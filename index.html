@@ -660,6 +660,32 @@
   #globalMapCanvas:-webkit-full-screen,#mapCanvas:-webkit-full-screen,#zpMapCanvas:-webkit-full-screen{height:100vh !important;width:100vw !important;background:var(--card)}
   /* Marcador del resultado de búsqueda */
   .search-result-marker{background:var(--guinda);border:3px solid #fff;border-radius:50%;width:18px !important;height:18px !important;margin-left:-9px !important;margin-top:-9px !important;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  /* ── Ficha de diagnóstico del botón «Ubicarme» (uso operativo SEDEMA) ── */
+  .loc-pop{font-family:'Roboto',sans-serif;font-size:12.5px;color:var(--ink);line-height:1.45;min-width:240px}
+  .loc-title{font-family:'Cabin','Roboto',sans-serif;font-weight:700;font-size:13px;color:var(--guinda);
+    text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+  .loc-coord{font-family:'Roboto Mono',monospace;font-size:12px;color:var(--ink);
+    background:var(--bg-2);border-radius:3px;padding:5px 7px;margin-bottom:9px;user-select:all}
+  .loc-acc{color:var(--muted);font-size:10.5px;margin-left:5px}
+  .loc-row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px dotted var(--line-soft)}
+  .loc-row:last-of-type{border-bottom:none}
+  .loc-k{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);white-space:nowrap;flex-shrink:0}
+  .loc-v{text-align:right;font-weight:500}
+  .loc-si{color:var(--verde);font-weight:700}
+  .loc-no{color:var(--guinda);font-weight:700}
+  .loc-na{color:var(--muted);font-style:italic;font-weight:400}
+  .loc-sep{height:1px;background:var(--line-soft);margin:9px 0 7px}
+  .loc-list{margin:5px 0 0;padding-left:15px}
+  .loc-list li{margin-bottom:3px;font-weight:500}
+  .loc-near{margin-top:5px;padding:7px 8px;background:var(--bg-2);border-left:2px solid var(--dorado);border-radius:0 3px 3px 0}
+  .loc-near b{display:block;font-weight:700}
+  .loc-grp{display:block;font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.05em;margin-top:1px}
+  .loc-dist{display:inline-block;margin-top:3px;font-family:'Roboto Mono',monospace;font-size:11px;color:var(--dorado-text);font-weight:500}
+  .loc-copy{margin-top:10px;width:100%;background:transparent;border:1px solid var(--line);border-radius:3px;
+    padding:6px 8px;font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-2);cursor:pointer;transition:all .15s}
+  .loc-copy:hover{border-color:var(--guinda);color:var(--guinda);background:var(--bg-2)}
   /* Chip SC flotante en la ficha técnica (esquina inferior izquierda para no chocar con buscador) */
   /* El lienzo Leaflet de la ficha vive en su propio hijo para no borrar los flotantes */
   .map-canvas-inner{position:absolute;inset:0;z-index:0}
@@ -678,6 +704,102 @@
   .map-block-toggle button + button{border-left:1px solid var(--line)}
   .map-canvas{height:340px;width:100%;background:#e8e3d4}
   .map-canvas.no-data{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12.5px;text-align:center;padding:20px;background:var(--bg-2);font-family:'Roboto',sans-serif}
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     SISTEMA UNIFICADO DE CONTROLES DE MAPA · v36
+     Antes convivían tres lenguajes visuales (los controles nativos de Leaflet,
+     los botones flotantes propios y los chips), con alturas, radios, sombras y
+     colores distintos, y la columna izquierda se veía como cuatro cajas sueltas.
+     Ahora todos comparten los mismos tokens y se agrupan por función:
+       · arriba-izquierda  → navegación (zoom · ubicarme · vista general) en UNA tarjeta
+       · a su derecha      → buscador
+       · arriba-derecha    → vista (capa base · pantalla completa) en UNA tarjeta
+       · abajo-izquierda   → capas/leyenda (chip de Suelo de Conservación)
+     ═══════════════════════════════════════════════════════════════════════ */
+  :root{
+    --mc-h:34px;                                   /* alto común de todo control */
+    --mc-bg:#fff;
+    --mc-line:rgba(42,42,42,.13);                  /* borde exterior */
+    --mc-div:rgba(42,42,42,.09);                   /* separador interno */
+    --mc-shadow:0 1px 2px rgba(42,42,42,.10), 0 4px 12px -5px rgba(42,42,42,.28);
+  }
+
+  /* ── Columna de navegación: las 4 acciones en una sola tarjeta ── */
+  .leaflet-top.leaflet-left{
+    top:10px; left:10px; display:flex; flex-direction:column;
+    background:var(--mc-bg); border:1px solid var(--mc-line);
+    border-radius:var(--radius); box-shadow:var(--mc-shadow); overflow:hidden;
+  }
+  .leaflet-top.leaflet-left .leaflet-control{
+    margin:0 !important; float:none; clear:none; border:0 !important;
+    box-shadow:none !important; border-radius:0 !important;
+  }
+  .leaflet-top.leaflet-left .leaflet-control + .leaflet-control{border-top:1px solid var(--mc-div) !important}
+  .leaflet-bar a,
+  .leaflet-control-zoom a{
+    width:var(--mc-h); height:var(--mc-h); line-height:var(--mc-h);
+    background:transparent; border:0; border-radius:0;
+    color:var(--ink-2); font-family:'Roboto',sans-serif; font-size:17px; font-weight:400;
+    display:flex; align-items:center; justify-content:center; transition:background .15s,color .15s;
+  }
+  .leaflet-bar a + a{border-top:1px solid var(--mc-div)}
+  .leaflet-bar a:hover,
+  .leaflet-control-zoom a:hover{background:var(--bg-2); color:var(--guinda)}
+  .leaflet-bar a:focus-visible{outline:2px solid var(--guinda); outline-offset:-2px}
+  .leaflet-bar a.leaflet-disabled{color:var(--muted); background:var(--bg-2); opacity:.55}
+  /* Íconos propios: mismo peso y color que el resto; el color solo aparece al pasar el cursor */
+  .locate-ctrl a, .resetview-ctrl a{color:var(--ink-2) !important}
+  .locate-ctrl a:hover, .resetview-ctrl a:hover{color:var(--guinda) !important}
+  .locate-ctrl a svg, .resetview-ctrl a svg{width:16px; height:16px}
+
+  /* ── Buscador: misma altura y acabado que la columna, a su derecha ── */
+  .map-search-float{
+    top:10px; left:calc(10px + var(--mc-h) + 8px); height:var(--mc-h);
+    background:var(--mc-bg); border:1px solid var(--mc-line); border-radius:var(--radius);
+    box-shadow:var(--mc-shadow); max-width:calc(100% - 300px);
+  }
+  .map-search-input{height:calc(var(--mc-h) - 2px); padding:0 12px; width:250px; font-size:12.5px}
+  .map-search-input::placeholder{font-size:12px}
+  .map-search-btn{width:var(--mc-h); border-left:1px solid var(--mc-div)}
+  .map-search-btn:hover{background:var(--bg-2); color:var(--guinda)}
+
+  /* ── Vista: capa base + pantalla completa en una sola tarjeta ── */
+  .map-block-controls-floating{
+    top:10px; right:10px; gap:0; align-items:center;
+    background:var(--mc-bg); border:1px solid var(--mc-line); border-radius:var(--radius);
+    box-shadow:var(--mc-shadow); overflow:hidden;
+  }
+  .map-block-controls-floating .map-block-toggle{border:0; border-radius:0; box-shadow:none; background:transparent}
+  .map-block-controls-floating .map-block-toggle button{
+    height:var(--mc-h); padding:0 13px; font-size:10px; letter-spacing:.1em; background:transparent;
+  }
+  .map-block-controls-floating .map-block-toggle button + button{border-left:1px solid var(--mc-div)}
+  .map-block-controls-floating .map-block-toggle button.active{background:var(--guinda); color:var(--crema)}
+  .map-block-controls-floating .map-fullscreen-btn{
+    width:var(--mc-h); height:var(--mc-h); border-radius:0; box-shadow:none;
+    border-left:1px solid var(--mc-div); background:transparent;
+  }
+  .map-block-controls-floating .map-fullscreen-btn:hover{background:var(--bg-2); color:var(--guinda)}
+
+  /* ── Capas/leyenda: chip flotante con el mismo acabado ── */
+  .drawer-sc-floating{bottom:10px; left:10px}
+  .drawer-sc-floating .map-filter-chip,
+  .drawer-sc-floating .map-filter-chip.active{
+    height:28px; padding:0 11px; font-size:10.5px; background:var(--mc-bg);
+    border:1px solid var(--mc-line); border-radius:var(--radius); box-shadow:var(--mc-shadow);
+    color:var(--ink-2); font-weight:500;
+  }
+  /* El estado activo lo comunica el punto de color, no un borde de otro color:
+     así el chip no compite visualmente con el resto de los controles. */
+  .drawer-sc-floating .map-filter-chip.active{background:var(--bg-2); color:var(--ink)}
+  .drawer-sc-floating .map-filter-chip:hover{border-color:var(--guinda); color:var(--guinda)}
+
+  /* ── Pantallas angostas: el buscador toma el ancho y la tarjeta de vista baja ── */
+  @media (max-width:760px){
+    .map-search-float{left:calc(10px + var(--mc-h) + 8px); right:10px; max-width:none}
+    .map-search-input{width:100%}
+    .map-block-controls-floating{top:calc(10px + var(--mc-h) + 8px)}
+  }
   .map-canvas.no-data b{display:block;color:var(--ink-2);margin-bottom:6px;font-size:13px}
   .map-block-foot{display:flex;align-items:center;gap:14px;padding:7px 12px;background:#fff;border-top:1px solid var(--line-soft);font-size:11px;color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.04em}
   .map-block-foot a{color:var(--guinda);text-decoration:none;font-weight:500}
@@ -3152,8 +3274,64 @@ function addResetViewControl(map, title){
   map.addControl(new Ctrl());
 }
 
+/* ===== Diagnóstico de ubicación · uso interno SEDEMA =====
+   Además de "caes / no caes", el popup resuelve la pregunta operativa:
+   en qué alcaldía estás, si estás en Suelo de Conservación y, si no caes
+   dentro de ningún polígono, cuál es el área más próxima y a qué distancia.
+   Proyección plana local (equirectangular): a escala CDMX el error es <0.1%. */
+function _projM(lat,lng,lat0){
+  const k = Math.cos(lat0*Math.PI/180);
+  return [lng*111320*k, lat*110540];
+}
+function _segDistM(px,py,ax,ay,bx,by){
+  const dx=bx-ax, dy=by-ay;
+  const den = dx*dx+dy*dy;
+  const t = den ? Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/den)) : 0;
+  return Math.hypot(px-(ax+t*dx), py-(ay+t*dy));
+}
+function _geomDistM(lat,lng,geom){
+  if(!geom) return Infinity;
+  const [px,py] = _projM(lat,lng,lat);
+  const polys = geom.type==='Polygon' ? [geom.coordinates]
+              : geom.type==='MultiPolygon' ? geom.coordinates : [];
+  let min = Infinity;
+  for(const poly of polys) for(const ring of poly){
+    for(let i=1;i<ring.length;i++){
+      const a=_projM(ring[i-1][1],ring[i-1][0],lat), b=_projM(ring[i][1],ring[i][0],lat);
+      const d=_segDistM(px,py,a[0],a[1],b[0],b[1]);
+      if(d<min) min=d;
+    }
+  }
+  return min;
+}
+function _fmtDist(m){
+  if(!isFinite(m)) return '—';
+  return m < 1000 ? `${Math.round(m)} m` : `${(m/1000).toFixed(m<10000?1:0)} km`;
+}
+function _alcaldiaEn(latlng){
+  const fs = (ALCALDIAS_EMBEDDED && ALCALDIAS_EMBEDDED.features) || [];
+  const hit = fs.find(f=>f.geometry && geoContainsPoint(latlng.lng, latlng.lat, f.geometry));
+  return hit ? (hit.properties.nombre || '—') : null;
+}
+function _enSueloConservacion(latlng){
+  const fs = (SUELO_CONSERVACION && SUELO_CONSERVACION.features) || null;
+  if(!fs || !fs.length) return null;                    // capa aún no cargada
+  return fs.some(f=>f.geometry && geoContainsPoint(latlng.lng, latlng.lat, f.geometry));
+}
+function _masCercana(latlng, features){
+  let best = null;
+  (features||[]).forEach(f=>{
+    if(!f.geometry) return;
+    const d = _geomDistM(latlng.lat, latlng.lng, f.geometry);
+    if(!best || d < best.d) best = {d, f};
+  });
+  if(!best) return null;
+  const pr = best.f.properties || {};
+  return { nombre: pr.nombre || pr.capa || 'Polígono', grupo: pr.grupo || pr.tenencia || '', d: best.d };
+}
+
 const _locateRefs = new WeakMap();
-function addLocateControl(map, getContainment){
+function addLocateControl(map, getContainment, getFeatures){
   if(!map || typeof L==='undefined') return;
   const Ctrl = L.Control.extend({
     options:{position:'topleft'},
@@ -3164,13 +3342,13 @@ function addLocateControl(map, getContainment){
       a.style.cssText = 'display:flex;align-items:center;justify-content:center;color:#1971C2';
       a.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg>';
       L.DomEvent.on(a,'click',L.DomEvent.stopPropagation).on(a,'click',L.DomEvent.preventDefault)
-        .on(a,'click',()=>_doLocate(map,getContainment,a));
+        .on(a,'click',()=>_doLocate(map,getContainment,a,getFeatures));
       return c;
     }
   });
   map.addControl(new Ctrl());
 }
-function _doLocate(map,getContainment,btn){
+function _doLocate(map,getContainment,btn,getFeatures){
   if(btn) btn.style.opacity = '0.5';
   map.locate({setView:true, maxZoom:16, enableHighAccuracy:true, timeout:12000});
   map.once('locationfound', e=>{
@@ -3180,18 +3358,69 @@ function _doLocate(map,getContainment,btn){
     const c=L.circle(e.latlng,{radius:e.accuracy||30,color:'#1971C2',weight:1,fillColor:'#1971C2',fillOpacity:0.12}).addTo(map);
     const m=L.circleMarker(e.latlng,{radius:7,color:'#fff',weight:2,fillColor:'#1971C2',fillOpacity:1}).addTo(map);
     _locateRefs.set(map,{m,c});
-    let msg='<b>Tu ubicación aproximada</b>';
-    if(typeof getContainment==='function'){
-      let names=[]; try{ names=getContainment(e.latlng)||[]; }catch(_){}
-      msg += names.length ? `<br>Caes dentro de:<br>• ${names.join('<br>• ')}` : '<br>No caes dentro de ningún polígono.';
-    }
-    m.bindPopup(msg).openPopup();
+    let names=[];
+    if(typeof getContainment==='function'){ try{ names=getContainment(e.latlng)||[]; }catch(_){} }
+    m.bindPopup(_locatePopupHTML(e.latlng, e.accuracy, names, getFeatures), {maxWidth:300, minWidth:250}).openPopup();
   });
   map.once('locationerror', ()=>{
     if(btn) btn.style.opacity = '';
     siaToast('No se pudo obtener tu ubicación. Revisa el permiso de ubicación del navegador (requiere HTTPS).');
   });
 }
+
+/* Ficha de diagnóstico del punto localizado (registro operativo, no divulgación) */
+function _locatePopupHTML(latlng, accuracy, names, getFeatures){
+  const coord = `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+  const alc = _alcaldiaEn(latlng);
+  const sc  = _enSueloConservacion(latlng);
+  const row = (k,v) => `<div class="loc-row"><span class="loc-k">${k}</span><span class="loc-v">${v}</span></div>`;
+
+  let html = `<div class="loc-pop">
+    <div class="loc-title">Punto localizado</div>
+    <div class="loc-coord" id="locCoord" data-coord="${esc(coord)}">${coord}
+      <span class="loc-acc">± ${Math.round(accuracy||0)} m</span></div>`;
+
+  html += row('Alcaldía', alc ? esc(alc) : '<span class="loc-na">fuera de la CDMX</span>');
+
+  if(sc === null) html += row('Suelo de Conservación', '<span class="loc-na">capa no cargada</span>');
+  else html += row('Suelo de Conservación', sc
+        ? '<span class="loc-si">Dentro</span>'
+        : '<span class="loc-no">Fuera</span>');
+
+  if(names && names.length){
+    html += `<div class="loc-sep"></div>
+      <div class="loc-k">Dentro de ${names.length===1?'1 polígono':names.length+' polígonos'}</div>
+      <ul class="loc-list">${names.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  } else {
+    html += `<div class="loc-sep"></div>
+      <div class="loc-k">Sin cobertura en este punto</div>`;
+    let near = null;
+    if(typeof getFeatures==='function'){ try{ near = _masCercana(latlng, getFeatures()); }catch(_){} }
+    if(near){
+      html += `<div class="loc-near"><b>${esc(near.nombre)}</b>${near.grupo?`<span class="loc-grp">${esc(near.grupo)}</span>`:''}
+        <span class="loc-dist">a ${_fmtDist(near.d)}</span></div>`;
+    }
+  }
+
+  html += `<button type="button" class="loc-copy" id="locCopyBtn">Copiar coordenadas</button></div>`;
+  return html;
+}
+
+/* Copiar coordenadas desde el popup (delegado: el popup se crea y destruye) */
+document.addEventListener('click', ev=>{
+  const b = ev.target.closest && ev.target.closest('.loc-copy');
+  if(!b) return;
+  const box = b.closest('.loc-pop');
+  const c = box && box.querySelector('.loc-coord');
+  const txt = c && c.dataset.coord;
+  if(!txt) return;
+  try{
+    navigator.clipboard.writeText(txt).then(
+      ()=>{ b.textContent='Copiado'; setTimeout(()=>{ b.textContent='Copiar coordenadas'; },1600); },
+      ()=>siaToast('No se pudo copiar. Selecciona el texto manualmente.')
+    );
+  }catch(_){ siaToast('No se pudo copiar. Selecciona el texto manualmente.'); }
+});
 
 /* Ficha lateral (mismo drawer #dr) para designaciones ZP */
 function openZPDrawer(row){
@@ -3272,7 +3501,7 @@ function initZPFichaMap(row){
   try{ activeMap.fitBounds(activeGeoLayer.getBounds(), {padding:[20,20], maxZoom:15}); activeMap._siaHome = activeGeoLayer.getBounds(); }catch(e){}
   activeMap.on('click focus', ()=> activeMap.scrollWheelZoom.enable());
   activeMap.on('mouseout',   ()=> activeMap.scrollWheelZoom.disable());
-  addLocateControl(activeMap, ll=>featuresContaining(getZPAllFeatures(), ll));
+  addLocateControl(activeMap, ll=>featuresContaining(getZPAllFeatures(), ll), getZPAllFeatures);
   addResetViewControl(activeMap, 'Volver al polígono');
   addSearchMarkerTo(activeMap);
 }
@@ -3430,7 +3659,7 @@ async function initZPMap(){
   // Buscador de dirección / coordenadas (reutiliza el geocoder existente)
   attachMapSearch('zpMapSearch', zpMap);
   addResetViewControl(zpMap, 'Vista general · Zona Patrimonio');
-  addLocateControl(zpMap, ll=>featuresContaining(getZPAllFeatures(), ll));
+  addLocateControl(zpMap, ll=>featuresContaining(getZPAllFeatures(), ll), getZPAllFeatures);
 
   // Toggle de capa base Mapa/Satélite — clone-and-replace para evitar listeners duplicados al re-inicializar
   document.querySelectorAll('#zpLayerToggle button').forEach(btn=>{
@@ -3675,7 +3904,7 @@ function initARCACFichaMap(no){
   try{ activeMap.fitBounds(activeGeoLayer.getBounds(), {padding:[20,20], maxZoom:15}); activeMap._siaHome = activeGeoLayer.getBounds(); }catch(e){}
   activeMap.on('click focus', ()=> activeMap.scrollWheelZoom.enable());
   activeMap.on('mouseout', ()=> activeMap.scrollWheelZoom.disable());
-  addLocateControl(activeMap, ll=>featuresContaining((ARCAC_GEO&&ARCAC_GEO.features)||[], ll));
+  addLocateControl(activeMap, ll=>featuresContaining((ARCAC_GEO&&ARCAC_GEO.features)||[], ll), ()=>(ARCAC_GEO&&ARCAC_GEO.features)||[]);
   addResetViewControl(activeMap, 'Volver al polígono');
   addSearchMarkerTo(activeMap);
 }
@@ -3788,7 +4017,7 @@ async function initARCACMap(){
 
   attachMapSearch('arcacMapSearch', arcacMap);
   addResetViewControl(arcacMap, 'Vista general · ARCAC');
-  addLocateControl(arcacMap, ll=>featuresContaining((ARCAC_GEO&&ARCAC_GEO.features)||[], ll));
+  addLocateControl(arcacMap, ll=>featuresContaining((ARCAC_GEO&&ARCAC_GEO.features)||[], ll), ()=>(ARCAC_GEO&&ARCAC_GEO.features)||[]);
   setTimeout(()=>{ try{ arcacMap.invalidateSize(); }catch(e){} }, 120);
 }
 
@@ -3919,7 +4148,7 @@ async function initGlobalMap(){
 
   // Buscador de direcciones / coordenadas
   attachMapSearch('globalMapSearch', globalMap);
-  addLocateControl(globalMap, ll=>featuresContaining(GEOMETRIES&&GEOMETRIES.features, ll));
+  addLocateControl(globalMap, ll=>featuresContaining(GEOMETRIES&&GEOMETRIES.features, ll), ()=>(GEOMETRIES&&GEOMETRIES.features)||[]);
   addResetViewControl(globalMap, 'Vista general · todas las áreas');
 
   // Overlay ARCAC (núcleos agrarios) — apagado por defecto, se activa con su chip
@@ -4370,7 +4599,7 @@ function initMapForArea(d){
   // Pantalla completa + buscador en mapa de ficha técnica
   attachFullscreenBtn(container, activeMap);
   attachMapSearch('drawerMapSearch', activeMap);
-  addLocateControl(activeMap, ll=>featuresContaining(GEOMETRIES&&GEOMETRIES.features, ll));
+  addLocateControl(activeMap, ll=>featuresContaining(GEOMETRIES&&GEOMETRIES.features, ll), ()=>(GEOMETRIES&&GEOMETRIES.features)||[]);
   addResetViewControl(activeMap, 'Volver al polígono del área');
   addSearchMarkerTo(activeMap);
 }
