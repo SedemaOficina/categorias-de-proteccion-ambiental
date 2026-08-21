@@ -84,27 +84,25 @@
   html,body{background:var(--bg);color:var(--ink);font-family:'Roboto',sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
   .wrap{max-width:1440px;margin:0 auto;padding:32px 28px 80px}
 
-  /* Banda institucional superior — logo oficial GCDMX · SEDEMA · SIA */
-  .logo-bar{width:100%;padding:8px 0 20px;border-bottom:1px solid var(--line-soft);margin-bottom:26px}
-  .logo-inst{display:block;height:62px;width:auto;max-width:100%;object-fit:contain;object-position:left center}
-  @media (max-width:1024px){ .logo-inst{height:54px} }
-  @media (max-width:640px){
-    .logo-bar{padding:4px 0 16px;margin-bottom:20px}
-    .logo-inst{height:44px;object-position:center}
-  }
+  /* Banda institucional — v36: el logo vive dentro del header (una sola banda) */
+  .logo-inst{display:block;height:46px;width:auto;max-width:100%;object-fit:contain;object-position:left center;flex-shrink:0}
+  .brand-divider{width:1px;align-self:stretch;background:var(--line);margin:3px 0;flex-shrink:0}
+  @media (max-width:1024px){ .logo-inst{height:44px} }
+  @media (max-width:900px){ .brand-divider{display:none} }
+  @media (max-width:640px){ .logo-inst{height:42px} }
   @media (max-width:420px){ .logo-inst{height:36px} }
 
-  header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding-bottom:22px;border-bottom:2px solid var(--guinda);margin-bottom:22px}
-  .brand{display:flex;flex-direction:column;gap:6px;max-width:780px}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:26px;padding:6px 0 14px;border-bottom:2px solid var(--guinda);margin-bottom:16px}
+  .brand{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0;max-width:780px}
   /* .eyebrow eliminada en v34 — el span se removió del header en v33 */
-  h1{font-family:'Roboto',sans-serif;font-weight:900;font-size:40px;line-height:1.08;letter-spacing:-.02em;color:var(--ink);max-width:900px}
+  h1{font-family:'Roboto',sans-serif;font-weight:900;font-size:30px;line-height:1.1;letter-spacing:-.02em;color:var(--ink);max-width:900px}
   h1 em{font-style:normal;color:var(--guinda);font-weight:900}
   .sub{color:var(--ink-2);margin-top:10px;font-size:15px;font-weight:400}
   .meta{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);text-align:right;letter-spacing:.05em;line-height:1.8}
   .meta b{color:var(--guinda);font-weight:500}
 
-  .tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:2px;background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:4px;margin-bottom:24px;box-shadow:var(--shadow)}
-  .tab{min-width:0;padding:11px 12px;background:transparent;border:none;cursor:pointer;font-family:'Roboto',sans-serif;font-size:13px;color:var(--ink-2);border-radius:3px;transition:transform .18s,background .18s,box-shadow .18s,color .18s;display:flex;flex-direction:row;align-items:center;gap:11px;text-align:left;font-weight:500;position:relative}
+  .tabs{display:flex;align-items:stretch;gap:2px;background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:4px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .tab{flex:1 1 0;min-width:0;padding:9px 10px;background:transparent;border:none;cursor:pointer;font-family:'Roboto',sans-serif;font-size:12.5px;color:var(--ink-2);border-radius:3px;transition:transform .18s,background .18s,box-shadow .18s,color .18s;display:flex;flex-direction:row;align-items:center;gap:9px;text-align:left;font-weight:500;position:relative}
   .tab:hover{background:var(--bg-2);transform:translateY(-1px)}
   .tab:hover .tab-icon{transform:scale(1.06)}
   .tab:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
@@ -138,6 +136,22 @@
   .tab[data-id="ARCAC"].active{background:#7048E8;color:var(--crema)}
   .tab[data-id="METAS"].active{background:var(--guinda);color:var(--crema)}
   .tab[data-id="LEGAL"].active{background:var(--legal);color:var(--crema)}
+
+  /* === Menú «Más ▾» · overflow de módulos analíticos (Análisis · Metas · Marco Jurídico) === */
+  .more-wrap{position:relative;flex:0 0 auto;display:flex}
+  .more-btn{display:flex;align-items:center;gap:7px;padding:9px 14px;border:none;border-left:1px solid var(--line-soft);
+    background:transparent;cursor:pointer;font-family:'Roboto',sans-serif;font-size:12.5px;font-weight:700;
+    color:var(--ink-2);border-radius:3px;transition:background .18s,color .18s;white-space:nowrap}
+  .more-btn:hover{background:var(--bg-2)}
+  .more-btn:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+  .more-btn.active{background:var(--guinda);color:var(--crema);border-left-color:transparent;box-shadow:0 2px 8px rgba(157,33,72,.25)}
+  .more-caret{font-size:10px;opacity:.7;transition:transform .18s}
+  .more-wrap.open .more-caret{transform:rotate(180deg)}
+  .more-menu{position:absolute;right:0;top:calc(100% + 6px);min-width:264px;background:var(--card);
+    border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 10px 28px -8px rgba(42,42,42,.3);
+    padding:5px;z-index:60;display:none}
+  .more-wrap.open .more-menu{display:block}
+  .more-menu .tab{width:100%;flex:1 1 auto;padding:10px 12px}
 
   .panel{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:26px 28px;margin-bottom:20px;box-shadow:var(--shadow)}
   .panel-title{font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--guinda);margin-bottom:10px;font-weight:500}
@@ -753,12 +767,22 @@
   .legal-block p:last-child{margin-bottom:0}
   .legal-block .ref{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);font-weight:500}
 
-  /* Global: prevent any word overflow in text content */
-  .panel h3, .panel-intro, .hero-sub, 
+  /* FIX v36: la lista de selectores quedaba abierta con coma final y se comía el
+     @media siguiente, dejando TODO el BREAKPOINT 1 (≤1200px) muerto en producción. */
+  .panel h3, .panel-intro, .hero-sub{overflow-wrap:break-word}
+
   /* ===== BREAKPOINT 1 — iPad 11" landscape y pantallas medianas (≤1200px) ===== */
   @media (max-width:1200px){
     .wrap{padding:28px 22px 70px}
-    h1{font-size:42px}
+    h1{font-size:28px}
+    .tabs{flex-wrap:wrap}
+    .tab{flex:1 1 calc(25% - 3px);padding:9px 10px;gap:9px;font-size:12px}
+    .tab-name{font-size:12px}
+    .tab-num{display:none}
+    .tab-icon{width:20px;height:20px}
+    .more-wrap{flex:1 1 calc(25% - 3px)}
+    .more-btn{width:100%;justify-content:center;border-left:none;padding:9px 10px;font-size:12px}
+    .more-menu{left:0;right:auto;width:100%;min-width:0}
     .hero{grid-template-columns:repeat(2,1fr)}
     .legal-grid-3{grid-template-columns:1fr 1fr}
   }
@@ -766,7 +790,7 @@
   /* ===== BREAKPOINT 2 — iPad 11" portrait y tablets (≤1024px) ===== */
   @media (max-width:1024px){
     .wrap{padding:26px 20px 60px}
-    h1{font-size:38px}
+    h1{font-size:27px}
     .grid-2,.legal-grid{grid-template-columns:1fr}
     .legal-grid-3{grid-template-columns:repeat(2,1fr)}
     .toolbar{grid-template-columns:repeat(3,1fr)}
@@ -787,9 +811,8 @@
     .hero{grid-template-columns:repeat(2,1fr);gap:10px}
     .hero-card{padding:16px 18px}
     .hero-value{font-size:34px}
-    .tab{min-width:auto;font-size:12px;padding:10px 10px;gap:9px}
+    .tab{min-width:0;font-size:12px;padding:10px 10px;gap:9px}
     .tab-name{font-size:12px}
-    .tab-num{font-size:9.5px}
     .tab-icon{width:20px;height:20px}
         .constitucion-card h4{font-size:15px}
     .panel h3{font-size:22px}
@@ -798,7 +821,7 @@
   /* ===== BREAKPOINT 4 — Móvil grande (≤640px) ===== */
   @media (max-width:640px){
     .wrap{padding:20px 14px 50px}
-    h1{font-size:30px}
+    h1{font-size:24px}
     .sub{font-size:14px}
     .hero{grid-template-columns:1fr}
     .legal-grid-3{grid-template-columns:1fr}
@@ -859,6 +882,10 @@
     .drawer h2{font-size:24px}
     .tabs{padding:4px;flex-wrap:wrap;overflow:visible;-webkit-mask-image:none;mask-image:none;gap:3px}
     .tab{flex:0 0 calc(25% - 3px);min-width:0;padding:8px 4px;flex-direction:column;align-items:center;gap:4px;text-align:center}
+    .more-wrap{flex:0 0 calc(25% - 3px)}
+    .more-btn{width:100%;flex-direction:row;justify-content:center;gap:6px;padding:8px 4px;font-size:10.5px;font-weight:700}
+    .more-menu .tab{flex-direction:row;align-items:center;text-align:left;padding:10px 12px;gap:10px}
+    .more-menu .tab .tab-num{display:block}
     .tab-icon{width:20px;height:20px;margin:0 auto}
     .tab-content{align-items:center;text-align:center;width:100%;gap:0}
     .tab-name{font-size:10.5px;line-height:1.2;white-space:normal;text-align:center}
@@ -868,7 +895,7 @@
   /* ===== BREAKPOINT 5 — Móvil pequeño (≤420px) ===== */
   @media (max-width:420px){
     .wrap{padding:16px 12px 40px}
-    h1{font-size:26px}
+    h1{font-size:21px}
     .hero-card{padding:14px 14px}
     .hero-value{font-size:28px}
         .panel h3{font-size:18px}
@@ -927,10 +954,9 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="logo-bar">
-    <img src="./SIA_LOGO-03.png" alt="Gobierno de la Ciudad de México · Secretaría del Medio Ambiente · Sistema de Información Ambiental" class="logo-inst">
-  </div>
   <header class="top">
+    <img src="./SIA_LOGO-03.png" alt="Gobierno de la Ciudad de México · Secretaría del Medio Ambiente · Sistema de Información Ambiental" class="logo-inst">
+    <span class="brand-divider" aria-hidden="true"></span>
     <div class="brand">
       <h1>Dashboard de Categorías de <em>Protección Ambiental</em></h1>
     </div>
@@ -1407,37 +1433,79 @@ const TAB_ICONS = {
   ARCAC: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8 L12 4 L21 8 L12 12 Z"/><path d="M3 8 v8 l9 4 l9-4 V8"/><line x1="12" y1="12" x2="12" y2="20"/></svg>'
 };
 
-function buildTabs(){
-  const el = document.getElementById('tabs');
-  el.innerHTML = GROUPS.map(g=>{
-    let subtitle;
-    if(g.id==='LEGAL') subtitle = 'LACM · 18 JUL 2024';
-    else if(g.id==='METAS') subtitle = 'LÍNEA BASE 2018-2024';
-    else if(g.id==='ANALISIS') subtitle = 'DATOS · DISTRIBUCIÓN';
-    else if(g.id==='ZP') subtitle = 'PATRIMONIO · 7,534 HA';
-    else if(g.id==='ARCAC') subtitle = 'NÚCLEOS AGRARIOS · 30';
-    else {
-      const subset = g.id==='ALL' ? DATA : DATA.filter(d=>d.grupo===g.key);
-      subtitle = `${subset.length} REG · ${fmt(sum(subset,'superficie'))} HA`;
-    }
-    return `<button class="tab ${g.cls||''} ${state.tab===g.id?'active':''}" data-id="${g.id}" aria-label="Ver ${g.label}" title="${g.label}">
+/* Módulos analíticos: no tienen superficie ni registros que contar y se consultan
+   de forma ocasional → viven en el menú «Más ▾» para dejar la nav en una sola fila.
+   NO altera DATA, GEOMETRIES, contadores ni filtros. */
+const SECONDARY_TABS = new Set(['ANALISIS','METAS','LEGAL']);
+
+function tabSubtitle(g, compact){
+  if(g.id==='LEGAL') return 'LACM · 18 JUL 2024';
+  if(g.id==='METAS') return 'LÍNEA BASE 2018-2024';
+  if(g.id==='ANALISIS') return 'DATOS · DISTRIBUCIÓN';
+  if(g.id==='ZP') return compact ? 'UNESCO · 7,534 HA' : 'PATRIMONIO · 7,534 HA';
+  if(g.id==='ARCAC') return compact ? '30 NÚCLEOS' : 'NÚCLEOS AGRARIOS · 30';
+  const subset = g.id==='ALL' ? DATA : DATA.filter(d=>d.grupo===g.key);
+  const ha = sum(subset,'superficie');
+  return compact
+    ? `${subset.length} · ${fmtInt(Math.round(ha))} HA`
+    : `${subset.length} REG · ${fmt(ha)} HA`;
+}
+
+function tabHTML(g, compact){
+  return `<button class="tab ${g.cls||''} ${state.tab===g.id?'active':''}" data-id="${g.id}" aria-label="Ver ${g.label}" title="${g.label}">
       <span class="tab-icon" aria-hidden="true">${TAB_ICONS[g.id]||''}</span>
       <span class="tab-content">
         <span class="tab-name">${g.label}</span>
-        <span class="tab-num">${subtitle}</span>
+        <span class="tab-num">${tabSubtitle(g, compact)}</span>
       </span>
     </button>`;
-  }).join('');
+}
+
+function closeMoreMenu(){
+  const mw = document.getElementById('moreWrap');
+  if(!mw || !mw.classList.contains('open')) return;
+  mw.classList.remove('open');
+  const mb = document.getElementById('moreBtn');
+  if(mb) mb.setAttribute('aria-expanded','false');
+}
+
+function buildTabs(){
+  const el = document.getElementById('tabs');
+  const primary   = GROUPS.filter(g=>!SECONDARY_TABS.has(g.id));
+  const secondary = GROUPS.filter(g=> SECONDARY_TABS.has(g.id));
+  const activeSec = secondary.find(g=>g.id===state.tab);
+  el.innerHTML = primary.map(g=>tabHTML(g,true)).join('') +
+    `<div class="more-wrap" id="moreWrap">
+      <button type="button" class="more-btn ${activeSec?'active':''}" id="moreBtn"
+              aria-haspopup="true" aria-expanded="false" aria-controls="moreMenu"
+              title="Análisis · Metas · Marco Jurídico">
+        <span class="more-label">${activeSec ? activeSec.label : 'Más'}</span><span class="more-caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="more-menu" id="moreMenu" role="menu">${secondary.map(g=>tabHTML(g,false)).join('')}</div>
+    </div>`;
+  const mb = document.getElementById('moreBtn');
+  if(mb) mb.addEventListener('click', ev=>{
+    ev.stopPropagation();
+    const mw = document.getElementById('moreWrap');
+    const open = mw.classList.toggle('open');
+    mb.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
   el.querySelectorAll('.tab').forEach(b=>{
     b.addEventListener('click',()=>{
       state.tab = b.dataset.id;
       state.q=''; state.fJur=''; state.fCat=''; state.fAlc=''; state.fPM=''; state.fTipo=''; state.fSC=''; state.fDG='';
       ['q','fJur','fCat','fAlc','fPM','fTipo','fSC','fDG'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+      closeMoreMenu();
       buildTabs(); populateFilters(); renderDashboard(); render();
       window.scrollTo({top:0,behavior:'smooth'});
     });
   });
 }
+
+/* Listeners globales del menú: se registran una sola vez (buildTabs se re-ejecuta
+   en cada cambio de módulo y no debe acumular handlers). */
+document.addEventListener('click', closeMoreMenu);
+document.addEventListener('keydown', ev=>{ if(ev.key === 'Escape') closeMoreMenu(); });
 
 function populateFilters(){
   if(isSpecialTab(state.tab)) return;
