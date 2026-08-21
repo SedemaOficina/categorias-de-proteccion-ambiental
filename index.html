@@ -621,7 +621,7 @@
   .drawer h2{font-family:'Roboto',sans-serif;font-weight:700;font-size:28px;line-height:1.2;margin-bottom:6px;color:var(--ink);letter-spacing:-.01em}
   .drawer .subcat{font-size:13.5px;color:var(--muted);margin-bottom:18px;font-style:italic}
   /* Encabezado del drawer con botón Compartir alineado a la derecha */
-  .drawer-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:8px}
+  .drawer-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:8px;padding-right:44px}
   .drawer-header-left{flex:1;min-width:0}
   .drawer-header-left h2{margin-bottom:6px}
   .drawer-header-left .subcat{margin-bottom:0}
@@ -660,34 +660,65 @@
   #globalMapCanvas:-webkit-full-screen,#mapCanvas:-webkit-full-screen,#zpMapCanvas:-webkit-full-screen{height:100vh !important;width:100vw !important;background:var(--card)}
   /* Marcador del resultado de búsqueda */
   .search-result-marker{background:var(--guinda);border:3px solid #fff;border-radius:50%;width:18px !important;height:18px !important;margin-left:-9px !important;margin-top:-9px !important;box-shadow:0 2px 6px rgba(0,0,0,.4)}
-  /* ── Ficha de diagnóstico del botón «Ubicarme» (uso operativo SEDEMA) ── */
-  .loc-pop{font-family:'Roboto',sans-serif;font-size:12.5px;color:var(--ink);line-height:1.45;min-width:240px}
-  .loc-title{font-family:'Cabin','Roboto',sans-serif;font-weight:700;font-size:13px;color:var(--guinda);
-    text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
-  .loc-coord{font-family:'Roboto Mono',monospace;font-size:12px;color:var(--ink);
-    background:var(--bg-2);border-radius:3px;padding:5px 7px;margin-bottom:9px;user-select:all}
-  .loc-acc{color:var(--muted);font-size:10.5px;margin-left:5px}
-  .loc-label{font-size:12.5px;font-weight:500;color:var(--ink);margin-bottom:5px;line-height:1.35}
-  .loc-row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px dotted var(--line-soft)}
-  .loc-row:last-of-type{border-bottom:none}
-  .loc-k{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  /* ── Ficha de ubicación en campo · popup de «Ubicarme» y del buscador ── */
+  .loc-pop{font-family:'Roboto',sans-serif;font-size:13px;color:var(--ink);line-height:1.45;min-width:250px}
+  .loc-loading{padding:16px 4px;text-align:center;color:var(--muted);font-size:12px;font-family:'Roboto Mono',monospace}
+
+  /* Bloque de cobertura */
+  .loc-pop .cov{padding:11px 12px 10px;border-left:4px solid var(--c);
+    background:linear-gradient(90deg,rgba(0,0,0,.035),transparent 55%);margin:0 -12px}
+  .loc-pop .cov:first-child{margin-top:-8px;padding-top:13px}
+  .loc-pop .cov + .cov{border-top:1px solid var(--line-soft)}
+  .loc-pop .cov-tag{display:inline-block;font-family:'Roboto Mono',monospace;font-size:9px;font-weight:700;
+    letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--c);
+    padding:3px 7px;border-radius:3px;margin-bottom:6px}
+  .loc-pop .cov-name{font-weight:700;font-size:14.5px;line-height:1.25;color:var(--ink)}
+  .loc-pop .cov-sub{font-size:12px;color:var(--ink-2);margin-top:2px}
+  .loc-pop .cov-meta{font-family:'Roboto Mono',monospace;font-size:10.5px;color:var(--muted);
+    margin-top:4px;letter-spacing:.03em}
+  .loc-pop .cov-warn{margin-top:6px;padding:5px 7px;background:#fff8e1;border-left:2px solid var(--dorado);
+    font-size:11px;line-height:1.35;color:var(--dorado-text);border-radius:0 3px 3px 0}
+  .loc-pop .cov-link{display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:transparent;
+    border:none;border-bottom:1px solid var(--c);padding:0 0 1px;cursor:pointer;
+    font-family:'Roboto Mono',monospace;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--c);font-weight:700}
+  .loc-pop .sc-block .cov-name{font-size:13.5px}
+
+  /* Sin cobertura */
+  .loc-pop .nocov{padding:11px 12px;margin:0 -12px;border-left:4px solid var(--muted);background:var(--bg-2)}
+  .loc-pop .nocov:first-child{margin-top:-8px}
+  .loc-pop .nocov.tras-sc{border-left-color:var(--line);background:#fff;border-top:1px solid var(--line-soft)}
+  .loc-pop .nocov .cov-tag{background:var(--gris)}
+  .loc-pop .nocov-t{font-size:12px;color:var(--ink-2);font-weight:500}
+  .loc-pop .near{margin-top:9px;padding:8px 9px;background:#fff;border:1px solid var(--line-soft);
+    border-left:3px solid var(--c);border-radius:0 3px 3px 0}
+  .loc-pop .nocov.tras-sc .near{margin-top:0}
+  .loc-pop .near-k{display:block;font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  .loc-pop .near b{display:block;font-size:13.5px;line-height:1.25}
+  .loc-pop .near-g{display:block;font-size:11.5px;color:var(--ink-2);margin-top:1px}
+  .loc-pop .near-m{display:inline-block;margin-top:4px;font-family:'Roboto Mono',monospace;
+    font-size:11px;color:var(--c);font-weight:700}
+
+  /* Pie de datos */
+  .loc-pop .loc-meta{padding:9px 0 2px}
+  .loc-pop .mrow{display:flex;justify-content:space-between;gap:12px;padding:4px 0;
+    border-bottom:1px dotted var(--line-soft)}
+  .loc-pop .mrow:last-child{border-bottom:none}
+  .loc-pop .mk{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:.09em;text-transform:uppercase;
     color:var(--muted);white-space:nowrap;flex-shrink:0}
-  .loc-v{text-align:right;font-weight:500}
-  .loc-si{color:var(--verde);font-weight:700}
-  .loc-no{color:var(--guinda);font-weight:700}
-  .loc-na{color:var(--muted);font-style:italic;font-weight:400}
-  .loc-sep{height:1px;background:var(--line-soft);margin:9px 0 7px}
-  .loc-list{margin:5px 0 0;padding-left:15px}
-  .loc-list li{margin-bottom:6px;font-weight:400}
-  .loc-list li b{font-weight:700;display:block;line-height:1.3}
-  .loc-near{margin-top:5px;padding:7px 8px;background:var(--bg-2);border-left:2px solid var(--dorado);border-radius:0 3px 3px 0}
-  .loc-near b{display:block;font-weight:700}
-  .loc-grp{display:block;font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.05em;margin-top:1px}
-  .loc-dist{display:inline-block;margin-top:3px;font-family:'Roboto Mono',monospace;font-size:11px;color:var(--dorado-text);font-weight:500}
-  .loc-copy{margin-top:10px;width:100%;background:transparent;border:1px solid var(--line);border-radius:3px;
-    padding:6px 8px;font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
-    color:var(--ink-2);cursor:pointer;transition:all .15s}
-  .loc-copy:hover{border-color:var(--guinda);color:var(--guinda);background:var(--bg-2)}
+  .loc-pop .mv{font-size:12.5px;font-weight:500;text-align:right}
+  .loc-pop .mv.mono{font-family:'Roboto Mono',monospace;font-size:11.5px;font-weight:400}
+  .loc-pop .loc-na{color:var(--muted);font-style:italic;font-weight:400}
+
+  /* Ir a la ficha */
+  .loc-pop .loc-goto{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:10px;
+    background:var(--guinda);border:none;border-radius:3px;padding:9px;cursor:pointer;
+    font-family:'Roboto',sans-serif;font-size:12.5px;font-weight:700;color:#fff}
+  .loc-pop .loc-goto:hover{background:#7d1839}
+  .loc-pop .loc-goto.ghost{background:transparent;border:1px solid var(--line);color:var(--ink-2);font-weight:500}
+  .loc-pop .loc-goto.ghost:hover{border-color:var(--guinda);color:var(--guinda);background:var(--bg-2)}
+  .loc-pop .loc-goto .ar{font-family:'Roboto Mono',monospace}
   /* Chip SC flotante en la ficha técnica (esquina inferior izquierda para no chocar con buscador) */
   /* El lienzo Leaflet de la ficha vive en su propio hijo para no borrar los flotantes */
   .map-canvas-inner{position:absolute;inset:0;z-index:0}
@@ -3320,6 +3351,92 @@ function _enSueloConservacion(latlng){
   if(!fs || !fs.length) return null;                    // capa aún no cargada
   return fs.some(f=>f.geometry && geoContainsPoint(latlng.lng, latlng.lat, f.geometry));
 }
+/* ── Universo completo de coberturas para el diagnóstico de campo ──
+   Consulta de SOLO LECTURA sobre inventario + ARCAC + Zona Patrimonio.
+   NO altera DATA, GEOMETRIES, contadores ni filtros: el inventario sigue
+   siendo 66 y los módulos especiales siguen aislados en sus propios GeoJSON. */
+const _COV_ORDEN = ['ANP · Federal','ANP · Local','AVA · Bosque Urbano','AVA · Barranca','ARCAC','ZP'];
+
+async function _cargarCapasCobertura(){
+  const t = [];
+  try{ if(typeof loadSueloConservacion==='function' && !SUELO_CONSERVACION) t.push(loadSueloConservacion()); }catch(_){}
+  try{ if(typeof loadARCAC==='function' && !ARCAC_GEO) t.push(loadARCAC()); }catch(_){}
+  try{ if(typeof loadZonaPatrimonio==='function' && !ZP_DESIGNACIONES) t.push(loadZonaPatrimonio()); }catch(_){}
+  if(t.length){ try{ await Promise.all(t); }catch(_){} }
+}
+
+function _zpColor(capa){
+  try{
+    const r = ZP_DATA.find(x=>x.key===capa);
+    if(r && r.color) return r.color;
+  }catch(_){}
+  return '#9d2148';
+}
+
+function _coberturasEn(latlng){
+  const out = [];
+  const dentro = (g)=> g && geoContainsPoint(latlng.lng, latlng.lat, g);
+
+  /* Inventario · 66 áreas */
+  ((typeof GEOMETRIES!=='undefined' && GEOMETRIES && GEOMETRIES.features)||[]).forEach(f=>{
+    if(!dentro(f.geometry)) return;
+    const nom = f.properties.nombre;
+    const d = (typeof DATA!=='undefined') ? DATA.find(x=>x.nombre===nom) : null;
+    out.push({
+      orden: f.properties.grupo,
+      color: (typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[f.properties.grupo]) || '#666',
+      tag: f.properties.grupo,
+      nombre: nom,
+      sub: d ? d.categoria : '',
+      meta: d ? `${fmt(d.superficie)} ha · Decreto ${d.fecha_decreto||'—'} · ${d.programa_manejo==='Sí'?'con PM':'sin PM'}` : '',
+      borde: _geomDistM(latlng.lat, latlng.lng, f.geometry),
+      ficha: 'inv::' + nom
+    });
+  });
+
+  /* ARCAC · 30 núcleos agrarios (módulo aparte) */
+  ((typeof ARCAC_GEO!=='undefined' && ARCAC_GEO && ARCAC_GEO.features)||[]).forEach(f=>{
+    if(!dentro(f.geometry)) return;
+    const pr = f.properties || {};
+    const ten = pr.tenencia || '';
+    out.push({
+      orden: 'ARCAC',
+      color: (typeof ARCAC_COLORS!=='undefined' && ARCAC_COLORS[ten]) || '#7048E8',
+      tag: 'ARCAC · ' + (ten || 'Núcleo agrario'),
+      nombre: pr.nombre || 'ARCAC',
+      sub: 'Área de Restauración y Conservación Ambiental Comunitaria',
+      meta: [pr.sup_ha ? `${fmt(pr.sup_ha)} ha` : '', 'núcleo agrario'].filter(Boolean).join(' · '),
+      borde: _geomDistM(latlng.lat, latlng.lng, f.geometry),
+      ficha: 'arcac::' + (pr.no != null ? pr.no : '')
+    });
+  });
+
+  /* Zona Patrimonio · designaciones internacionales (módulo aparte) */
+  ((typeof ZP_DESIGNACIONES!=='undefined' && ZP_DESIGNACIONES && ZP_DESIGNACIONES.features)||[]).forEach(f=>{
+    if(!dentro(f.geometry)) return;
+    const pr = f.properties || {};
+    const capa = pr.capa || '';
+    let row = null;
+    try{ row = ZP_DATA.find(x=>x.key===capa); }catch(_){}
+    out.push({
+      orden: 'ZP',
+      color: _zpColor(capa),
+      tag: 'Zona Patrimonio · ' + (pr.ambito || 'Designación'),
+      nombre: (row && row.nombre) || pr.nombre || 'Designación',
+      sub: (row && row.categoria) || '',
+      meta: [pr.superficie_ha ? `${fmt(pr.superficie_ha)} ha` : '', pr.anio ? `desde ${pr.anio}` : ''].filter(Boolean).join(' · '),
+      borde: _geomDistM(latlng.lat, latlng.lng, f.geometry),
+      ficha: 'zp::' + capa
+    });
+  });
+
+  out.sort((a,b)=>{
+    const ia=_COV_ORDEN.indexOf(a.orden), ib=_COV_ORDEN.indexOf(b.orden);
+    return (ia<0?99:ia)-(ib<0?99:ib);
+  });
+  return out;
+}
+
 function _masCercana(latlng, features){
   let best = null;
   (features||[]).forEach(f=>{
@@ -3360,9 +3477,11 @@ function _doLocate(map,getContainment,btn,getFeatures){
     const c=L.circle(e.latlng,{radius:e.accuracy||30,color:'#1971C2',weight:1,fillColor:'#1971C2',fillOpacity:0.12}).addTo(map);
     const m=L.circleMarker(e.latlng,{radius:7,color:'#fff',weight:2,fillColor:'#1971C2',fillOpacity:1}).addTo(map);
     _locateRefs.set(map,{m,c});
-    let names=[];
-    if(typeof getContainment==='function'){ try{ names=getContainment(e.latlng)||[]; }catch(_){} }
-    m.bindPopup(_locatePopupHTML(e.latlng, e.accuracy, names, getFeatures), {maxWidth:300, minWidth:250}).openPopup();
+    m.bindPopup('<div class="loc-pop"><div class="loc-loading">Consultando capas…</div></div>',
+                {maxWidth:320, minWidth:262}).openPopup();
+    _cargarCapasCobertura().then(()=>{
+      try{ m.setPopupContent(_locatePopupHTML(e.latlng, e.accuracy)); }catch(_){}
+    });
   });
   map.once('locationerror', ()=>{
     if(btn) btn.style.opacity = '';
@@ -3370,61 +3489,100 @@ function _doLocate(map,getContainment,btn,getFeatures){
   });
 }
 
-/* Ficha de diagnóstico del punto localizado (registro operativo, no divulgación) */
-function _locatePopupHTML(latlng, accuracy, names, getFeatures, opts){
+/* Ficha de ubicación en campo · uso operativo SEDEMA */
+function _locatePopupHTML(latlng, accuracy, _ignored, _ignored2, opts){
   opts = opts || {};
   const coord = `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
-  const alc = _alcaldiaEn(latlng);
-  const sc  = _enSueloConservacion(latlng);
-  const row = (k,v) => `<div class="loc-row"><span class="loc-k">${k}</span><span class="loc-v">${v}</span></div>`;
+  const acc   = accuracy ? Math.round(accuracy) : null;
+  const alc   = _alcaldiaEn(latlng);
+  const sc    = _enSueloConservacion(latlng);
+  const covs  = _coberturasEn(latlng);
 
-  let html = `<div class="loc-pop">
-    <div class="loc-title">${esc(opts.titulo || 'Punto localizado')}</div>`;
-  if(opts.etiqueta) html += `<div class="loc-label">${esc(opts.etiqueta)}</div>`;
-  html += `<div class="loc-coord" data-coord="${esc(coord)}">${coord}${
-      accuracy ? `<span class="loc-acc">± ${Math.round(accuracy)} m</span>` : ''}</div>`;
+  /* Aviso de precisión: si el borde está más cerca que el error del GPS,
+     la respuesta dentro/fuera no es concluyente y hay que decirlo. */
+  const aviso = (dist) => (acc && isFinite(dist) && dist < acc)
+    ? `<div class="cov-warn">A ${Math.round(dist)} m del límite · dentro del margen de error del GPS</div>`
+    : '';
 
-  html += row('Alcaldía', alc ? esc(alc) : '<span class="loc-na">fuera de la CDMX</span>');
+  let html = '<div class="loc-pop">';
 
-  if(sc === null) html += row('Suelo de Conservación', '<span class="loc-na">capa no cargada</span>');
-  else html += row('Suelo de Conservación', sc
-        ? '<span class="loc-si">Dentro</span>'
-        : '<span class="loc-no">Fuera</span>');
+  /* El badge ya dice la categoría: si el subtítulo la repite, no se imprime.
+     Compara sin acentos ni mayúsculas ("AVA · Barranca" vs "Barranca"). */
+  const _norm = t => String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  covs.forEach(c=>{
+    const subRedundante = c.sub && _norm(c.tag).includes(_norm(c.sub));
+    html += `<div class="cov" style="--c:${esc(c.color)}">
+      <span class="cov-tag">${esc(c.tag)}</span>
+      <div class="cov-name">${esc(c.nombre)}</div>
+      ${(c.sub && !subRedundante) ? `<div class="cov-sub">${esc(c.sub)}</div>` : ''}
+      ${c.meta ? `<div class="cov-meta">${esc(c.meta)}</div>` : ''}
+      ${aviso(c.borde)}
+      ${covs.length>1 ? `<button type="button" class="cov-link" data-ficha="${esc(c.ficha)}">Ver ficha →</button>` : ''}
+    </div>`;
+  });
 
-  if(names && names.length){
-    // Con el universo de features disponible se muestra también la categoría de cada
-    // polígono (AVA/ANP · subcategoría): para personal de SEDEMA el tipo es tan
-    // relevante como el nombre para saber qué instrumento aplica.
-    let detalle = null;
-    if(typeof getFeatures==='function'){
-      try{
-        detalle = (getFeatures()||[])
-          .filter(f=>f.geometry && geoContainsPoint(latlng.lng, latlng.lat, f.geometry))
-          .map(f=>({ nombre:(f.properties&&(f.properties.nombre||f.properties.capa))||'Polígono',
-                     grupo:(f.properties&&(f.properties.grupo||f.properties.tenencia))||'' }));
-        if(!detalle.length) detalle = null;
-      }catch(_){ detalle = null; }
-    }
-    const items = detalle || names.map(x=>({nombre:x, grupo:''}));
-    html += `<div class="loc-sep"></div>
-      <div class="loc-k">Dentro de ${items.length===1?'1 polígono':items.length+' polígonos'}</div>
-      <ul class="loc-list">${items.map(it=>
-        `<li><b>${esc(it.nombre)}</b>${it.grupo?`<span class="loc-grp">${esc(it.grupo)}</span>`:''}</li>`
-      ).join('')}</ul>`;
-  } else {
-    html += `<div class="loc-sep"></div>
-      <div class="loc-k">Sin cobertura en este punto</div>`;
-    let near = null;
-    if(typeof getFeatures==='function'){ try{ near = _masCercana(latlng, getFeatures()); }catch(_){} }
-    if(near){
-      html += `<div class="loc-near"><b>${esc(near.nombre)}</b>${near.grupo?`<span class="loc-grp">${esc(near.grupo)}</span>`:''}
-        <span class="loc-dist">a ${_fmtDist(near.d)}</span></div>`;
-    }
+  if(sc === true){
+    html += `<div class="cov sc-block" style="--c:#00838f">
+      <span class="cov-tag">Suelo de Conservación</span>
+      <div class="cov-name">Dentro del Suelo de Conservación</div>
+      <div class="cov-sub">${covs.length ? 'Régimen territorial aplicable en este punto'
+                                         : 'Sin área decretada de AVA, ANP ni ARCAC en este punto'}</div>
+    </div>`;
   }
 
-  html += `<button type="button" class="loc-copy" id="locCopyBtn">Copiar coordenadas</button></div>`;
-  return html;
+  let cercana = null;
+  if(!covs.length){
+    cercana = _masCercana(latlng, (typeof GEOMETRIES!=='undefined' && GEOMETRIES && GEOMETRIES.features)||[]);
+    html += `<div class="nocov${sc===true?' tras-sc':''}">`;
+    if(sc !== true){
+      html += `<span class="cov-tag">Sin cobertura</span>
+        <div class="nocov-t">El punto no cae en ninguna AVA, ANP, ARCAC ni en Suelo de Conservación.</div>`;
+    }
+    if(cercana){
+      html += `<div class="near" style="--c:${esc((typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[cercana.grupo])||'#8a8d8f')}">
+        <span class="near-k">Área decretada más cercana</span>
+        <b>${esc(cercana.nombre)}</b>
+        ${cercana.grupo ? `<span class="near-g">${esc(cercana.grupo)}</span>` : ''}
+        <span class="near-m">a ${_fmtDist(cercana.d)}</span>
+        ${aviso(cercana.d)}
+      </div>`;
+    }
+    html += '</div>';
+  }
+
+  html += '<div class="loc-meta">';
+  html += `<div class="mrow"><span class="mk">Alcaldía</span><span class="mv">${
+    alc ? esc(alc) : '<span class="loc-na">fuera de la CDMX</span>'}</span></div>`;
+  if(sc === false) html += `<div class="mrow"><span class="mk">Suelo de Conservación</span><span class="mv loc-na">Fuera</span></div>`;
+  if(sc === null)  html += `<div class="mrow"><span class="mk">Suelo de Conservación</span><span class="mv loc-na">capa no cargada</span></div>`;
+  html += `<div class="mrow"><span class="mk">${esc(opts.titulo || 'Punto localizado')}</span>
+    <span class="mv mono">${coord}</span></div>`;
+  if(acc) html += `<div class="mrow"><span class="mk">Precisión GPS</span><span class="mv mono">± ${acc} m</span></div>`;
+  html += '</div>';
+
+  if(covs.length === 1){
+    html += `<button type="button" class="loc-goto" data-ficha="${esc(covs[0].ficha)}">Ir a la ficha <span class="ar">→</span></button>`;
+  } else if(!covs.length && cercana){
+    html += `<button type="button" class="loc-goto ghost" data-ficha="inv::${esc(cercana.nombre)}">Ir a la ficha de la más cercana <span class="ar">→</span></button>`;
+  }
+
+  return html + '</div>';
 }
+
+/* Acciones del popup: abrir ficha y copiar coordenada (delegadas: el popup se recrea) */
+document.addEventListener('click', ev=>{
+  const t = ev.target.closest && ev.target.closest('[data-ficha]');
+  if(t){
+    const raw = t.dataset.ficha || '';
+    const i = raw.indexOf('::');
+    const tipo = raw.slice(0, i), ref = raw.slice(i+2);
+    try{
+      if(tipo==='inv'){ const a = DATA.find(d=>d.nombre===ref); if(a) openDrawer(a); }
+      else if(tipo==='arcac' && ref !== ''){ openARCACFicha(Number(ref)); }
+      else if(tipo==='zp'){ openZPFicha(ref); }
+    }catch(err){ siaToast('No se pudo abrir la ficha de esta área.'); }
+  }
+});
 
 /* Copiar coordenadas desde el popup (delegado: el popup se crea y destruye) */
 document.addEventListener('click', ev=>{
@@ -4367,13 +4525,13 @@ function attachMapSearch(containerId, mapInstance, getFeatures){
       icon: L.divIcon({ className: 'search-result-marker', iconSize: [18, 18] })
     }).addTo(mapInstance);
     // Mismo diagnóstico que «Ubicarme»: da igual si llegaste por GPS o tecleando la coordenada
-    const _names = featuresContaining(getFeatures(), {lat, lng});
-    currentMarker.bindPopup(
-      _locatePopupHTML({lat, lng}, null, _names, getFeatures,
-        { titulo: 'Coordenada consultada', etiqueta: label || null }),
-      {maxWidth:300, minWidth:250}
-    );
+    currentMarker.bindPopup('<div class="loc-pop"><div class="loc-loading">Consultando capas…</div></div>',
+                            {maxWidth:320, minWidth:262});
     setTimeout(()=>{ try{ currentMarker.openPopup(); }catch(e){} }, 850);
+    _cargarCapasCobertura().then(()=>{
+      try{ currentMarker.setPopupContent(
+        _locatePopupHTML({lat, lng}, null, null, null, {titulo:'Coordenada consultada'})); }catch(e){}
+    });
     mapInstance.flyTo([lat, lng], Math.max(mapInstance.getZoom(), 14), { duration: 0.8 });
   }
 
@@ -4630,6 +4788,158 @@ function initMapForArea(d){
   addSearchMarkerTo(activeMap);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   Imagen compartible de la ficha · se dibuja con Canvas, sin librerías.
+   No es una captura del DOM: es una lámina institucional con el polígono
+   y los datos duros, pensada para pegarse en WhatsApp, un oficio o una minuta.
+   ═══════════════════════════════════════════════════════════════════════ */
+function _wrapText(ctx, txt, maxW){
+  const words = String(txt||'').split(/\s+/); const lines=[]; let cur='';
+  words.forEach(w=>{
+    const t = cur ? cur+' '+w : w;
+    if(ctx.measureText(t).width > maxW && cur){ lines.push(cur); cur=w; }
+    else cur=t;
+  });
+  if(cur) lines.push(cur);
+  return lines;
+}
+
+function _drawGeoInBox(ctx, geoIn, x, y, w, h, color){
+  /* findGeometry() devuelve un Feature, no una geometría: hay que desenvolverlo */
+  const geo = (geoIn && geoIn.type==='Feature') ? geoIn.geometry : geoIn;
+  if(!geo) return;
+  const polys = geo.type==='Polygon' ? [geo.coordinates]
+              : geo.type==='MultiPolygon' ? geo.coordinates : [];
+  if(!polys.length) return;
+  let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+  polys.forEach(p=>p.forEach(r=>r.forEach(c=>{
+    if(c[0]<minX)minX=c[0]; if(c[0]>maxX)maxX=c[0];
+    if(c[1]<minY)minY=c[1]; if(c[1]>maxY)maxY=c[1];
+  })));
+  const lat0=(minY+maxY)/2, k=Math.cos(lat0*Math.PI/180);
+  const gw=(maxX-minX)*k, gh=(maxY-minY);
+  if(!gw || !gh) return;
+  const sc = Math.min((w-40)/gw, (h-40)/gh);
+  const ox = x + w/2, oy = y + h/2;
+  const P = c => [ ox + (c[0]-(minX+maxX)/2)*k*sc, oy - (c[1]-lat0)*sc ];
+  ctx.save();
+  polys.forEach(poly=>{
+    ctx.beginPath();
+    poly.forEach(ring=>{
+      ring.forEach((c,i)=>{ const [px,py]=P(c); i?ctx.lineTo(px,py):ctx.moveTo(px,py); });
+      ctx.closePath();
+    });
+    ctx.fillStyle = color + '33'; ctx.fill('evenodd');
+    ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.lineJoin='round'; ctx.stroke();
+  });
+  ctx.restore();
+}
+
+async function compartirFichaImagen(d, btn){
+  const W=1080, H=1440;
+  try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(_){}
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const ctx=cv.getContext('2d');
+  const color = (typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[d.grupo]) || '#9d2148';
+
+  ctx.fillStyle='#fffdf0'; ctx.fillRect(0,0,W,H);
+
+  /* Encabezado institucional */
+  let y=54;
+  const logo=document.querySelector('.logo-inst');
+  if(logo && logo.complete && logo.naturalWidth){
+    const lw=Math.min(600, W-96), lh=lw*logo.naturalHeight/logo.naturalWidth;
+    try{ ctx.drawImage(logo,48,y,lw,lh); y+=lh+26; }catch(_){ y+=20; }
+  }
+  ctx.fillStyle='#9d2148'; ctx.fillRect(48,y,W-96,3); y+=44;
+
+  /* Badge de categoría */
+  ctx.font='600 22px "Roboto Mono", monospace';
+  const tag=`${d.tipo} · ${d.jurisdiccion}`.toUpperCase();
+  const tw=ctx.measureText(tag).width;
+  ctx.fillStyle=color; ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(48,y-4,tw+32,42,5) : ctx.rect(48,y-4,tw+32,42);
+  ctx.fill();
+  ctx.fillStyle='#fff'; ctx.fillText(tag,64,y+24); y+=76;
+
+  /* Nombre */
+  ctx.fillStyle='#2a2a2a'; ctx.font='900 54px Roboto, sans-serif';
+  _wrapText(ctx,d.nombre,W-96).forEach(l=>{ ctx.fillText(l,48,y); y+=62; });
+  y+=6;
+  ctx.fillStyle='#55585a'; ctx.font='400 28px Roboto, sans-serif';
+  ctx.fillText(d.categoria||'',48,y); y+=44;
+
+  /* Polígono */
+  const geo=(typeof findGeometry==='function') ? findGeometry(d) : null;
+  const boxH=430;
+  ctx.fillStyle='#f8f4e0'; ctx.fillRect(48,y,W-96,boxH);
+  ctx.strokeStyle='#eae4cf'; ctx.lineWidth=2; ctx.strokeRect(48,y,W-96,boxH);
+  if(geo) _drawGeoInBox(ctx,geo,48,y,W-96,boxH,color);
+  else{
+    ctx.fillStyle='#8a8d8f'; ctx.font='400 26px Roboto, sans-serif';
+    ctx.fillText('Polígono no disponible',48+30,y+boxH/2);
+  }
+  y+=boxH+50;
+
+  /* Superficie */
+  ctx.fillStyle=color; ctx.font='900 70px Roboto, sans-serif';
+  ctx.fillText(fmt(d.superficie),48,y);
+  const sw=ctx.measureText(fmt(d.superficie)).width;
+  ctx.fillStyle='#8a8d8f'; ctx.font='400 30px Roboto, sans-serif'; ctx.fillText(' ha',48+sw+10,y);
+  y+=34;
+  ctx.fillStyle='#8a8d8f'; ctx.font='500 20px "Roboto Mono", monospace';
+  ctx.fillText('SUPERFICIE DECRETADA',48,y); y+=52;
+
+  /* Datos duros */
+  const filas=[
+    /* SUBCATEGORÍA ya aparece bajo el nombre: no se repite aquí */
+    ['ALCALDÍA(S)',  d.alcaldia||'—'],
+    ['DECRETO',      d.fecha_decreto||'—'],
+    ['PROGRAMA DE MANEJO', d.programa_manejo==='Sí' ? ('Sí' + (d.fecha_pm ? ' · '+d.fecha_pm : '')) : 'No'],
+    ['SUELO DE CONSERVACIÓN', d.suelo_conservacion==='Sí' ? 'Dentro' : 'Fuera'],
+    ['DG RESPONSABLE', d.dg_responsable||'—']
+  ];
+  filas.forEach(([k,v])=>{
+    ctx.fillStyle='#8a8d8f'; ctx.font='500 19px "Roboto Mono", monospace'; ctx.fillText(k,48,y);
+    ctx.fillStyle='#2a2a2a'; ctx.font='500 25px Roboto, sans-serif';
+    const lines=_wrapText(ctx,v,W-96-330);
+    ctx.fillText(lines[0]||'',378,y);
+    ctx.strokeStyle='#eae4cf'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(48,y+14); ctx.lineTo(W-48,y+14); ctx.stroke();
+    y+=46;
+  });
+
+  /* Pie */
+  y=H-58;
+  ctx.fillStyle='#9d2148'; ctx.fillRect(0,H-92,W,3);
+  ctx.fillStyle='#55585a'; ctx.font='400 19px "Roboto Mono", monospace';
+  const hoy=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
+  ctx.fillText('Sistema de Información Ambiental · SEDEMA CDMX',48,y);
+  ctx.fillStyle='#8a8d8f'; ctx.font='400 17px "Roboto Mono", monospace';
+  ctx.fillText('Consulta: '+hoy,48,y+26);
+
+  /* Compartir o descargar */
+  const nombreArchivo = 'SIA_' + slugify(d.nombre) + '.png';
+  return new Promise(res=>{
+    cv.toBlob(async blob=>{
+      if(!blob){ siaToast('No se pudo generar la imagen.'); return res(false); }
+      const file = new File([blob], nombreArchivo, {type:'image/png'});
+      try{
+        if(navigator.canShare && navigator.canShare({files:[file]})){
+          await navigator.share({files:[file], title:d.nombre});
+          return res(true);
+        }
+      }catch(err){ if(err && err.name==='AbortError') return res(false); }
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob); a.download=nombreArchivo;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+      siaToast('Imagen descargada: ' + nombreArchivo);
+      res(true);
+    },'image/png');
+  });
+}
+
 const bd=document.getElementById('bd'),dr=document.getElementById('dr'),drIn=document.getElementById('drIn');
 function openDrawer(d){
   const legalParts = getLegalContext(d);
@@ -4647,9 +4957,9 @@ function openDrawer(d){
         <h2>${esc(d.nombre)}</h2>
         <div class="subcat">${esc(d.categoria)}</div>
       </div>
-      <button class="btn-share-area" id="btnShareArea" type="button" aria-label="Copiar enlace de esta ficha">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
-        <span class="btn-share-text">Compartir enlace</span>
+      <button class="btn-share-area" id="btnShareArea" type="button" aria-label="Compartir esta ficha como imagen">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        <span class="btn-share-text">Compartir imagen</span>
       </button>
     </div>
 
@@ -4722,31 +5032,15 @@ function openDrawer(d){
   const shareBtn = document.getElementById('btnShareArea');
   if(shareBtn){
     shareBtn.addEventListener('click', async () => {
-      const url = location.origin + location.pathname + `#area=${slugify(d.nombre)}`;
       const textSpan = shareBtn.querySelector('.btn-share-text');
-      const originalText = textSpan.textContent;
-      try {
-        // Web Share API (móvil) si está disponible y el dispositivo lo soporta
-        if(navigator.share && /Mobi|Android/i.test(navigator.userAgent)){
-          await navigator.share({
-            title: `${d.nombre} · SIA SEDEMA`,
-            text: `${d.nombre} — ${d.categoria} (${d.tipo} · ${d.jurisdiccion})`,
-            url: url
-          });
-        } else {
-          // Desktop o navegador sin Web Share: copiar al portapapeles
-          await navigator.clipboard.writeText(url);
-          shareBtn.classList.add('copied');
-          textSpan.textContent = 'Enlace copiado ✓';
-          setTimeout(() => {
-            shareBtn.classList.remove('copied');
-            textSpan.textContent = originalText;
-          }, 2200);
-        }
-      } catch(err){
-        console.error('[Compartir] Error:', err);
-        // Fallback: mostrar la URL en un prompt
-        prompt('Copia este enlace para compartir:', url);
+      const original = textSpan ? textSpan.textContent : '';
+      if(textSpan) textSpan.textContent = 'Generando…';
+      shareBtn.disabled = true;
+      try{ await compartirFichaImagen(d, shareBtn); }
+      catch(err){ siaToast('No se pudo generar la imagen de la ficha.'); }
+      finally{
+        shareBtn.disabled = false;
+        if(textSpan) textSpan.textContent = original;
       }
     });
   }
