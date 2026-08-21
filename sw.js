@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-08-21e';
+const CACHE_VERSION = 'sia-v35-2026-08-21f';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
