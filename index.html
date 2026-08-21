@@ -137,17 +137,19 @@
   .tab[data-id="METAS"].active{background:var(--guinda);color:var(--crema)}
   .tab[data-id="LEGAL"].active{background:var(--legal);color:var(--crema)}
 
-  /* === Menú «Más ▾» · overflow de módulos analíticos (Análisis · Metas · Marco Jurídico) === */
-  .more-wrap{position:relative;flex:0 0 auto;display:flex}
-  .more-btn{display:flex;align-items:center;gap:7px;padding:9px 14px;border:none;border-left:1px solid var(--line-soft);
-    background:transparent;cursor:pointer;font-family:'Roboto',sans-serif;font-size:12.5px;font-weight:700;
-    color:var(--ink-2);border-radius:3px;transition:background .18s,color .18s;white-space:nowrap}
-  .more-btn:hover{background:var(--bg-2)}
-  .more-btn:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
-  .more-btn.active{background:var(--guinda);color:var(--crema);border-left-color:transparent;box-shadow:0 2px 8px rgba(157,33,72,.25)}
-  .more-caret{font-size:10px;opacity:.7;transition:transform .18s}
+  /* === Menú «Más» · overflow de módulos analíticos (Análisis · Metas · Marco Jurídico) ===
+     El botón reutiliza la clase .tab: hereda toda la maquetación y el responsive de una
+     pestaña normal, y solo sobreescribe fondo y borde para leerse como control. */
+  .more-wrap{position:relative;flex:1 1 0;min-width:0;display:flex}
+  .more-btn{flex:1 1 auto;width:100%;background:var(--bg-2);border-left:1px solid var(--line);box-shadow:inset 0 0 0 1px rgba(178,142,92,.18)}
+  .more-btn:hover{background:var(--bg-3)}
+  .more-btn .tab-icon{color:var(--dorado-text)}
+  .more-btn.active{background:var(--guinda);color:var(--crema);border-left-color:transparent;
+    box-shadow:0 2px 8px rgba(157,33,72,.25)}
+  .more-btn.active .tab-icon,.more-btn.active .tab-num{color:var(--crema)}
+  .more-caret{font-size:9px;opacity:.65;margin-left:5px;display:inline-block;transition:transform .18s}
   .more-wrap.open .more-caret{transform:rotate(180deg)}
-  .more-menu{position:absolute;right:0;top:calc(100% + 6px);min-width:264px;background:var(--card);
+  .more-menu{position:absolute;right:0;top:calc(100% + 6px);min-width:272px;background:var(--card);
     border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 10px 28px -8px rgba(42,42,42,.3);
     padding:5px;z-index:60;display:none}
   .more-wrap.open .more-menu{display:block}
@@ -659,6 +661,8 @@
   /* Marcador del resultado de búsqueda */
   .search-result-marker{background:var(--guinda);border:3px solid #fff;border-radius:50%;width:18px !important;height:18px !important;margin-left:-9px !important;margin-top:-9px !important;box-shadow:0 2px 6px rgba(0,0,0,.4)}
   /* Chip SC flotante en la ficha técnica (esquina inferior izquierda para no chocar con buscador) */
+  /* El lienzo Leaflet de la ficha vive en su propio hijo para no borrar los flotantes */
+  .map-canvas-inner{position:absolute;inset:0;z-index:0}
   .drawer-sc-floating{position:absolute;bottom:10px;left:10px;z-index:500}
   .drawer-sc-floating .map-filter-chip{box-shadow:0 2px 6px rgba(0,0,0,.15);font-size:11px;padding:5px 10px}
   .map-block-toggle{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden}
@@ -775,14 +779,15 @@
   @media (max-width:1200px){
     .wrap{padding:28px 22px 70px}
     h1{font-size:28px}
-    .tabs{flex-wrap:wrap}
+    .tabs{flex-wrap:wrap;position:relative}
     .tab{flex:1 1 calc(25% - 3px);padding:9px 10px;gap:9px;font-size:12px}
     .tab-name{font-size:12px}
     .tab-num{display:none}
     .tab-icon{width:20px;height:20px}
-    .more-wrap{flex:1 1 calc(25% - 3px)}
-    .more-btn{width:100%;justify-content:center;border-left:none;padding:9px 10px;font-size:12px}
-    .more-menu{left:0;right:auto;width:100%;min-width:0}
+    .more-wrap{flex:1 1 calc(25% - 3px);position:static}
+    .more-btn{flex:1 1 auto;border-left:none}
+    /* Anclado a .tabs (no al botón): se abre a todo el ancho de la barra */
+    .more-menu{left:4px;right:4px;width:auto;min-width:0;top:calc(100% + 4px)}
     .hero{grid-template-columns:repeat(2,1fr)}
     .legal-grid-3{grid-template-columns:1fr 1fr}
   }
@@ -883,9 +888,14 @@
     .tabs{padding:4px;flex-wrap:wrap;overflow:visible;-webkit-mask-image:none;mask-image:none;gap:3px}
     .tab{flex:0 0 calc(25% - 3px);min-width:0;padding:8px 4px;flex-direction:column;align-items:center;gap:4px;text-align:center}
     .more-wrap{flex:0 0 calc(25% - 3px)}
-    .more-btn{width:100%;flex-direction:row;justify-content:center;gap:6px;padding:8px 4px;font-size:10.5px;font-weight:700}
-    .more-menu .tab{flex-direction:row;align-items:center;text-align:left;padding:10px 12px;gap:10px}
-    .more-menu .tab .tab-num{display:block}
+    .more-btn{flex:1 1 auto}
+    /* Las filas del menú vuelven a ser horizontales y alineadas a la izquierda:
+       heredaban .tab-content{align-items:center} y el texto se salía del panel. */
+    .more-menu .tab{flex-direction:row;align-items:center;text-align:left;padding:11px 12px;gap:10px}
+    .more-menu .tab .tab-icon{margin:0}
+    .more-menu .tab .tab-content{align-items:flex-start;text-align:left;width:auto;gap:2px;min-width:0}
+    .more-menu .tab .tab-name{white-space:nowrap;font-size:12.5px;text-align:left}
+    .more-menu .tab .tab-num{display:block;font-size:10px}
     .tab-icon{width:20px;height:20px;margin:0 auto}
     .tab-content{align-items:center;text-align:center;width:100%;gap:0}
     .tab-name{font-size:10.5px;line-height:1.2;white-space:normal;text-align:center}
@@ -1438,6 +1448,8 @@ const TAB_ICONS = {
    NO altera DATA, GEOMETRIES, contadores ni filtros. */
 const SECONDARY_TABS = new Set(['ANALISIS','METAS','LEGAL']);
 
+const MORE_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>';
+
 function tabSubtitle(g, compact){
   if(g.id==='LEGAL') return 'LACM · 18 JUL 2024';
   if(g.id==='METAS') return 'LÍNEA BASE 2018-2024';
@@ -1476,10 +1488,14 @@ function buildTabs(){
   const activeSec = secondary.find(g=>g.id===state.tab);
   el.innerHTML = primary.map(g=>tabHTML(g,true)).join('') +
     `<div class="more-wrap" id="moreWrap">
-      <button type="button" class="more-btn ${activeSec?'active':''}" id="moreBtn"
+      <button type="button" class="tab more-btn ${activeSec?'active':''}" id="moreBtn"
               aria-haspopup="true" aria-expanded="false" aria-controls="moreMenu"
               title="Análisis · Metas · Marco Jurídico">
-        <span class="more-label">${activeSec ? activeSec.label : 'Más'}</span><span class="more-caret" aria-hidden="true">▾</span>
+        <span class="tab-icon" aria-hidden="true">${activeSec ? (TAB_ICONS[activeSec.id]||MORE_ICON) : MORE_ICON}</span>
+        <span class="tab-content">
+          <span class="tab-name">${activeSec ? activeSec.label : 'Más'}<span class="more-caret" aria-hidden="true">▾</span></span>
+          <span class="tab-num">${activeSec ? tabSubtitle(activeSec,true) : '3 MÓDULOS'}</span>
+        </span>
       </button>
       <div class="more-menu" id="moreMenu" role="menu">${secondary.map(g=>tabHTML(g,false)).join('')}</div>
     </div>`;
@@ -1490,7 +1506,7 @@ function buildTabs(){
     const open = mw.classList.toggle('open');
     mb.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
-  el.querySelectorAll('.tab').forEach(b=>{
+  el.querySelectorAll('.tab[data-id]').forEach(b=>{
     b.addEventListener('click',()=>{
       state.tab = b.dataset.id;
       state.q=''; state.fJur=''; state.fCat=''; state.fAlc=''; state.fPM=''; state.fTipo=''; state.fSC=''; state.fDG='';
@@ -3104,6 +3120,32 @@ function getZPAllFeatures(){
   }
   return out;
 }
+/* ===== Botón "Vista general": devuelve el mapa a su encuadre inicial =====
+   Se guarda el bounds de origen en map._siaHome al construir cada mapa.
+   Útil sobre todo después de buscar una coordenada, que desplaza la vista. */
+function addResetViewControl(map, title){
+  if(!map || typeof L==='undefined') return;
+  const Ctrl = L.Control.extend({
+    options:{position:'topleft'},
+    onAdd:function(){
+      const c = L.DomUtil.create('div','leaflet-bar resetview-ctrl');
+      const a = L.DomUtil.create('a','',c);
+      a.href='#'; a.title=title||'Vista general'; a.setAttribute('role','button');
+      a.setAttribute('aria-label', title||'Vista general');
+      a.style.cssText = 'display:flex;align-items:center;justify-content:center;color:#9d2148';
+      a.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4"/><path d="M20 9V5a1 1 0 0 0-1-1h-4"/><path d="M4 15v4a1 1 0 0 0 1 1h4"/><path d="M20 15v4a1 1 0 0 1-1 1h-4"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>';
+      L.DomEvent.on(a,'click',L.DomEvent.stopPropagation).on(a,'click',L.DomEvent.preventDefault)
+        .on(a,'click',()=>{
+          const b = map._siaHome;
+          if(b && b.isValid && b.isValid()) map.fitBounds(b, {padding:[20,20], maxZoom:16});
+          else siaToast('Todavía no hay una vista general disponible para este mapa.');
+        });
+      return c;
+    }
+  });
+  map.addControl(new Ctrl());
+}
+
 const _locateRefs = new WeakMap();
 function addLocateControl(map, getContainment){
   if(!map || typeof L==='undefined') return;
@@ -3221,10 +3263,11 @@ function initZPFichaMap(row){
   }).addTo(activeMap);
   activeGeoLayer.bindTooltip(row.nombre, {sticky:true, direction:'top'});
   activeGeoLayer.bringToFront();
-  try{ activeMap.fitBounds(activeGeoLayer.getBounds(), {padding:[20,20], maxZoom:15}); }catch(e){}
+  try{ activeMap.fitBounds(activeGeoLayer.getBounds(), {padding:[20,20], maxZoom:15}); activeMap._siaHome = activeGeoLayer.getBounds(); }catch(e){}
   activeMap.on('click focus', ()=> activeMap.scrollWheelZoom.enable());
   activeMap.on('mouseout',   ()=> activeMap.scrollWheelZoom.disable());
   addLocateControl(activeMap, ll=>featuresContaining(getZPAllFeatures(), ll));
+  addResetViewControl(activeMap, 'Volver al polígono');
   addSearchMarkerTo(activeMap);
 }
 
@@ -3333,7 +3376,7 @@ async function initZPMap(){
       try{ bounds.extend(lyr.getBounds()); }catch(e){}
     });
 
-  if(bounds.isValid()) zpMap.fitBounds(bounds, {padding:[20,20]});
+  if(bounds.isValid()){ zpMap.fitBounds(bounds, {padding:[20,20]}); zpMap._siaHome = bounds; }
 
   // (c) Embarcaderos — capa de puntos toggleable por tipo (Turístico / Productivo).
   //     Archivo propio y opcional; si no existe, simplemente no se generan chips.
@@ -3380,6 +3423,7 @@ async function initZPMap(){
 
   // Buscador de dirección / coordenadas (reutiliza el geocoder existente)
   attachMapSearch('zpMapSearch', zpMap);
+  addResetViewControl(zpMap, 'Vista general · Zona Patrimonio');
   addLocateControl(zpMap, ll=>featuresContaining(getZPAllFeatures(), ll));
 
   // Toggle de capa base Mapa/Satélite — clone-and-replace para evitar listeners duplicados al re-inicializar
@@ -3622,10 +3666,11 @@ function initARCACFichaMap(no){
   const col = feat.properties._color || '#7048E8';
   activeGeoLayer = L.geoJSON(feat, {style:{color:col, weight:2, fillColor:col, fillOpacity:0.28}}).addTo(activeMap);
   activeGeoLayer.bindTooltip(`${feat.properties.nombre} · ${feat.properties.tenencia}`, {sticky:true, direction:'top'});
-  try{ activeMap.fitBounds(activeGeoLayer.getBounds(), {padding:[20,20], maxZoom:15}); }catch(e){}
+  try{ activeMap.fitBounds(activeGeoLayer.getBounds(), {padding:[20,20], maxZoom:15}); activeMap._siaHome = activeGeoLayer.getBounds(); }catch(e){}
   activeMap.on('click focus', ()=> activeMap.scrollWheelZoom.enable());
   activeMap.on('mouseout', ()=> activeMap.scrollWheelZoom.disable());
   addLocateControl(activeMap, ll=>featuresContaining((ARCAC_GEO&&ARCAC_GEO.features)||[], ll));
+  addResetViewControl(activeMap, 'Volver al polígono');
   addSearchMarkerTo(activeMap);
 }
 
@@ -3700,7 +3745,7 @@ async function initARCACMap(){
     arcacLayers[ten] = {layer:lyr, color:ARCAC_COLORS[ten], label:`${ten}s (${feats.length})`};
     try{ bounds.extend(lyr.getBounds()); }catch(e){}
   });
-  if(bounds.isValid()) arcacMap.fitBounds(bounds,{padding:[20,20]});
+  if(bounds.isValid()){ arcacMap.fitBounds(bounds,{padding:[20,20]}); arcacMap._siaHome = bounds; }
 
   // Chips: filtro del mapa por tenencia (color = badge de tenencia)
   const cont = document.getElementById('arcacFilters');
@@ -3736,6 +3781,7 @@ async function initARCACMap(){
   renderArcacRows();
 
   attachMapSearch('arcacMapSearch', arcacMap);
+  addResetViewControl(arcacMap, 'Vista general · ARCAC');
   addLocateControl(arcacMap, ll=>featuresContaining((ARCAC_GEO&&ARCAC_GEO.features)||[], ll));
   setTimeout(()=>{ try{ arcacMap.invalidateSize(); }catch(e){} }, 120);
 }
@@ -3841,7 +3887,7 @@ async function initGlobalMap(){
     if(features.length) allBounds.extend(layer.getBounds());
   });
   
-  if(allBounds.isValid()) globalMap.fitBounds(allBounds, {padding:[20,20]});
+  if(allBounds.isValid()){ globalMap.fitBounds(allBounds, {padding:[20,20]}); globalMap._siaHome = allBounds; }
 
   // Aplicar resaltado de coadministración si el filtro estaba activo
   if(state.highlightCoadmin) applyCoadminHighlight();
@@ -3868,6 +3914,7 @@ async function initGlobalMap(){
   // Buscador de direcciones / coordenadas
   attachMapSearch('globalMapSearch', globalMap);
   addLocateControl(globalMap, ll=>featuresContaining(GEOMETRIES&&GEOMETRIES.features, ll));
+  addResetViewControl(globalMap, 'Vista general · todas las áreas');
 
   // Overlay ARCAC (núcleos agrarios) — apagado por defecto, se activa con su chip
   globalArcacLayer = null;
@@ -4281,6 +4328,7 @@ function setBaseLayer(key){
 function initMapForArea(d){
   const container = document.getElementById('mapCanvas');
   if(!container || typeof L === 'undefined') return;
+  const canvas = document.getElementById('mapCanvasMap') || container;
   const geo = findGeometry(d);
   if(!geo){
     container.classList.add('no-data');
@@ -4288,8 +4336,8 @@ function initMapForArea(d){
     return;
   }
   container.classList.remove('no-data');
-  container.innerHTML = '';
-  activeMap = L.map(container, { zoomControl: true, scrollWheelZoom: false, attributionControl: true });
+  canvas.innerHTML = '';   // solo el lienzo del mapa: los flotantes se conservan
+  activeMap = L.map(canvas, { zoomControl: true, scrollWheelZoom: false, attributionControl: true });
   setBaseLayer('positron');
   // Capa de alcaldías como contexto territorial (dibujada antes del polígono para que quede debajo)
   createAlcaldiasLayer({interactive:true}).addTo(activeMap);
@@ -4304,6 +4352,7 @@ function initMapForArea(d){
   activeGeoLayer.bindTooltip(d.nombre, {sticky: true, direction: 'top'});
   activeGeoLayer.bringToFront();
   activeMap.fitBounds(activeGeoLayer.getBounds(), {padding: [20,20], maxZoom: 16});
+  try{ activeMap._siaHome = activeGeoLayer.getBounds(); }catch(e){}
   // Habilita scroll-wheel solo después de clic en el mapa (mejor UX)
   activeMap.on('click focus', ()=>activeMap.scrollWheelZoom.enable());
   activeMap.on('mouseout', ()=>activeMap.scrollWheelZoom.disable());
@@ -4316,6 +4365,7 @@ function initMapForArea(d){
   attachFullscreenBtn(container, activeMap);
   attachMapSearch('drawerMapSearch', activeMap);
   addLocateControl(activeMap, ll=>featuresContaining(GEOMETRIES&&GEOMETRIES.features, ll));
+  addResetViewControl(activeMap, 'Volver al polígono del área');
   addSearchMarkerTo(activeMap);
 }
 
@@ -4344,6 +4394,7 @@ function openDrawer(d){
 
     <div class="map-block">
       <div class="map-canvas" id="mapCanvas" style="position:relative">
+        <div class="map-canvas-inner" id="mapCanvasMap"></div>
         <div class="map-search-float" id="drawerMapSearch">
           <input type="text" class="map-search-input" placeholder="Buscar dirección o coordenadas…" aria-label="Buscar en el mapa">
           <button class="map-search-btn" type="button" aria-label="Buscar">
