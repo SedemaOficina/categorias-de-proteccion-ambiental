@@ -663,6 +663,12 @@
   /* Chip SC flotante en la ficha técnica (esquina inferior izquierda para no chocar con buscador) */
   /* El lienzo Leaflet de la ficha vive en su propio hijo para no borrar los flotantes */
   .map-canvas-inner{position:absolute;inset:0;z-index:0}
+  /* Ficha: el panel mide 580px, así que el buscador (316px desde left:50) se encimaba
+     con el toggle Mapa/Satélite + pantalla completa (262px desde la derecha).
+     El buscador toma el ancho disponible y los controles bajan una fila. */
+  #mapCanvas .map-search-float{left:50px;right:10px;max-width:none}
+  #mapCanvas .map-search-input{width:100%}
+  #mapCanvas .map-block-controls-floating{top:52px}
   .drawer-sc-floating{position:absolute;bottom:10px;left:10px;z-index:500}
   .drawer-sc-floating .map-filter-chip{box-shadow:0 2px 6px rgba(0,0,0,.15);font-size:11px;padding:5px 10px}
   .map-block-toggle{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden}
