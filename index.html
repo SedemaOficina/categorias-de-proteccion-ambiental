@@ -134,6 +134,8 @@
   .tab[data-id="ZP"].active{background:#9d2148;color:var(--crema)}
   .tab[data-id="ARCAC"]:not(.active) .tab-icon{color:#7048E8}
   .tab[data-id="ARCAC"].active{background:#7048E8;color:var(--crema)}
+  .tab[data-id="TRASLAPES"]:not(.active) .tab-icon{color:#d72f89}
+  .tab[data-id="TRASLAPES"].active{background:#d72f89;color:var(--crema)}
   .tab[data-id="METAS"].active{background:var(--guinda);color:var(--crema)}
   .tab[data-id="LEGAL"].active{background:var(--legal);color:var(--crema)}
 
@@ -1371,6 +1373,7 @@ const GROUPS = [
   {id:'ANPF',    label:'ANP Federales',   cls:'anpf',   key:'ANP · Federal'},
   {id:'ZP',      label:'Zona Patrimonio', cls:'zp',     key:'ZONA_PATRIMONIO'},
   {id:'ARCAC',   label:'ARCAC',           cls:'arcac',  key:'ARCAC'},
+  {id:'TRASLAPES',label:'Traslapes',      cls:'traslapes',key:'TRASLAPES'},
   {id:'ANALISIS',label:'Análisis',        cls:'analisis',key:'ANALISIS'},
   {id:'METAS',   label:'Metas',           cls:'metas',  key:'METAS'},
   {id:'LEGAL',   label:'Marco Jurídico',  cls:'legal',  key:'LEGAL'},
@@ -1625,13 +1628,14 @@ const TAB_ICONS = {
   METAS: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>',
   LEGAL: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M6 6 L3 13 H9 L6 6"/><path d="M18 6 L15 13 H21 L18 6"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="6" x2="12" y2="3"/></svg>',
   ZP: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L20 8 H4 Z"/><line x1="4" y1="8" x2="4" y2="19"/><line x1="12" y1="8" x2="12" y2="19"/><line x1="20" y1="8" x2="20" y2="19"/><line x1="3" y1="19" x2="21" y2="19"/></svg>',
-  ARCAC: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8 L12 4 L21 8 L12 12 Z"/><path d="M3 8 v8 l9 4 l9-4 V8"/><line x1="12" y1="12" x2="12" y2="20"/></svg>'
+  ARCAC: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8 L12 4 L21 8 L12 12 Z"/><path d="M3 8 v8 l9 4 l9-4 V8"/><line x1="12" y1="12" x2="12" y2="20"/></svg>',
+  TRASLAPES: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>'
 };
 
 /* Módulos analíticos: no tienen superficie ni registros que contar y se consultan
    de forma ocasional → viven en el menú «Más ▾» para dejar la nav en una sola fila.
    NO altera DATA, GEOMETRIES, contadores ni filtros. */
-const SECONDARY_TABS = new Set(['ANALISIS','METAS','LEGAL']);
+const SECONDARY_TABS = new Set(['TRASLAPES','ANALISIS','METAS','LEGAL']);
 
 const MORE_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>';
 
@@ -1639,6 +1643,7 @@ function tabSubtitle(g, compact){
   if(g.id==='LEGAL') return 'LACM · 18 JUL 2024';
   if(g.id==='METAS') return 'LÍNEA BASE 2018-2024';
   if(g.id==='ANALISIS') return 'DATOS · DISTRIBUCIÓN';
+  if(g.id==='TRASLAPES') return compact ? '35 PARES' : 'SUPERPOSICIONES · 35 PARES';
   if(g.id==='ZP') return compact ? 'UNESCO · 7,534 HA' : 'PATRIMONIO · 7,534 HA';
   if(g.id==='ARCAC') return compact ? '30 NÚCLEOS' : 'NÚCLEOS AGRARIOS · 30';
   const subset = g.id==='ALL' ? DATA : DATA.filter(d=>d.grupo===g.key);
@@ -1756,6 +1761,11 @@ function renderDashboard(){
     tblSec.style.display = 'none';
     if(mapSec) mapSec.style.display = 'none';
     setTimeout(() => initARCACMap(), 60);
+  } else if(g.id==='TRASLAPES'){
+    dash.innerHTML = renderTraslapesPage();
+    tblSec.style.display = 'none';
+    if(mapSec) mapSec.style.display = 'none';
+    setTimeout(() => initTraslapesMap(), 60);
   } else {
     tblSec.style.display = '';
     dash.innerHTML = g.id==='ALL' ? renderGlobalDashboard() : renderGroupDashboard(g);
@@ -4241,6 +4251,315 @@ async function initARCACMap(){
   addResetViewControl(arcacMap, 'Vista general · ARCAC');
   addLocateControl(arcacMap, ll=>featuresContaining((ARCAC_GEO&&ARCAC_GEO.features)||[], ll), ()=>(ARCAC_GEO&&ARCAC_GEO.features)||[]);
   setTimeout(()=>{ try{ arcacMap.invalidateSize(); }catch(e){} }, 120);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MÓDULO TRASLAPES · superposiciones espaciales entre instrumentos
+   ═══════════════════════════════════════════════════════════════════════
+   Los polígonos de intersección se precalculan (data/traslapes.geojson):
+   hacerlo en el navegador exigiría una librería de clipping geométrico y
+   el sitio solo carga Leaflet. El archivo lleva su fecha de generación y
+   el módulo la muestra en pantalla. Para regenerarlo: tools/traslapes.py
+
+   Capa aislada: no entra a DATA ni a GEOMETRIES, no toca contadores.
+   ═══════════════════════════════════════════════════════════════════════ */
+const TRAS_COLORS = {
+  'Inventario × Inventario'     : '#9d2148',
+  'Inventario × ARCAC'          : '#7048E8',
+  'Inventario × Zona Patrimonio': '#444441',
+  'ARCAC × Zona Patrimonio'     : '#B28E5C',
+  'ARCAC × ARCAC'               : '#E8590C'
+};
+let TRASLAPES_GEO = null, traslapesMap = null, traslapesLayers = {};
+let trasState = { q:'', cruce:'todos', sortKey:'ha', sortDir:-1 };
+
+async function loadTraslapes(){
+  if(TRASLAPES_GEO) return TRASLAPES_GEO;
+  try{
+    const r = await fetch('data/traslapes.geojson');
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    TRASLAPES_GEO = await r.json();
+  }catch(err){
+    console.warn('[Traslapes] no disponible:', err.message);
+    TRASLAPES_GEO = { type:'FeatureCollection', features:[] };
+  }
+  return TRASLAPES_GEO;
+}
+
+function trasFeats(){ return (TRASLAPES_GEO && TRASLAPES_GEO.features) || []; }
+
+function renderTraslapesPage(){
+  return `
+  <div class="panel">
+    <div class="panel-eyebrow">Análisis espacial · superposición de instrumentos de protección</div>
+    <h2 class="panel-title" style="color:#d72f89">Traslapes entre áreas</h2>
+    <p class="panel-intro">Un mismo predio puede estar cubierto por más de un instrumento: dos decretos de
+      protección, un ANP y un ARCAC, o un área del inventario dentro del polígono de Patrimonio Mundial.
+      Este módulo mide esas superposiciones sobre la geometría real y las dibuja en el mapa.
+      Es información de coordinación: donde hay traslape, hay más de una autoridad y más de un
+      programa de manejo aplicables al mismo territorio.</p>
+
+    <div class="hero" id="trasKpis" style="margin-top:16px"></div>
+
+    <div class="map-filters" id="trasFilters" style="margin-top:14px"></div>
+    <div class="map-canvas" id="trasMapCanvas" style="position:relative;height:520px;border-radius:12px;overflow:hidden;margin-top:6px">
+      <div class="map-search-float" id="trasMapSearch">
+        <input type="text" class="map-search-input" placeholder="Buscar dirección o coordenadas (lat, lng)…" aria-label="Buscar en el mapa">
+        <button class="map-search-btn" type="button" aria-label="Buscar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></button>
+        <div class="map-search-results" hidden></div>
+      </div>
+      <div class="map-block-controls map-block-controls-floating">
+        <div class="map-block-toggle" id="trasLayerToggle">
+          <button data-layer="positron" class="active">Mapa</button>
+          <button data-layer="satelite">Satélite</button>
+        </div>
+        <button class="map-fullscreen-btn" type="button" aria-label="Pantalla completa" title="Pantalla completa"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M21 8V5a2 2 0 0 0-2-2h-3"></path><path d="M3 16v3a2 2 0 0 0 2 2h3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg></button>
+      </div>
+    </div>
+
+    <style>
+      #trasTable{width:100%;border-collapse:collapse;font-family:'Roboto',sans-serif;font-size:12.5px}
+      #trasTable thead th{background:#d72f89;color:#fff;text-align:left;padding:9px 12px;font-weight:600;white-space:nowrap;cursor:pointer;position:sticky;top:0}
+      #trasTable thead th:hover{background:#b3236f}
+      #trasTable thead th.num{text-align:right}
+      #trasTable td.num{text-align:right;font-family:'Roboto Mono',monospace}
+      #trasTable tbody tr{cursor:pointer;border-top:1px solid var(--line-soft);transition:background .12s}
+      #trasTable tbody tr:hover{background:var(--bg-2)}
+      #trasTable td{padding:8px 12px;color:var(--ink-2);vertical-align:top}
+      #trasTable td.name{color:var(--ink);font-weight:500}
+      #trasTable .sub{display:block;font-family:'Roboto Mono',monospace;font-size:10.5px;color:var(--muted);margin-top:2px}
+      .tras-dot{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:8px;vertical-align:middle;border:1px solid rgba(0,0,0,.15)}
+      .tras-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px;align-items:center}
+      .tras-toolbar input,.tras-toolbar select{font-family:'Roboto',sans-serif;font-size:12.5px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;color:var(--ink)}
+      .tras-toolbar input{flex:1;min-width:220px}
+      .tras-toolbar input:focus,.tras-toolbar select:focus{outline:2px solid #d72f89;outline-offset:1px}
+      .tras-nota{background:#fff;border-left:3px solid var(--dorado);padding:12px 14px;border-radius:0 4px 4px 0;
+        font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:18px;box-shadow:var(--shadow)}
+      .tras-nota b{color:var(--ink)}
+    </style>
+
+    <div style="margin-top:24px">
+      <div class="panel-eyebrow" style="margin-bottom:4px">Pares con superposición</div>
+      <div class="panel-intro" id="trasCount" style="margin-bottom:6px">Cargando…</div>
+      <div class="tras-toolbar">
+        <input id="trasSearch" type="text" placeholder="Buscar área…">
+        <select id="trasCruceFilter"><option value="todos">Todos los cruces</option></select>
+        <button class="btn ghost" id="trasCsv" type="button">↓ CSV</button>
+      </div>
+      <div style="overflow-x:auto;border:1px solid var(--line);border-radius:10px;max-height:520px">
+        <table id="trasTable">
+          <thead><tr>
+            <th data-sort="a">Área A<span class="sort-ind"></span></th>
+            <th data-sort="b">Área B<span class="sort-ind"></span></th>
+            <th data-sort="cruce">Cruce<span class="sort-ind"></span></th>
+            <th data-sort="ha" class="num">Traslape (ha)<span class="sort-ind"></span></th>
+            <th data-sort="pct_a" class="num">% de A<span class="sort-ind"></span></th>
+            <th data-sort="pct_b" class="num">% de B<span class="sort-ind"></span></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="tras-nota" id="trasNota">Cargando metodología…</div>
+    </div>
+  </div>`;
+}
+
+function initTraslapesMap(){
+  const cont = document.getElementById('trasMapCanvas');
+  if(!cont || typeof L === 'undefined') return;
+  if(traslapesMap){ try{ traslapesMap.remove(); }catch(e){} traslapesMap=null; }
+  traslapesMap = L.map(cont, { zoomControl:true, scrollWheelZoom:false, attributionControl:true });
+  traslapesMap._activeBase = L.tileLayer(TILE_LAYERS.positron.url,
+      {attribution:TILE_LAYERS.positron.attribution, maxZoom:TILE_LAYERS.positron.maxZoom}).addTo(traslapesMap);
+  try{ createAlcaldiasLayer({interactive:false}).addTo(traslapesMap); }catch(e){}
+  traslapesMap.on('click focus', ()=> traslapesMap.scrollWheelZoom.enable());
+  traslapesMap.on('mouseout',    ()=> traslapesMap.scrollWheelZoom.disable());
+
+  document.querySelectorAll('#trasLayerToggle button').forEach(btn=>{
+    const fresh = btn.cloneNode(true); btn.parentNode.replaceChild(fresh, btn);
+    fresh.addEventListener('click', ()=>{
+      const key = fresh.dataset.layer;
+      if(traslapesMap._activeBase) traslapesMap.removeLayer(traslapesMap._activeBase);
+      const cfg = TILE_LAYERS[key] || TILE_LAYERS.positron;
+      traslapesMap._activeBase = L.tileLayer(cfg.url,{attribution:cfg.attribution,maxZoom:cfg.maxZoom}).addTo(traslapesMap);
+      Object.values(traslapesLayers).forEach(o=>{ try{ o.layer.bringToFront(); }catch(e){} });
+      document.querySelectorAll('#trasLayerToggle button').forEach(b=>b.classList.toggle('active', b.dataset.layer===key));
+    });
+  });
+  attachFullscreenBtn(cont, traslapesMap);
+  attachMapSearch('trasMapSearch', traslapesMap);
+  addLocateControl(traslapesMap, ll=>featuresContaining(trasFeats(), ll));
+  addResetViewControl(traslapesMap, 'Vista general · traslapes');
+
+  loadTraslapes().then(fc=>{
+    if(!traslapesMap) return;
+    traslapesLayers = {};
+    const bounds = L.latLngBounds([]);
+    const porCruce = {};
+    (fc.features||[]).forEach(f=>{ (porCruce[f.properties.cruce] = porCruce[f.properties.cruce] || []).push(f); });
+
+    Object.entries(porCruce).forEach(([cruce, feats])=>{
+      const color = TRAS_COLORS[cruce] || '#d72f89';
+      const lyr = L.geoJSON({type:'FeatureCollection',features:feats}, {
+        style: ()=>({color, weight:1.6, fillColor:color, fillOpacity:0.45}),
+        onEachFeature: (feat, l)=>{
+          const p = feat.properties;
+          l.bindTooltip(`${esc(p.a)} ∩ ${esc(p.b)}`, {sticky:true, direction:'top'});
+          l.bindPopup(trasPopup(p), {maxWidth:300, minWidth:240});
+          l.on('mouseover', ()=>l.setStyle({fillOpacity:0.7, weight:2.6}));
+          l.on('mouseout',  ()=>l.setStyle({fillOpacity:0.45, weight:1.6}));
+        }
+      }).addTo(traslapesMap);
+      traslapesLayers[cruce] = {layer:lyr, color, label:`${cruce} (${feats.length})`};
+      try{ bounds.extend(lyr.getBounds()); }catch(e){}
+    });
+    if(bounds.isValid()){ traslapesMap.fitBounds(bounds,{padding:[20,20]}); traslapesMap._siaHome = bounds; }
+
+    // Chips de filtro del mapa
+    const cont2 = document.getElementById('trasFilters');
+    if(cont2){
+      cont2.innerHTML = Object.entries(traslapesLayers).map(([k,it])=>
+        `<button class="map-filter-chip active" style="--chip-color:${it.color}" data-key="${esc(k)}" type="button"><span class="chip-dot"></span>${esc(it.label)}</button>`).join('');
+      cont2.querySelectorAll('.map-filter-chip').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          const k=b.dataset.key, it=traslapesLayers[k]; if(!it) return;
+          const on=b.classList.toggle('active');
+          if(on) it.layer.addTo(traslapesMap); else traslapesMap.removeLayer(it.layer);
+        });
+      });
+    }
+    renderTrasKpis(fc);
+    renderTrasTabla();
+  });
+}
+
+function trasPopup(p){
+  const c = TRAS_COLORS[p.cruce] || '#d72f89';
+  return `<div class="loc-pop">
+    <div class="cov" style="--c:${esc(c)}">
+      <span class="cov-tag">${esc(p.cruce)}</span>
+      <div class="cov-name">${esc(p.a)}</div>
+      <div class="cov-sub">${esc(p.a_sub)} · ${p.pct_a}% de su superficie</div>
+    </div>
+    <div class="cov" style="--c:${esc(c)}">
+      <div class="cov-name">${esc(p.b)}</div>
+      <div class="cov-sub">${esc(p.b_sub)} · ${p.pct_b}% de su superficie</div>
+    </div>
+    <div class="loc-meta">
+      <div class="mrow"><span class="mk">Superficie compartida</span><span class="mv mono">${fmt(p.ha)} ha</span></div>
+    </div>
+  </div>`;
+}
+
+function renderTrasKpis(fc){
+  const el = document.getElementById('trasKpis'); if(!el) return;
+  const fs = fc.features || [];
+  const anpArcac = fs.filter(f=>f.properties.cruce==='Inventario × ARCAC').length;
+  const dentro100 = fs.filter(f=>f.properties.cruce==='Inventario × Zona Patrimonio' && f.properties.pct_a>=99.5).length;
+  const dobles = fc.doble_conteo_ha != null ? fc.doble_conteo_ha : 0;
+  el.innerHTML = `
+    <div class="hero-card"><div class="hero-label">Pares con traslape</div>
+      <div class="hero-value">${fmtInt(fs.length)}</div>
+      <div class="hero-sub">umbral ${fc.umbral_ha || 0.5} ha</div></div>
+    <div class="hero-card"><div class="hero-label">Superficie contada dos veces</div>
+      <div class="hero-value" style="color:#d72f89">${fmt(dobles)}<span class="u">ha</span></div>
+      <div class="hero-sub">dentro del inventario de 66 áreas</div></div>
+    <div class="hero-card"><div class="hero-label">Áreas del inventario sobre ARCAC</div>
+      <div class="hero-value">${anpArcac}</div>
+      <div class="hero-sub">pares con doble instrumento</div></div>
+    <div class="hero-card"><div class="hero-label">Íntegras en Patrimonio Mundial</div>
+      <div class="hero-value">${dentro100}</div>
+      <div class="hero-sub">100% dentro del polígono UNESCO</div></div>`;
+}
+
+function renderTrasTabla(){
+  const tb = document.querySelector('#trasTable tbody'); if(!tb) return;
+  const fc = TRASLAPES_GEO || {features:[]};
+  const norm = t => String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+
+  const sel = document.getElementById('trasCruceFilter');
+  if(sel && sel.options.length <= 1){
+    const cruces = [...new Set((fc.features||[]).map(f=>f.properties.cruce))];
+    cruces.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+    sel.addEventListener('change', ()=>{ trasState.cruce = sel.value; renderTrasTabla(); });
+  }
+  const inp = document.getElementById('trasSearch');
+  if(inp && !inp._wired){ inp._wired=true;
+    inp.addEventListener('input', ()=>{ trasState.q = inp.value; renderTrasTabla(); }); }
+  const csv = document.getElementById('trasCsv');
+  if(csv && !csv._wired){ csv._wired=true; csv.addEventListener('click', exportTraslapesCSV); }
+
+  document.querySelectorAll('#trasTable thead th').forEach(th=>{
+    if(th._wired) return; th._wired=true;
+    th.addEventListener('click', ()=>{
+      const k=th.dataset.sort;
+      if(trasState.sortKey===k) trasState.sortDir*=-1; else { trasState.sortKey=k; trasState.sortDir = (k==='a'||k==='b'||k==='cruce')?1:-1; }
+      renderTrasTabla();
+    });
+  });
+
+  let rows = (fc.features||[]).map(f=>f.properties);
+  if(trasState.cruce!=='todos') rows = rows.filter(r=>r.cruce===trasState.cruce);
+  if(trasState.q.trim()){
+    const q=norm(trasState.q);
+    rows = rows.filter(r=>norm(r.a).includes(q)||norm(r.b).includes(q));
+  }
+  const k=trasState.sortKey, d=trasState.sortDir;
+  rows.sort((x,y)=>{
+    const a=x[k], b=y[k];
+    if(typeof a==='number' && typeof b==='number') return (a-b)*d;
+    return String(a).localeCompare(String(b),'es')*d;
+  });
+
+  tb.innerHTML = rows.length ? rows.map(r=>{
+    const c = TRAS_COLORS[r.cruce] || '#d72f89';
+    return `<tr data-a="${esc(r.a)}">
+      <td class="name"><span class="tras-dot" style="background:${esc(c)}"></span>${esc(r.a)}<span class="sub">${esc(r.a_sub)}</span></td>
+      <td class="name">${esc(r.b)}<span class="sub">${esc(r.b_sub)}</span></td>
+      <td>${esc(r.cruce)}</td>
+      <td class="num">${fmt(r.ha)}</td>
+      <td class="num">${r.pct_a}%</td>
+      <td class="num">${r.pct_b}%</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="6" style="padding:18px;text-align:center;color:var(--muted)">Sin resultados.</td></tr>';
+
+  tb.querySelectorAll('tr[data-a]').forEach(tr=>{
+    tr.addEventListener('click', ()=>{
+      const nombre = tr.dataset.a;
+      const area = (typeof DATA!=='undefined') ? DATA.find(x=>x.nombre===nombre) : null;
+      if(area){ openDrawer(area); return; }
+      const f = (TRASLAPES_GEO.features||[]).find(x=>x.properties.a===nombre);
+      if(f && traslapesMap){ try{ traslapesMap.fitBounds(L.geoJSON(f).getBounds(),{padding:[30,30],maxZoom:15}); }catch(e){} }
+    });
+  });
+
+  const cnt = document.getElementById('trasCount');
+  if(cnt) cnt.textContent = `${rows.length} de ${(fc.features||[]).length} pares`;
+
+  const nota = document.getElementById('trasNota');
+  if(nota) nota.innerHTML = `<b>Metodología.</b> ${esc(fc.nota||'')}
+    Superficies calculadas en proyección plana local (error &lt;0.1% a escala CDMX).
+    <b>Cálculo generado el ${esc(fc.generado||'—')}</b> sobre las geometrías vigentes en esa fecha;
+    si se actualiza algún GeoJSON hay que regenerarlo. Suma de superficies individuales del inventario:
+    ${fmt(fc.suma_individual_ha||0)} ha · unión real del territorio: ${fmt(fc.union_ha||0)} ha.`;
+}
+
+function exportTraslapesCSV(){
+  const fc = TRASLAPES_GEO || {features:[]};
+  const q = s => `"${String(s==null?'':s).replace(/"/g,'""')}"`;
+  const head = ['cruce','area_a','categoria_a','area_b','categoria_b','traslape_ha','pct_a','pct_b'];
+  const lines = [head.join(',')].concat((fc.features||[]).map(f=>{
+    const p=f.properties;
+    return [p.cruce,p.a,p.a_sub,p.b,p.b_sub,p.ha,p.pct_a,p.pct_b].map(q).join(',');
+  }));
+  const blob = new Blob(['﻿'+lines.join('\r\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `traslapes_sia_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  siaToast('CSV descargado.');
 }
 
 function renderARCACPage(){

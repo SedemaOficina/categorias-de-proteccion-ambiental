@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-08-22b';
+const CACHE_VERSION = 'sia-v35-2026-08-22c';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
@@ -22,8 +22,8 @@ const CORE_ASSETS = [
   './data/zona_patrimonio.geojson',
   './data/alcaldias.geojson',
   './data/suelo_conservacion.geojson'
-  // Nota: sipam_fao, arcac y embarcaderos NO se precachean (se cargan bajo demanda
-  // al abrir su pestaña y quedan en caché runtime tras la primera visita → install más ligero)
+  // Nota: sipam_fao, arcac, embarcaderos y traslapes NO se precachean (se cargan bajo
+  // demanda al abrir su pestaña y quedan en caché runtime tras la primera visita)
 ];
 
 /* === INSTALL: pre-cachear assets críticos === */
