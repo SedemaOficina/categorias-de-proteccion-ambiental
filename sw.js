@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-08-22f';
+const CACHE_VERSION = 'sia-v35-2026-08-22g';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
@@ -124,13 +124,28 @@ async function networkFirst(req){
 
 /* === Estrategia: network-first específica para datos críticos (Sheets) === */
 async function networkFirstData(req){
+  const limpiar = u => u.split('&_t=')[0].split('?_t=')[0];
   try {
     const response = await fetch(req);
     if(response && response.status === 200){
-      const cache = await caches.open(CACHE_DATA);
-      const cleanUrl = req.url.split('&_t=')[0].split('?_t=')[0];
-      const cleanReq = new Request(cleanUrl, { method: 'GET' });
-      cache.put(cleanReq, response.clone());
+      /* Solo se persiste lo que parece un CSV: evita guardar como inventario
+         una pagina de error de Google que responda 200. */
+      const ct = (response.headers.get('content-type') || '').toLowerCase();
+      if(ct.includes('csv') || ct.includes('text/plain')){
+        const cache = await caches.open(CACHE_DATA);
+        cache.put(new Request(limpiar(req.url), { method: 'GET' }), response.clone());
+      } else {
+        console.warn('[SW] Respuesta del Sheet con Content-Type inesperado, no se cachea:', ct);
+      }
+      return response;
+    }
+    /* 404 (publicacion revocada), 429 (cuota) o 5xx NO son fallo de red, asi
+       que no entran al catch. Sin esto la app entera muestra pantalla de error
+       aunque exista una copia buena en cache. */
+    const previo = await caches.match(limpiar(req.url));
+    if(previo){
+      console.warn('[SW] Sheets respondio', response && response.status, '— sirviendo copia en caché');
+      return previo;
     }
     return response;
   } catch(err) {
