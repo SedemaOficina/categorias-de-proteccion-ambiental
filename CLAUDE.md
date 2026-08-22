@@ -97,6 +97,37 @@ Cruce geométrico de las 66 áreas contra `data/suelo_conservacion.geojson` (uni
 - **La columna `suelo_conservacion` es binaria pero el territorio no.** Casos que un Sí/No no describe: Insurgente Miguel Hidalgo y Costilla 95.96% · Lago Tláhuac-Xico 65.71% · El Tepeyac 63.18% · Cerro de la Estrella federal 24.00% · Lomas de Padierna 11.83% · Magdalena Eslava 3.83% · Pachuquilla 1.32% · Atzoyapan 1.29%.
 - Recomendación: agregar `suelo_conservacion_pct` al Sheet, o un tercer valor "Parcial".
 
+## Barra «¿Dónde estoy?» · flujo principal de campo (v37)
+El uso dominante del tablero es de **personal de SEDEMA**, no público: en celular para ubicarse
+en campo, en escritorio para consultar tablas y estadística. La barra refleja eso.
+
+- Vive **fuera de las pestañas**, entre el header y `<nav class="tabs">`: es una acción, no una
+  categoría, y debe estar disponible desde cualquier vista sin gastar un espacio de pestaña
+  (con 8 pestañas los nombres empiezan a truncarse).
+- **Escritorio**: una fila compacta de 40 px. **Celular (<760px)**: se apila, el botón
+  «Usar mi ubicación» ocupa el ancho completo a 48 px y el placeholder se acorta por JS.
+- Tres entradas al mismo resultado: GPS, coordenada tecleada (`parseCoordsSia`) o dirección
+  (índice local primero, luego Google Places).
+- `ubicarResolver()` dibuja el resultado a **ancho completo** en `#ubicarResultado`, no en un
+  globo del mapa: bloques de cobertura grandes, cada uno con su botón **Ver ficha**, mapa con
+  los polígonos que cubren el punto, y el pie de datos. En celular el mapa va primero (`order:-1`).
+- `initUbicarMap` hace **setView antes de agregar capas**: sin vista establecida, Leaflet falla
+  en `_clipPoints` al pintar vectores.
+
+## Módulo Traslapes (v37)
+Pestaña dentro de «Más ▾», primera de la lista. Color `#d72f89`.
+
+- Los polígonos de intersección se **precalculan** en `data/traslapes.geojson` (143 KB, 35 pares
+  con umbral 0.5 ha). Hacerlo en el navegador exigiría una librería de clipping y el sitio solo
+  carga Leaflet.
+- **Regenerar con `python tools/traslapes.py`** cada vez que cambien `geometrias.geojson`,
+  `arcac.geojson` o `zona_patrimonio.geojson`. El archivo lleva su fecha y el módulo la muestra.
+- De Zona Patrimonio solo entra el polígono **UNESCO** (`ZPM_POLIGONO`); Ramsar, AICA y SIPAM se
+  excluyeron por decisión institucional.
+- NO va en `CORE_ASSETS`: carga bajo demanda.
+- Hallazgo que expone: **300.47 ha de doble conteo** dentro del inventario (suma 25,968.10 ha vs
+  unión real 25,667.63 ha) y 17 pares ANP–ARCAC con doble instrumento.
+
 ## Pendientes / riesgos conocidos
 - **Continuidad institucional:** el Google Sheet del inventario y el proyecto de Google Cloud deberían colgar de cuentas institucionales de SEDEMA, no personales. Agregar un segundo propietario en IAM.
 - **Corregir el Sheet** en la fila de Bosque de Tlalpan (y revisar las 8 parciales) según el hallazgo de arriba.

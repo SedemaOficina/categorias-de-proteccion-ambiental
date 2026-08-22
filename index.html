@@ -101,6 +101,105 @@
   .meta{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);text-align:right;letter-spacing:.05em;line-height:1.8}
   .meta b{color:var(--guinda);font-weight:500}
 
+  /* ═══ Barra «¿Dónde estoy?» · acción principal en campo ═══
+     En escritorio es compacta (el uso ahí es consulta de tablas y estadística).
+     En celular crece: es la primera acción de la pantalla y el uso dominante. */
+  .ubicar-bar{background:linear-gradient(100deg,rgba(157,33,72,.05),rgba(178,142,92,.05));
+    border:1px solid var(--line);border-left:3px solid var(--guinda);border-radius:var(--radius);
+    padding:12px 16px;margin-bottom:14px}
+  .ubicar-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:9px}
+  .ubicar-kicker{font-family:'Cabin',sans-serif;font-weight:700;font-size:13px;color:var(--guinda);
+    text-transform:uppercase;letter-spacing:.06em}
+  .ubicar-hint{font-size:12px;color:var(--ink-2)}
+  .ubicar-row{display:flex;gap:10px;align-items:stretch}
+  .ubicar-gps{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;
+    background:var(--guinda);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;
+    padding:0 16px;height:40px;font-family:'Roboto',sans-serif;font-size:13px;font-weight:700;
+    transition:background .15s;white-space:nowrap}
+  .ubicar-gps:hover{background:#7d1839}
+  .ubicar-gps:disabled{opacity:.6;cursor:wait}
+  .ubicar-input-wrap{position:relative;flex:1;display:flex;min-width:0}
+  .ubicar-input-wrap input{flex:1;min-width:0;height:40px;padding:0 14px;border:1px solid var(--line);
+    border-right:none;border-radius:var(--radius) 0 0 var(--radius);background:#fff;
+    font-family:'Roboto',sans-serif;font-size:13.5px;color:var(--ink);outline:none}
+  .ubicar-input-wrap input:focus{border-color:var(--guinda)}
+  .ubicar-go{width:44px;flex-shrink:0;border:1px solid var(--line);border-left:none;
+    border-radius:0 var(--radius) var(--radius) 0;background:#fff;color:var(--ink-2);cursor:pointer}
+  .ubicar-go:hover{color:var(--guinda)}
+  .ubicar-sugerencias{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);
+    border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.18);
+    max-height:300px;overflow-y:auto;z-index:900}
+  .ubicar-sugerencias .res-group{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:.11em;
+    text-transform:uppercase;color:var(--muted);padding:8px 12px 5px;background:var(--bg-2);
+    border-bottom:1px solid var(--line-soft);position:sticky;top:0;z-index:2}
+  .ubicar-sugerencias .item{position:relative;z-index:1;background:var(--card);padding:10px 12px 10px 28px;
+    cursor:pointer;border-bottom:1px dotted var(--line-soft);font-size:13px;color:var(--ink)}
+  .ubicar-sugerencias .item:last-child{border-bottom:none}
+  .ubicar-sugerencias .item:hover{background:var(--bg-2)}
+  .ubicar-sugerencias .item .sw{position:absolute;left:12px;top:14px;width:8px;height:8px;border-radius:2px}
+  .ubicar-sugerencias .item .meta{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+
+  @media (max-width:760px){
+    .ubicar-bar{padding:14px;border-left-width:4px}
+    .ubicar-head{margin-bottom:11px}
+    .ubicar-kicker{font-size:14px}
+    .ubicar-hint{font-size:12.5px;width:100%}
+    .ubicar-row{flex-direction:column;gap:9px}
+    .ubicar-gps{width:100%;height:48px;font-size:15px}
+    .ubicar-input-wrap input{height:44px;font-size:15px}
+    .ubicar-go{width:48px}
+  }
+
+  /* ═══ Resultado de ubicación · a ancho completo, no en un globo ═══ */
+  .ubi-panel{position:relative}
+  .ubi-cerrar{position:absolute;top:14px;right:16px;width:32px;height:32px;border:none;background:transparent;
+    font-size:26px;line-height:1;color:var(--ink-2);cursor:pointer;border-radius:50%}
+  .ubi-cerrar:hover{background:var(--bg-2);color:var(--guinda)}
+  .ubi-cargando{padding:36px;text-align:center;color:var(--muted);font-family:'Roboto Mono',monospace;font-size:13px}
+  .ubi-etiqueta{font-size:14px;color:var(--ink-2);margin:2px 0 0}
+  .ubi-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:18px;align-items:start}
+  .ubi-col{min-width:0}
+  .ubi-cov{border-left:4px solid var(--c);background:linear-gradient(90deg,rgba(0,0,0,.03),transparent 60%);
+    border:1px solid var(--line-soft);border-left-width:4px;border-radius:0 var(--radius) var(--radius) 0;
+    padding:13px 15px;margin-bottom:10px}
+  .ubi-cov-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}
+  .ubi-tag{display:inline-block;font-family:'Roboto Mono',monospace;font-size:9.5px;font-weight:700;
+    letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--c);padding:3px 8px;border-radius:3px}
+  .ubi-nombre{font-weight:700;font-size:17px;line-height:1.25;color:var(--ink)}
+  .ubi-sub{font-size:13px;color:var(--ink-2);margin-top:2px}
+  .ubi-meta{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);margin-top:5px;letter-spacing:.03em}
+  .ubi-warn{margin-top:8px;padding:6px 9px;background:#fff8e1;border-left:2px solid var(--dorado);
+    font-size:12px;color:var(--dorado-text);border-radius:0 3px 3px 0;line-height:1.35}
+  .ubi-ficha{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;background:transparent;
+    border:1px solid var(--c);color:var(--c);border-radius:3px;padding:5px 11px;cursor:pointer;
+    font-family:'Roboto',sans-serif;font-size:11.5px;font-weight:700;transition:all .15s}
+  .ubi-ficha:hover{background:var(--c);color:#fff}
+  .ubi-ficha .ar{font-family:'Roboto Mono',monospace}
+  .ubi-sin{background:var(--bg-2)}
+  .ubi-near{margin-top:10px;padding:11px 12px;background:#fff;border:1px solid var(--line-soft);
+    border-left:3px solid var(--c);border-radius:0 3px 3px 0}
+  .ubi-near-k{display:block;font-family:'Roboto Mono',monospace;font-size:9.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  .ubi-near b{display:block;font-size:15px;line-height:1.25}
+  .ubi-near-m{display:inline-block;margin-top:5px;font-family:'Roboto Mono',monospace;font-size:12px;
+    color:var(--c);font-weight:700}
+  .ubi-near .ubi-ficha{margin-top:9px}
+  .ubi-map{height:300px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-soft);background:#e8e3d4}
+  .ubi-datos{margin-top:12px;border:1px solid var(--line-soft);border-radius:var(--radius);padding:4px 14px;background:#fff}
+  .ubi-row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dotted var(--line-soft)}
+  .ubi-row:last-child{border-bottom:none}
+  .ubi-row .k{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--muted);white-space:nowrap}
+  .ubi-row .v{font-size:13.5px;font-weight:500;text-align:right}
+  .ubi-row .v.mono{font-family:'Roboto Mono',monospace;font-size:12.5px;font-weight:400}
+  .ubi-row .v i{color:var(--muted);font-weight:400}
+  @media (max-width:900px){
+    .ubi-grid{grid-template-columns:1fr;gap:16px}
+    .ubi-col:last-child{order:-1}          /* en celular el mapa va primero */
+    .ubi-map{height:240px}
+    .ubi-nombre{font-size:16px}
+  }
+
   .tabs{display:flex;align-items:stretch;gap:2px;background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:4px;margin-bottom:18px;box-shadow:var(--shadow)}
   .tab{flex:1 1 0;min-width:0;padding:9px 10px;background:transparent;border:none;cursor:pointer;font-family:'Roboto',sans-serif;font-size:12.5px;color:var(--ink-2);border-radius:3px;transition:transform .18s,background .18s,box-shadow .18s,color .18s;display:flex;flex-direction:row;align-items:center;gap:9px;text-align:left;font-weight:500;position:relative}
   .tab:hover{background:var(--bg-2);transform:translateY(-1px)}
@@ -1163,6 +1262,33 @@
   </header>
 
   <main id="main-content">
+
+  <!-- Acción principal en campo · vive fuera de las pestañas a propósito:
+       es una acción, no una categoría, y debe estar disponible desde cualquier vista -->
+  <section class="ubicar-bar" id="ubicarBar" aria-label="Ubicar un punto">
+    <div class="ubicar-head">
+      <span class="ubicar-kicker">¿Dónde estoy?</span>
+      <span class="ubicar-hint">Ubica un punto y revisa qué instrumentos de protección aplican ahí</span>
+    </div>
+    <div class="ubicar-row">
+      <button type="button" class="ubicar-gps" id="ubicarGps">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/></svg>
+        <span>Usar mi ubicación</span>
+      </button>
+      <div class="ubicar-input-wrap">
+        <input type="text" id="ubicarInput" autocomplete="off"
+               placeholder="Dirección, coordenadas (lat, lng) o nombre de área…"
+               aria-label="Dirección, coordenadas o nombre de área">
+        <button type="button" class="ubicar-go" id="ubicarGo" aria-label="Buscar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+        <div class="ubicar-sugerencias" id="ubicarSug" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="ubicarResultado" hidden></section>
+
   <nav class="tabs" id="tabs"></nav>
   <section id="dashboard"></section>
 
@@ -4865,6 +4991,42 @@ function cargarGooglePlaces(){
 /* Sesgo a la CDMX: mismas coordenadas que ya usa el buscador de Nominatim */
 const _CDMX_BOUNDS = { west:-99.366, south:19.045, east:-98.940, north:19.593 };
 
+/* Sugerencias de dirección · una sola implementación para los mapas y la barra
+   «¿Dónde estoy?». El session token agrupa tecleo + selección en un solo cobro. */
+let _sesionPlaces = null;
+function siaCerrarSesionPlaces(){ _sesionPlaces = null; }
+async function siaSugerirDirecciones(q){
+  if(!GOOGLE_MAPS_API_KEY) return [];
+  try{
+    await cargarGooglePlaces();
+    const { AutocompleteSuggestion, AutocompleteSessionToken } =
+      await google.maps.importLibrary('places');
+    if(!_sesionPlaces) _sesionPlaces = new AutocompleteSessionToken();
+    const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+      input: q, sessionToken: _sesionPlaces, locationBias: _CDMX_BOUNDS,
+      includedRegionCodes: ['mx'], language: 'es-MX'
+    });
+    return (suggestions||[]).slice(0,5).map(sg=>{
+      const pp = sg.placePrediction;
+      return { place: pp,
+        principal: (pp.mainText && pp.mainText.text) || (pp.text && pp.text.text) || '',
+        secundario: (pp.secondaryText && pp.secondaryText.text) || '' };
+    }).filter(x=>x.principal);
+  }catch(err){
+    console.warn('[Buscador] Google Places no disponible:', err && err.message);
+    return [];
+  }
+}
+
+/* Resuelve una sugerencia de Places a coordenadas */
+async function siaResolverLugar(pred){
+  const place = pred.toPlace();
+  await place.fetchFields({fields:['location','formattedAddress']});
+  const loc = place.location;
+  siaCerrarSesionPlaces();
+  return { lat: loc.lat(), lng: loc.lng(), etiqueta: place.formattedAddress || '' };
+}
+
 /* === Buscador de direcciones / coordenadas (Nominatim · OpenStreetMap) === */
 /* Última coordenada buscada (persiste entre mapas: global → mini-mapa de ficha) */
 let lastSearchLatLng = null;
@@ -4974,7 +5136,6 @@ function attachMapSearch(containerId, mapInstance, getFeatures){
   }
 
   /* Sugerencias mientras se escribe: primero el inventario, luego direcciones */
-  let _sesion = null;      // AutocompleteSessionToken: agrupa teclas + selección en un cobro
   let _debounce = null;
   let _seq = 0;
 
@@ -5029,38 +5190,12 @@ function attachMapSearch(containerId, mapInstance, getFeatures){
             placeMarker(d.lat, d.lng, d.principal);
           }
         }catch(err){ siaToast('No se pudo ubicar esa dirección.'); }
-        _sesion = null;   // la sesión de facturación termina al elegir
+        siaCerrarSesionPlaces();   // la sesión de facturación termina al elegir
       });
     });
   }
 
-  async function sugerirDirecciones(q){
-    if(!GOOGLE_MAPS_API_KEY) return [];
-    try{
-      await cargarGooglePlaces();
-      const { AutocompleteSuggestion, AutocompleteSessionToken } =
-        await google.maps.importLibrary('places');
-      if(!_sesion) _sesion = new AutocompleteSessionToken();
-      const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
-        input: q,
-        sessionToken: _sesion,
-        locationBias: _CDMX_BOUNDS,
-        includedRegionCodes: ['mx'],
-        language: 'es-MX'
-      });
-      return (suggestions||[]).slice(0,5).map(sg=>{
-        const pp = sg.placePrediction;
-        return {
-          place: pp,
-          principal: (pp.mainText && pp.mainText.text) || (pp.text && pp.text.text) || '',
-          secundario: (pp.secondaryText && pp.secondaryText.text) || ''
-        };
-      }).filter(x=>x.principal);
-    }catch(err){
-      console.warn('[Buscador] Google Places no disponible:', err && err.message);
-      return [];
-    }
-  }
+  const sugerirDirecciones = q => siaSugerirDirecciones(q);
 
   freshInput.addEventListener('input', ()=>{
     const q = freshInput.value.trim();
@@ -5490,6 +5625,266 @@ async function compartirFichaImagen(d, btn){
   });
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════════
+   BARRA «¿DÓNDE ESTOY?» · flujo principal de campo
+   ═══════════════════════════════════════════════════════════════════════
+   Tres entradas al mismo resultado: GPS, coordenada tecleada o dirección.
+   El resultado se dibuja a ancho completo —no en un globo del mapa— con
+   un botón por cobertura para abrir su ficha. Vive fuera de las pestañas
+   porque es una acción disponible desde cualquier vista.
+   ═══════════════════════════════════════════════════════════════════════ */
+let ubicarMap = null, _ubicarDebounce = null, _ubicarSeq = 0;
+
+function initUbicarBar(){
+  const inp = document.getElementById('ubicarInput');
+  const sug = document.getElementById('ubicarSug');
+  const gps = document.getElementById('ubicarGps');
+  const go  = document.getElementById('ubicarGo');
+  if(!inp || !sug || !gps || !go) return;
+
+  /* En celular el placeholder largo se corta: se acorta a esa anchura */
+  if(window.innerWidth < 760) inp.placeholder = 'Dirección o coordenadas…';
+
+  gps.addEventListener('click', ubicarPorGPS);
+  go.addEventListener('click', ()=>ubicarDesdeTexto(inp.value));
+  inp.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); ubicarDesdeTexto(inp.value); }
+    if(e.key==='Escape'){ sug.hidden = true; }
+  });
+  document.addEventListener('click', e=>{
+    if(!e.target.closest('#ubicarBar')) sug.hidden = true;
+  });
+
+  inp.addEventListener('input', ()=>{
+    const q = inp.value.trim();
+    clearTimeout(_ubicarDebounce);
+    if(q.length < 2){ sug.hidden = true; return; }
+    if(parseCoordsSia(q)){ sug.hidden = true; return; }
+    const mio = ++_ubicarSeq;
+    const locales = _buscarLocal(q);
+    pintarUbicarSug(locales, []);
+    _ubicarDebounce = setTimeout(async ()=>{
+      const dirs = await siaSugerirDirecciones(q);
+      if(mio === _ubicarSeq) pintarUbicarSug(locales, dirs);
+    }, 280);
+  });
+}
+
+/* Mismo parser de coordenadas que usa el buscador de los mapas */
+function parseCoordsSia(q){
+  const clean = String(q||'').trim()
+    .replace(/^[\(\[\{]+|[\)\]\}]+$/g,'').replace(/\s+/g,' ').trim();
+  const m = clean.match(/^(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)$/);
+  if(!m) return null;
+  const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+  if(isNaN(lat)||isNaN(lng)||lat<-90||lat>90||lng<-180||lng>180) return null;
+  return {lat, lng};
+}
+
+function pintarUbicarSug(locales, direcciones){
+  const sug = document.getElementById('ubicarSug'); if(!sug) return;
+  let html = '';
+  if(locales.length){
+    html += '<div class="res-group">En el inventario</div>' + locales.map((x,i)=>
+      `<div class="item" data-local="${i}"><span class="sw" style="background:${esc(x.color)}"></span>${esc(x.nombre)}<span class="meta">${esc(x.sub||'')}</span></div>`).join('');
+  }
+  if(direcciones.length){
+    html += '<div class="res-group">Direcciones</div>' + direcciones.map((d,i)=>
+      `<div class="item" data-dir="${i}">${esc(d.principal)}<span class="meta">${esc(d.secundario||'')}</span></div>`).join('');
+  }
+  if(!html){ sug.hidden = true; return; }
+  sug.innerHTML = html; sug.hidden = false;
+
+  sug.querySelectorAll('[data-local]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const x = locales[+el.dataset.local];
+      sug.hidden = true;
+      document.getElementById('ubicarInput').value = x.nombre;
+      try{
+        if(x.t==='inv'){ const a=DATA.find(d=>d.nombre===x.ref); if(a) return openDrawer(a); }
+        if(x.t==='arcac') return openARCACFicha(Number(x.ref));
+        if(x.t==='zp')    return openZPFicha(x.ref);
+      }catch(err){ siaToast('No se pudo abrir esa área.'); }
+    });
+  });
+  sug.querySelectorAll('[data-dir]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const d = direcciones[+el.dataset.dir];
+      sug.hidden = true;
+      document.getElementById('ubicarInput').value = d.principal;
+      try{
+        const r = await siaResolverLugar(d.place);
+        ubicarResolver({lat:r.lat, lng:r.lng}, null, r.etiqueta || d.principal);
+      }catch(err){ siaToast('No se pudo ubicar esa dirección.'); }
+    });
+  });
+}
+
+function ubicarDesdeTexto(txt){
+  const q = String(txt||'').trim();
+  if(!q) return;
+  const c = parseCoordsSia(q);
+  if(c){ ubicarResolver(c, null, null); return; }
+  const loc = _buscarLocal(q);
+  if(loc.length){
+    const x = loc[0];
+    try{
+      if(x.t==='inv'){ const a=DATA.find(d=>d.nombre===x.ref); if(a) return openDrawer(a); }
+      if(x.t==='arcac') return openARCACFicha(Number(x.ref));
+      if(x.t==='zp')    return openZPFicha(x.ref);
+    }catch(err){}
+  }
+  siaSugerirDirecciones(q).then(async dirs=>{
+    if(!dirs.length){ siaToast('Sin resultados para esa búsqueda.'); return; }
+    try{
+      const r = await siaResolverLugar(dirs[0].place);
+      ubicarResolver({lat:r.lat, lng:r.lng}, null, r.etiqueta || dirs[0].principal);
+    }catch(err){ siaToast('No se pudo ubicar esa dirección.'); }
+  });
+}
+
+function ubicarPorGPS(){
+  const btn = document.getElementById('ubicarGps');
+  if(!navigator.geolocation){ siaToast('Este navegador no permite geolocalización.'); return; }
+  const span = btn.querySelector('span'); const txt = span ? span.textContent : '';
+  btn.disabled = true; if(span) span.textContent = 'Ubicando…';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    btn.disabled = false; if(span) span.textContent = txt;
+    ubicarResolver({lat:pos.coords.latitude, lng:pos.coords.longitude}, pos.coords.accuracy, null);
+  }, err=>{
+    btn.disabled = false; if(span) span.textContent = txt;
+    siaToast('No se pudo obtener tu ubicación. Revisa el permiso del navegador (requiere HTTPS).');
+  }, {enableHighAccuracy:true, timeout:12000, maximumAge:0});
+}
+
+async function ubicarResolver(latlng, precision, etiqueta){
+  const sec = document.getElementById('ubicarResultado');
+  if(!sec) return;
+  sec.hidden = false;
+  sec.innerHTML = '<div class="panel"><div class="ubi-cargando">Consultando capas…</div></div>';
+  sec.scrollIntoView({behavior:'smooth', block:'start'});
+  await _cargarCapasCobertura();
+  sec.innerHTML = renderUbicarResultado(latlng, precision, etiqueta);
+  const cerrar = document.getElementById('ubicarCerrar');
+  if(cerrar) cerrar.addEventListener('click', ()=>{ sec.hidden = true; sec.innerHTML=''; if(ubicarMap){ try{ubicarMap.remove();}catch(e){} ubicarMap=null; } });
+  setTimeout(()=>initUbicarMap(latlng, precision), 60);
+}
+
+function renderUbicarResultado(latlng, precision, etiqueta){
+  const coord = `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+  const acc = precision ? Math.round(precision) : null;
+  const alc = _alcaldiaEn(latlng);
+  const sc  = _enSueloConservacion(latlng);
+  const covs = _coberturasEn(latlng);
+  const _norm = t => String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+  const aviso = d => (acc && isFinite(d) && d < acc)
+    ? `<div class="ubi-warn">A ${Math.round(d)} m del límite · dentro del margen de error del GPS</div>` : '';
+
+  let bloques = covs.map(c=>{
+    const red = c.sub && _norm(c.tag).includes(_norm(c.sub));
+    return `<div class="ubi-cov" style="--c:${esc(c.color)}">
+      <div class="ubi-cov-top">
+        <span class="ubi-tag">${esc(c.tag)}</span>
+        <button type="button" class="ubi-ficha" data-ficha="${esc(c.ficha)}">Ver ficha <span class="ar">→</span></button>
+      </div>
+      <div class="ubi-nombre">${esc(c.nombre)}</div>
+      ${(c.sub && !red) ? `<div class="ubi-sub">${esc(c.sub)}</div>` : ''}
+      ${c.meta ? `<div class="ubi-meta">${esc(c.meta)}</div>` : ''}
+      ${aviso(c.borde)}
+    </div>`;
+  }).join('');
+
+  if(sc === true){
+    bloques += `<div class="ubi-cov" style="--c:#00838f">
+      <div class="ubi-cov-top"><span class="ubi-tag">Suelo de Conservación</span></div>
+      <div class="ubi-nombre">Dentro del Suelo de Conservación</div>
+      <div class="ubi-sub">${covs.length ? 'Régimen territorial aplicable en este punto'
+                                          : 'Sin área decretada de AVA, ANP ni ARCAC en este punto'}</div>
+    </div>`;
+  }
+
+  let cercana = null;
+  if(!covs.length){
+    cercana = _masCercana(latlng, (typeof GEOMETRIES!=='undefined' && GEOMETRIES && GEOMETRIES.features)||[]);
+    bloques += `<div class="ubi-cov ubi-sin" style="--c:#8a8d8f">
+      <div class="ubi-cov-top"><span class="ubi-tag">Sin área decretada</span></div>
+      <div class="ubi-nombre">El punto no cae en ninguna AVA, ANP ni ARCAC</div>
+      ${cercana ? `<div class="ubi-near">
+        <span class="ubi-near-k">Área decretada más cercana</span>
+        <b>${esc(cercana.nombre)}</b>
+        <span class="ubi-sub">${esc(cercana.grupo||'')}</span>
+        <span class="ubi-near-m">a ${_fmtDist(cercana.d)}</span>
+        ${aviso(cercana.d)}
+        <button type="button" class="ubi-ficha" data-ficha="inv::${esc(cercana.nombre)}">Ver ficha <span class="ar">→</span></button>
+      </div>` : ''}
+    </div>`;
+  }
+
+  const resumen = covs.length
+      ? `${covs.length} ${covs.length===1?'instrumento aplica':'instrumentos aplican'} en este punto`
+      : 'Sin instrumentos de protección en este punto';
+
+  return `<div class="panel ubi-panel">
+    <button type="button" class="ubi-cerrar" id="ubicarCerrar" aria-label="Cerrar resultado">×</button>
+    <div class="panel-eyebrow">Resultado de ubicación</div>
+    <h2 class="panel-title" style="color:var(--guinda)">${esc(resumen)}</h2>
+    ${etiqueta ? `<p class="ubi-etiqueta">${esc(etiqueta)}</p>` : ''}
+    <div class="ubi-grid">
+      <div class="ubi-col">${bloques}</div>
+      <div class="ubi-col">
+        <div class="ubi-map" id="ubicarMapCanvas"></div>
+        <div class="ubi-datos">
+          <div class="ubi-row"><span class="k">Alcaldía</span><span class="v">${alc ? esc(alc) : '<i>fuera de la CDMX</i>'}</span></div>
+          ${sc === false ? '<div class="ubi-row"><span class="k">Suelo de Conservación</span><span class="v"><i>Fuera</i></span></div>' : ''}
+          ${sc === null  ? '<div class="ubi-row"><span class="k">Suelo de Conservación</span><span class="v"><i>capa no cargada</i></span></div>' : ''}
+          <div class="ubi-row"><span class="k">Coordenada</span><span class="v mono">${coord}</span></div>
+          ${acc ? `<div class="ubi-row"><span class="k">Precisión GPS</span><span class="v mono">± ${acc} m</span></div>` : ''}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function initUbicarMap(latlng, precision){
+  const cont = document.getElementById('ubicarMapCanvas');
+  if(!cont || typeof L === 'undefined') return;
+  if(ubicarMap){ try{ ubicarMap.remove(); }catch(e){} ubicarMap = null; }
+  /* setView antes de agregar capas: Leaflet necesita una vista establecida
+     o los vectores fallan en _clipPoints al no existir aún los pixelBounds. */
+  ubicarMap = L.map(cont, {zoomControl:true, scrollWheelZoom:false, attributionControl:true})
+                .setView([latlng.lat, latlng.lng], 14);
+  try{ ubicarMap.invalidateSize(); }catch(e){}
+  L.tileLayer(TILE_LAYERS.positron.url,{attribution:TILE_LAYERS.positron.attribution,maxZoom:TILE_LAYERS.positron.maxZoom}).addTo(ubicarMap);
+  try{ createAlcaldiasLayer({interactive:false}).addTo(ubicarMap); }catch(e){}
+
+  const bounds = L.latLngBounds([[latlng.lat, latlng.lng]]);
+  _coberturasEn(latlng).forEach(c=>{
+    let feat = null;
+    try{
+      if(c.ficha.indexOf('inv::')===0) feat = GEOM_INDEX[slugify(c.ficha.slice(5))];
+      else if(c.ficha.indexOf('arcac::')===0) feat = ((ARCAC_GEO&&ARCAC_GEO.features)||[]).find(f=>String(f.properties.no)===c.ficha.slice(7));
+      else if(c.ficha.indexOf('zp::')===0) feat = ((ZP_DESIGNACIONES&&ZP_DESIGNACIONES.features)||[]).find(f=>f.properties.capa===c.ficha.slice(4));
+    }catch(e){}
+    if(!feat) return;
+    const l = L.geoJSON(feat,{style:{color:c.color,weight:2,fillColor:c.color,fillOpacity:0.2}}).addTo(ubicarMap);
+    l.bindTooltip(c.nombre,{sticky:true,direction:'top'});
+    try{ bounds.extend(l.getBounds()); }catch(e){}
+  });
+
+  if(precision){
+    L.circle([latlng.lat,latlng.lng],{radius:precision,color:'#1971C2',weight:1,fillColor:'#1971C2',fillOpacity:.12}).addTo(ubicarMap);
+  }
+  L.circleMarker([latlng.lat,latlng.lng],{radius:7,color:'#fff',weight:2,fillColor:'#1971C2',fillOpacity:1}).addTo(ubicarMap);
+
+  if(bounds.isValid()){ ubicarMap.fitBounds(bounds,{padding:[24,24],maxZoom:16}); ubicarMap._siaHome = bounds; }
+  else ubicarMap.setView([latlng.lat,latlng.lng],15);
+  ubicarMap.on('click focus', ()=>ubicarMap.scrollWheelZoom.enable());
+  ubicarMap.on('mouseout',    ()=>ubicarMap.scrollWheelZoom.disable());
+  addResetViewControl(ubicarMap, 'Vista general');
+  setTimeout(()=>{ try{ ubicarMap.invalidateSize(); }catch(e){} }, 200);
+}
+
 const bd=document.getElementById('bd'),dr=document.getElementById('dr'),drIn=document.getElementById('drIn');
 function openDrawer(d){
   const legalParts = getLegalContext(d);
@@ -5633,6 +6028,7 @@ document.getElementById('metaCount').textContent = fmtInt(DATA.length);
    ===================================================================== */
 
 buildTabs(); populateFilters(); renderDashboard(); render();
+initUbicarBar();
 
 /* === Deep linking: abrir ficha si la URL tiene #area=slug-del-area === */
 function openAreaFromHash(){
