@@ -656,9 +656,9 @@
   .map-search-result-item .res-meta{font-size:11px;color:var(--muted);font-family:'Roboto Mono',monospace;margin-top:2px;display:block}
   /* Encabezados de grupo y color de categoría en las sugerencias */
   .map-search-results .res-group{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:.11em;
-    text-transform:uppercase;color:var(--muted);padding:8px 12px 4px;background:var(--bg-2);
-    border-bottom:1px solid var(--line-soft);position:sticky;top:0}
-  .map-search-result-item{position:relative;padding-left:12px}
+    text-transform:uppercase;color:var(--muted);padding:8px 12px 5px;background:var(--bg-2);
+    border-bottom:1px solid var(--line-soft);position:sticky;top:0;z-index:2}
+  .map-search-result-item{position:relative;z-index:1;padding-left:12px;background:var(--card)}
   .map-search-result-item .res-swatch{position:absolute;left:12px;top:12px;width:8px;height:8px;
     border-radius:2px;flex-shrink:0}
   .map-search-result-item:has(.res-swatch){padding-left:28px}
@@ -4563,6 +4563,14 @@ function attachMapSearch(containerId, mapInstance, getFeatures){
   const btn = container.querySelector('.map-search-btn');
   const results = container.querySelector('.map-search-results');
   if(!input || !btn || !results) return;
+
+  /* El buscador vive dentro del contenedor de Leaflet, así que la rueda del mouse
+     y los clics llegaban al mapa: girar la rueda sobre la lista hacía zoom en vez
+     de desplazar los resultados. Leaflet trae utilidades para aislarlo. */
+  try{
+    L.DomEvent.disableScrollPropagation(container);
+    L.DomEvent.disableClickPropagation(container);
+  }catch(_){}
 
   // Clone-and-replace para evitar duplicación de listeners
   const freshInput = input.cloneNode(true);
