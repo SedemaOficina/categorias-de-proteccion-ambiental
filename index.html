@@ -654,6 +654,16 @@
   .map-search-result-item:hover,.map-search-result-item:focus-visible{background:var(--bg-2);outline:none}
   .map-search-result-item .res-title{font-weight:500;color:var(--ink);display:block}
   .map-search-result-item .res-meta{font-size:11px;color:var(--muted);font-family:'Roboto Mono',monospace;margin-top:2px;display:block}
+  /* Encabezados de grupo y color de categoría en las sugerencias */
+  .map-search-results .res-group{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:.11em;
+    text-transform:uppercase;color:var(--muted);padding:8px 12px 4px;background:var(--bg-2);
+    border-bottom:1px solid var(--line-soft);position:sticky;top:0}
+  .map-search-result-item{position:relative;padding-left:12px}
+  .map-search-result-item .res-swatch{position:absolute;left:12px;top:12px;width:8px;height:8px;
+    border-radius:2px;flex-shrink:0}
+  .map-search-result-item:has(.res-swatch){padding-left:28px}
+  .map-search-result-item:has(.res-swatch) .res-title,
+  .map-search-result-item:has(.res-swatch) .res-meta{margin-left:0}
   .map-search-empty{padding:14px 12px;text-align:center;color:var(--muted);font-size:12px;font-family:'Roboto',sans-serif}
   /* Mapa en pantalla completa — usa Fullscreen API nativa */
   #globalMapCanvas:fullscreen,#mapCanvas:fullscreen,#zpMapCanvas:fullscreen{height:100vh !important;width:100vw !important;background:var(--card)}
@@ -3553,7 +3563,9 @@ function _locatePopupHTML(latlng, accuracy, _ignored, _ignored2, opts){
   html += '<div class="loc-meta">';
   html += `<div class="mrow"><span class="mk">Alcaldía</span><span class="mv">${
     alc ? esc(alc) : '<span class="loc-na">fuera de la CDMX</span>'}</span></div>`;
-  if(sc === false) html += `<div class="mrow"><span class="mk">Suelo de Conservación</span><span class="mv loc-na">Fuera</span></div>`;
+  /* El renglón "Fuera" solo cuando hay alguna cobertura: en el caso sin cobertura
+     el párrafo de arriba ya dice "…ni en Suelo de Conservación" y se repetiría. */
+  if(sc === false && covs.length) html += `<div class="mrow"><span class="mk">Suelo de Conservación</span><span class="mv loc-na">Fuera</span></div>`;
   if(sc === null)  html += `<div class="mrow"><span class="mk">Suelo de Conservación</span><span class="mv loc-na">capa no cargada</span></div>`;
   html += `<div class="mrow"><span class="mk">${esc(opts.titulo || 'Punto localizado')}</span>
     <span class="mv mono">${coord}</span></div>`;
@@ -4463,6 +4475,45 @@ function attachFullscreenBtn(canvas, mapInstance){
   document.addEventListener('webkitfullscreenchange', onChange);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   AUTOCOMPLETADO DE DIRECCIONES · Google Places (New)
+   ═══════════════════════════════════════════════════════════════════════
+   Pega aquí la llave del proyecto de Google Cloud de SEDEMA.
+   Si queda vacía, el buscador sigue funcionando exactamente como hoy
+   (Nominatim al presionar Enter) — el sitio nunca se degrada.
+
+   OBLIGATORIO antes de publicarla, en Google Cloud → Credenciales:
+     1. Restricción de aplicación: "Sitios web" con estos referers
+          https://sedemaoficina.github.io/*
+        (y el dominio propio si algún día se migra)
+     2. Restricción de API: solo "Maps JavaScript API" y "Places API (New)"
+     3. Cuota diaria y alerta de facturación en el proyecto
+   La llave viaja al navegador por diseño: lo que la protege NO es esconderla,
+   son esas tres restricciones.
+   ═══════════════════════════════════════════════════════════════════════ */
+const GOOGLE_MAPS_API_KEY = 'AIzaSyD2FpHuJf692Y_Ap4lQfNw_ZjaxJcdXcYo';   // ← pegar aquí la llave
+
+let _gmapsPromise = null;
+function cargarGooglePlaces(){
+  if(!GOOGLE_MAPS_API_KEY) return Promise.reject(new Error('sin llave'));
+  if(_gmapsPromise) return _gmapsPromise;
+  _gmapsPromise = new Promise((ok, fail)=>{
+    window.__siaGmapsReady = ()=>ok(window.google);
+    const sc = document.createElement('script');
+    sc.src = 'https://maps.googleapis.com/maps/api/js'
+           + '?key=' + encodeURIComponent(GOOGLE_MAPS_API_KEY)
+           + '&libraries=places&v=weekly&language=es&region=MX'
+           + '&loading=async&callback=__siaGmapsReady';
+    sc.async = true;
+    sc.onerror = ()=>fail(new Error('no se pudo cargar Google Maps'));
+    document.head.appendChild(sc);
+  });
+  return _gmapsPromise;
+}
+
+/* Sesgo a la CDMX: mismas coordenadas que ya usa el buscador de Nominatim */
+const _CDMX_BOUNDS = { west:-99.366, south:19.045, east:-98.940, north:19.593 };
+
 /* === Buscador de direcciones / coordenadas (Nominatim · OpenStreetMap) === */
 /* Última coordenada buscada (persiste entre mapas: global → mini-mapa de ficha) */
 let lastSearchLatLng = null;
@@ -4474,6 +4525,34 @@ function addSearchMarkerTo(map){
     }).addTo(map);
     mk.bindTooltip(lastSearchLatLng.label || `${lastSearchLatLng.lat.toFixed(5)}, ${lastSearchLatLng.lng.toFixed(5)}`, {direction:'top'});
   }catch(e){}
+}
+
+/* Índice local de nombres: instantáneo, sin red y sin costo.
+   Es lo que más se teclea ("Ajusco", "Chapultepec"), así que va primero. */
+function _indiceLocal(){
+  const out = [];
+  try{
+    (DATA||[]).forEach(d=>out.push({t:'inv', nombre:d.nombre, sub:d.grupo,
+      color:(typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[d.grupo])||'#9d2148', ref:d.nombre}));
+  }catch(_){}
+  try{
+    ((ARCAC_GEO&&ARCAC_GEO.features)||[]).forEach(f=>{
+      const pr=f.properties||{};
+      out.push({t:'arcac', nombre:pr.nombre, sub:'ARCAC · '+(pr.tenencia||''),
+        color:(typeof ARCAC_COLORS!=='undefined' && ARCAC_COLORS[pr.tenencia])||'#7048E8', ref:pr.no});
+    });
+  }catch(_){}
+  try{
+    (ZP_DATA||[]).filter(r=>r.es_designacion).forEach(r=>out.push({t:'zp', nombre:r.nombre,
+      sub:'Zona Patrimonio', color:r.color||'#9d2148', ref:r.key}));
+  }catch(_){}
+  return out;
+}
+function _buscarLocal(q){
+  const norm = t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const nq = norm(q);
+  if(nq.length < 2) return [];
+  return _indiceLocal().filter(x=>norm(x.nombre).includes(nq)).slice(0,5);
 }
 
 function attachMapSearch(containerId, mapInstance, getFeatures){
@@ -4535,13 +4614,116 @@ function attachMapSearch(containerId, mapInstance, getFeatures){
     mapInstance.flyTo([lat, lng], Math.max(mapInstance.getZoom(), 14), { duration: 0.8 });
   }
 
+  /* Sugerencias mientras se escribe: primero el inventario, luego direcciones */
+  let _sesion = null;      // AutocompleteSessionToken: agrupa teclas + selección en un cobro
+  let _debounce = null;
+  let _seq = 0;
+
+  function pintarSugerencias(locales, direcciones){
+    let html = '';
+    if(locales.length){
+      html += '<div class="res-group">En el inventario</div>';
+      html += locales.map((x,i)=>`
+        <div class="map-search-result-item" tabindex="0" role="button" data-local="${i}">
+          <span class="res-swatch" style="background:${escapeHtml(x.color)}"></span>
+          <span class="res-title">${escapeHtml(x.nombre)}</span>
+          <span class="res-meta">${escapeHtml(x.sub||'')}</span>
+        </div>`).join('');
+    }
+    if(direcciones.length){
+      html += '<div class="res-group">Direcciones</div>';
+      html += direcciones.map((d,i)=>`
+        <div class="map-search-result-item" tabindex="0" role="button" data-dir="${i}">
+          <span class="res-title">${escapeHtml(d.principal)}</span>
+          <span class="res-meta">${escapeHtml(d.secundario||'')}</span>
+        </div>`).join('');
+    }
+    if(!html){ results.hidden = true; return; }
+    results.innerHTML = html;
+    results.hidden = false;
+
+    results.querySelectorAll('[data-local]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const x = locales[+el.dataset.local];
+        results.hidden = true; freshInput.value = x.nombre;
+        try{
+          if(x.t==='inv'){
+            const g = GEOM_INDEX[slugify(x.ref)];
+            if(g){ const l=L.geoJSON(g); mapInstance.fitBounds(l.getBounds(),{padding:[30,30],maxZoom:16}); }
+            const a = DATA.find(d=>d.nombre===x.ref); if(a) openDrawer(a);
+          } else if(x.t==='arcac'){ openARCACFicha(Number(x.ref)); }
+          else if(x.t==='zp'){ openZPFicha(x.ref); }
+        }catch(err){ siaToast('No se pudo abrir esa área.'); }
+      });
+    });
+    results.querySelectorAll('[data-dir]').forEach(el=>{
+      el.addEventListener('click', async ()=>{
+        const d = direcciones[+el.dataset.dir];
+        results.hidden = true; freshInput.value = d.principal;
+        try{
+          if(d.place){
+            const place = d.place.toPlace();
+            await place.fetchFields({fields:['location','formattedAddress']});
+            const loc = place.location;
+            placeMarker(loc.lat(), loc.lng(), place.formattedAddress || d.principal);
+          } else if(d.lat != null){
+            placeMarker(d.lat, d.lng, d.principal);
+          }
+        }catch(err){ siaToast('No se pudo ubicar esa dirección.'); }
+        _sesion = null;   // la sesión de facturación termina al elegir
+      });
+    });
+  }
+
+  async function sugerirDirecciones(q){
+    if(!GOOGLE_MAPS_API_KEY) return [];
+    try{
+      await cargarGooglePlaces();
+      const { AutocompleteSuggestion, AutocompleteSessionToken } =
+        await google.maps.importLibrary('places');
+      if(!_sesion) _sesion = new AutocompleteSessionToken();
+      const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+        input: q,
+        sessionToken: _sesion,
+        locationBias: _CDMX_BOUNDS,
+        includedRegionCodes: ['mx'],
+        language: 'es-MX'
+      });
+      return (suggestions||[]).slice(0,5).map(sg=>{
+        const pp = sg.placePrediction;
+        return {
+          place: pp,
+          principal: (pp.mainText && pp.mainText.text) || (pp.text && pp.text.text) || '',
+          secundario: (pp.secondaryText && pp.secondaryText.text) || ''
+        };
+      }).filter(x=>x.principal);
+    }catch(err){
+      console.warn('[Buscador] Google Places no disponible:', err && err.message);
+      return [];
+    }
+  }
+
+  freshInput.addEventListener('input', ()=>{
+    const q = freshInput.value.trim();
+    clearTimeout(_debounce);
+    if(q.length < 2){ results.hidden = true; return; }
+    if(parseCoords(q)){ results.hidden = true; return; }   // es una coordenada: no hay que sugerir
+    const mio = ++_seq;
+    const locales = _buscarLocal(q);
+    pintarSugerencias(locales, []);                        // el inventario aparece de inmediato
+    _debounce = setTimeout(async ()=>{                      // las direcciones, con freno
+      const dirs = await sugerirDirecciones(q);
+      if(mio === _seq) pintarSugerencias(locales, dirs);
+    }, 280);
+  });
+
   function showResults(items){
     if(!items || !items.length){
       results.innerHTML = '<div class="map-search-empty">Sin resultados. Intenta con otra búsqueda.</div>';
       results.hidden = false;
       return;
     }
-    results.innerHTML = items.map((it, i) => `
+    results.innerHTML = '<div class="res-group">Direcciones</div>' + items.map((it, i) => `
       <div class="map-search-result-item" tabindex="0" role="button" data-idx="${i}">
         <span class="res-title">${escapeHtml(it.display_name.split(',').slice(0,2).join(','))}</span>
         <span class="res-meta">${parseFloat(it.lat).toFixed(5)}, ${parseFloat(it.lon).toFixed(5)}</span>
@@ -4575,7 +4757,16 @@ function attachMapSearch(containerId, mapInstance, getFeatures){
       return;
     }
 
-    // 2) Si es texto, geocodificar con Nominatim (sesgo CDMX)
+    // 2) Con llave de Google, Enter toma la primera sugerencia de Places
+    if(GOOGLE_MAPS_API_KEY){
+      freshBtn.disabled = true;
+      try{
+        const dirs = await sugerirDirecciones(q);
+        if(dirs.length){ pintarSugerencias(_buscarLocal(q), dirs); return; }
+      } finally { freshBtn.disabled = false; }
+    }
+
+    // 3) Sin llave (o si Places falló): Nominatim, una sola consulta al presionar Enter
     freshBtn.disabled = true;
     try {
       // Bounding box de CDMX para priorizar resultados locales
