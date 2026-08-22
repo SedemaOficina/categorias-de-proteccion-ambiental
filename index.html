@@ -5085,10 +5085,19 @@ const _CDMX_BOUNDS = { west:-99.366, south:19.045, east:-98.940, north:19.593 };
 const _AMBITO_BOUNDS = { west:-100.62, south:18.32, east:-98.55, north:20.30 };
 const _AMBITO_ORDEN  = { 'CDMX':0, 'Estado de México':1, 'Morelos':2 };
 function _entidadDeTexto(txt){
-  const t = String(txt || '');
-  if(/\bCDMX\b|Ciudad de M[eé]xico|Distrito Federal/i.test(t))            return 'CDMX';
-  if(/\bMor\.?\s*,|\bMorelos\b/i.test(t))                                 return 'Morelos';
-  if(/\bM[eé]x\.?\s*,|Estado de M[eé]xico|\bEdo\.?\s*de\s*M[eé]x/i.test(t)) return 'Estado de México';
+  const t = String(txt || '').trim().replace(/,\s*M[eé]xico\s*\.?\s*$/i, '');
+  /* La entidad viaja como ULTIMO componente del texto secundario. Hay que
+     probar el componente completo, no una subcadena: "Ecatepec de Morelos"
+     es municipio del Estado de Mexico, y una prueba laxa de /Morelos/ lo
+     etiquetaba como Morelos. Detectado probando en produccion. */
+  const cola = t.split(',').pop().trim();
+  if(/^(CDMX|Ciudad de M[eé]xico|Distrito Federal|D\.?\s*F\.?)$/i.test(cola)) return 'CDMX';
+  if(/^(Mor\.?|Morelos)$/i.test(cola))                                        return 'Morelos';
+  if(/^(M[eé]x\.?|Estado de M[eé]xico|Edo\.?\s*de\s*M[eé]x\.?)$/i.test(cola)) return 'Estado de México';
+  /* Respaldo si Google no cierra con la entidad. Nunca por /Morelos/ suelto. */
+  if(/\bCDMX\b|Distrito Federal/i.test(t))                                   return 'CDMX';
+  if(/Estado de M[eé]xico|\bM[eé]x\.(?=\s*,|\s*$)/i.test(t))                   return 'Estado de México';
+  if(/\bMor\.(?=\s*,|\s*$)/i.test(t))                                        return 'Morelos';
   return null;   // fuera del ambito: se descarta
 }
 /* Origen para calcular distancias en las sugerencias (gratis: viene en la
@@ -5120,8 +5129,12 @@ async function siaSugerirDirecciones(q){
       return { place: pp, ent,
         principal: (pp.mainText && pp.mainText.text) || (pp.text && pp.text.text) || '',
         /* El sufijo ", CDMX, México" es ruido en el 100% de los casos */
-        secundario: sec.replace(/,\s*(CDMX|M[eé]x\.|Mor\.)\s*,\s*M[eé]xico\s*$/i,'')
-                       .replace(/,\s*M[eé]xico\s*$/i,''),
+        /* Places no siempre manda el pais, asi que se recorta en dos pasos:
+           primero "México" si viene, luego la entidad abreviada. El chip ya
+           dice la entidad; repetirla en el renglon es ruido. */
+        secundario: sec.replace(/,\s*M[eé]xico\s*$/i,'')
+                       .replace(/,\s*(CDMX|M[eé]x\.?|Mor\.?)\s*$/i,'')
+                       .trim(),
         d: (typeof pp.distanceMeters === 'number') ? pp.distanceMeters : null };
     })
     .filter(x => x.principal && x.ent)                    // fuera del ambito: se descarta
