@@ -62,12 +62,7 @@
     --bg-3:#f1ead4;
     --ink:#2a2a2a;
     --ink-2:var(--gris);
-    /* 2.78:1 sobre --bg-3 no cumplia AA y es el color de la etiqueta que
-       identifica cada dato en la ficha. #67696b da 5.40 sobre crema y 4.58
-       sobre el fondo mas oscuro del sistema. */
-    --muted:#67696b;
-    --marron-900:#8f5610;   /* fondo de insignia con texto crema · 5.86:1 */
-    --magenta-900:#c2277a;  /* idem · 5.32:1 */
+    --muted:#8a8d8f;
     --line:#d9d3c0;
     --line-soft:#eae4cf;
     --accent:var(--guinda);
@@ -185,14 +180,9 @@
   .e-mor{background:var(--verde)}
   /* Distintivo de area cuyo poligono cruza el limite estatal */
   .lim{display:inline-flex;align-items:center;gap:4px;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);
-    letter-spacing:.09em;font-weight:700;text-transform:uppercase;background:var(--dorado);color:var(--ink);
+    letter-spacing:.09em;font-weight:700;text-transform:uppercase;background:var(--dorado);color:#fff;
     padding:2px 6px;border-radius:var(--r-chip);white-space:nowrap}
 
-  /* Filas de tabla operables con teclado: sin esto, examinar el inventario
-     y abrir una ficha —el flujo central— es imposible sin raton. */
-  tr[tabindex]:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px}
-  .ubicar-sugerencias .item:focus-visible,
-  .map-search-result-item:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px;background:var(--bg-2)}
   .ubicar-kbd{display:none}
   /* Escritorio: el modulo se colapsa a una franja de una linea.
      El boton de GPS se oculta porque en escritorio navigator.geolocation
@@ -704,14 +694,14 @@
   .tag-sub.tag-sub-full{padding:4px 12px;font-size:var(--fs-xs);letter-spacing:.02em;white-space:normal}
   /* AVA */
   .sub-BU   {background:var(--naranja);    color:var(--ink)}        /* Naranja 151C */
-  .sub-BR   {background:var(--marron-900); color:var(--crema)}      /* Marrón 146C oscurecido · AA */
+  .sub-BR   {background:var(--marron);     color:var(--crema)}      /* Marrón 146C  */
   /* ANP Local */
   .sub-ZCE  {background:var(--gris);       color:var(--crema)}      /* Gris 425C    */
   .sub-ZSCE {background:var(--azul-claro); color:var(--ink)}        /* Azul cl 0821C */
   .sub-ZPE  {background:var(--amarillo);   color:var(--ink)}        /* Amarillo 7548C */
   .sub-ZEC  {background:var(--rosa-claro); color:var(--ink)}        /* Rosa 176C    */
-  .sub-ZPHE {background:var(--magenta-900);color:var(--crema)}      /* Magenta 225C oscurecido · AA */
-  .sub-REC  {background:var(--dorado);     color:var(--ink)}        /* Dorado 465C · texto oscuro por contraste */
+  .sub-ZPHE {background:var(--magenta);    color:var(--crema)}      /* Magenta 225C */
+  .sub-REC  {background:var(--dorado);     color:var(--crema)}      /* Dorado 465C  */
   /* ANP Federal */
   .sub-PN   {background:var(--rojo);       color:var(--crema)}      /* Rojo 1925C   */
   .sub-APRN {background:var(--violeta);    color:var(--crema)}      /* Violeta 258C */
@@ -1419,8 +1409,8 @@
 </div>
 
 <div class="backdrop" id="bd"></div>
-<aside class="drawer" id="dr" role="dialog" aria-label="Ficha del área" tabindex="-1">
-  <button class="close" id="drClose" aria-label="Cerrar ficha">×</button>
+<aside class="drawer" id="dr">
+  <button class="close" id="drClose" aria-label="Cerrar">×</button>
   <div class="drawer-inner" id="drIn"></div>
 </aside>
 
@@ -1482,40 +1472,10 @@ const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'
      Se declara aqui, y no junto al resto de helpers, porque es un const (no se
      iza) y DATA lo necesita unas lineas mas abajo. */
 
-/* Aviso en el cuerpo de la tabla mientras el inventario no llega. Sin esto,
-   una respuesta lenta del Sheet se ve como una pagina rota: el cascaron se
-   pinta y el usuario se queda con "REGISTROS · —" sin ninguna senal. */
-function _estadoTabla(msg){
-  try{
-    const tb = document.getElementById('tb');
-    if(tb) tb.innerHTML = '<tr><td colspan="12" class="ubi-cargando">' + msg + '</td></tr>';
-  }catch(_){}
-}
-
 async function loadInventarioCSV(){
-  _estadoTabla('Cargando el inventario…');
-  /* Era el unico fetch del archivo sin timeout, y bloquea todo el modulo:
-     si el Sheet no responde, nada despues de esta linea se ejecuta. */
-  const intento = async (ms)=>{
-    const url = SHEET_URL + (SHEET_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
-    const ac = new AbortController();
-    const reloj = setTimeout(()=>ac.abort(), ms);
-    try{ return await fetch(url, { cache:'no-store', signal:ac.signal }); }
-    finally{ clearTimeout(reloj); }
-  };
-  let r;
-  try{
-    r = await intento(9000);
-  }catch(err){
-    if(err && err.name !== 'AbortError') throw err;
-    _estadoTabla('El inventario tarda en responder. Reintentando…');
-    try{
-      r = await intento(15000);
-    }catch(err2){
-      throw new Error('El inventario de Google Sheets no respondió a tiempo. '
-                    + 'Revisa la conexión y recarga la página.');
-    }
-  }
+  // Cache-busting: agrega timestamp para forzar lectura fresca
+  const url = SHEET_URL + (SHEET_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
+  const r = await fetch(url, { cache: 'no-store' });
   if(!r.ok) throw new Error('No se pudo leer el inventario desde Google Sheets (HTTP ' + r.status + ')');
   const text = await r.text();
   const rows = parseCSV(text);
@@ -6316,83 +6276,6 @@ function closeDrawer(){
     history.replaceState(null, '', location.pathname + location.search);
   }
 }
-/* ═══ OPERABILIDAD POR TECLADO ═════════════════════════════════════════
-   Las filas de las cinco tablas y los renglones de las dos listas de
-   sugerencias se activaban solo con clic. Aqui se les da foco y se traduce
-   Enter/Espacio al mismo clic, sin tocar las funciones de render. */
-const _NAVEGABLES = 'tr[data-i],tr[data-emb],tr[data-zpkey],tr[data-no],tr[data-a],'
-                  + '.ubicar-sugerencias .item,.map-search-result-item';
-function _marcarNavegables(){
-  document.querySelectorAll(_NAVEGABLES).forEach(el=>{
-    if(!el.hasAttribute('tabindex')) el.setAttribute('tabindex','0');
-  });
-}
-let _navPend = false;
-new MutationObserver(muts=>{
-  if(_navPend) return;
-  const hayFilas = muts.some(m=>[...m.addedNodes].some(n=>
-    n.nodeType===1 && (n.tagName==='TR' || (n.querySelector && n.querySelector('tr,.item')))));
-  if(!hayFilas) return;
-  _navPend = true;
-  requestAnimationFrame(()=>{ _navPend = false; _marcarNavegables(); });
-}).observe(document.body, {childList:true, subtree:true});
-_marcarNavegables();
-
-document.addEventListener('keydown', e=>{
-  /* Flechas dentro de una lista de sugerencias abierta */
-  const lista = document.querySelector('.ubicar-sugerencias:not([hidden]), .map-search-results');
-  if(lista && (lista.contains(e.target) || e.target.id === 'ubicarInput'
-      || (e.target.classList && e.target.classList.contains('map-search-input')))
-      && (e.key === 'ArrowDown' || e.key === 'ArrowUp')){
-    const items = [...lista.querySelectorAll('.item,.map-search-result-item')].filter(x=>x.offsetParent);
-    if(items.length){
-      e.preventDefault();
-      const i = items.indexOf(document.activeElement);
-      items[e.key === 'ArrowDown' ? (i+1) % items.length : (i-1+items.length) % items.length].focus();
-      return;
-    }
-  }
-  /* Enter y Espacio activan lo que tenga el foco */
-  if(e.key !== 'Enter' && e.key !== ' ') return;
-  const el = e.target.closest && e.target.closest(_NAVEGABLES);
-  if(!el) return;
-  e.preventDefault();
-  el.dispatchEvent(new MouseEvent('click', {bubbles:true}));
-});
-
-/* ═══ FOCO DE LA FICHA LATERAL ═════════════════════════════════════════
-   Se envuelven las funciones ya existentes para no tocar su cuerpo. Debe
-   ir ANTES de los addEventListener de abajo: esos capturan la referencia
-   en el momento de enlazar. */
-let _focoPrevio = null;
-const _openDrawerOrig = openDrawer, _closeDrawerOrig = closeDrawer;
-openDrawer = function(){
-  _focoPrevio = document.activeElement;
-  const r = _openDrawerOrig.apply(this, arguments);
-  try{ document.getElementById('dr').setAttribute('aria-modal','true'); }catch(_){}
-  setTimeout(()=>{ const b = document.getElementById('drClose'); if(b) b.focus(); }, 80);
-  return r;
-};
-closeDrawer = function(){
-  const r = _closeDrawerOrig.apply(this, arguments);
-  try{ document.getElementById('dr').removeAttribute('aria-modal'); }catch(_){}
-  if(_focoPrevio && document.contains(_focoPrevio)){ try{ _focoPrevio.focus(); }catch(_){} }
-  _focoPrevio = null;
-  return r;
-};
-/* El tabulador no debe salirse de la ficha mientras esta abierta */
-document.addEventListener('keydown', e=>{
-  if(e.key !== 'Tab') return;
-  const dr = document.getElementById('dr');
-  if(!dr || !dr.classList.contains('open')) return;
-  const f = [...dr.querySelectorAll('a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])')]
-            .filter(el=>el.offsetParent !== null);
-  if(!f.length) return;
-  const pri = f[0], ult = f[f.length-1];
-  if(e.shiftKey && document.activeElement === pri){ e.preventDefault(); ult.focus(); }
-  else if(!e.shiftKey && document.activeElement === ult){ e.preventDefault(); pri.focus(); }
-});
-
 document.getElementById('tb').addEventListener('click',e=>{
   const tr=e.target.closest('tr[data-i]'); if(!tr) return;
   openDrawer(DATA[+tr.dataset.i]);
