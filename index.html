@@ -839,9 +839,24 @@
 
   /* ── Pantallas angostas: el buscador toma el ancho y la tarjeta de vista baja ── */
   @media (max-width:760px){
-    .map-search-float{left:calc(10px + var(--mc-h) + 8px); right:10px; max-width:none}
+    /* Fila 1 · buscador a todo lo ancho */
+    .map-search-float{top:10px; left:10px; right:10px; max-width:none}
     .map-search-input{width:100%}
+    /* Fila 2 · navegación a la izquierda, vista a la derecha, debajo del buscador */
+    .leaflet-top.leaflet-left{top:calc(10px + var(--mc-h) + 8px)}
     .map-block-controls-floating{top:calc(10px + var(--mc-h) + 8px)}
+    /* El popup no debe exceder el ancho del mapa */
+    .loc-pop{min-width:0}
+    /* Mientras el globo está abierto, la columna de navegación se quita de en medio:
+       los controles de Leaflet se pintan por encima de los popups por diseño. */
+    .leaflet-container.sia-popup-abierto .leaflet-top.leaflet-left{
+      opacity:0; pointer-events:none; transition:opacity .15s}
+    .loc-pop .cov{padding:9px 12px 8px}
+    .loc-pop .loc-goto{padding:8px; font-size:12px}
+    .loc-pop .cov-name{font-size:13.5px}
+    .loc-pop .mk{font-size:8.5px}
+    .loc-pop .mv{font-size:12px}
+    .loc-pop .mv.mono{font-size:11px}
   }
   .map-canvas.no-data b{display:block;color:var(--ink-2);margin-bottom:6px;font-size:13px}
   .map-block-foot{display:flex;align-items:center;gap:14px;padding:7px 12px;background:#fff;border-top:1px solid var(--line-soft);font-size:11px;color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.04em}
@@ -896,9 +911,8 @@
   @media (max-width:640px){
     #globalMapCanvas{height:420px}
     .map-filter-chip{padding:5px 10px;font-size:11.5px}
-    /* === Controles de mapa en 2 filas (evita solapamiento buscador/toggle/expandir) === */
-    /* Fila 1 · buscador a todo lo ancho, arriba */
-    .map-search-float{top:10px;left:10px;right:10px;width:auto;max-width:none}
+    /* === Controles en 2 filas · el posicionamiento vive en el bloque ≤760px === */
+    .map-search-float{width:auto}
     .map-search-input{width:100%;font-size:12px;padding:7px 10px}
     .map-search-input::placeholder{font-size:11px}
     .map-search-btn{width:30px}
@@ -3459,6 +3473,24 @@ function _masCercana(latlng, features){
   return { nombre: pr.nombre || pr.capa || 'Polígono', grupo: pr.grupo || pr.tenencia || '', d: best.d };
 }
 
+/* El popup debe caber en el mapa: en un contenedor de 328 px, 320 de ancho se sale.
+   También se reserva espacio arriba para que el autopan no lo deje bajo los controles. */
+function _popupOpts(map){
+  if(map && !map._siaDim){
+    map._siaDim = true;
+    const cl = (add) => { try{
+      map.getContainer().classList[add?'add':'remove']('sia-popup-abierto');
+    }catch(_){} };
+    map.on('popupopen',  ()=>cl(true));
+    map.on('popupclose', ()=>cl(false));
+  }
+  let w = 320;
+  /* -64 = padding interno del globo de Leaflet (44) + holgura a los lados */
+  try{ w = Math.max(190, Math.min(320, map.getContainer().clientWidth - 64)); }catch(_){}
+  return { maxWidth:w, minWidth:Math.min(220, w),
+           autoPanPaddingTopLeft:[12, 100], autoPanPaddingBottomRight:[12, 12] };
+}
+
 const _locateRefs = new WeakMap();
 function addLocateControl(map, getContainment, getFeatures){
   if(!map || typeof L==='undefined') return;
@@ -3488,7 +3520,7 @@ function _doLocate(map,getContainment,btn,getFeatures){
     const m=L.circleMarker(e.latlng,{radius:7,color:'#fff',weight:2,fillColor:'#1971C2',fillOpacity:1}).addTo(map);
     _locateRefs.set(map,{m,c});
     m.bindPopup('<div class="loc-pop"><div class="loc-loading">Consultando capas…</div></div>',
-                {maxWidth:320, minWidth:262}).openPopup();
+                _popupOpts(map)).openPopup();
     _cargarCapasCobertura().then(()=>{
       try{ m.setPopupContent(_locatePopupHTML(e.latlng, e.accuracy)); }catch(_){}
     });
@@ -4613,7 +4645,7 @@ function attachMapSearch(containerId, mapInstance, getFeatures){
     }).addTo(mapInstance);
     // Mismo diagnóstico que «Ubicarme»: da igual si llegaste por GPS o tecleando la coordenada
     currentMarker.bindPopup('<div class="loc-pop"><div class="loc-loading">Consultando capas…</div></div>',
-                            {maxWidth:320, minWidth:262});
+                            _popupOpts(mapInstance));
     setTimeout(()=>{ try{ currentMarker.openPopup(); }catch(e){} }, 850);
     _cargarCapasCobertura().then(()=>{
       try{ currentMarker.setPopupContent(
