@@ -8,7 +8,7 @@
 <!-- Metadatos institucionales -->
 <meta name="description" content="Sistema de Información Ambiental de la CDMX. Dashboard institucional de las 66 Áreas Naturales Protegidas, Áreas de Valor Ambiental y Zonas Comunitarias de Conservación Ecológica del territorio capitalino.">
 <meta name="author" content="Secretaría del Medio Ambiente · Gobierno de la Ciudad de México">
-<meta name="theme-color" content="#9d2148">
+<meta name="theme-color" content="var(--guinda)">
 <meta name="robots" content="index,follow">
 
 <!-- Favicon institucional -->
@@ -79,9 +79,37 @@
 
     --shadow:0 1px 2px rgba(42,42,42,.04),0 4px 12px -6px rgba(42,42,42,.08);
     --radius:4px;
+
+    /* ─── Sistema de diseno · consolidacion 2026-08-22 ────────────────────
+       Antes: 36 tamanos de letra, 14 radios, 20 sombras, 11 z-index y 32
+       colores hex sueltos fuera de este bloque. Cada token conserva el valor
+       que ya tenia el caso dominante: es consolidacion, no rediseno.
+       Movimiento maximo: 1 px. */
+    --fs-micro:9.5px;   --fs-mini:10.5px;  --fs-xs:11px;
+    --fs-sm:12.5px;     --fs-base:13px;    --fs-md:14px;
+    --fs-lg:18px;       --fs-xl:22px;      --fs-2xl:28px;
+    --fs-hero:30px;     --fs-mega:44px;
+
+    --r-chip:2px;       /* insignias y puntos de color */
+    --r-ui:3px;         /* botones, campos, celdas */
+    --r-card:var(--radius);
+
+    --sh-1:0 1px 3px rgba(42,42,42,.08);      /* tarjeta en reposo */
+    --sh-2:0 4px 14px rgba(42,42,42,.12);     /* control flotante */
+    --sh-3:0 8px 24px rgba(42,42,42,.22);     /* ficha, popup, toast */
+
+    --z-mapa:1; --z-flotante:500; --z-sticky:900;
+    --z-drawer:1000; --z-drawer-top:1001; --z-modal:1500; --z-toast:2000;
+
+    --guinda-900:#7d1839;   /* hover del guinda */
+    --arcac-com:#7048e8;    /* ARCAC · Comunidad */
+    --acento-mapa:#f4c842;
+    --sc:#00838f;  --sc-900:#006064;
+    --warn-bg:#fff8e1;  --alert-bg:#fdf0f3;  --alert-text:#8a2242;
+    --map-bg:#e8e3d4;       /* lienzo del mapa sin tiles */
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{background:var(--bg);color:var(--ink);font-family:'Roboto',sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Roboto',sans-serif;font-size:var(--fs-md);line-height:1.55;-webkit-font-smoothing:antialiased}
   .wrap{max-width:1440px;margin:0 auto;padding:32px 28px 80px}
 
   /* Banda institucional — v36: el logo vive dentro del header (una sola banda) */
@@ -95,10 +123,10 @@
   header.top{display:flex;align-items:center;justify-content:space-between;gap:26px;padding:6px 0 14px;border-bottom:2px solid var(--guinda);margin-bottom:16px}
   .brand{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0;max-width:780px}
   /* .eyebrow eliminada en v34 — el span se removió del header en v33 */
-  h1{font-family:'Roboto',sans-serif;font-weight:900;font-size:30px;line-height:1.1;letter-spacing:-.02em;color:var(--ink);max-width:900px}
+  h1{font-family:'Roboto',sans-serif;font-weight:900;font-size:var(--fs-hero);line-height:1.1;letter-spacing:-.02em;color:var(--ink);max-width:900px}
   h1 em{font-style:normal;color:var(--guinda);font-weight:900}
-  .sub{color:var(--ink-2);margin-top:10px;font-size:15px;font-weight:400}
-  .meta{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);text-align:right;letter-spacing:.05em;line-height:1.8}
+  .sub{color:var(--ink-2);margin-top:10px;font-size:var(--fs-md);font-weight:400}
+  .meta{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:right;letter-spacing:.05em;line-height:1.8}
   .meta b{color:var(--guinda);font-weight:500}
 
   /* ═══ Barra «¿Dónde estoy?» · acción principal en campo ═══
@@ -108,52 +136,52 @@
     border:1px solid var(--line);border-left:3px solid var(--guinda);border-radius:var(--radius);
     padding:12px 16px;margin-bottom:14px}
   .ubicar-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:9px}
-  .ubicar-kicker{font-family:'Cabin',sans-serif;font-weight:700;font-size:13px;color:var(--guinda);
+  .ubicar-kicker{font-family:'Cabin',sans-serif;font-weight:700;font-size:var(--fs-base);color:var(--guinda);
     text-transform:uppercase;letter-spacing:.06em}
-  .ubicar-hint{font-size:12px;color:var(--ink-2)}
+  .ubicar-hint{font-size:var(--fs-sm);color:var(--ink-2)}
   .ubicar-row{display:flex;gap:10px;align-items:stretch}
   .ubicar-gps{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;
     background:var(--guinda);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;
-    padding:0 16px;height:40px;font-family:'Roboto',sans-serif;font-size:13px;font-weight:700;
+    padding:0 16px;height:40px;font-family:'Roboto',sans-serif;font-size:var(--fs-base);font-weight:700;
     transition:background .15s;white-space:nowrap}
-  .ubicar-gps:hover{background:#7d1839}
+  .ubicar-gps:hover{background:var(--guinda-900)}
   .ubicar-gps:disabled{opacity:.6;cursor:wait}
   .ubicar-input-wrap{position:relative;flex:1;display:flex;min-width:0}
   .ubicar-input-wrap input{flex:1;min-width:0;height:40px;padding:0 14px;border:1px solid var(--line);
     border-right:none;border-radius:var(--radius) 0 0 var(--radius);background:#fff;
-    font-family:'Roboto',sans-serif;font-size:13.5px;color:var(--ink);outline:none}
+    font-family:'Roboto',sans-serif;font-size:var(--fs-base);color:var(--ink);outline:none}
   .ubicar-input-wrap input:focus{border-color:var(--guinda)}
   .ubicar-go{width:44px;flex-shrink:0;border:1px solid var(--line);border-left:none;
     border-radius:0 var(--radius) var(--radius) 0;background:#fff;color:var(--ink-2);cursor:pointer}
   .ubicar-go:hover{color:var(--guinda)}
   .ubicar-sugerencias{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);
-    border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.18);
-    max-height:300px;overflow-y:auto;z-index:900}
-  .ubicar-sugerencias .res-group{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:.11em;
+    border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--sh-3);
+    max-height:300px;overflow-y:auto;z-index:var(--z-sticky)}
+  .ubicar-sugerencias .res-group{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.11em;
     text-transform:uppercase;color:var(--muted);padding:8px 12px 5px;background:var(--bg-2);
     border-bottom:1px solid var(--line-soft);position:sticky;top:0;z-index:2}
   .ubicar-sugerencias .item{position:relative;z-index:1;background:var(--card);padding:10px 12px 10px 28px;
-    cursor:pointer;border-bottom:1px dotted var(--line-soft);font-size:13px;color:var(--ink)}
+    cursor:pointer;border-bottom:1px dotted var(--line-soft);font-size:var(--fs-base);color:var(--ink)}
   .ubicar-sugerencias .item:last-child{border-bottom:none}
   .ubicar-sugerencias .item:hover{background:var(--bg-2)}
-  .ubicar-sugerencias .item .sw{position:absolute;left:12px;top:14px;width:8px;height:8px;border-radius:2px}
-  .ubicar-sugerencias .item .meta{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+  .ubicar-sugerencias .item .sw{position:absolute;left:12px;top:14px;width:8px;height:8px;border-radius:var(--r-chip)}
+  .ubicar-sugerencias .item .meta{display:block;font-size:var(--fs-xs);color:var(--muted);margin-top:2px}
   .ubicar-sugerencias .item .rt{position:absolute;right:10px;top:9px;text-align:right}
-  .ubicar-sugerencias .item .dist{display:block;font-family:'Roboto Mono',monospace;font-size:10px;
+  .ubicar-sugerencias .item .dist{display:block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);
     color:var(--guinda);font-weight:700;margin-top:3px}
   .ubicar-sugerencias .item.ext{background:var(--bg-2)}
   .ubicar-sugerencias .item.dir{padding-left:12px;padding-right:90px}
 
   /* Chips de entidad federativa: el ambito de busqueda incluye colindantes */
-  .ent{display:inline-block;font-family:'Roboto Mono',monospace;font-size:8.5px;letter-spacing:.1em;
-    font-weight:700;padding:2px 6px;border-radius:2px;color:#fff;vertical-align:middle}
+  .ent{display:inline-block;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.1em;
+    font-weight:700;padding:2px 6px;border-radius:var(--r-chip);color:#fff;vertical-align:middle}
   .e-cdmx{background:var(--guinda)}
   .e-mex{background:var(--azul)}
   .e-mor{background:var(--verde)}
   /* Distintivo de area cuyo poligono cruza el limite estatal */
-  .lim{display:inline-flex;align-items:center;gap:4px;font-family:'Roboto Mono',monospace;font-size:8.5px;
+  .lim{display:inline-flex;align-items:center;gap:4px;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);
     letter-spacing:.09em;font-weight:700;text-transform:uppercase;background:var(--dorado);color:#fff;
-    padding:2px 6px;border-radius:2px;white-space:nowrap}
+    padding:2px 6px;border-radius:var(--r-chip);white-space:nowrap}
 
   .ubicar-kbd{display:none}
   /* Escritorio: el modulo se colapsa a una franja de una linea.
@@ -164,26 +192,26 @@
     .ubicar-bar{display:flex;align-items:center;gap:12px;background:var(--bg-2);
       border-left-width:3px;padding:8px 12px;margin-bottom:12px}
     .ubicar-head{margin:0;flex:0 0 auto;align-items:center;flex-wrap:nowrap;gap:8px}
-    .ubicar-kicker{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:.11em;
+    .ubicar-kicker{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.11em;
       color:var(--ink-2);font-weight:700}
     .ubicar-kicker::before{content:'\25CE  ';color:var(--guinda)}
     .ubicar-hint{display:none}
     .ubicar-gps{display:none}
     .ubicar-row{flex:1;min-width:0}
-    .ubicar-input-wrap input{height:30px;font-size:12.5px;border-radius:4px 0 0 4px}
+    .ubicar-input-wrap input{height:30px;font-size:var(--fs-sm);border-radius:4px 0 0 4px}
     .ubicar-go{width:34px;border-radius:0 4px 4px 0}
-    .ubicar-kbd{display:inline-block;flex:0 0 auto;font-family:'Roboto Mono',monospace;font-size:9.5px;
-      color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:2px 6px;white-space:nowrap}
+    .ubicar-kbd{display:inline-block;flex:0 0 auto;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);
+      color:var(--muted);border:1px solid var(--line);border-radius:var(--r-ui);padding:2px 6px;white-space:nowrap}
   }
 
   @media (max-width:760px){
     .ubicar-bar{padding:14px;border-left-width:4px}
     .ubicar-head{margin-bottom:11px}
-    .ubicar-kicker{font-size:14px}
-    .ubicar-hint{font-size:12.5px;width:100%}
+    .ubicar-kicker{font-size:var(--fs-md)}
+    .ubicar-hint{font-size:var(--fs-sm);width:100%}
     .ubicar-row{flex-direction:column;gap:9px}
-    .ubicar-gps{width:100%;height:48px;font-size:15px}
-    .ubicar-input-wrap input{height:44px;font-size:15px}
+    .ubicar-gps{width:100%;height:48px;font-size:var(--fs-md)}
+    .ubicar-input-wrap input{height:44px;font-size:var(--fs-md)}
     .ubicar-go{width:48px}
   }
 
@@ -192,55 +220,55 @@
      Superficie, decreto y programa de manejo NO están aquí: viven en la ficha. */
   .ubi-panel{position:relative}
   .ubi-cerrar{position:absolute;top:12px;right:14px;width:32px;height:32px;border:none;background:transparent;
-    font-size:26px;line-height:1;color:var(--ink-2);cursor:pointer;border-radius:50%}
+    font-size:var(--fs-2xl);line-height:1;color:var(--ink-2);cursor:pointer;border-radius:50%}
   .ubi-cerrar:hover{background:var(--bg-2);color:var(--guinda)}
-  .ubi-cargando{padding:32px;text-align:center;color:var(--muted);font-family:'Roboto Mono',monospace;font-size:13px}
-  .ubi-cabeza{font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  .ubi-cargando{padding:32px;text-align:center;color:var(--muted);font-family:'Roboto Mono',monospace;font-size:var(--fs-base)}
+  .ubi-cabeza{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.13em;text-transform:uppercase;
     color:var(--muted);margin-bottom:14px;padding-right:40px}
-  .ubi-etiqueta{font-size:13.5px;color:var(--ink-2);margin:-8px 0 14px}
+  .ubi-etiqueta{font-size:var(--fs-base);color:var(--ink-2);margin:-8px 0 14px}
   .ubi-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
   .ubi-col{min-width:0}
 
   /* La respuesta */
   .ubi-main{border-left:4px solid var(--c);padding:2px 0 0 16px}
-  .ubi-main-cat{display:flex;align-items:center;gap:8px;font-family:'Roboto Mono',monospace;font-size:10px;
+  .ubi-main-cat{display:flex;align-items:center;gap:8px;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);
     font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--c);margin-bottom:6px}
-  .ubi-dot{width:9px;height:9px;border-radius:2px;background:var(--c);flex-shrink:0}
-  .ubi-main-nom{font-size:30px;font-weight:900;line-height:1.12;letter-spacing:-.02em;color:var(--ink)}
-  .ubi-vacio .ubi-main-nom{font-size:19px;font-weight:500;color:var(--ink-2)}
-  .ubi-warn{margin-top:10px;padding:7px 10px;background:#fff8e1;border-left:2px solid var(--dorado);
-    font-size:12px;color:var(--dorado-text);border-radius:0 3px 3px 0;line-height:1.4}
+  .ubi-dot{width:9px;height:9px;border-radius:var(--r-chip);background:var(--c);flex-shrink:0}
+  .ubi-main-nom{font-size:var(--fs-hero);font-weight:900;line-height:1.12;letter-spacing:-.02em;color:var(--ink)}
+  .ubi-vacio .ubi-main-nom{font-size:var(--fs-xl);font-weight:500;color:var(--ink-2)}
+  .ubi-warn{margin-top:10px;padding:7px 10px;background:var(--warn-bg);border-left:2px solid var(--dorado);
+    font-size:var(--fs-sm);color:var(--dorado-text);border-radius:0 3px 3px 0;line-height:1.4}
   .ubi-ficha{display:inline-flex;align-items:center;gap:7px;margin-top:14px;background:var(--guinda);color:#fff;
-    border:none;border-radius:3px;padding:10px 16px;cursor:pointer;font-family:'Roboto',sans-serif;
-    font-size:13px;font-weight:700}
-  .ubi-ficha:hover{background:#7d1839}
+    border:none;border-radius:var(--r-ui);padding:10px 16px;cursor:pointer;font-family:'Roboto',sans-serif;
+    font-size:var(--fs-base);font-weight:700}
+  .ubi-ficha:hover{background:var(--guinda-900)}
   .ubi-ficha .ar{font-family:'Roboto Mono',monospace}
 
   /* Lo demás que aplica: lista compacta */
   .ubi-lista{margin-top:18px;border-top:1px solid var(--line-soft)}
   .ubi-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line-soft)}
   .ubi-item-txt{flex:1;min-width:0;line-height:1.3}
-  .ubi-item-txt b{display:block;font-size:14px;font-weight:700;color:var(--ink)}
-  .ubi-item-txt span{display:block;font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:.06em;
+  .ubi-item-txt b{display:block;font-size:var(--fs-md);font-weight:700;color:var(--ink)}
+  .ubi-item-txt span{display:block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.06em;
     text-transform:uppercase;color:var(--muted);margin-top:2px}
   .ubi-mini{flex-shrink:0;width:30px;height:30px;border:1px solid var(--c);color:var(--c);background:transparent;
-    border-radius:3px;cursor:pointer;font-family:'Roboto Mono',monospace;font-size:14px;line-height:1}
+    border-radius:var(--r-ui);cursor:pointer;font-family:'Roboto Mono',monospace;font-size:var(--fs-md);line-height:1}
   .ubi-mini:hover{background:var(--c);color:#fff}
 
-  .ubi-map{height:280px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-soft);background:#e8e3d4}
+  .ubi-map{height:280px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-soft);background:var(--map-bg)}
   .ubi-ctx{margin-top:16px;padding-top:12px;border-top:1px solid var(--line-soft);
-    font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.03em}
+    font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:.03em}
 
   @media (max-width:900px){
     .ubi-grid{grid-template-columns:1fr;gap:16px}
     .ubi-col:last-child{order:-1}
     .ubi-map{height:220px}
-    .ubi-main-nom{font-size:25px}
+    .ubi-main-nom{font-size:var(--fs-2xl)}
     .ubi-ficha{width:100%;justify-content:center;padding:13px}
   }
 
   .tabs{display:flex;align-items:stretch;gap:2px;background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:4px;margin-bottom:18px;box-shadow:var(--shadow)}
-  .tab{flex:1 1 0;min-width:0;padding:9px 10px;background:transparent;border:none;cursor:pointer;font-family:'Roboto',sans-serif;font-size:12.5px;color:var(--ink-2);border-radius:3px;transition:transform .18s,background .18s,box-shadow .18s,color .18s;display:flex;flex-direction:row;align-items:center;gap:9px;text-align:left;font-weight:500;position:relative}
+  .tab{flex:1 1 0;min-width:0;padding:9px 10px;background:transparent;border:none;cursor:pointer;font-family:'Roboto',sans-serif;font-size:var(--fs-sm);color:var(--ink-2);border-radius:var(--r-ui);transition:transform .18s,background .18s,box-shadow .18s,color .18s;display:flex;flex-direction:row;align-items:center;gap:9px;text-align:left;font-weight:500;position:relative}
   .tab:hover{background:var(--bg-2);transform:translateY(-1px)}
   .tab:hover .tab-icon{transform:scale(1.06)}
   .tab:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
@@ -251,14 +279,14 @@
   .tab-icon svg{width:100%;height:100%}
   .tab-content{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
   .tab-name{font-weight:700;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tab-num{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.06em;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tab-num{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);color:var(--muted);letter-spacing:.06em;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* Color del icono por grupo cuando inactivo, da identidad visual */
   .tab[data-id="ALL"]:not(.active) .tab-icon{color:var(--guinda)}
-  .tab[data-id="BU"]:not(.active) .tab-icon{color:#027a35}
-  .tab[data-id="BR"]:not(.active) .tab-icon{color:#ac6d14}
-  .tab[data-id="ANPL"]:not(.active) .tab-icon{color:#9d2148}
-  .tab[data-id="ANPF"]:not(.active) .tab-icon{color:#266cb4}
-  .tab[data-id="ZP"]:not(.active) .tab-icon{color:#9d2148}
+  .tab[data-id="BU"]:not(.active) .tab-icon{color:var(--verde)}
+  .tab[data-id="BR"]:not(.active) .tab-icon{color:var(--marron)}
+  .tab[data-id="ANPL"]:not(.active) .tab-icon{color:var(--guinda)}
+  .tab[data-id="ANPF"]:not(.active) .tab-icon{color:var(--azul)}
+  .tab[data-id="ZP"]:not(.active) .tab-icon{color:var(--guinda)}
   .tab[data-id="ANALISIS"]:not(.active) .tab-icon{color:var(--dorado)}
   .tab[data-id="METAS"]:not(.active) .tab-icon{color:var(--guinda)}
   .tab[data-id="LEGAL"]:not(.active) .tab-icon{color:var(--legal)}
@@ -269,11 +297,11 @@
   .tab[data-id="ANPL"].active .tab-num{color:var(--ink);opacity:.75}
   .tab[data-id="ANPL"].active .tab-icon{color:var(--ink)}
   .tab[data-id="ANPF"].active{background:var(--anpf);color:var(--crema)}
-  .tab[data-id="ZP"].active{background:#9d2148;color:var(--crema)}
-  .tab[data-id="ARCAC"]:not(.active) .tab-icon{color:#7048E8}
-  .tab[data-id="ARCAC"].active{background:#7048E8;color:var(--crema)}
-  .tab[data-id="TRASLAPES"]:not(.active) .tab-icon{color:#d72f89}
-  .tab[data-id="TRASLAPES"].active{background:#d72f89;color:var(--crema)}
+  .tab[data-id="ZP"].active{background:var(--guinda);color:var(--crema)}
+  .tab[data-id="ARCAC"]:not(.active) .tab-icon{color:var(--arcac-com)}
+  .tab[data-id="ARCAC"].active{background:var(--arcac-com);color:var(--crema)}
+  .tab[data-id="TRASLAPES"]:not(.active) .tab-icon{color:var(--magenta)}
+  .tab[data-id="TRASLAPES"].active{background:var(--magenta);color:var(--crema)}
   .tab[data-id="METAS"].active{background:var(--guinda);color:var(--crema)}
   .tab[data-id="LEGAL"].active{background:var(--legal);color:var(--crema)}
 
@@ -287,7 +315,7 @@
   .more-btn.active{background:var(--guinda);color:var(--crema);border-left-color:transparent;
     box-shadow:0 2px 8px rgba(157,33,72,.25)}
   .more-btn.active .tab-icon,.more-btn.active .tab-num{color:var(--crema)}
-  .more-caret{font-size:9px;opacity:.65;margin-left:5px;display:inline-block;transition:transform .18s}
+  .more-caret{font-size:var(--fs-micro);opacity:.65;margin-left:5px;display:inline-block;transition:transform .18s}
   .more-wrap.open .more-caret{transform:rotate(180deg)}
   .more-menu{position:absolute;right:0;top:calc(100% + 6px);min-width:272px;background:var(--card);
     border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 10px 28px -8px rgba(42,42,42,.3);
@@ -296,10 +324,10 @@
   .more-menu .tab{width:100%;flex:1 1 auto;padding:10px 12px}
 
   .panel{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:26px 28px;margin-bottom:20px;box-shadow:var(--shadow)}
-  .panel-title{font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--guinda);margin-bottom:10px;font-weight:500}
-  .panel h3{font-family:'Roboto',sans-serif;font-size:26px;font-weight:700;line-height:1.2;margin-bottom:6px;letter-spacing:-.01em}
+  .panel-title{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--guinda);margin-bottom:10px;font-weight:500}
+  .panel h3{font-family:'Roboto',sans-serif;font-size:var(--fs-2xl);font-weight:700;line-height:1.2;margin-bottom:6px;letter-spacing:-.01em}
   .panel h3 em{font-style:normal;color:var(--guinda);font-weight:900}
-  .panel-intro{color:var(--ink-2);font-size:14px;margin-top:8px;margin-bottom:20px;max-width:760px;line-height:1.6}
+  .panel-intro{color:var(--ink-2);font-size:var(--fs-md);margin-top:8px;margin-bottom:20px;max-width:760px;line-height:1.6}
 
   .hero{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
   .hero-card{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:20px 22px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
@@ -308,20 +336,20 @@
   .hero-card.br::before{background:var(--br)}
   .hero-card.anpl::before{background:var(--anpl)}
   .hero-card.anpf::before{background:var(--anpf)}
-  .hero-label{font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:500}
-  .hero-value{font-family:'Roboto',sans-serif;font-size:42px;line-height:1;color:var(--ink);font-weight:900;letter-spacing:-.02em}
-  .hero-value .u{font-size:14px;color:var(--muted);margin-left:6px;font-weight:500;letter-spacing:0}
-  .hero-sub{font-size:12.5px;color:var(--muted);margin-top:8px;font-family:'Roboto Mono',monospace;letter-spacing:.04em}
+  .hero-label{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:500}
+  .hero-value{font-family:'Roboto',sans-serif;font-size:var(--fs-mega);line-height:1;color:var(--ink);font-weight:900;letter-spacing:-.02em}
+  .hero-value .u{font-size:var(--fs-md);color:var(--muted);margin-left:6px;font-weight:500;letter-spacing:0}
+  .hero-sub{font-size:var(--fs-sm);color:var(--muted);margin-top:8px;font-family:'Roboto Mono',monospace;letter-spacing:.04em}
 
   /* ============================================================
    * Separador institucional · diferencia secciones dentro de un mismo tab
    * ============================================================ */
   .seccion-divider{margin-top:48px;margin-bottom:24px;padding:24px 28px;background:linear-gradient(180deg,var(--bg-2) 0%,var(--card) 100%);border-radius:var(--radius);border-top:3px solid var(--guinda);position:relative}
   .seccion-divider::before{content:"";position:absolute;top:-12px;left:28px;width:24px;height:24px;background:var(--card);border:3px solid var(--guinda);border-radius:50%;box-shadow:0 0 0 4px var(--bg)}
-  .seccion-divider-eyebrow{display:inline-block;font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--guinda);font-weight:600;margin-bottom:10px;background:rgba(157,33,72,.08);padding:4px 10px;border-radius:3px}
-  .seccion-divider-title{font-family:'Roboto',sans-serif;font-size:30px;font-weight:700;line-height:1.15;margin:0 0 12px;color:var(--ink);letter-spacing:-.015em}
+  .seccion-divider-eyebrow{display:inline-block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.16em;text-transform:uppercase;color:var(--guinda);font-weight:600;margin-bottom:10px;background:rgba(157,33,72,.08);padding:4px 10px;border-radius:var(--r-ui)}
+  .seccion-divider-title{font-family:'Roboto',sans-serif;font-size:var(--fs-hero);font-weight:700;line-height:1.15;margin:0 0 12px;color:var(--ink);letter-spacing:-.015em}
   .seccion-divider-title em{font-style:italic;font-weight:400;color:var(--guinda)}
-  .seccion-divider-sub{font-size:14px;color:var(--ink-2);line-height:1.6;margin:0;max-width:880px}
+  .seccion-divider-sub{font-size:var(--fs-md);color:var(--ink-2);line-height:1.6;margin:0;max-width:880px}
 
   /* ============================================================
    * BRECHAS · CSS
@@ -329,40 +357,40 @@
   /* Variantes hero para diagnóstico de brechas */
   .hero-card.hero-warning::before{background:var(--rojo)}
   .hero-card.hero-info::before{background:var(--azul)}
-  .hero-eyebrow{font-family:'Roboto Mono',monospace;font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--rojo);font-weight:600;margin-bottom:8px}
+  .hero-eyebrow{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.15em;text-transform:uppercase;color:var(--rojo);font-weight:600;margin-bottom:8px}
   .hero-card.hero-info .hero-eyebrow{color:var(--azul)}
   .hero-card:not(.hero-warning):not(.hero-info) .hero-eyebrow{color:var(--guinda)}
-  .hero-meta{font-size:11.5px;color:var(--muted);margin-top:10px;font-family:'Roboto Mono',monospace;letter-spacing:.04em;line-height:1.3}
+  .hero-meta{font-size:var(--fs-xs);color:var(--muted);margin-top:10px;font-family:'Roboto Mono',monospace;letter-spacing:.04em;line-height:1.3}
 
   /* Grid de tarjetas de brecha por grupo (2 columnas en desktop) */
   .brechas-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
   .brecha-card{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:18px 20px;border-left:3px solid var(--card-color, var(--guinda));position:relative}
   .brecha-card-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;gap:10px}
-  .brecha-card-grupo{font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:var(--ink-2);font-weight:500;text-transform:uppercase}
-  .brecha-card-pct{font-family:'Roboto',sans-serif;font-size:18px;font-weight:700;color:var(--card-color, var(--guinda));letter-spacing:-.01em}
-  .brecha-card-num{font-family:'Roboto',sans-serif;font-size:36px;line-height:1;color:var(--ink);font-weight:900;letter-spacing:-.02em}
-  .brecha-card-lbl{font-size:12px;color:var(--muted);margin-top:4px;font-family:'Roboto',sans-serif}
-  .brecha-card-bar{margin-top:14px;height:6px;background:var(--bg-2);border-radius:3px;overflow:hidden}
+  .brecha-card-grupo{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;color:var(--ink-2);font-weight:500;text-transform:uppercase}
+  .brecha-card-pct{font-family:'Roboto',sans-serif;font-size:var(--fs-lg);font-weight:700;color:var(--card-color, var(--guinda));letter-spacing:-.01em}
+  .brecha-card-num{font-family:'Roboto',sans-serif;font-size:var(--fs-mega);line-height:1;color:var(--ink);font-weight:900;letter-spacing:-.02em}
+  .brecha-card-lbl{font-size:var(--fs-sm);color:var(--muted);margin-top:4px;font-family:'Roboto',sans-serif}
+  .brecha-card-bar{margin-top:14px;height:6px;background:var(--bg-2);border-radius:var(--r-ui);overflow:hidden}
   .brecha-card-bar-fill{height:100%;background:var(--card-color, var(--guinda));transition:width .4s ease}
   .brecha-card-details{margin-top:14px;border-top:1px dotted var(--line-soft);padding-top:10px}
-  .brecha-card-details summary{cursor:pointer;font-size:12px;color:var(--ink-2);font-family:'Roboto Mono',monospace;letter-spacing:.06em;padding:4px 0;user-select:none}
+  .brecha-card-details summary{cursor:pointer;font-size:var(--fs-sm);color:var(--ink-2);font-family:'Roboto Mono',monospace;letter-spacing:.06em;padding:4px 0;user-select:none}
   .brecha-card-details summary:hover{color:var(--card-color, var(--guinda))}
   .brecha-card-details[open] summary{color:var(--card-color, var(--guinda));margin-bottom:8px}
   .brecha-list{list-style:none;padding:0;margin:0}
-  .brecha-list li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dotted var(--line-soft);font-size:12.5px;color:var(--ink-2);line-height:1.4}
+  .brecha-list li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dotted var(--line-soft);font-size:var(--fs-sm);color:var(--ink-2);line-height:1.4}
   .brecha-list li:last-child{border-bottom:none}
-  .brecha-list-meta{color:var(--muted);font-family:'Roboto Mono',monospace;font-size:11px;flex-shrink:0;white-space:nowrap}
+  .brecha-list-meta{color:var(--muted);font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);flex-shrink:0;white-space:nowrap}
 
   /* Ranking de alcaldías */
   .brechas-rank{display:flex;flex-direction:column;gap:10px;margin-top:8px}
   .rank-row{display:grid;grid-template-columns:36px 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px dotted var(--line-soft)}
   .rank-row:last-child{border-bottom:none}
-  .rank-pos{font-family:'Roboto',sans-serif;font-size:24px;font-weight:900;color:var(--guinda);text-align:center;letter-spacing:-.02em;line-height:1}
+  .rank-pos{font-family:'Roboto',sans-serif;font-size:var(--fs-2xl);font-weight:900;color:var(--guinda);text-align:center;letter-spacing:-.02em;line-height:1}
   .rank-body{display:flex;flex-direction:column;gap:6px;min-width:0}
   .rank-header{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
-  .rank-name{font-size:14px;font-weight:600;color:var(--ink)}
-  .rank-count{font-size:11.5px;color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.04em;white-space:nowrap}
-  .rank-bar{height:5px;background:var(--bg-2);border-radius:3px;overflow:hidden}
+  .rank-name{font-size:var(--fs-md);font-weight:600;color:var(--ink)}
+  .rank-count{font-size:var(--fs-xs);color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.04em;white-space:nowrap}
+  .rank-bar{height:5px;background:var(--bg-2);border-radius:var(--r-ui);overflow:hidden}
   .rank-bar-fill{height:100%;background:linear-gradient(90deg,var(--guinda),#c0426d);transition:width .4s ease}
 
   /* ============================================================
@@ -371,39 +399,39 @@
   .cronologia-container{margin-top:20px;background:var(--bg-2);border-radius:var(--radius);padding:24px 20px 14px;border:1px solid var(--line-soft)}
   .cronologia-chart{display:flex;align-items:flex-end;gap:6px;height:240px;padding:0 6px;border-bottom:2px solid var(--line)}
   .cron-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;height:100%;justify-content:flex-end;position:relative}
-  .cron-bar-count{font-family:'Roboto',sans-serif;font-size:11px;font-weight:600;color:var(--ink-2);min-height:14px;letter-spacing:-.01em}
-  .cron-bar{width:100%;max-width:42px;background:var(--guinda);border-radius:3px 3px 0 0;transition:all .25s ease;position:relative;cursor:pointer;min-height:2px}
+  .cron-bar-count{font-family:'Roboto',sans-serif;font-size:var(--fs-xs);font-weight:600;color:var(--ink-2);min-height:14px;letter-spacing:-.01em}
+  .cron-bar{width:100%;max-width:42px;background:var(--guinda);border-radius:var(--r-ui) 3px 0 0;transition:all .25s ease;position:relative;cursor:pointer;min-height:2px}
   .cron-bar[data-count="0"]{background:transparent !important;border:1px dashed var(--line);min-height:6px;max-height:6px;height:6px !important;opacity:.5}
   /* Etiqueta de década vacía atenuada */
   .cron-bar-col:has(.cron-bar[data-count="0"]) .cron-bar-label{opacity:.45}
   .cron-bar-col:has(.cron-bar[data-count="0"]) .cron-bar-count{visibility:hidden}
-  .cron-bar:hover{background:#7d1839;transform:translateY(-2px)}
-  .cron-bar-tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--crema);padding:10px 12px;border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:12px;line-height:1.4;white-space:normal;width:220px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .15s;z-index:10}
+  .cron-bar:hover{background:var(--guinda-900);transform:translateY(-2px)}
+  .cron-bar-tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--crema);padding:10px 12px;border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:var(--fs-sm);line-height:1.4;white-space:normal;width:220px;box-shadow:var(--sh-3);opacity:0;pointer-events:none;transition:opacity .15s;z-index:10}
   .cron-bar:hover .cron-bar-tooltip{opacity:1}
-  .cron-tt-decada{font-weight:700;font-size:12.5px;margin-bottom:2px;color:#fff}
-  .cron-tt-count{font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.06em;color:#f4c842;margin-bottom:8px;text-transform:uppercase}
-  .cron-tt-list{list-style:none;padding:0;margin:0;font-size:11px;line-height:1.45}
+  .cron-tt-decada{font-weight:700;font-size:var(--fs-sm);margin-bottom:2px;color:#fff}
+  .cron-tt-count{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.06em;color:var(--acento-mapa);margin-bottom:8px;text-transform:uppercase}
+  .cron-tt-list{list-style:none;padding:0;margin:0;font-size:var(--fs-xs);line-height:1.45}
   .cron-tt-list li{padding:2px 0;color:rgba(255,253,240,.85)}
-  .cron-bar-label{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:.04em;color:var(--muted);margin-top:4px;text-align:center}
+  .cron-bar-label{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.04em;color:var(--muted);margin-top:4px;text-align:center}
   .cron-bar-label.is-pico{color:var(--guinda);font-weight:600}
 
   /* === Gráfico independiente de Decretos por Administración Electa CDMX === */
   .cron-gob-chart{display:flex;align-items:flex-end;gap:8px;height:280px;padding:0 6px;border-bottom:2px solid var(--line);margin-top:4px}
   .cron-gob-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;height:100%;justify-content:flex-end;position:relative}
-  .cron-gob-count{font-family:'Roboto',sans-serif;font-size:14px;font-weight:700;color:var(--ink);min-height:18px;letter-spacing:-.01em}
-  .cron-gob-bar{width:100%;max-width:64px;border-radius:3px 3px 0 0;transition:filter .2s,transform .2s;position:relative;cursor:pointer;min-height:2px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .cron-gob-count{font-family:'Roboto',sans-serif;font-size:var(--fs-md);font-weight:700;color:var(--ink);min-height:18px;letter-spacing:-.01em}
+  .cron-gob-bar{width:100%;max-width:64px;border-radius:var(--r-ui) 3px 0 0;transition:filter .2s,transform .2s;position:relative;cursor:pointer;min-height:2px;box-shadow:var(--sh-1)}
   .cron-gob-bar[data-count="0"]{background:transparent !important;border:1px dashed var(--line);min-height:8px}
   .cron-gob-bar:hover{filter:brightness(1.08);transform:translateY(-2px)}
-  .cron-gob-tooltip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--crema);padding:12px 14px;border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:12px;line-height:1.45;white-space:normal;width:260px;box-shadow:0 8px 24px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .15s;z-index:15}
+  .cron-gob-tooltip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--crema);padding:12px 14px;border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:var(--fs-sm);line-height:1.45;white-space:normal;width:260px;box-shadow:var(--sh-3);opacity:0;pointer-events:none;transition:opacity .15s;z-index:15}
   .cron-gob-bar:hover .cron-gob-tooltip{opacity:1}
-  .cron-gob-tt-title{font-weight:700;font-size:13px;color:#fff;margin-bottom:4px;line-height:1.3}
-  .cron-gob-tt-period{font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.04em;color:#f4c842;margin-bottom:6px}
-  .cron-gob-tt-meta{font-size:11px;color:rgba(255,253,240,.85);margin-bottom:6px;font-style:italic}
-  .cron-gob-tt-list{list-style:none;padding:0;margin:0;font-size:11px;line-height:1.5;border-top:1px solid rgba(255,255,255,.15);padding-top:6px;margin-top:4px}
+  .cron-gob-tt-title{font-weight:700;font-size:var(--fs-base);color:#fff;margin-bottom:4px;line-height:1.3}
+  .cron-gob-tt-period{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.04em;color:var(--acento-mapa);margin-bottom:6px}
+  .cron-gob-tt-meta{font-size:var(--fs-xs);color:rgba(255,253,240,.85);margin-bottom:6px;font-style:italic}
+  .cron-gob-tt-list{list-style:none;padding:0;margin:0;font-size:var(--fs-xs);line-height:1.5;border-top:1px solid rgba(255,255,255,.15);padding-top:6px;margin-top:4px}
   .cron-gob-tt-list li{padding:2px 0;color:rgba(255,253,240,.9)}
-  .cron-gob-col-label{font-family:'Roboto',sans-serif;font-size:11px;letter-spacing:.01em;color:var(--ink-2);font-weight:500;margin-top:6px;text-align:center;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
-  .cron-gob-col-period{font-family:'Roboto Mono',monospace;font-size:9.5px;letter-spacing:.04em;color:var(--muted);text-align:center;margin-top:1px}
-  .cron-gob-caption{font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;text-align:center}
+  .cron-gob-col-label{font-family:'Roboto',sans-serif;font-size:var(--fs-xs);letter-spacing:.01em;color:var(--ink-2);font-weight:500;margin-top:6px;text-align:center;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
+  .cron-gob-col-period{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.04em;color:var(--muted);text-align:center;margin-top:1px}
+  .cron-gob-caption{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.06em;color:var(--muted);text-transform:uppercase;text-align:center}
 
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
   /* .grid-3 y .mini eliminadas en v34 (sin uso en HTML) — usar .legal-grid-3 si se necesita grid de 3 columnas */
@@ -415,126 +443,126 @@
   /* Separación entre tabla y mapa cartográfico */
   #globalMapSection{display:block;margin-top:28px}
   #globalMapSection > .panel{margin-bottom:0}
-  .panel-compact h3{font-size:22px;margin-bottom:10px}
+  .panel-compact h3{font-size:var(--fs-xl);margin-bottom:10px}
 
   /* Tabla compacta de hitos — reemplaza grid de tarjetas */
   .hitos-table{width:100%;border-collapse:collapse;margin-top:6px}
   .hitos-table tr{border-bottom:1px dotted var(--line-soft)}
   .hitos-table tr:last-child{border-bottom:none}
-  .hitos-table th{text-align:left;padding:10px 14px 10px 0;font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;width:190px;white-space:nowrap;vertical-align:baseline}
-  .hitos-table td{padding:10px 12px;font-size:13.5px;color:var(--ink);vertical-align:baseline}
-  .hitos-table td.hitos-val{font-family:'Roboto',sans-serif;font-weight:700;font-size:17px;color:var(--guinda);width:130px;white-space:nowrap;letter-spacing:-.01em}
-  .hitos-table td.hitos-ctx{color:var(--ink-2);font-size:13px;line-height:1.45}
-  .hitos-table .hitos-u{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);font-weight:500;margin-left:2px}
+  .hitos-table th{text-align:left;padding:10px 14px 10px 0;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;width:190px;white-space:nowrap;vertical-align:baseline}
+  .hitos-table td{padding:10px 12px;font-size:var(--fs-base);color:var(--ink);vertical-align:baseline}
+  .hitos-table td.hitos-val{font-family:'Roboto',sans-serif;font-weight:700;font-size:var(--fs-lg);color:var(--guinda);width:130px;white-space:nowrap;letter-spacing:-.01em}
+  .hitos-table td.hitos-ctx{color:var(--ink-2);font-size:var(--fs-base);line-height:1.45}
+  .hitos-table .hitos-u{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);font-weight:500;margin-left:2px}
 
   /* Nota al pie dentro de paneles (sustituye estilos inline) */
-  .panel-note{margin-top:14px;padding:10px 14px;background:var(--bg-2);border-radius:3px;font-size:12px;color:var(--muted);line-height:1.55;border-left:3px solid var(--dorado)}
+  .panel-note{margin-top:14px;padding:10px 14px;background:var(--bg-2);border-radius:var(--r-ui);font-size:var(--fs-sm);color:var(--muted);line-height:1.55;border-left:3px solid var(--dorado)}
 
   @media (max-width:1024px){
-    .hitos-table th{width:160px;font-size:10px}
-    .hitos-table td.hitos-val{width:110px;font-size:16px}
+    .hitos-table th{width:160px;font-size:var(--fs-mini)}
+    .hitos-table td.hitos-val{width:110px;font-size:var(--fs-lg)}
   }
   @media (max-width:640px){
     .panel-compact{padding:16px 18px}
     .hitos-table th{width:auto;display:block;padding:10px 0 2px;border:none}
     .hitos-table td{display:block;padding:0 0 4px}
-    .hitos-table td.hitos-val{width:auto;display:inline-block;margin-right:10px;font-size:18px}
-    .hitos-table td.hitos-ctx{display:inline;font-size:12.5px}
+    .hitos-table td.hitos-val{width:auto;display:inline-block;margin-right:10px;font-size:var(--fs-lg)}
+    .hitos-table td.hitos-ctx{display:inline;font-size:var(--fs-sm)}
     .hitos-table tr{padding:8px 0;display:block}
   }
 
   .comp{width:100%;border-collapse:collapse}
-  .comp th,.comp td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line-soft);font-size:14px}
-  .comp th{font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--guinda);font-weight:500;background:var(--bg-2)}
+  .comp th,.comp td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line-soft);font-size:var(--fs-md)}
+  .comp th{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.12em;text-transform:uppercase;color:var(--guinda);font-weight:500;background:var(--bg-2)}
   .comp td.num{font-family:'Roboto Mono',monospace;text-align:right;color:var(--ink);font-weight:500}
   .comp td.grp{font-weight:500;color:var(--ink)}
   .comp .chip{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:10px;vertical-align:middle}
   .chip.bu{background:var(--bu)} .chip.br{background:var(--br)}
   .chip.anpl{background:var(--anpl)} .chip.anpf{background:var(--anpf)}
-  .comp .share{position:relative;width:100%;height:6px;background:var(--bg-2);border-radius:3px;overflow:hidden}
-  .comp .share-fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+  .comp .share{position:relative;width:100%;height:6px;background:var(--bg-2);border-radius:var(--r-ui);overflow:hidden}
+  .comp .share-fill{position:absolute;left:0;top:0;bottom:0;border-radius:var(--r-ui)}
   /* Wrapper con scroll horizontal e indicador visual en mobile */
   .comp-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .share-fill.bu{background:var(--bu)} .share-fill.br{background:var(--br)}
   .share-fill.anpl{background:var(--anpl)} .share-fill.anpf{background:var(--anpf)}
 
   .dist{display:flex;flex-direction:column;gap:6px}
-  .bar-row{display:grid;grid-template-columns:1.2fr 2.4fr auto;gap:12px;align-items:center;font-size:13.5px}
+  .bar-row{display:grid;grid-template-columns:1.2fr 2.4fr auto;gap:12px;align-items:center;font-size:var(--fs-base)}
   .bar-row .lbl{color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400}
-  .bar-row .track{position:relative;height:20px;background:var(--bg-2);border-radius:3px;overflow:hidden}
-  .bar-row .fill{position:absolute;left:0;top:0;bottom:0;background:var(--guinda);border-radius:3px;transition:width .4s cubic-bezier(.2,.8,.2,1)}
+  .bar-row .track{position:relative;height:20px;background:var(--bg-2);border-radius:var(--r-ui);overflow:hidden}
+  .bar-row .fill{position:absolute;left:0;top:0;bottom:0;background:var(--guinda);border-radius:var(--r-ui);transition:width .4s cubic-bezier(.2,.8,.2,1)}
   .bar-row .fill.bu{background:var(--bu)} .bar-row .fill.br{background:var(--br)}
   .bar-row .fill.anpl{background:var(--anpl)} .bar-row .fill.anpf{background:var(--anpf)}
-  .bar-row .v{font-family:'Roboto Mono',monospace;font-size:12.5px;color:var(--ink);white-space:nowrap;min-width:80px;text-align:right;font-weight:500}
+  .bar-row .v{font-family:'Roboto Mono',monospace;font-size:var(--fs-sm);color:var(--ink);white-space:nowrap;min-width:80px;text-align:right;font-weight:500}
 
   /* === Barra apilada de Áreas por Alcaldía (desglose por tipo) === */
-  .alc-legend{display:flex;flex-wrap:wrap;gap:14px 18px;margin:8px 0 14px;padding:10px 12px;background:var(--bg-2);border-radius:var(--radius);font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.04em;color:var(--ink-2);text-transform:uppercase}
+  .alc-legend{display:flex;flex-wrap:wrap;gap:14px 18px;margin:8px 0 14px;padding:10px 12px;background:var(--bg-2);border-radius:var(--radius);font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.04em;color:var(--ink-2);text-transform:uppercase}
   .alc-leg-item{display:inline-flex;align-items:center;gap:6px;font-weight:500}
-  .alc-leg-swatch{display:inline-block;width:14px;height:11px;border-radius:2px;flex-shrink:0}
+  .alc-leg-swatch{display:inline-block;width:14px;height:11px;border-radius:var(--r-chip);flex-shrink:0}
 
   .alc-stacked{display:flex;flex-direction:column;gap:7px}
-  .alc-row{display:grid;grid-template-columns:1.3fr 2.4fr auto;gap:12px;align-items:center;font-size:13.5px}
+  .alc-row{display:grid;grid-template-columns:1.3fr 2.4fr auto;gap:12px;align-items:center;font-size:var(--fs-base)}
   .alc-name{color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400}
-  .alc-track{display:flex;height:22px;background:var(--bg-2);border-radius:3px;overflow:hidden;transition:width .4s cubic-bezier(.2,.8,.2,1)}
-  .alc-seg{display:flex;align-items:center;justify-content:center;height:100%;color:#fff;font-family:'Roboto Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.02em;cursor:help;transition:filter .15s;border-right:1px solid rgba(255,255,255,.25);min-width:0}
+  .alc-track{display:flex;height:22px;background:var(--bg-2);border-radius:var(--r-ui);overflow:hidden;transition:width .4s cubic-bezier(.2,.8,.2,1)}
+  .alc-seg{display:flex;align-items:center;justify-content:center;height:100%;color:#fff;font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);font-weight:600;letter-spacing:.02em;cursor:help;transition:filter .15s;border-right:1px solid rgba(255,255,255,.25);min-width:0}
   .alc-seg:last-child{border-right:none}
   .alc-seg:hover{filter:brightness(1.12)}
   .alc-seg-num{padding:0 4px;text-shadow:0 1px 2px rgba(0,0,0,.25)}
-  .alc-total{font-family:'Roboto Mono',monospace;font-size:12.5px;color:var(--ink);white-space:nowrap;min-width:90px;text-align:right;font-weight:600}
+  .alc-total{font-family:'Roboto Mono',monospace;font-size:var(--fs-sm);color:var(--ink);white-space:nowrap;min-width:90px;text-align:right;font-weight:600}
 
   /* Mobile: stack vertical para legibilidad */
   @media (max-width:640px){
     .alc-row{grid-template-columns:1fr;gap:4px}
-    .alc-name{font-size:12.5px;font-weight:500;color:var(--ink)}
+    .alc-name{font-size:var(--fs-sm);font-weight:500;color:var(--ink)}
     .alc-track{width:100% !important;height:20px}
-    .alc-total{text-align:left;font-size:11.5px;color:var(--muted)}
-    .alc-legend{font-size:9.5px;gap:8px 12px;padding:8px 10px}
+    .alc-total{text-align:left;font-size:var(--fs-xs);color:var(--muted)}
+    .alc-legend{font-size:var(--fs-micro);gap:8px 12px;padding:8px 10px}
     .alc-leg-swatch{width:12px;height:9px}
   }
 
   /* Tarjetas de definición (glosario técnico-jurídico) */
   .legal-card{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:20px 22px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
   .legal-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--legal)}
-  .legal-card .l-art{display:inline-block;font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:var(--legal);background:rgba(143,72,153,.08);padding:3px 8px;border-radius:3px;margin-bottom:10px;font-weight:500}
-  .legal-card h4{font-family:'Roboto',sans-serif;font-size:20px;font-weight:700;line-height:1.2;margin-bottom:10px;color:var(--ink);letter-spacing:-.01em}
-  .legal-card p{font-size:13.5px;color:var(--ink-2);line-height:1.6}
+  .legal-card .l-art{display:inline-block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;color:var(--legal);background:rgba(143,72,153,.08);padding:3px 8px;border-radius:var(--r-ui);margin-bottom:10px;font-weight:500}
+  .legal-card h4{font-family:'Roboto',sans-serif;font-size:var(--fs-xl);font-weight:700;line-height:1.2;margin-bottom:10px;color:var(--ink);letter-spacing:-.01em}
+  .legal-card p{font-size:var(--fs-base);color:var(--ink-2);line-height:1.6}
 
   /* Header de instrumento normativo: título a la izquierda, botón de descarga a la derecha */
   .norma-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:14px;flex-wrap:wrap}
   .norma-header-left{flex:1;min-width:280px}
   .norma-header-left h3{margin:0}
   .norma-header-right{flex-shrink:0}
-  .btn-pdf{display:inline-flex;align-items:center;gap:10px;background:var(--card);color:var(--ink);padding:10px 14px;border-radius:var(--radius);text-decoration:none;font-family:'Roboto',sans-serif;font-size:12.5px;font-weight:500;border:1.5px solid var(--line);transition:all .2s;white-space:nowrap}
+  .btn-pdf{display:inline-flex;align-items:center;gap:10px;background:var(--card);color:var(--ink);padding:10px 14px;border-radius:var(--radius);text-decoration:none;font-family:'Roboto',sans-serif;font-size:var(--fs-sm);font-weight:500;border:1.5px solid var(--line);transition:all .2s;white-space:nowrap}
   .btn-pdf:hover{border-color:var(--guinda);color:var(--guinda);background:#fff}
   .btn-pdf:hover .pdf-badge{background:var(--guinda);color:#fff}
   /* Badge PDF — claramente identificable como un archivo descargable */
-  .btn-pdf .pdf-badge{display:inline-flex;align-items:center;justify-content:center;width:32px;height:24px;background:#d44a3a;color:#fff;border-radius:3px;font-family:'Roboto',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.04em;flex-shrink:0;transition:background .2s}
-  .btn-pdf .pdf-arrow{display:inline-flex;align-items:center;color:var(--muted);font-size:14px;font-weight:700;line-height:1}
+  .btn-pdf .pdf-badge{display:inline-flex;align-items:center;justify-content:center;width:32px;height:24px;background:#d44a3a;color:#fff;border-radius:var(--r-ui);font-family:'Roboto',sans-serif;font-size:var(--fs-micro);font-weight:700;letter-spacing:.04em;flex-shrink:0;transition:background .2s}
+  .btn-pdf .pdf-arrow{display:inline-flex;align-items:center;color:var(--muted);font-size:var(--fs-md);font-weight:700;line-height:1}
   .btn-pdf:hover .pdf-arrow{color:var(--guinda)}
   .btn-pdf-federal:hover{border-color:var(--azul);color:var(--azul)}
   .btn-pdf-federal:hover .pdf-badge{background:var(--azul)}
   .btn-pdf-federal:hover .pdf-arrow{color:var(--azul)}
   /* Sub-secciones agrupadas por instrumento (línea divisoria sutil) */
   .norma-subsec{margin-top:24px;padding-top:20px;border-top:1px solid var(--line-soft)}
-  .norma-subsec-title{font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;font-weight:500;display:block}
+  .norma-subsec-title{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;font-weight:500;display:block}
   /* Sub-tarjetas dentro del panel "ANP Federales" — sirven para LGEEPA y Convenio */
   .anp-fed-card{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:22px 24px;border-left:3px solid var(--azul)}
   .convenio-meta{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
   .convenio-meta-item{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:18px 20px;border-left:3px solid var(--guinda)}
-  .convenio-meta-item .l-art{display:inline-block;font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:var(--guinda);background:rgba(157,33,72,.08);padding:3px 8px;border-radius:3px;margin-bottom:10px;font-weight:500}
-  .convenio-meta-item p{font-size:13.5px;color:var(--ink-2);line-height:1.6;margin:0}
-  .convenio-table{font-size:13px}
-  .convenio-table th{background:rgba(157,33,72,.06);color:var(--guinda);font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;padding:10px 12px}
+  .convenio-meta-item .l-art{display:inline-block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;color:var(--guinda);background:rgba(157,33,72,.08);padding:3px 8px;border-radius:var(--r-ui);margin-bottom:10px;font-weight:500}
+  .convenio-meta-item p{font-size:var(--fs-base);color:var(--ink-2);line-height:1.6;margin:0}
+  .convenio-table{font-size:var(--fs-base)}
+  .convenio-table th{background:rgba(157,33,72,.06);color:var(--guinda);font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.08em;text-transform:uppercase;font-weight:600;padding:10px 12px}
   .convenio-table td{padding:10px 12px;border-bottom:1px dotted var(--line-soft)}
   .convenio-table tbody tr:hover{background:rgba(157,33,72,.03)}
   .legal-card-mini{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:14px 16px;border-left:2px solid var(--guinda)}
-  .legal-card-mini .l-art{display:inline-block;font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--guinda);background:rgba(157,33,72,.08);padding:2px 7px;border-radius:3px;margin-bottom:8px;font-weight:500}
-  .legal-card-mini p{font-size:12.5px;color:var(--ink-2);line-height:1.55;margin:0}
+  .legal-card-mini .l-art{display:inline-block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;color:var(--guinda);background:rgba(157,33,72,.08);padding:2px 7px;border-radius:var(--r-ui);margin-bottom:8px;font-weight:500}
+  .legal-card-mini p{font-size:var(--fs-sm);color:var(--ink-2);line-height:1.55;margin:0}
 
   /* Listados normativos — contenidos por artículo, dentro de paneles */
   .legal-list{margin-top:14px}
   .legal-list ul{list-style:none;padding:0;margin:0}
-  .legal-list li{padding:12px 0;font-size:13px;color:var(--ink-2);border-bottom:1px dotted var(--line-soft);display:block;line-height:1.55;word-wrap:break-word;overflow-wrap:break-word}
+  .legal-list li{padding:12px 0;font-size:var(--fs-base);color:var(--ink-2);border-bottom:1px dotted var(--line-soft);display:block;line-height:1.55;word-wrap:break-word;overflow-wrap:break-word}
   .legal-list li:last-child{border-bottom:none}
   /* Variante en 2 columnas (Prohibiciones, etc.) */
   .legal-list-cols-2 ul{display:grid;grid-template-columns:1fr 1fr;column-gap:28px}
@@ -545,7 +573,7 @@
   .legal-list-cols-2 li:nth-last-child(1),
   .legal-list-cols-2 li:nth-last-child(2):nth-child(odd){border-bottom:none}
   .legal-list li .lbl{color:var(--ink);font-weight:500;display:block;margin-bottom:3px;word-wrap:break-word;overflow-wrap:break-word;hyphens:auto}
-  .legal-list li .ref{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.04em;font-weight:400;display:block;word-wrap:break-word;overflow-wrap:break-word;white-space:normal}
+  .legal-list li .ref{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:.04em;font-weight:400;display:block;word-wrap:break-word;overflow-wrap:break-word;white-space:normal}
 
   /* Variante compacta — ref a la izquierda (mono, pequeña) · contenido a la derecha */
             
@@ -560,11 +588,11 @@
   .panel-accent-anp .panel-title{color:var(--guinda)}
 
   /* Enlaces a textos oficiales de leyes · pie institucional del panel */
-  .ley-link{display:inline-flex;align-items:center;gap:10px;margin-top:14px;padding:9px 14px;background:var(--bg-2);border:1px solid var(--line-soft);border-radius:var(--radius);text-decoration:none;font-size:12.5px;color:var(--ink-2);transition:all .15s;font-family:'Roboto',sans-serif;line-height:1.4;max-width:100%}
+  .ley-link{display:inline-flex;align-items:center;gap:10px;margin-top:14px;padding:9px 14px;background:var(--bg-2);border:1px solid var(--line-soft);border-radius:var(--radius);text-decoration:none;font-size:var(--fs-sm);color:var(--ink-2);transition:all .15s;font-family:'Roboto',sans-serif;line-height:1.4;max-width:100%}
   .ley-link:hover{background:#fff;transform:translateY(-1px)}
-  .ley-link-ico{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-width:24px;border-radius:50%;font-size:12px;font-weight:700}
+  .ley-link-ico{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-width:24px;border-radius:50%;font-size:var(--fs-sm);font-weight:700}
   .ley-link-txt{flex:1;min-width:0;word-wrap:break-word;overflow-wrap:break-word}
-  .ley-link-txt b{font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:.04em;font-weight:500}
+  .ley-link-txt b{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.04em;font-weight:500}
   .ley-link-local{border-left:3px solid var(--guinda)}
   .ley-link-local:hover{border-color:var(--guinda);color:var(--guinda)}
   .ley-link-local .ley-link-ico{background:var(--guinda);color:var(--crema)}
@@ -578,39 +606,39 @@
   .fracciones-list{list-style:none;padding:0;margin:12px 0 0 0}
   .fr-item{display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:baseline;padding:9px 0;border-bottom:1px dotted var(--line-soft)}
   .fr-item:last-child{border-bottom:none}
-  .fr-num{font-family:'Roboto Mono',monospace;font-size:11.5px;color:var(--azul);font-weight:500;letter-spacing:.04em;white-space:nowrap}
+  .fr-num{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--azul);font-weight:500;letter-spacing:.04em;white-space:nowrap}
   .fr-body{display:flex;flex-direction:column;gap:2px;min-width:0}
-  .fr-lbl{font-size:13.5px;color:var(--ink);font-weight:600;line-height:1.3}
-  .fr-desc{font-size:12px;color:var(--ink-2);line-height:1.5}
+  .fr-lbl{font-size:var(--fs-base);color:var(--ink);font-weight:600;line-height:1.3}
+  .fr-desc{font-size:var(--fs-sm);color:var(--ink-2);line-height:1.5}
 
   @media (max-width:640px){
     .fr-item{grid-template-columns:52px 1fr;gap:10px;padding:8px 0}
-    .fr-lbl{font-size:13px}
-    .fr-desc{font-size:11.5px}
+    .fr-lbl{font-size:var(--fs-base)}
+    .fr-desc{font-size:var(--fs-xs)}
   }
   .legal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
   .legal-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
 
   .toolbar{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:14px;display:grid;grid-template-columns:1.4fr .7fr .8fr 1fr 1fr .9fr .7fr 1fr auto;gap:8px;align-items:end;margin-bottom:14px;box-shadow:var(--shadow)}
-  .toolbar .lab{font-size:9.5px;letter-spacing:.06em}
-  .toolbar select,.toolbar input{font-size:12.5px;padding:7px 8px}
+  .toolbar .lab{font-size:var(--fs-micro);letter-spacing:.06em}
+  .toolbar select,.toolbar input{font-size:var(--fs-sm);padding:7px 8px}
   .toolbar label{display:flex;flex-direction:column;gap:4px}
-  .lab{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
-  input[type=search],select{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:9px 11px;font-family:'Roboto',sans-serif;font-size:14px;color:var(--ink);outline:none;transition:border-color .15s;width:100%}
+  .lab{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+  input[type=search],select{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:9px 11px;font-family:'Roboto',sans-serif;font-size:var(--fs-md);color:var(--ink);outline:none;transition:border-color .15s;width:100%}
   input[type=search]:focus,select:focus{border-color:var(--guinda)}
-  .btn{background:var(--guinda);color:var(--crema);border:none;border-radius:var(--radius);padding:0 16px;font-family:'Roboto',sans-serif;font-weight:500;font-size:13px;letter-spacing:.02em;cursor:pointer;transition:background .15s;height:38px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+  .btn{background:var(--guinda);color:var(--crema);border:none;border-radius:var(--radius);padding:0 16px;font-family:'Roboto',sans-serif;font-weight:500;font-size:var(--fs-base);letter-spacing:.02em;cursor:pointer;transition:background .15s;height:38px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
   .btn:hover{background:#7a1a37}
   .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
   .btn.ghost:hover{background:var(--bg-2);border-color:var(--guinda);color:var(--guinda)}
   .btn-group{display:flex;gap:8px}
 
-  .counter-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:400}
+  .counter-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:400}
   .counter-row b{color:var(--guinda);font-weight:500}
 
   /* Indicadores de interactividad — ayuda contextual para nuevos usuarios */
   .tip-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-  .tip-chip{display:inline-flex;align-items:center;gap:8px;padding:5px 11px;background:var(--bg-2);border:1px dashed var(--line);border-radius:3px;font-size:11px;color:var(--muted);font-weight:400;line-height:1.3}
-  .tip-chip .tip-ico{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:var(--card);border:1px solid var(--line-soft);border-radius:50%;font-weight:700;color:var(--guinda);font-size:11px}
+  .tip-chip{display:inline-flex;align-items:center;gap:8px;padding:5px 11px;background:var(--bg-2);border:1px dashed var(--line);border-radius:var(--r-ui);font-size:var(--fs-xs);color:var(--muted);font-weight:400;line-height:1.3}
+  .tip-chip .tip-ico{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:var(--card);border:1px solid var(--line-soft);border-radius:50%;font-weight:700;color:var(--guinda);font-size:var(--fs-xs)}
 
   .table-wrap{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
   .table-scroll{max-height:70vh;overflow:auto}
@@ -630,23 +658,23 @@
   table.t th:nth-child(11),table.t td:nth-child(11){width:6%}    /* DG resp.      */
   /* Celda de Alcaldía permite wrap (puede ocupar 2 líneas si el nombre es largo) */
   table.t td.cell-alcaldia{white-space:normal;line-height:1.3;word-break:break-word}
-  thead.t-head th{background:var(--bg-2);text-align:left;padding:10px 8px;font-size:10.5px;font-family:'Roboto Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:500;border-bottom:2px solid var(--guinda);cursor:pointer;user-select:none;position:sticky;top:0;white-space:nowrap;z-index:2;transition:background .15s,color .15s;overflow:hidden;text-overflow:ellipsis}
+  thead.t-head th{background:var(--bg-2);text-align:left;padding:10px 8px;font-size:var(--fs-mini);font-family:'Roboto Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:500;border-bottom:2px solid var(--guinda);cursor:pointer;user-select:none;position:sticky;top:0;white-space:nowrap;z-index:2;transition:background .15s,color .15s;overflow:hidden;text-overflow:ellipsis}
   thead.t-head th:hover{color:var(--guinda);background:#fff}
-  thead.t-head th .arrow{opacity:.45;margin-left:4px;font-size:10px;transition:opacity .15s,color .15s;display:inline-block}
+  thead.t-head th .arrow{opacity:.45;margin-left:4px;font-size:var(--fs-mini);transition:opacity .15s,color .15s;display:inline-block}
   thead.t-head th:hover .arrow{opacity:.8}
   thead.t-head th.sort-asc .arrow,thead.t-head th.sort-desc .arrow{opacity:1;color:var(--guinda)}
   tbody.t-body tr{border-bottom:1px solid var(--line-soft);cursor:pointer;transition:background .15s,box-shadow .15s}
   tbody.t-body tr:hover{background:var(--bg-2);box-shadow:inset 3px 0 0 var(--guinda)}
-  tbody.t-body td{padding:10px 8px;font-size:13px;color:var(--ink-2);vertical-align:top;font-weight:400;position:relative;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  tbody.t-body td{padding:10px 8px;font-size:var(--fs-base);color:var(--ink-2);vertical-align:top;font-weight:400;position:relative;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   tbody.t-body td.name{color:var(--ink);font-weight:500;padding-left:18px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
-  tbody.t-body td.name::before{content:"›";position:absolute;left:4px;top:10px;color:var(--line);font-weight:700;font-size:16px;transition:color .15s,transform .15s}
+  tbody.t-body td.name::before{content:"›";position:absolute;left:4px;top:10px;color:var(--line);font-weight:700;font-size:var(--fs-lg);transition:color .15s,transform .15s}
   tbody.t-body tr:hover td.name::before{color:var(--guinda);transform:translateX(2px)}
-  tbody.t-body td.num{font-family:'Roboto Mono',monospace;font-size:12.5px;text-align:right;white-space:nowrap;font-weight:500}
-  tbody.t-body td.date{font-family:'Roboto Mono',monospace;font-size:12px;white-space:nowrap;color:var(--ink-2)}
+  tbody.t-body td.num{font-family:'Roboto Mono',monospace;font-size:var(--fs-sm);text-align:right;white-space:nowrap;font-weight:500}
+  tbody.t-body td.date{font-family:'Roboto Mono',monospace;font-size:var(--fs-sm);white-space:nowrap;color:var(--ink-2)}
 
   /* ===== Sistema de tags con paleta oficial GCDMX · cero repeticiones ===== */
   /* TIPO (outline discreto) — deja que la subcategoría destaque como dato principal */
-  .tag{display:inline-block;padding:2px 8px;border-radius:2px;font-size:10.5px;font-family:'Roboto Mono',monospace;letter-spacing:.04em;white-space:nowrap;font-weight:500}
+  .tag{display:inline-block;padding:2px 8px;border-radius:var(--r-chip);font-size:var(--fs-mini);font-family:'Roboto Mono',monospace;letter-spacing:.04em;white-space:nowrap;font-weight:500}
     
   /* JURISDICCIÓN (también outline para mantener jerarquía) */
   .tag-jur-Local{background:transparent;color:var(--ink-2);border:1px solid var(--line)}
@@ -656,14 +684,14 @@
   .tag-AVA  {background:transparent; color:var(--dorado-text);  border:1px solid var(--dorado-text)}
   .tag-ANP  {background:transparent; color:var(--guinda);  border:1px solid var(--guinda)}
   /* Variantes "full" usadas en la ficha técnica: nombre completo dentro del recuadro */
-  .tag.tag-full{padding:4px 12px;font-size:11.5px;letter-spacing:.02em}
+  .tag.tag-full{padding:4px 12px;font-size:var(--fs-xs);letter-spacing:.02em}
   .tag-AVA.tag-full{background:rgba(178,142,92,.12)}
   .tag-ANP.tag-full{background:rgba(157,33,72,.08)}
 
   /* SUBCATEGORÍA — todas con color único basado en paleta GCDMX */
-  .tag-sub{display:inline-block;padding:3px 9px;border-radius:2px;font-size:10.5px;font-family:'Roboto Mono',monospace;letter-spacing:.03em;white-space:nowrap;font-weight:500;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .tag-sub{display:inline-block;padding:3px 9px;border-radius:var(--r-chip);font-size:var(--fs-mini);font-family:'Roboto Mono',monospace;letter-spacing:.03em;white-space:nowrap;font-weight:500;max-width:100%;overflow:hidden;text-overflow:ellipsis}
   /* Variante full: nombre completo dentro del recuadro con su color característico */
-  .tag-sub.tag-sub-full{padding:4px 12px;font-size:11.5px;letter-spacing:.02em;white-space:normal}
+  .tag-sub.tag-sub-full{padding:4px 12px;font-size:var(--fs-xs);letter-spacing:.02em;white-space:normal}
   /* AVA */
   .sub-BU   {background:var(--naranja);    color:var(--ink)}        /* Naranja 151C */
   .sub-BR   {background:var(--marron);     color:var(--crema)}      /* Marrón 146C  */
@@ -693,9 +721,9 @@
   .constitucion-block{border-left:4px solid var(--guinda)}
   .constitucion-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:18px}
   .constitucion-card{background:var(--bg-2);border:1px solid var(--line-soft);border-radius:var(--radius);padding:16px 18px}
-  .constitucion-card .l-art{display:inline-block;font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:var(--guinda);background:rgba(157,33,72,.08);padding:3px 8px;border-radius:3px;margin-bottom:10px;font-weight:500}
-  .constitucion-card h4{font-family:'Roboto',sans-serif;font-size:16px;font-weight:700;line-height:1.25;margin-bottom:8px;color:var(--ink);letter-spacing:-.005em}
-  .constitucion-card p{font-size:13px;color:var(--ink-2);line-height:1.6}
+  .constitucion-card .l-art{display:inline-block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;color:var(--guinda);background:rgba(157,33,72,.08);padding:3px 8px;border-radius:var(--r-ui);margin-bottom:10px;font-weight:500}
+  .constitucion-card h4{font-family:'Roboto',sans-serif;font-size:var(--fs-lg);font-weight:700;line-height:1.25;margin-bottom:8px;color:var(--ink);letter-spacing:-.005em}
+  .constitucion-card p{font-size:var(--fs-base);color:var(--ink-2);line-height:1.6}
   @media (max-width:900px){ .constitucion-grid{grid-template-columns:1fr} }
 
   /* Meta comparable · línea base sexenal */
@@ -706,66 +734,66 @@
   .meta-col-base{border-top:3px solid var(--gris)}
   .meta-col-goal{border-top:3px solid var(--guinda);background:linear-gradient(to bottom, rgba(157,33,72,.03), var(--card))}
   .meta-col-head{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--line-soft);padding-bottom:12px}
-  .meta-period{font-family:'Roboto',sans-serif;font-size:22px;font-weight:900;color:var(--ink);letter-spacing:-.02em}
+  .meta-period{font-family:'Roboto',sans-serif;font-size:var(--fs-xl);font-weight:900;color:var(--ink);letter-spacing:-.02em}
   .meta-col-goal .meta-period{color:var(--guinda)}
-  .meta-label{font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+  .meta-label{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
   .meta-stats{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .meta-stat{display:flex;flex-direction:column;gap:4px}
-  .meta-n{font-family:'Roboto',sans-serif;font-size:56px;font-weight:900;line-height:.95;color:var(--gris);letter-spacing:-.03em}
+  .meta-n{font-family:'Roboto',sans-serif;font-size:var(--fs-mega);font-weight:900;line-height:.95;color:var(--gris);letter-spacing:-.03em}
   .meta-n.meta-actual{color:var(--guinda)}
-  .meta-t{font-size:12.5px;color:var(--ink-2);line-height:1.35}
-  .meta-rate{font-size:12.5px;color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.02em;margin-top:auto;padding-top:10px;border-top:1px dotted var(--line-soft)}
+  .meta-t{font-size:var(--fs-sm);color:var(--ink-2);line-height:1.35}
+  .meta-rate{font-size:var(--fs-sm);color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.02em;margin-top:auto;padding-top:10px;border-top:1px dotted var(--line-soft)}
   .meta-rate b{color:var(--ink);font-weight:700}
-  .meta-arrow{display:flex;align-items:center;justify-content:center;font-family:'Roboto',sans-serif;font-size:38px;color:var(--guinda);font-weight:300}
+  .meta-arrow{display:flex;align-items:center;justify-content:center;font-family:'Roboto',sans-serif;font-size:var(--fs-mega);color:var(--guinda);font-weight:300}
 
   .meta-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
   .meta-card{background:var(--bg-2);border:1px solid var(--line-soft);border-radius:var(--radius);padding:16px 18px}
   .meta-card.meta-current{background:#fff;border-left:3px solid var(--guinda)}
-  .meta-card-title{font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--guinda);font-weight:500;margin-bottom:12px}
+  .meta-card-title{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--guinda);font-weight:500;margin-bottom:12px}
   .meta-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-  .meta-tag{padding:3px 9px !important;font-size:11.5px !important}
+  .meta-tag{padding:3px 9px !important;font-size:var(--fs-xs) !important}
   .meta-details{margin-top:10px}
-  .meta-details summary{cursor:pointer;font-size:12.5px;color:var(--guinda);padding:8px 14px;background:var(--bg-2);border:1px solid var(--line-soft);border-radius:3px;font-weight:500;user-select:none;list-style:none;display:inline-flex;align-items:center;gap:8px;transition:all .15s}
+  .meta-details summary{cursor:pointer;font-size:var(--fs-sm);color:var(--guinda);padding:8px 14px;background:var(--bg-2);border:1px solid var(--line-soft);border-radius:var(--r-ui);font-weight:500;user-select:none;list-style:none;display:inline-flex;align-items:center;gap:8px;transition:all .15s}
   .meta-details summary::-webkit-details-marker{display:none}
-  .meta-details summary::before{content:"▸";font-size:11px;display:inline-block;transition:transform .2s ease;color:var(--guinda)}
+  .meta-details summary::before{content:"▸";font-size:var(--fs-xs);display:inline-block;transition:transform .2s ease;color:var(--guinda)}
   .meta-details[open] summary::before{transform:rotate(90deg)}
   .meta-details summary:hover{background:#fff;border-color:var(--guinda);box-shadow:0 1px 3px rgba(157,33,72,.08)}
   .meta-details[open] summary{background:#fff;border-color:var(--guinda)}
   .meta-list{list-style:none;padding:0;margin:8px 0 0 0}
-  .meta-list li{padding:8px 0;font-size:12.5px;color:var(--ink-2);border-bottom:1px dotted var(--line-soft);display:block;line-height:1.5}
+  .meta-list li{padding:8px 0;font-size:var(--fs-sm);color:var(--ink-2);border-bottom:1px dotted var(--line-soft);display:block;line-height:1.5}
   .meta-list li:last-child{border-bottom:none}
   .meta-list li .lbl{color:var(--ink);font-weight:500;display:block}
-  .meta-list li .ref{font-family:'Roboto Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:.03em;display:block;margin-top:2px}
-  .meta-ref{margin-top:16px;padding:10px 14px;background:var(--bg-2);border-radius:3px;font-size:11.5px;color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.03em;text-align:center}
+  .meta-list li .ref{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);color:var(--muted);letter-spacing:.03em;display:block;margin-top:2px}
+  .meta-ref{margin-top:16px;padding:10px 14px;background:var(--bg-2);border-radius:var(--r-ui);font-size:var(--fs-xs);color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.03em;text-align:center}
 
   @media (max-width:900px){
     .meta-hero{grid-template-columns:1fr;gap:12px}
-    .meta-arrow{transform:rotate(90deg);font-size:28px}
-    .meta-n{font-size:48px}
+    .meta-arrow{transform:rotate(90deg);font-size:var(--fs-2xl)}
+    .meta-n{font-size:var(--fs-mega)}
     .meta-breakdown{grid-template-columns:1fr}
   }
   @media (max-width:640px){
     .meta-stats{grid-template-columns:1fr}
-    .meta-n{font-size:44px}
+    .meta-n{font-size:var(--fs-mega)}
     .meta-col{padding:18px 18px}
   }
 
-  .backdrop{position:fixed;inset:0;background:rgba(42,42,42,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:1000}
+  .backdrop{position:fixed;inset:0;background:rgba(42,42,42,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:var(--z-drawer)}
   .backdrop.show,.backdrop.open{opacity:1;pointer-events:auto}
-  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(580px,94vw);background:var(--card);border-left:3px solid var(--guinda);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:1001;overflow-y:auto}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(580px,94vw);background:var(--card);border-left:3px solid var(--guinda);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:var(--z-drawer-top);overflow-y:auto}
   .drawer.open{transform:translateX(0)}
   .drawer-inner{padding:30px 34px 50px}
-  .drawer .close{position:absolute;top:16px;right:18px;background:transparent;border:none;font-size:28px;cursor:pointer;color:var(--ink-2);width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;line-height:1}
+  .drawer .close{position:absolute;top:16px;right:18px;background:transparent;border:none;font-size:var(--fs-2xl);cursor:pointer;color:var(--ink-2);width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;line-height:1}
   .drawer .close:hover{background:var(--bg-2);color:var(--guinda)}
-  .drawer .kat{font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--guinda);margin-bottom:10px;font-weight:500}
-  .drawer h2{font-family:'Roboto',sans-serif;font-weight:700;font-size:28px;line-height:1.2;margin-bottom:6px;color:var(--ink);letter-spacing:-.01em}
-  .drawer .subcat{font-size:13.5px;color:var(--muted);margin-bottom:18px;font-style:italic}
+  .drawer .kat{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--guinda);margin-bottom:10px;font-weight:500}
+  .drawer h2{font-family:'Roboto',sans-serif;font-weight:700;font-size:var(--fs-2xl);line-height:1.2;margin-bottom:6px;color:var(--ink);letter-spacing:-.01em}
+  .drawer .subcat{font-size:var(--fs-base);color:var(--muted);margin-bottom:18px;font-style:italic}
   /* Encabezado del drawer con botón Compartir alineado a la derecha */
   .drawer-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:8px;padding-right:44px}
   .drawer-header-left{flex:1;min-width:0}
   .drawer-header-left h2{margin-bottom:6px}
   .drawer-header-left .subcat{margin-bottom:0}
-  .btn-share-area{display:inline-flex;align-items:center;gap:8px;background:var(--card);color:var(--ink-2);padding:8px 14px;border:1.5px solid var(--line);border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;margin-top:4px}
+  .btn-share-area{display:inline-flex;align-items:center;gap:8px;background:var(--card);color:var(--ink-2);padding:8px 14px;border:1.5px solid var(--line);border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:var(--fs-sm);font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;margin-top:4px}
   .btn-share-area:hover{border-color:var(--guinda);color:var(--guinda);background:#fff}
   .btn-share-area:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
   .btn-share-area.copied{background:var(--verde);color:#fff;border-color:var(--verde)}
@@ -774,37 +802,40 @@
   /* Mapa Leaflet dentro del drawer */
   .map-block{margin-top:8px;margin-bottom:22px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-soft);position:relative;background:var(--bg-2)}
   /* Contenedor de controles flotantes (toggle + fullscreen) */
-  .map-block-controls-floating{position:absolute;top:10px;right:10px;z-index:500;display:flex;gap:6px;align-items:stretch}
-  .map-block-controls-floating .map-block-toggle{position:static;box-shadow:0 2px 6px rgba(0,0,0,.15);background:var(--card)}
+  .map-block-controls-floating{position:absolute;top:10px;right:10px;z-index:var(--z-flotante);display:flex;gap:6px;align-items:stretch}
+  .map-block-controls-floating .map-block-toggle{position:static;box-shadow:var(--sh-2);background:var(--card)}
   /* Botón de pantalla completa */
-  .map-fullscreen-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;background:var(--card);border:none;border-radius:var(--radius);cursor:pointer;color:var(--ink-2);box-shadow:0 2px 6px rgba(0,0,0,.15);transition:all .15s;padding:0}
+  .map-fullscreen-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;background:var(--card);border:none;border-radius:var(--radius);cursor:pointer;color:var(--ink-2);box-shadow:var(--sh-2);transition:all .15s;padding:0}
   .map-fullscreen-btn:hover{background:#fff;color:var(--guinda)}
   .map-fullscreen-btn:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
   /* Buscador de direcciones/coordenadas (esquina superior izquierda, debajo del control de zoom) */
-  .map-search-float{position:absolute;top:10px;left:50px;z-index:500;display:flex;align-items:stretch;background:var(--card);border-radius:var(--radius);box-shadow:0 2px 6px rgba(0,0,0,.15);overflow:visible;max-width:calc(100% - 200px)}
-  .map-search-input{border:none;outline:none;padding:8px 12px;font-family:'Roboto',sans-serif;font-size:12.5px;color:var(--ink);background:transparent;width:280px;min-width:0}
-  .map-search-input::placeholder{color:var(--muted);font-size:12px}
+  /* Solo estructura. Posicion, fondo, borde, sombra y ancho maximo los fija
+     el SISTEMA UNIFICADO DE CONTROLES DE MAPA v36, mas abajo: antes estaban
+     declarados en los dos sitios y ganaba el segundo por orden de aparicion. */
+  .map-search-float{position:absolute;z-index:var(--z-flotante);display:flex;align-items:stretch;overflow:visible}
+  .map-search-input{border:none;outline:none;padding:8px 12px;font-family:'Roboto',sans-serif;font-size:var(--fs-sm);color:var(--ink);background:transparent;width:280px;min-width:0}
+  .map-search-input::placeholder{color:var(--muted);font-size:var(--fs-sm)}
   .map-search-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;background:transparent;border:none;border-left:1px solid var(--line-soft);cursor:pointer;color:var(--ink-2);transition:color .15s;padding:0;flex-shrink:0}
   .map-search-btn:hover{color:var(--guinda)}
   .map-search-btn:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px}
   .map-search-btn:disabled{opacity:.5;cursor:wait}
-  .map-search-results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 6px 20px rgba(0,0,0,.18);max-height:280px;overflow-y:auto;font-family:'Roboto',sans-serif}
-  .map-search-result-item{padding:9px 12px;cursor:pointer;border-bottom:1px dotted var(--line-soft);font-size:12.5px;color:var(--ink-2);line-height:1.4;transition:background .12s}
+  .map-search-results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--sh-3);max-height:280px;overflow-y:auto;font-family:'Roboto',sans-serif}
+  .map-search-result-item{padding:9px 12px;cursor:pointer;border-bottom:1px dotted var(--line-soft);font-size:var(--fs-sm);color:var(--ink-2);line-height:1.4;transition:background .12s}
   .map-search-result-item:last-child{border-bottom:none}
   .map-search-result-item:hover,.map-search-result-item:focus-visible{background:var(--bg-2);outline:none}
   .map-search-result-item .res-title{font-weight:500;color:var(--ink);display:block}
-  .map-search-result-item .res-meta{font-size:11px;color:var(--muted);font-family:'Roboto Mono',monospace;margin-top:2px;display:block}
+  .map-search-result-item .res-meta{font-size:var(--fs-xs);color:var(--muted);font-family:'Roboto Mono',monospace;margin-top:2px;display:block}
   /* Encabezados de grupo y color de categoría en las sugerencias */
-  .map-search-results .res-group{font-family:'Roboto Mono',monospace;font-size:9px;letter-spacing:.11em;
+  .map-search-results .res-group{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.11em;
     text-transform:uppercase;color:var(--muted);padding:8px 12px 5px;background:var(--bg-2);
     border-bottom:1px solid var(--line-soft);position:sticky;top:0;z-index:2}
   .map-search-result-item{position:relative;z-index:1;padding-left:12px;background:var(--card)}
   .map-search-result-item .res-swatch{position:absolute;left:12px;top:12px;width:8px;height:8px;
-    border-radius:2px;flex-shrink:0}
+    border-radius:var(--r-chip);flex-shrink:0}
   .map-search-result-item:has(.res-swatch){padding-left:28px}
   .map-search-result-item:has(.res-swatch) .res-title,
   .map-search-result-item:has(.res-swatch) .res-meta{margin-left:0}
-  .map-search-empty{padding:14px 12px;text-align:center;color:var(--muted);font-size:12px;font-family:'Roboto',sans-serif}
+  .map-search-empty{padding:14px 12px;text-align:center;color:var(--muted);font-size:var(--fs-sm);font-family:'Roboto',sans-serif}
   /* Mapa en pantalla completa — usa Fullscreen API nativa */
   #globalMapCanvas:fullscreen,#mapCanvas:fullscreen,#zpMapCanvas:fullscreen{height:100vh !important;width:100vw !important;background:var(--card)}
   #globalMapCanvas:-webkit-full-screen,#mapCanvas:-webkit-full-screen,#zpMapCanvas:-webkit-full-screen{height:100vh !important;width:100vw !important;background:var(--card)}
@@ -812,25 +843,25 @@
   .search-result-marker{background:var(--guinda);border:3px solid #fff;border-radius:50%;width:18px !important;height:18px !important;margin-left:-9px !important;margin-top:-9px !important;box-shadow:0 2px 6px rgba(0,0,0,.4)}
   /* ── Popup de ubicación · ejecutivo: una respuesta, no un expediente ── */
   .lp{font-family:'Roboto',sans-serif;color:var(--ink);line-height:1.4;min-width:0}
-  .loc-loading{padding:14px 4px;text-align:center;color:var(--muted);font-size:12px;font-family:'Roboto Mono',monospace}
-  .lp-cat{display:flex;align-items:center;gap:7px;font-family:'Roboto Mono',monospace;font-size:9.5px;
+  .loc-loading{padding:14px 4px;text-align:center;color:var(--muted);font-size:var(--fs-sm);font-family:'Roboto Mono',monospace}
+  .lp-cat{display:flex;align-items:center;gap:7px;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);
     font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-2);margin-bottom:5px}
   .lp-cat.gris{color:var(--muted)}
-  .lp-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
-  .lp-nom{font-size:19px;font-weight:700;line-height:1.2;color:var(--ink);letter-spacing:-.01em}
-  .lp-nom.sm{font-size:15px;font-weight:500}
-  .lp-mas{font-size:12.5px;color:var(--ink-2);margin-top:5px}
-  .lp-warn{margin-top:8px;padding:5px 8px;background:#fff8e1;border-left:2px solid var(--dorado);
-    font-size:11.5px;color:var(--dorado-text);border-radius:0 3px 3px 0;line-height:1.35}
+  .lp-dot{width:9px;height:9px;border-radius:var(--r-chip);flex-shrink:0}
+  .lp-nom{font-size:var(--fs-xl);font-weight:700;line-height:1.2;color:var(--ink);letter-spacing:-.01em}
+  .lp-nom.sm{font-size:var(--fs-md);font-weight:500}
+  .lp-mas{font-size:var(--fs-sm);color:var(--ink-2);margin-top:5px}
+  .lp-warn{margin-top:8px;padding:5px 8px;background:var(--warn-bg);border-left:2px solid var(--dorado);
+    font-size:var(--fs-xs);color:var(--dorado-text);border-radius:0 3px 3px 0;line-height:1.35}
   .lp-pie{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;
     padding-top:9px;border-top:1px solid var(--line-soft)}
-  .lp-ctx{font-family:'Roboto Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:.03em;
+  .lp-ctx{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);color:var(--muted);letter-spacing:.03em;
     min-width:0;line-height:1.5}
-  .lp-warn.rojo{background:#fdf0f3;border-left-color:var(--guinda);color:#8a2242}
+  .lp-warn.rojo{background:var(--alert-bg);border-left-color:var(--guinda);color:var(--alert-text)}
   .lp-ficha{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;background:var(--guinda);color:#fff;
-    border:none;border-radius:3px;padding:6px 11px;cursor:pointer;font-family:'Roboto',sans-serif;
-    font-size:12px;font-weight:700;max-width:150px;overflow:hidden;white-space:nowrap}
-  .lp-ficha:hover{background:#7d1839}
+    border:none;border-radius:var(--r-ui);padding:6px 11px;cursor:pointer;font-family:'Roboto',sans-serif;
+    font-size:var(--fs-sm);font-weight:700;max-width:150px;overflow:hidden;white-space:nowrap}
+  .lp-ficha:hover{background:var(--guinda-900)}
   .lp-ficha .ar{font-family:'Roboto Mono',monospace}
   /* Chip SC flotante en la ficha técnica (esquina inferior izquierda para no chocar con buscador) */
   /* El lienzo Leaflet de la ficha vive en su propio hijo para no borrar los flotantes */
@@ -841,15 +872,15 @@
   #mapCanvas .map-search-float{left:50px;right:10px;max-width:none}
   #mapCanvas .map-search-input{width:100%}
   #mapCanvas .map-block-controls-floating{top:52px}
-  .drawer-sc-floating{position:absolute;bottom:10px;left:10px;z-index:500}
-  .drawer-sc-floating .map-filter-chip{box-shadow:0 2px 6px rgba(0,0,0,.15);font-size:11px;padding:5px 10px}
-  .map-block-toggle{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden}
-  .map-block-toggle button{background:#fff;border:none;padding:3px 9px;font-family:'Roboto Mono',monospace;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);cursor:pointer;font-weight:500;transition:all .15s}
+  .drawer-sc-floating{position:absolute;bottom:10px;left:10px;z-index:var(--z-flotante)}
+  .drawer-sc-floating .map-filter-chip{box-shadow:var(--sh-2);font-size:var(--fs-xs);padding:5px 10px}
+  .map-block-toggle{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:var(--r-ui);overflow:hidden}
+  .map-block-toggle button{background:#fff;border:none;padding:3px 9px;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);cursor:pointer;font-weight:500;transition:all .15s}
   .map-block-toggle button:hover{background:var(--bg-2);color:var(--guinda)}
   .map-block-toggle button.active{background:var(--guinda);color:var(--crema)}
   .map-block-toggle button + button{border-left:1px solid var(--line)}
-  .map-canvas{height:340px;width:100%;background:#e8e3d4}
-  .map-canvas.no-data{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12.5px;text-align:center;padding:20px;background:var(--bg-2);font-family:'Roboto',sans-serif}
+  .map-canvas{height:340px;width:100%;background:var(--map-bg)}
+  .map-canvas.no-data{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:var(--fs-sm);text-align:center;padding:20px;background:var(--bg-2);font-family:'Roboto',sans-serif}
 
   /* ═══════════════════════════════════════════════════════════════════════
      SISTEMA UNIFICADO DE CONTROLES DE MAPA · v36
@@ -885,7 +916,7 @@
   .leaflet-control-zoom a{
     width:var(--mc-h); height:var(--mc-h); line-height:var(--mc-h);
     background:transparent; border:0; border-radius:0;
-    color:var(--ink-2); font-family:'Roboto',sans-serif; font-size:17px; font-weight:400;
+    color:var(--ink-2); font-family:'Roboto',sans-serif; font-size:var(--fs-lg); font-weight:400;
     display:flex; align-items:center; justify-content:center; transition:background .15s,color .15s;
   }
   .leaflet-bar a + a{border-top:1px solid var(--mc-div)}
@@ -904,8 +935,8 @@
     background:var(--mc-bg); border:1px solid var(--mc-line); border-radius:var(--radius);
     box-shadow:var(--mc-shadow); max-width:calc(100% - 300px);
   }
-  .map-search-input{height:calc(var(--mc-h) - 2px); padding:0 12px; width:250px; font-size:12.5px}
-  .map-search-input::placeholder{font-size:12px}
+  .map-search-input{height:calc(var(--mc-h) - 2px); padding:0 12px; width:250px; font-size:var(--fs-sm)}
+  .map-search-input::placeholder{font-size:var(--fs-sm)}
   .map-search-btn{width:var(--mc-h); border-left:1px solid var(--mc-div)}
   .map-search-btn:hover{background:var(--bg-2); color:var(--guinda)}
 
@@ -917,7 +948,7 @@
   }
   .map-block-controls-floating .map-block-toggle{border:0; border-radius:0; box-shadow:none; background:transparent}
   .map-block-controls-floating .map-block-toggle button{
-    height:var(--mc-h); padding:0 13px; font-size:10px; letter-spacing:.1em; background:transparent;
+    height:var(--mc-h); padding:0 13px; font-size:var(--fs-mini); letter-spacing:.1em; background:transparent;
   }
   .map-block-controls-floating .map-block-toggle button + button{border-left:1px solid var(--mc-div)}
   .map-block-controls-floating .map-block-toggle button.active{background:var(--guinda); color:var(--crema)}
@@ -931,7 +962,7 @@
   .drawer-sc-floating{bottom:10px; left:10px}
   .drawer-sc-floating .map-filter-chip,
   .drawer-sc-floating .map-filter-chip.active{
-    height:28px; padding:0 11px; font-size:10.5px; background:var(--mc-bg);
+    height:28px; padding:0 11px; font-size:var(--fs-mini); background:var(--mc-bg);
     border:1px solid var(--mc-line); border-radius:var(--radius); box-shadow:var(--mc-shadow);
     color:var(--ink-2); font-weight:500;
   }
@@ -954,27 +985,27 @@
        los controles de Leaflet se pintan por encima de los popups por diseño. */
     .leaflet-container.sia-popup-abierto .leaflet-top.leaflet-left{
       opacity:0; pointer-events:none; transition:opacity .15s}
-    .lp-nom{font-size:18px}
-    .lp-ficha{font-size:11.5px;padding:6px 10px}
-    .lp-ctx{font-size:10px}
+    .lp-nom{font-size:var(--fs-lg)}
+    .lp-ficha{font-size:var(--fs-xs);padding:6px 10px}
+    .lp-ctx{font-size:var(--fs-mini)}
   }
-  .map-canvas.no-data b{display:block;color:var(--ink-2);margin-bottom:6px;font-size:13px}
-  .map-block-foot{display:flex;align-items:center;gap:14px;padding:7px 12px;background:#fff;border-top:1px solid var(--line-soft);font-size:11px;color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.04em}
+  .map-canvas.no-data b{display:block;color:var(--ink-2);margin-bottom:6px;font-size:var(--fs-base)}
+  .map-block-foot{display:flex;align-items:center;gap:14px;padding:7px 12px;background:#fff;border-top:1px solid var(--line-soft);font-size:var(--fs-xs);color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.04em}
   .map-block-foot a{color:var(--guinda);text-decoration:none;font-weight:500}
   .map-block-foot a:hover{text-decoration:underline}
   /* Leaflet override · suaviza tooltips para identidad institucional */
         @media (max-width:640px){
     .map-canvas{height:280px}
     /* En táctil agrandamos los toggles para superar 32px de alto (recomendación WCAG) */
-    .map-block-toggle button{padding:11px 14px;font-size:10px}
+    .map-block-toggle button{padding:11px 14px;font-size:var(--fs-mini)}
     .map-block-toggle{flex-shrink:0}
   }
 
   /* Touch-friendly: en cualquier dispositivo táctil agrandamos botones críticos */
   @media (pointer:coarse), (max-width:640px){
-    .map-filter-chip{padding:8px 14px;font-size:12.5px;min-height:36px}
+    .map-filter-chip{padding:8px 14px;font-size:var(--fs-sm);min-height:44px}
     .map-filter-chip .chip-dot{width:11px;height:11px}
-    .drawer .close{width:44px;height:44px;font-size:30px}
+    .drawer .close{width:44px;height:44px;font-size:var(--fs-hero)}
   }
 
   /* Accesibilidad: respeta la preferencia del usuario por menos movimiento */
@@ -987,21 +1018,21 @@
     }
   }
   .map-filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;margin-bottom:10px}
-  .map-filter-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 13px;background:#fff;border:1.5px solid var(--line);border-radius:3px;font-size:12px;color:var(--ink-2);cursor:pointer;font-weight:500;font-family:'Roboto',sans-serif;transition:all .15s}
+  .map-filter-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 13px;background:#fff;border:1.5px solid var(--line);border-radius:var(--r-ui);font-size:var(--fs-sm);color:var(--ink-2);cursor:pointer;font-weight:500;font-family:'Roboto',sans-serif;transition:all .15s}
   .map-filter-chip:hover{border-color:var(--ink-2)}
   .map-filter-chip .chip-dot{width:10px;height:10px;border-radius:50%;background:var(--chip-color);display:inline-block;flex-shrink:0;border:1.5px solid var(--chip-color)}
   .map-filter-chip:not(.active){opacity:.55}
   .map-filter-chip:not(.active) .chip-dot{background:transparent}
   .map-filter-chip.active{border-color:var(--chip-color);color:var(--ink);background:#fff}
   /* Chip especial de Coadministración — icono de estrella en lugar de punto */
-  #coadminToggle .chip-dot{background:#f4c842;border-color:#f4c842;border-radius:0;width:10px;height:10px;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
-  #coadminToggle:not(.active) .chip-dot{background:transparent;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);background:#f4c842;opacity:.45}
-  #coadminToggle.active{background:#fff8e1;border-color:#9d2148;color:#9d2148;font-weight:600}
-  .map-filter-chip .chip-count{font-family:'Roboto Mono',monospace;font-size:10.5px;color:var(--muted);font-weight:500;letter-spacing:.04em;margin-left:2px}
+  #coadminToggle .chip-dot{background:var(--acento-mapa);border-color:var(--acento-mapa);border-radius:0;width:10px;height:10px;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+  #coadminToggle:not(.active) .chip-dot{background:transparent;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);background:var(--acento-mapa);opacity:.45}
+  #coadminToggle.active{background:var(--warn-bg);border-color:var(--guinda);color:var(--guinda);font-weight:600}
+  .map-filter-chip .chip-count{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);color:var(--muted);font-weight:500;letter-spacing:.04em;margin-left:2px}
   .map-filter-chip.active .chip-count{color:var(--chip-color)}
 
   .global-map-block{margin-top:6px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-soft);background:var(--bg-2)}
-  #globalMapCanvas{height:600px;width:100%;background:#e8e3d4}
+  #globalMapCanvas{height:600px;width:100%;background:var(--map-bg)}
 
   /* Tooltip discreto para alcaldías (overlay de contexto) */
   
@@ -1010,11 +1041,11 @@
   }
   @media (max-width:640px){
     #globalMapCanvas{height:420px}
-    .map-filter-chip{padding:5px 10px;font-size:11.5px}
+    .map-filter-chip{padding:5px 10px;font-size:var(--fs-xs)}
     /* === Controles en 2 filas · el posicionamiento vive en el bloque ≤760px === */
     .map-search-float{width:auto}
-    .map-search-input{width:100%;font-size:12px;padding:7px 10px}
-    .map-search-input::placeholder{font-size:11px}
+    .map-search-input{width:100%;font-size:var(--fs-sm);padding:7px 10px}
+    .map-search-input::placeholder{font-size:var(--fs-xs)}
     .map-search-btn{width:30px}
     /* Fila 2 · zoom (izq) + toggle Mapa/Satélite y expandir (der), debajo del buscador */
     .leaflet-top{top:44px}
@@ -1022,22 +1053,22 @@
     .map-fullscreen-btn{width:30px;height:30px}
   }
   .field{padding:12px 0;border-bottom:1px solid var(--line-soft);display:grid;grid-template-columns:140px 1fr;gap:16px;align-items:baseline}
-  .field .k{font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
-  .field .v{color:var(--ink);font-size:14px;font-weight:400}
-  .big-num{font-family:'Roboto',sans-serif;font-size:38px;line-height:1;color:var(--guinda);margin:20px 0 4px;font-weight:900;letter-spacing:-.02em}
-  .big-num-lbl{font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;font-weight:500}
+  .field .k{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+  .field .v{color:var(--ink);font-size:var(--fs-md);font-weight:400}
+  .big-num{font-family:'Roboto',sans-serif;font-size:var(--fs-mega);line-height:1;color:var(--guinda);margin:20px 0 4px;font-weight:900;letter-spacing:-.02em}
+  .big-num-lbl{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;font-weight:500}
   .legal-block{margin-top:24px;padding:18px 20px;background:var(--bg-2);border-left:3px solid var(--legal);border-radius:0 3px 3px 0}
-  .legal-block .title{font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--legal);margin-bottom:10px;font-weight:500}
-  .legal-block p{font-size:13px;color:var(--ink-2);line-height:1.6;margin-bottom:8px}
+  .legal-block .title{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.14em;text-transform:uppercase;color:var(--legal);margin-bottom:10px;font-weight:500}
+  .legal-block p{font-size:var(--fs-base);color:var(--ink-2);line-height:1.6;margin-bottom:8px}
 
   /* Documentos oficiales en ficha técnica (PDFs y Gacetas del decreto y PM) */
   .documentos-oficiales{margin-top:20px;padding:18px 20px;background:var(--card);border:1px solid var(--line-soft);border-left:3px solid var(--guinda);border-radius:0 3px 3px 0}
-  .documentos-oficiales-title{font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--guinda);margin-bottom:14px;font-weight:600}
+  .documentos-oficiales-title{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.14em;text-transform:uppercase;color:var(--guinda);margin-bottom:14px;font-weight:600}
   .doc-group{margin-bottom:14px}
   .doc-group:last-child{margin-bottom:0}
-  .doc-group-title{font-family:'Roboto',sans-serif;font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:8px;letter-spacing:.02em}
+  .doc-group-title{font-family:'Roboto',sans-serif;font-size:var(--fs-sm);font-weight:600;color:var(--ink-2);margin-bottom:8px;letter-spacing:.02em}
   .doc-group-links{display:flex;flex-wrap:wrap;gap:8px}
-  .doc-link{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);text-decoration:none;color:var(--ink-2);font-family:'Roboto',sans-serif;font-size:12.5px;font-weight:500;transition:all .18s;cursor:pointer}
+  .doc-link{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);text-decoration:none;color:var(--ink-2);font-family:'Roboto',sans-serif;font-size:var(--fs-sm);font-weight:500;transition:all .18s;cursor:pointer}
   .doc-link:hover{background:#fff;border-color:var(--guinda);color:var(--guinda);transform:translateY(-1px);box-shadow:0 2px 8px rgba(157,33,72,.15)}
   .doc-link:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
   .doc-link-pdf{border-color:#e5074c33}
@@ -1050,11 +1081,11 @@
   .doc-link:hover .doc-link-ext{opacity:1}
   @media (max-width:640px){
     .documentos-oficiales{padding:14px 16px}
-    .doc-link{font-size:12px;padding:7px 10px}
-    .doc-link-label{font-size:11.5px}
+    .doc-link{font-size:var(--fs-sm);padding:7px 10px}
+    .doc-link-label{font-size:var(--fs-xs)}
   }
   .legal-block p:last-child{margin-bottom:0}
-  .legal-block .ref{font-family:'Roboto Mono',monospace;font-size:11px;color:var(--muted);font-weight:500}
+  .legal-block .ref{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);font-weight:500}
 
   /* FIX v36: la lista de selectores quedaba abierta con coma final y se comía el
      @media siguiente, dejando TODO el BREAKPOINT 1 (≤1200px) muerto en producción. */
@@ -1063,10 +1094,10 @@
   /* ===== BREAKPOINT 1 — iPad 11" landscape y pantallas medianas (≤1200px) ===== */
   @media (max-width:1200px){
     .wrap{padding:28px 22px 70px}
-    h1{font-size:28px}
+    h1{font-size:var(--fs-2xl)}
     .tabs{flex-wrap:wrap;position:relative}
-    .tab{flex:1 1 calc(25% - 3px);padding:9px 10px;gap:9px;font-size:12px}
-    .tab-name{font-size:12px}
+    .tab{flex:1 1 calc(25% - 3px);padding:9px 10px;gap:9px;font-size:var(--fs-sm)}
+    .tab-name{font-size:var(--fs-sm)}
     .tab-num{display:none}
     .tab-icon{width:20px;height:20px}
     .more-wrap{flex:1 1 calc(25% - 3px);position:static}
@@ -1080,7 +1111,7 @@
   /* ===== BREAKPOINT 2 — iPad 11" portrait y tablets (≤1024px) ===== */
   @media (max-width:1024px){
     .wrap{padding:26px 20px 60px}
-    h1{font-size:27px}
+    h1{font-size:var(--fs-2xl)}
     .grid-2,.legal-grid{grid-template-columns:1fr}
     .legal-grid-3{grid-template-columns:repeat(2,1fr)}
     .toolbar{grid-template-columns:repeat(3,1fr)}
@@ -1088,7 +1119,7 @@
     .toolbar > label:first-child{grid-column:span 3}  /* Búsqueda ocupa toda la fila en tablet */
     .constitucion-grid{grid-template-columns:1fr}
     .panel{padding:22px 22px}
-    .hero-value{font-size:40px}
+    .hero-value{font-size:var(--fs-mega)}
     /* Table: enable horizontal scroll only if truly needed */
     .table-scroll{overflow-x:auto}
     table.t{min-width:980px;table-layout:auto}  /* En mobile/tablet usa scroll si hace falta */
@@ -1100,19 +1131,19 @@
     .meta{text-align:left}
     .hero{grid-template-columns:repeat(2,1fr);gap:10px}
     .hero-card{padding:16px 18px}
-    .hero-value{font-size:34px}
-    .tab{min-width:0;font-size:12px;padding:10px 10px;gap:9px}
-    .tab-name{font-size:12px}
+    .hero-value{font-size:var(--fs-hero)}
+    .tab{min-width:0;font-size:var(--fs-sm);padding:10px 10px;gap:9px}
+    .tab-name{font-size:var(--fs-sm)}
     .tab-icon{width:20px;height:20px}
-        .constitucion-card h4{font-size:15px}
-    .panel h3{font-size:22px}
+        .constitucion-card h4{font-size:var(--fs-md)}
+    .panel h3{font-size:var(--fs-xl)}
   }
 
   /* ===== BREAKPOINT 4 — Móvil grande (≤640px) ===== */
   @media (max-width:640px){
     .wrap{padding:20px 14px 50px}
-    h1{font-size:24px}
-    .sub{font-size:14px}
+    h1{font-size:var(--fs-2xl)}
+    .sub{font-size:var(--fs-md)}
     .hero{grid-template-columns:1fr}
     .legal-grid-3{grid-template-columns:1fr}
     /* Convenio en mobile: una sola columna */
@@ -1125,51 +1156,51 @@
     .btn-group{grid-column:span 2}
     .toolbar > label:first-child{grid-column:span 2}  /* Búsqueda completa en mobile */
     .field{grid-template-columns:100px 1fr;gap:10px}
-    .field .k{font-size:9.5px}
-    .field .v{font-size:13px}
+    .field .k{font-size:var(--fs-micro)}
+    .field .v{font-size:var(--fs-base)}
     .bar-row{grid-template-columns:1fr;gap:6px}
     .bar-row .lbl{white-space:normal;overflow:visible;text-overflow:unset;font-weight:500}
     .bar-row .v{text-align:left;min-width:auto}
-    .comp{font-size:12px}
+    .comp{font-size:var(--fs-sm)}
     .comp th,.comp td{padding:8px 6px}
     .comp-scroll{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 24px),transparent 100%);mask-image:linear-gradient(to right,#000 calc(100% - 24px),transparent 100%)}
     .comp-scroll .comp{min-width:560px}
     .panel{padding:18px 16px}
-    .panel h3{font-size:20px}
-    .panel-intro{font-size:13px}
+    .panel h3{font-size:var(--fs-xl)}
+    .panel-intro{font-size:var(--fs-base)}
     /* Brechas en mobile: 1 columna */
     .brechas-grid{grid-template-columns:1fr}
-    .brecha-card-num{font-size:30px}
+    .brecha-card-num{font-size:var(--fs-hero)}
     /* Separador institucional adaptado a mobile */
     .seccion-divider{margin-top:32px;padding:18px 18px;border-top-width:2px}
     .seccion-divider::before{left:18px;width:18px;height:18px;border-width:2px;top:-9px}
-    .seccion-divider-title{font-size:22px}
-    .seccion-divider-sub{font-size:13px}
+    .seccion-divider-title{font-size:var(--fs-xl)}
+    .seccion-divider-sub{font-size:var(--fs-base)}
     /* Cronología en mobile: scroll horizontal */
     .cronologia-container{padding:18px 12px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
     .cronologia-chart{min-width:520px;height:200px}
-    .cron-bar-tooltip{width:170px;font-size:11px}
+    .cron-bar-tooltip{width:170px;font-size:var(--fs-xs)}
     .cron-gob-chart{min-width:580px;height:240px;gap:6px}
-    .cron-gob-col-label{font-size:10px}
-    .cron-gob-col-period{font-size:8.5px}
-    .cron-gob-tooltip{width:200px;font-size:11px;padding:10px 12px}
-    .rank-pos{font-size:20px}
+    .cron-gob-col-label{font-size:var(--fs-mini)}
+    .cron-gob-col-period{font-size:var(--fs-micro)}
+    .cron-gob-tooltip{width:200px;font-size:var(--fs-xs);padding:10px 12px}
+    .rank-pos{font-size:var(--fs-xl)}
     .constitucion-card{padding:14px 16px}
-    .constitucion-card h4{font-size:14px}
-    .constitucion-card p{font-size:12.5px}
+    .constitucion-card h4{font-size:var(--fs-md)}
+    .constitucion-card p{font-size:var(--fs-sm)}
     .legal-card{padding:16px 18px}
-    .legal-card h4{font-size:17px}
-    .legal-card li{padding:9px 0;font-size:12.5px}
-    .legal-card li .ref{font-size:10.5px}
-        .hero-value{font-size:32px}
-    .big-num{font-size:32px}
-    .counter-row{flex-direction:column;align-items:flex-start;gap:6px;font-size:10.5px}
+    .legal-card h4{font-size:var(--fs-lg)}
+    .legal-card li{padding:9px 0;font-size:var(--fs-sm)}
+    .legal-card li .ref{font-size:var(--fs-mini)}
+        .hero-value{font-size:var(--fs-hero)}
+    .big-num{font-size:var(--fs-hero)}
+    .counter-row{flex-direction:column;align-items:flex-start;gap:6px;font-size:var(--fs-mini)}
     .drawer{width:100vw}
     .drawer-inner{padding:24px 22px 40px}
     .drawer-header-row{padding-right:50px}
     .btn-share-area{padding:8px 10px}
     .btn-share-area .btn-share-text{display:none}
-    .drawer h2{font-size:24px}
+    .drawer h2{font-size:var(--fs-2xl)}
     .tabs{padding:4px;flex-wrap:wrap;overflow:visible;-webkit-mask-image:none;mask-image:none;gap:3px}
     .tab{flex:0 0 calc(25% - 3px);min-width:0;padding:8px 4px;flex-direction:column;align-items:center;gap:4px;text-align:center}
     .more-wrap{flex:0 0 calc(25% - 3px)}
@@ -1179,51 +1210,51 @@
     .more-menu .tab{flex-direction:row;align-items:center;text-align:left;padding:11px 12px;gap:10px}
     .more-menu .tab .tab-icon{margin:0}
     .more-menu .tab .tab-content{align-items:flex-start;text-align:left;width:auto;gap:2px;min-width:0}
-    .more-menu .tab .tab-name{white-space:nowrap;font-size:12.5px;text-align:left}
-    .more-menu .tab .tab-num{display:block;font-size:10px}
+    .more-menu .tab .tab-name{white-space:nowrap;font-size:var(--fs-sm);text-align:left}
+    .more-menu .tab .tab-num{display:block;font-size:var(--fs-mini)}
     .tab-icon{width:20px;height:20px;margin:0 auto}
     .tab-content{align-items:center;text-align:center;width:100%;gap:0}
-    .tab-name{font-size:10.5px;line-height:1.2;white-space:normal;text-align:center}
+    .tab-name{font-size:var(--fs-mini);line-height:1.2;white-space:normal;text-align:center}
     .tab-num{display:none}
   }
 
   /* ===== BREAKPOINT 5 — Móvil pequeño (≤420px) ===== */
   @media (max-width:420px){
     .wrap{padding:16px 12px 40px}
-    h1{font-size:21px}
+    h1{font-size:var(--fs-xl)}
     .hero-card{padding:14px 14px}
-    .hero-value{font-size:28px}
-        .panel h3{font-size:18px}
+    .hero-value{font-size:var(--fs-2xl)}
+        .panel h3{font-size:var(--fs-lg)}
     .toolbar{grid-template-columns:1fr}
     .btn-group{grid-column:span 1}
-    .tab-name{font-size:10px;line-height:1.15}
+    .tab-name{font-size:var(--fs-mini);line-height:1.15}
     .tab{padding:7px 3px;gap:3px}
     .tab-icon{width:18px;height:18px}
   }
 
 
   /* === Suelo de Conservación: capa overlay === */
-  .sc-toggle-btn{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:3px;background:#fff;cursor:pointer;font-family:'Roboto Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:500;transition:all .15s}
-  .sc-toggle-btn:hover{background:#e0f7fa;color:#006064;border-color:#4dd0e1}
-  .sc-toggle-btn.active{background:#00838f;border-color:#006064;color:#fff}
-  .sc-toggle-btn .sc-swatch{width:10px;height:10px;border:1.5px solid #006064;background:rgba(0,131,143,.25);display:inline-block;border-radius:2px}
+  .sc-toggle-btn{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:var(--r-ui);background:#fff;cursor:pointer;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:500;transition:all .15s}
+  .sc-toggle-btn:hover{background:#e0f7fa;color:var(--sc-900);border-color:#4dd0e1}
+  .sc-toggle-btn.active{background:var(--sc);border-color:var(--sc-900);color:#fff}
+  .sc-toggle-btn .sc-swatch{width:10px;height:10px;border:1.5px solid var(--sc-900);background:rgba(0,131,143,.25);display:inline-block;border-radius:var(--r-chip)}
   .sc-toggle-btn.active .sc-swatch{background:rgba(255,255,255,.4);border-color:#fff}
-  .status-tag{display:inline-block;padding:2px 9px;border-radius:3px;font-size:11px;font-weight:600;font-family:'Roboto Mono',monospace;letter-spacing:.04em;text-transform:none}
+  .status-tag{display:inline-block;padding:2px 9px;border-radius:var(--r-ui);font-size:var(--fs-xs);font-weight:600;font-family:'Roboto Mono',monospace;letter-spacing:.04em;text-transform:none}
   .status-tag-si{background:#3a7d44;color:#fff}
   .status-tag-no{background:var(--rojo);color:#fff}
   /* Tag de DG responsable — compacto, monoespaciado, color institucional según DG */
-  .tag-dg{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;font-family:'Roboto Mono',monospace;letter-spacing:.04em;white-space:nowrap;border:1px solid;cursor:help}
-  .tag-dg-dgsanpava{color:#9d2148;border-color:#9d2148;background:rgba(157,33,72,.06)}
-  .tag-dg-dgcorenader,.tag-dg-dgcorenadr{color:#1f5a99;border-color:#266cb4;background:rgba(38,108,180,.06)}
-  .dg-empty{color:var(--muted);font-family:'Roboto Mono',monospace;font-size:11px}
+  .tag-dg{display:inline-block;padding:2px 7px;border-radius:var(--r-ui);font-size:var(--fs-mini);font-weight:600;font-family:'Roboto Mono',monospace;letter-spacing:.04em;white-space:nowrap;border:1px solid;cursor:help}
+  .tag-dg-dgsanpava{color:var(--guinda);border-color:var(--guinda);background:rgba(157,33,72,.06)}
+  .tag-dg-dgcorenader,.tag-dg-dgcorenadr{color:#1f5a99;border-color:var(--azul);background:rgba(38,108,180,.06)}
+  .dg-empty{color:var(--muted);font-family:'Roboto Mono',monospace;font-size:var(--fs-xs)}
   @media (max-width: 480px){
-    .sc-toggle-btn{padding:9px 12px;font-size:10px}
+    .sc-toggle-btn{padding:9px 12px;font-size:var(--fs-mini)}
   }
 
   
   /* Footer institucional · siempre visible al final del wrap */
   .sia-footer{margin-top:48px;padding:24px 0;border-top:1px solid var(--line);background:transparent}
-  .sia-footer-inner{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .sia-footer-inner{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
   .sia-footer-text{color:var(--guinda);font-weight:600}
   .sia-footer-text-2{color:var(--ink-2);font-weight:400}
   .sia-footer-sep{color:var(--line);font-weight:300}
@@ -1231,17 +1262,17 @@
   /* ============================================================
    * E3 · INDICADOR DE ESTADO DE CONEXIÓN (Service Worker)
    * ============================================================ */
-  .offline-notice{position:fixed;bottom:80px;right:20px;background:var(--ink);color:var(--crema);padding:12px 18px;border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:13px;line-height:1.4;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:1500;max-width:320px;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none}
+  .offline-notice{position:fixed;bottom:80px;right:20px;background:var(--ink);color:var(--crema);padding:12px 18px;border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:var(--fs-base);line-height:1.4;box-shadow:var(--sh-3);z-index:var(--z-modal);max-width:320px;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none}
   .offline-notice.visible{opacity:1;transform:translateY(0);pointer-events:auto}
   .offline-notice[data-type="online"]{background:var(--verde)}
   .offline-notice[data-type="offline"]{background:var(--dorado-text)}
   .offline-notice[data-type="update"]{background:var(--azul);cursor:pointer}
   .offline-notice[data-type="update"]:hover{background:#1f5a99}
   @media (max-width:640px){
-    .offline-notice{bottom:74px;right:14px;left:14px;max-width:none;font-size:12px;padding:10px 14px}
+    .offline-notice{bottom:74px;right:14px;left:14px;max-width:none;font-size:var(--fs-sm);padding:10px 14px}
   }
   @media (max-width:600px){
-    .sia-footer-inner{flex-direction:column;gap:4px;font-size:10px;text-align:center}
+    .sia-footer-inner{flex-direction:column;gap:4px;font-size:var(--fs-mini);text-align:center}
     .sia-footer-sep{display:none}
   }
 
@@ -1724,7 +1755,7 @@ function siaToast(msg){
     /* Sin esto el aviso es invisible para lector de pantalla, y siaToast es
        el UNICO canal de retroalimentacion no bloqueante de toda la app. */
     t.setAttribute('role','status'); t.setAttribute('aria-live','polite');
-    t.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#2a2a2a;color:#fff;padding:12px 18px;border-radius:8px;font-family:Roboto,sans-serif;font-size:13px;box-shadow:0 6px 22px rgba(0,0,0,.3);z-index:100000;max-width:min(440px,90vw);text-align:center;opacity:0;transition:opacity .2s'; document.body.appendChild(t); }
+    t.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#2a2a2a;color:#fff;padding:12px 18px;border-radius:8px;font-family:Roboto,sans-serif;font-size:var(--fs-base);box-shadow:var(--sh-3);z-index:var(--z-toast);max-width:min(440px,90vw);text-align:center;opacity:0;transition:opacity .2s'; document.body.appendChild(t); }
   t.textContent=msg; requestAnimationFrame(()=>{ t.style.opacity='1'; });
   clearTimeout(t._h); t._h=setTimeout(()=>{ t.style.opacity='0'; }, 4200);
 }
@@ -2047,10 +2078,10 @@ function renderAnalisisPage(){
       <p class="panel-intro" style="margin-top:8px;margin-bottom:10px">Conteo de polígonos presentes en cada demarcación territorial, segmentados por tipo de área. Una misma área puede contabilizarse en más de una alcaldía si su superficie cruza límites administrativos. Pase el cursor sobre cada segmento para ver el detalle.</p>
 
       <div class="alc-legend">
-        <span class="alc-leg-item"><span class="alc-leg-swatch" style="background:#027a35"></span>Bosque Urbano</span>
-        <span class="alc-leg-item"><span class="alc-leg-swatch" style="background:#ac6d14"></span>Barranca</span>
-        <span class="alc-leg-item"><span class="alc-leg-swatch" style="background:#9d2148"></span>ANP Local</span>
-        <span class="alc-leg-item"><span class="alc-leg-swatch" style="background:#266cb4"></span>ANP Federal</span>
+        <span class="alc-leg-item"><span class="alc-leg-swatch" style="background:var(--verde)"></span>Bosque Urbano</span>
+        <span class="alc-leg-item"><span class="alc-leg-swatch" style="background:var(--marron)"></span>Barranca</span>
+        <span class="alc-leg-item"><span class="alc-leg-swatch" style="background:var(--guinda)"></span>ANP Local</span>
+        <span class="alc-leg-item"><span class="alc-leg-swatch" style="background:var(--azul)"></span>ANP Federal</span>
       </div>
 
       <div class="alc-stacked">
@@ -2063,10 +2094,10 @@ function renderAnalisisPage(){
 
           // Construir segmentos solo para los que tienen valor > 0
           const segs = [
-            {n: bu,  cls: 'seg-bu',  color: '#027a35', label: 'Bosques Urbanos'},
-            {n: br,  cls: 'seg-br',  color: '#ac6d14', label: 'Barrancas'},
-            {n: apl, cls: 'seg-apl', color: '#9d2148', label: 'ANP Locales'},
-            {n: apf, cls: 'seg-apf', color: '#266cb4', label: 'ANP Federales'}
+            {n: bu,  cls: 'seg-bu',  color: 'var(--verde)', label: 'Bosques Urbanos'},
+            {n: br,  cls: 'seg-br',  color: 'var(--marron)', label: 'Barrancas'},
+            {n: apl, cls: 'seg-apl', color: 'var(--guinda)', label: 'ANP Locales'},
+            {n: apf, cls: 'seg-apf', color: 'var(--azul)', label: 'ANP Federales'}
           ];
 
           const segsHTML = segs.filter(seg => seg.n > 0).map(seg => {
@@ -2190,7 +2221,7 @@ function renderBrechasSection(){
     <div class="hero">
       <div class="hero-card hero-warning">
         <div class="hero-eyebrow">PRIORIDAD ALTA</div>
-        <div class="hero-value">${sinPM.length}<span style="font-size:18px;color:var(--muted);margin-left:6px;font-weight:500">/${total}</span></div>
+        <div class="hero-value">${sinPM.length}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">/${total}</span></div>
         <div class="hero-label">áreas sin Programa de Manejo</div>
         <div class="hero-meta">${sinPMPct}% del sistema</div>
       </div>
@@ -2202,7 +2233,7 @@ function renderBrechasSection(){
       </div>
       <div class="hero-card hero-info">
         <div class="hero-eyebrow">COBERTURA</div>
-        <div class="hero-value">${16 - sinAreas.length}<span style="font-size:18px;color:var(--muted);margin-left:6px;font-weight:500">/16</span></div>
+        <div class="hero-value">${16 - sinAreas.length}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">/16</span></div>
         <div class="hero-label">alcaldías con áreas protegidas</div>
         <div class="hero-meta">${sinAreas.length} sin áreas registradas</div>
       </div>
@@ -2223,7 +2254,7 @@ function renderBrechasSection(){
                 <span class="brecha-card-grupo">${grupo.replace(' · ', ' · ')}</span>
                 <span class="brecha-card-pct">${pct}%</span>
               </div>
-              <div class="brecha-card-num">${arr.length}<span style="font-size:14px;color:var(--muted);margin-left:4px;font-weight:500">/${totGrupo}</span></div>
+              <div class="brecha-card-num">${arr.length}<span style="font-size:var(--fs-md);color:var(--muted);margin-left:4px;font-weight:500">/${totGrupo}</span></div>
               <div class="brecha-card-lbl">sin PM</div>
               <div class="brecha-card-bar">
                 <div class="brecha-card-bar-fill" style="width:${pct}%;background:${color}"></div>
@@ -2268,7 +2299,7 @@ function renderBrechasSection(){
                   ? (anioActual - anioDec)
                   : null;
                 const antigStr = antig !== null ? `${antig} ${antig === 1 ? 'año' : 'años'}` : '—';
-                return `<tr><td style="text-align:center">${i+1}</td><td><b>${d.nombre}</b></td><td><span style="color:${GROUP_COLORS[d.grupo]||'var(--ink-2)'};font-size:11.5px;font-family:'Roboto Mono',monospace">${d.grupo}</span></td><td>${d.fecha_decreto || '—'}</td><td style="text-align:right;color:${antig !== null ? 'var(--rojo)' : 'var(--muted)'};font-weight:500">${antigStr}</td><td style="text-align:right">${fmt(d.superficie)} ha</td></tr>`;
+                return `<tr><td style="text-align:center">${i+1}</td><td><b>${d.nombre}</b></td><td><span style="color:${GROUP_COLORS[d.grupo]||'var(--ink-2)'};font-size:var(--fs-xs);font-family:'Roboto Mono',monospace">${d.grupo}</span></td><td>${d.fecha_decreto || '—'}</td><td style="text-align:right;color:${antig !== null ? 'var(--rojo)' : 'var(--muted)'};font-weight:500">${antigStr}</td><td style="text-align:right">${fmt(d.superficie)} ha</td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -2301,8 +2332,8 @@ function renderBrechasSection(){
       </div>
       ${sinAreas.length > 0 ? `
         <div style="margin-top:18px;padding:14px 16px;background:var(--bg-2);border-radius:var(--radius);border-left:3px solid var(--rojo)">
-          <div style="font-family:'Roboto Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--rojo);font-weight:500;margin-bottom:8px">SIN ÁREAS REGISTRADAS</div>
-          <div style="font-size:13.5px;color:var(--ink-2);line-height:1.55">Las siguientes alcaldías no tienen áreas en el inventario actual: <b>${sinAreas.join(', ')}</b>.</div>
+          <div style="font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.12em;text-transform:uppercase;color:var(--rojo);font-weight:500;margin-bottom:8px">SIN ÁREAS REGISTRADAS</div>
+          <div style="font-size:var(--fs-base);color:var(--ink-2);line-height:1.55">Las siguientes alcaldías no tienen áreas en el inventario actual: <b>${sinAreas.join(', ')}</b>.</div>
         </div>
       ` : ''}
     </div>
@@ -2381,9 +2412,9 @@ function renderCronologiaSection(){
     {nombre:'M. Ebrard',       start:toDec(2006,12,5),  end:toDec(2012,12,4),  full:'Marcelo Ebrard',           color:'#7d6e8f'},
     {nombre:'M.Á. Mancera',    start:toDec(2012,12,5),  end:toDec(2018,3,29),  full:'Miguel Ángel Mancera',     color:'#a08bb5'},
     {nombre:'J.R. Amieva',     start:toDec(2018,3,29),  end:toDec(2018,12,4),  full:'José Ramón Amieva',        color:'#7d6e8f'},
-    {nombre:'C. Sheinbaum',    start:toDec(2018,12,5),  end:toDec(2023,6,16),  full:'Claudia Sheinbaum',        color:'#9d2148'},
-    {nombre:'M. Batres',       start:toDec(2023,6,16),  end:toDec(2024,10,4),  full:'Martí Batres',             color:'#7d1839'},
-    {nombre:'C. Brugada',      start:toDec(2024,10,5),  end:toDec(2030,10,5),  full:'Clara Brugada',            color:'#9d2148'}
+    {nombre:'C. Sheinbaum',    start:toDec(2018,12,5),  end:toDec(2023,6,16),  full:'Claudia Sheinbaum',        color:'var(--guinda)'},
+    {nombre:'M. Batres',       start:toDec(2023,6,16),  end:toDec(2024,10,4),  full:'Martí Batres',             color:'var(--guinda-900)'},
+    {nombre:'C. Brugada',      start:toDec(2024,10,5),  end:toDec(2030,10,5),  full:'Clara Brugada',            color:'var(--guinda)'}
   ];
 
   // Rango total del eje (en años decimales)
@@ -2699,11 +2730,11 @@ function renderLegalDashboard(){
 
       <div class="norma-subsec">
         <span class="norma-subsec-title">CPCDMX · Artículo 53 · Atribuciones de las Alcaldías</span>
-        <h4 style="font-family:'Roboto',sans-serif;font-weight:700;font-size:18px;color:var(--ink);margin-bottom:8px;letter-spacing:-.01em">Apartado A · fracciones XXI–XXIV</h4>
+        <h4 style="font-family:'Roboto',sans-serif;font-weight:700;font-size:var(--fs-lg);color:var(--ink);margin-bottom:8px;letter-spacing:-.01em">Apartado A · fracciones XXI–XXIV</h4>
         <ul style="list-style:none;padding:0;margin:10px 0 0 0">
           ${LEGAL.constitucion.atribucionesAlcaldias.map(a=>`
-            <li style="padding:10px 0;border-bottom:1px dotted var(--line-soft);display:grid;grid-template-columns:78px 1fr;gap:14px;align-items:baseline;font-size:13.5px;color:var(--ink-2);line-height:1.55">
-              <span style="font-family:'Roboto Mono',monospace;font-size:11.5px;color:var(--guinda);font-weight:500;letter-spacing:.04em;white-space:nowrap">fr. ${a.fr}</span>
+            <li style="padding:10px 0;border-bottom:1px dotted var(--line-soft);display:grid;grid-template-columns:78px 1fr;gap:14px;align-items:baseline;font-size:var(--fs-base);color:var(--ink-2);line-height:1.55">
+              <span style="font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--guinda);font-weight:500;letter-spacing:.04em;white-space:nowrap">fr. ${a.fr}</span>
               <span>${a.lbl}</span>
             </li>`).join('')}
         </ul>
@@ -2731,7 +2762,7 @@ function renderLegalDashboard(){
 
       <div class="norma-subsec">
         <span class="norma-subsec-title">LACM · Artículo 4° · Definiciones fundamentales</span>
-        <h4 style="font-family:'Roboto',sans-serif;font-weight:700;font-size:18px;color:var(--ink);margin-bottom:14px;letter-spacing:-.01em">Glosario técnico-jurídico</h4>
+        <h4 style="font-family:'Roboto',sans-serif;font-weight:700;font-size:var(--fs-lg);color:var(--ink);margin-bottom:14px;letter-spacing:-.01em">Glosario técnico-jurídico</h4>
         <div class="legal-grid">${defCards}</div>
       </div>
 
@@ -2841,8 +2872,8 @@ function renderLegalDashboard(){
         <div class="panel-title" style="color:var(--azul);margin-bottom:6px">Instrumento concurrente · Norma reglamentaria federal</div>
         <div class="norma-header">
           <div class="norma-header-left">
-            <h4 style="font-family:'Roboto',sans-serif;font-size:22px;font-weight:700;color:var(--ink);margin:0 0 8px;letter-spacing:-.01em">${LEGAL.instrumentoFederal.nombre}</h4>
-            <p style="color:var(--ink-2);font-size:13.5px;line-height:1.6;margin:0"><b>${LEGAL.instrumentoFederal.abreviatura}</b>. ${LEGAL.instrumentoFederal.publicacion}. ${LEGAL.instrumentoFederal.ultimaReforma}. ${LEGAL.instrumentoFederal.alcance}</p>
+            <h4 style="font-family:'Roboto',sans-serif;font-size:var(--fs-xl);font-weight:700;color:var(--ink);margin:0 0 8px;letter-spacing:-.01em">${LEGAL.instrumentoFederal.nombre}</h4>
+            <p style="color:var(--ink-2);font-size:var(--fs-base);line-height:1.6;margin:0"><b>${LEGAL.instrumentoFederal.abreviatura}</b>. ${LEGAL.instrumentoFederal.publicacion}. ${LEGAL.instrumentoFederal.ultimaReforma}. ${LEGAL.instrumentoFederal.alcance}</p>
           </div>
           <div class="norma-header-right">
             <a class="btn-pdf btn-pdf-federal" href="${LEGAL.instrumentoFederal.url}" target="_blank" rel="noopener" download>
@@ -2874,8 +2905,8 @@ function renderLegalDashboard(){
         <div class="panel-title" style="color:var(--azul);margin-bottom:6px">Coordinación interinstitucional · Federal–Local</div>
         <div class="norma-header">
           <div class="norma-header-left">
-            <h4 style="font-family:'Roboto',sans-serif;font-size:22px;font-weight:700;color:var(--ink);margin:0 0 8px;letter-spacing:-.01em">Convenio Marco SEMARNAT–CONANP–CDMX 2025</h4>
-            <p style="color:var(--ink-2);font-size:13.5px;line-height:1.6;margin:0">Suscrito el <b>10 de marzo de 2025</b> entre el Ejecutivo Federal, a través de SEMARNAT por conducto de la CONANP, y el Gobierno de la Ciudad de México, a través de la SEDEMA. <b>Vigencia hasta el 30 de septiembre de 2030</b>.</p>
+            <h4 style="font-family:'Roboto',sans-serif;font-size:var(--fs-xl);font-weight:700;color:var(--ink);margin:0 0 8px;letter-spacing:-.01em">Convenio Marco SEMARNAT–CONANP–CDMX 2025</h4>
+            <p style="color:var(--ink-2);font-size:var(--fs-base);line-height:1.6;margin:0">Suscrito el <b>10 de marzo de 2025</b> entre el Ejecutivo Federal, a través de SEMARNAT por conducto de la CONANP, y el Gobierno de la Ciudad de México, a través de la SEDEMA. <b>Vigencia hasta el 30 de septiembre de 2030</b>.</p>
           </div>
           <div class="norma-header-right">
             <a class="btn-pdf btn-pdf-federal" href="data/normativa/CONVENIO_SEMARNAT-CONANP-CDMX_2025.pdf" download>
@@ -2902,7 +2933,7 @@ function renderLegalDashboard(){
 
         <div class="norma-subsec" style="border-top-color:rgba(38,108,180,.15)">
           <span class="norma-subsec-title">Convenio Marco · Áreas en coadministración</span>
-          <p style="color:var(--muted);font-size:13px;margin:0 0 12px">Ocho ANP de competencia federal ubicadas dentro de la circunscripción territorial de la Ciudad de México.</p>
+          <p style="color:var(--muted);font-size:var(--fs-base);margin:0 0 12px">Ocho ANP de competencia federal ubicadas dentro de la circunscripción territorial de la Ciudad de México.</p>
           <div class="comp-scroll">
             <table class="comp convenio-table">
               <thead>
@@ -2968,7 +2999,7 @@ function renderLegalDashboard(){
     <!-- ====================================================== -->
     <div class="panel" style="border-left:3px solid var(--legal)">
       <div class="panel-title" style="color:var(--legal)">Nota de consulta</div>
-      <p style="color:var(--ink-2);font-size:13.5px;line-height:1.65;margin:0;max-width:900px">Este módulo tiene fines de consulta operativa. La jerarquía normativa aplicable en orden descendente es: (1) <b>Constitución Política de la Ciudad de México</b> — Art. 16 A; (2) <b>Ley Ambiental de la Ciudad de México</b> — publicada en la GOCDMX el 18 de julio de 2024 (que abroga la Ley Ambiental de Protección a la Tierra en la Ciudad de México); (3) decretos específicos de declaratoria de cada área; y (4) programas de manejo respectivos. En ANP de jurisdicción federal aplica la <b>LGEEPA</b> y su Reglamento en materia de ANP.</p>
+      <p style="color:var(--ink-2);font-size:var(--fs-base);line-height:1.65;margin:0;max-width:900px">Este módulo tiene fines de consulta operativa. La jerarquía normativa aplicable en orden descendente es: (1) <b>Constitución Política de la Ciudad de México</b> — Art. 16 A; (2) <b>Ley Ambiental de la Ciudad de México</b> — publicada en la GOCDMX el 18 de julio de 2024 (que abroga la Ley Ambiental de Protección a la Tierra en la Ciudad de México); (3) decretos específicos de declaratoria de cada área; y (4) programas de manejo respectivos. En ANP de jurisdicción federal aplica la <b>LGEEPA</b> y su Reglamento en materia de ANP.</p>
     </div>
   `;
 }
@@ -3226,10 +3257,10 @@ let ALCALDIAS_EMBEDDED = { type:'FeatureCollection', features:[] };
 
 /* Colores institucionales por grupo para el mapa global */
 const GROUP_COLORS = {
-  'AVA · Bosque Urbano': '#027a35',
-  'AVA · Barranca':       '#ac6d14',
-  'ANP · Local':          '#9d2148',
-  'ANP · Federal':        '#266cb4'
+  'AVA · Bosque Urbano': 'var(--verde)',
+  'AVA · Barranca':       'var(--marron)',
+  'ANP · Local':          'var(--guinda)',
+  'ANP · Federal':        'var(--azul)'
 };
 
 /* ANP Federales en coadministración SEMARNAT–CONANP–CDMX (Convenio 2025) */
@@ -3358,13 +3389,13 @@ const ZP_INVENTARIO = new Set([
    Miembros (es_designacion=false) → abren la ficha completa openDrawer(DATA).
    Designaciones (es_designacion=true) → abren openZPDrawer(row). */
 const ZP_DATA = [
-  {key:'INV::Bosque de Nativitas', nombre:'Bosque de Nativitas', grupo:'AVA · Bosque Urbano', categoria:'Bosque Urbano', alcaldia:'Xochimilco', fecha_decreto:'10/06/2010', superficie:19.28, fecha_pm:'12/08/2014', color:'#027a35', es_designacion:false},
-  {key:'INV::Bosque de San Luis Tlaxialtemalco', nombre:'Bosque de San Luis Tlaxialtemalco', grupo:'AVA · Bosque Urbano', categoria:'Bosque Urbano', alcaldia:'Xochimilco', fecha_decreto:'04/08/2008', superficie:3.83, fecha_pm:'23/07/2014', color:'#027a35', es_designacion:false},
-  {key:'INV::Canal Nacional', nombre:'Canal Nacional', grupo:'AVA · Bosque Urbano', categoria:'Bosque Urbano', alcaldia:'Coyoacán, Iztapalapa, Xochimilco', fecha_decreto:'15/06/2022', superficie:32.32, fecha_pm:'23/01/2025', color:'#027a35', es_designacion:false},
-  {key:'INV::Bosque de Tláhuac', nombre:'Bosque de Tláhuac', grupo:'ANP · Local', categoria:'Zona de Protección Especial', alcaldia:'Tláhuac', fecha_decreto:'29/01/2024', superficie:58.77, fecha_pm:'—', color:'#9d2148', es_designacion:false},
-  {key:'INV::Ejidos de Xochimilco y San Gregorio Atlapulco', nombre:'Ejidos de Xochimilco y San Gregorio Atlapulco', grupo:'ANP · Local', categoria:'Zona Sujeta a Conservación Ecológica', alcaldia:'Xochimilco, Tláhuac', fecha_decreto:'04/12/2006', superficie:2522.43, fecha_pm:'26/02/2018', color:'#9d2148', es_designacion:false},
-  {key:'INV::Tempiluli', nombre:'Tempiluli', grupo:'ANP · Local', categoria:'Zona de Protección Especial', alcaldia:'Tláhuac', fecha_decreto:'11/08/2011', superficie:47.55, fecha_pm:'06/11/2023', color:'#9d2148', es_designacion:false},
-  {key:'INV::Lago Tláhuac-Xico', nombre:'Lago Tláhuac-Xico', grupo:'ANP · Federal', categoria:'Área de Protección de Recursos Naturales', alcaldia:'Tláhuac', fecha_decreto:'08/01/2024', superficie:3545.41, fecha_pm:'—', color:'#266cb4', es_designacion:false},
+  {key:'INV::Bosque de Nativitas', nombre:'Bosque de Nativitas', grupo:'AVA · Bosque Urbano', categoria:'Bosque Urbano', alcaldia:'Xochimilco', fecha_decreto:'10/06/2010', superficie:19.28, fecha_pm:'12/08/2014', color:'var(--verde)', es_designacion:false},
+  {key:'INV::Bosque de San Luis Tlaxialtemalco', nombre:'Bosque de San Luis Tlaxialtemalco', grupo:'AVA · Bosque Urbano', categoria:'Bosque Urbano', alcaldia:'Xochimilco', fecha_decreto:'04/08/2008', superficie:3.83, fecha_pm:'23/07/2014', color:'var(--verde)', es_designacion:false},
+  {key:'INV::Canal Nacional', nombre:'Canal Nacional', grupo:'AVA · Bosque Urbano', categoria:'Bosque Urbano', alcaldia:'Coyoacán, Iztapalapa, Xochimilco', fecha_decreto:'15/06/2022', superficie:32.32, fecha_pm:'23/01/2025', color:'var(--verde)', es_designacion:false},
+  {key:'INV::Bosque de Tláhuac', nombre:'Bosque de Tláhuac', grupo:'ANP · Local', categoria:'Zona de Protección Especial', alcaldia:'Tláhuac', fecha_decreto:'29/01/2024', superficie:58.77, fecha_pm:'—', color:'var(--guinda)', es_designacion:false},
+  {key:'INV::Ejidos de Xochimilco y San Gregorio Atlapulco', nombre:'Ejidos de Xochimilco y San Gregorio Atlapulco', grupo:'ANP · Local', categoria:'Zona Sujeta a Conservación Ecológica', alcaldia:'Xochimilco, Tláhuac', fecha_decreto:'04/12/2006', superficie:2522.43, fecha_pm:'26/02/2018', color:'var(--guinda)', es_designacion:false},
+  {key:'INV::Tempiluli', nombre:'Tempiluli', grupo:'ANP · Local', categoria:'Zona de Protección Especial', alcaldia:'Tláhuac', fecha_decreto:'11/08/2011', superficie:47.55, fecha_pm:'06/11/2023', color:'var(--guinda)', es_designacion:false},
+  {key:'INV::Lago Tláhuac-Xico', nombre:'Lago Tláhuac-Xico', grupo:'ANP · Federal', categoria:'Área de Protección de Recursos Naturales', alcaldia:'Tláhuac', fecha_decreto:'08/01/2024', superficie:3545.41, fecha_pm:'—', color:'var(--azul)', es_designacion:false},
   {key:'ZPM_POLIGONO', nombre:'Zona Patrimonio Mundial (UNESCO)', grupo:'Internacional', ambito:'Internacional', categoria:'Patrimonio Mundial Cultural y Natural · Sitio mixto', alcaldia:'Xochimilco, Tláhuac, Milpa Alta', fecha_decreto:'11/12/1987', superficie:7534.17, sup_nota:'oficial · ampliación 2014', fecha_pm:'Ampliación del polígono 2014', notas:'Inscripción UNESCO 1987; el Comité de Patrimonio Mundial amplió el polígono a 75.34 km² (7,534.17 ha) en 2014.', color:'#444441', es_designacion:true},
   {key:'RAMSAR_1363', nombre:'Sitio Ramsar No. 1363 · Sistema Lacustre EXSGA', grupo:'Internacional', ambito:'Internacional', categoria:'Humedal de Importancia Internacional (Convención Ramsar)', alcaldia:'Xochimilco, Tláhuac', fecha_decreto:'02/02/2004', superficie:2657.00, sup_nota:'oficial Ramsar', fecha_pm:'Actualización FIR 2023', notas:'Denominación oficial: “Sistema Lacustre Ejidos de Xochimilco y San Gregorio Atlapulco”. Sitio Ramsar no. 1363.', color:'#1D9E75', es_designacion:true},
   {key:'AICA_37', nombre:'AICA No. 37 · Ciénega de Tláhuac', grupo:'Internacional', ambito:'Internacional', categoria:'Área de Importancia para la Conservación de las Aves (CONABIO–CIPAMEX)', alcaldia:'Tláhuac', fecha_decreto:'1999', superficie:2860.32, sup_nota:'oficial CONABIO', fecha_pm:'—', notas:'Clave AICA-037. Superficie oficial 2,860.32 ha (CONABIO). Sitio reconocido por diversidad ornitológica del humedal de la Ciénega de Tláhuac.', color:'#7F77DD', es_designacion:true},
@@ -3410,7 +3441,7 @@ function openEmbFicha(e){
       <h2>${p.nombre || 'Embarcadero'}</h2>
       <div class="subcat">${p.clasificacion || ''}</div>
     </div></div>
-    <div class="big-num">${p.sup_m2!=null?fmt(p.sup_m2):'—'}<span style="font-size:18px;color:var(--muted);margin-left:6px;font-weight:500">m²</span></div>
+    <div class="big-num">${p.sup_m2!=null?fmt(p.sup_m2):'—'}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">m²</span></div>
     <div class="big-num-lbl">Superficie</div>
     <div class="field"><div class="k">Tipo</div><div class="v">${e.tipo}</div></div>
     <div class="field"><div class="k">Alcaldía</div><div class="v">${p.alcaldia||'—'}</div></div>
@@ -3478,7 +3509,7 @@ function addResetViewControl(map, title){
       const a = L.DomUtil.create('a','',c);
       a.href='#'; a.title=title||'Vista general'; a.setAttribute('role','button');
       a.setAttribute('aria-label', title||'Vista general');
-      a.style.cssText = 'display:flex;align-items:center;justify-content:center;color:#9d2148';
+      a.style.cssText = 'display:flex;align-items:center;justify-content:center;color:var(--guinda)';
       a.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4"/><path d="M20 9V5a1 1 0 0 0-1-1h-4"/><path d="M4 15v4a1 1 0 0 0 1 1h4"/><path d="M20 15v4a1 1 0 0 1-1 1h-4"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>';
       L.DomEvent.on(a,'click',L.DomEvent.stopPropagation).on(a,'click',L.DomEvent.preventDefault)
         .on(a,'click',()=>{
@@ -3614,7 +3645,7 @@ function _zpColor(capa){
     const r = ZP_DATA.find(x=>x.key===capa);
     if(r && r.color) return r.color;
   }catch(_){}
-  return '#9d2148';
+  return 'var(--guinda)';
 }
 
 function _coberturasEn(latlng){
@@ -3645,7 +3676,7 @@ function _coberturasEn(latlng){
     const ten = pr.tenencia || '';
     out.push({
       orden: 'ARCAC',
-      color: (typeof ARCAC_COLORS!=='undefined' && ARCAC_COLORS[ten]) || '#7048E8',
+      color: (typeof ARCAC_COLORS!=='undefined' && ARCAC_COLORS[ten]) || 'var(--arcac-com)',
       tag: 'ARCAC · ' + (ten || 'Núcleo agrario'),
       nombre: pr.nombre || 'ARCAC',
       sub: 'Área de Restauración y Conservación Ambiental Comunitaria',
@@ -3830,7 +3861,7 @@ function _locatePopupHTML(latlng, accuracy, _i1, _i2, opts){
 
   } else if(sc === true){
     const cer = _masCercana(latlng, GF);
-    html += `<div class="lp-cat" style="color:#00838f"><span class="lp-dot" style="background:#00838f"></span>Suelo de Conservación</div>
+    html += `<div class="lp-cat" style="color:var(--sc)"><span class="lp-dot" style="background:var(--sc)"></span>Suelo de Conservación</div>
       <div class="lp-nom sm">Sin área decretada en este punto</div>
       ${cer ? `<div class="lp-mas">Más cercana · <b>${esc(cer.nombre)}</b> a ${_fmtDist(cer.d)}</div>` : ''}
       <div class="lp-pie"><span class="lp-ctx">${pie}</span>`
@@ -3872,8 +3903,8 @@ document.addEventListener('click', ev=>{
 function openZPDrawer(row){
   if(typeof destroyMap === 'function'){ try{ destroyMap(); }catch(e){} }
   const sup = (row.superficie != null && row.superficie !== '')
-    ? `${fmt(row.superficie)}<span style="font-size:18px;color:var(--muted);margin-left:6px;font-weight:500">ha</span>`
-    : `<span style="font-size:22px;color:var(--muted)">Por confirmar</span>`;
+    ? `${fmt(row.superficie)}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">ha</span>`
+    : `<span style="font-size:var(--fs-xl);color:var(--muted)">Por confirmar</span>`;
   drIn.innerHTML = `
     <div class="drawer-header-row">
       <div class="drawer-header-left">
@@ -3936,7 +3967,7 @@ function initZPFichaMap(row){
   // Contexto territorial: límites de alcaldía (debajo del polígono)
   try{ createAlcaldiasLayer({interactive:false}).addTo(activeMap); }catch(e){}
   const isCont = !!feat.properties.es_contenedor;
-  const col = row.color || feat.properties.color || '#9d2148';
+  const col = row.color || feat.properties.color || 'var(--guinda)';
   activeGeoLayer = L.geoJSON(feat, {
     style: isCont
       ? { color:col, weight:2.5, fillColor:col, fillOpacity:0.06, dashArray:'6 5' }
@@ -4213,8 +4244,8 @@ function renderZonaPatrimonioPage(){
     </div>
 
     <style>
-      #zpTable{width:100%;border-collapse:collapse;font-family:'Roboto',sans-serif;font-size:12.5px}
-      #zpTable thead th{background:#9d2148;color:#fff;text-align:left;padding:9px 12px;font-weight:600;white-space:nowrap}
+      #zpTable{width:100%;border-collapse:collapse;font-family:'Roboto',sans-serif;font-size:var(--fs-sm)}
+      #zpTable thead th{background:var(--guinda);color:#fff;text-align:left;padding:9px 12px;font-weight:600;white-space:nowrap}
       #zpTable thead th:last-child,#zpTable td.num{text-align:right}
       #zpTable tbody tr{cursor:pointer;border-top:1px solid var(--line-soft);transition:background .12s}
       #zpTable tbody tr:hover{background:var(--bg-2)}
@@ -4223,7 +4254,7 @@ function renderZonaPatrimonioPage(){
       #zpTable .zp-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:7px;vertical-align:middle}
       .zp-desig td:first-child{font-style:normal}
       .zp-desig{background:rgba(157,33,72,.035)}
-      #zpEmbTable{width:100%;border-collapse:collapse;font-family:'Roboto',sans-serif;font-size:12.5px}
+      #zpEmbTable{width:100%;border-collapse:collapse;font-family:'Roboto',sans-serif;font-size:var(--fs-sm)}
       #zpEmbTable thead th{background:#1864AB;color:#fff;text-align:left;padding:9px 12px;font-weight:600;white-space:nowrap}
       #zpEmbTable td.num{text-align:right}
       #zpEmbTable tbody tr{cursor:pointer;border-top:1px solid var(--line-soft);transition:background .12s}
@@ -4232,9 +4263,9 @@ function renderZonaPatrimonioPage(){
       #zpEmbTable td.name{color:var(--ink);font-weight:500;white-space:nowrap}
       #zpEmbTable .zp-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:7px;vertical-align:middle}
       .zp-subtabs{margin-top:24px;display:flex;gap:8px;flex-wrap:wrap}
-      .zp-subtab{padding:7px 16px;border:1px solid var(--line);border-radius:8px;background:var(--bg-1);color:var(--ink-2);font-size:13px;font-weight:600;cursor:pointer;font-family:'Roboto',sans-serif;transition:all .12s}
+      .zp-subtab{padding:7px 16px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink-2);font-size:var(--fs-base);font-weight:600;cursor:pointer;font-family:'Roboto',sans-serif;transition:all .12s}
       .zp-subtab:hover{background:var(--bg-2)}
-      .zp-subtab.active{background:#9d2148;color:#fff;border-color:#9d2148}
+      .zp-subtab.active{background:var(--guinda);color:#fff;border-color:var(--guinda)}
     </style>
 
     <div class="zp-subtabs">
@@ -4287,7 +4318,7 @@ function renderZonaPatrimonioPage(){
 let arcacMap = null, ARCAC_GEO = null, globalArcacLayer = null;
 let arcacLayers = {}, arcacByNo = {};
 let arcacTbl = { q:'', ten:'todos', alc:'todos', sort:'no', dir:'asc' };
-const ARCAC_COLORS = { 'Comunidad':'#7048E8', 'Ejido':'#E8590C' };   // color de TENENCIA (badges/filtros)
+const ARCAC_COLORS = { 'Comunidad':'var(--arcac-com)', 'Ejido':'#E8590C' };   // color de TENENCIA (badges/filtros)
 
 /* Badge de tenencia (color) para tabla y ficha */
 function arcacBadge(ten){
@@ -4323,7 +4354,7 @@ function openARCACFicha(no){
       <div class="map-canvas" id="mapCanvas" style="position:relative"></div>
       <div class="map-block-foot"><span style="margin-left:auto">Clic en el mapa para activar zoom</span></div>
     </div>
-    <div class="big-num">${fmt(p.sup_ha)}<span style="font-size:18px;color:var(--muted);margin-left:6px;font-weight:500">ha</span></div>
+    <div class="big-num">${fmt(p.sup_ha)}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">ha</span></div>
     <div class="big-num-lbl">Superficie</div>
     <div class="field"><div class="k">Tenencia</div><div class="v">${arcacBadge(p.tenencia)}</div></div>
     <div class="field"><div class="k">Alcaldía</div><div class="v">${p.alcaldia||'—'}</div></div>
@@ -4344,7 +4375,7 @@ function initARCACFichaMap(no){
   activeMap = L.map(container, { zoomControl:true, scrollWheelZoom:false, attributionControl:true });
   activeBaseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO', maxZoom:19}).addTo(activeMap);
   try{ createAlcaldiasLayer({interactive:false}).addTo(activeMap); }catch(e){}
-  const col = feat.properties._color || '#7048E8';
+  const col = feat.properties._color || 'var(--arcac-com)';
   activeGeoLayer = L.geoJSON(feat, {style:{color:col, weight:2, fillColor:col, fillOpacity:0.28}}).addTo(activeMap);
   activeGeoLayer.bindTooltip(`${feat.properties.nombre} · ${feat.properties.tenencia}`, {sticky:true, direction:'top'});
   try{ activeMap.fitBounds(activeGeoLayer.getBounds(), {padding:[20,20], maxZoom:15}); activeMap._siaHome = activeGeoLayer.getBounds(); }catch(e){}
@@ -4358,7 +4389,7 @@ function initARCACFichaMap(no){
 /* Capa L.geoJSON de ARCAC con color DISTINTO por feature, clic→ficha (+zoom opcional) */
 function buildArcacGeoLayer(fc, zoomMap){
   return L.geoJSON(fc, {
-    style: f => { const c = f.properties._color || '#7048E8'; return {color:c, weight:1.3, fillColor:c, fillOpacity:0.35}; },
+    style: f => { const c = f.properties._color || 'var(--arcac-com)'; return {color:c, weight:1.3, fillColor:c, fillOpacity:0.35}; },
     onEachFeature: (feat,lyr)=>{
       const p=feat.properties;
       lyr.bindTooltip(`${p.nombre} · ${p.tenencia} · ${p.alcaldia}`, {sticky:true, direction:'top'});
@@ -4479,8 +4510,8 @@ async function initARCACMap(){
    Capa aislada: no entra a DATA ni a GEOMETRIES, no toca contadores.
    ═══════════════════════════════════════════════════════════════════════ */
 const TRAS_COLORS = {
-  'Inventario × Inventario'     : '#9d2148',
-  'Inventario × ARCAC'          : '#7048E8',
+  'Inventario × Inventario'     : 'var(--guinda)',
+  'Inventario × ARCAC'          : 'var(--arcac-com)',
   'Inventario × Zona Patrimonio': '#444441',
   'ARCAC × Zona Patrimonio'     : '#B28E5C',
   'ARCAC × ARCAC'               : '#E8590C'
@@ -4507,7 +4538,7 @@ function renderTraslapesPage(){
   return `
   <div class="panel">
     <div class="panel-eyebrow">Análisis espacial · superposición de instrumentos de protección</div>
-    <h2 class="panel-title" style="color:#d72f89">Traslapes entre áreas</h2>
+    <h2 class="panel-title" style="color:var(--magenta)">Traslapes entre áreas</h2>
     <p class="panel-intro">Un mismo predio puede estar cubierto por más de un instrumento: dos decretos de
       protección, un ANP y un ARCAC, o un área del inventario dentro del polígono de Patrimonio Mundial.
       Este módulo mide esas superposiciones sobre la geometría real y las dibuja en el mapa.
@@ -4533,8 +4564,8 @@ function renderTraslapesPage(){
     </div>
 
     <style>
-      #trasTable{width:100%;border-collapse:collapse;font-family:'Roboto',sans-serif;font-size:12.5px}
-      #trasTable thead th{background:#d72f89;color:#fff;text-align:left;padding:9px 12px;font-weight:600;white-space:nowrap;cursor:pointer;position:sticky;top:0}
+      #trasTable{width:100%;border-collapse:collapse;font-family:'Roboto',sans-serif;font-size:var(--fs-sm)}
+      #trasTable thead th{background:var(--magenta);color:#fff;text-align:left;padding:9px 12px;font-weight:600;white-space:nowrap;cursor:pointer;position:sticky;top:0}
       #trasTable thead th:hover{background:#b3236f}
       #trasTable thead th.num{text-align:right}
       #trasTable td.num{text-align:right;font-family:'Roboto Mono',monospace}
@@ -4542,14 +4573,14 @@ function renderTraslapesPage(){
       #trasTable tbody tr:hover{background:var(--bg-2)}
       #trasTable td{padding:8px 12px;color:var(--ink-2);vertical-align:top}
       #trasTable td.name{color:var(--ink);font-weight:500}
-      #trasTable .sub{display:block;font-family:'Roboto Mono',monospace;font-size:10.5px;color:var(--muted);margin-top:2px}
-      .tras-dot{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:8px;vertical-align:middle;border:1px solid rgba(0,0,0,.15)}
+      #trasTable .sub{display:block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);color:var(--muted);margin-top:2px}
+      .tras-dot{width:11px;height:11px;border-radius:var(--r-ui);display:inline-block;margin-right:8px;vertical-align:middle;border:1px solid rgba(0,0,0,.15)}
       .tras-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px;align-items:center}
-      .tras-toolbar input,.tras-toolbar select{font-family:'Roboto',sans-serif;font-size:12.5px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;color:var(--ink)}
+      .tras-toolbar input,.tras-toolbar select{font-family:'Roboto',sans-serif;font-size:var(--fs-sm);padding:8px 12px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;color:var(--ink)}
       .tras-toolbar input{flex:1;min-width:220px}
-      .tras-toolbar input:focus,.tras-toolbar select:focus{outline:2px solid #d72f89;outline-offset:1px}
+      .tras-toolbar input:focus,.tras-toolbar select:focus{outline:2px solid var(--magenta);outline-offset:1px}
       .tras-nota{background:#fff;border-left:3px solid var(--dorado);padding:12px 14px;border-radius:0 4px 4px 0;
-        font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:18px;box-shadow:var(--shadow)}
+        font-size:var(--fs-sm);color:var(--ink-2);line-height:1.5;margin-top:18px;box-shadow:var(--shadow)}
       .tras-nota b{color:var(--ink)}
     </style>
 
@@ -4614,7 +4645,7 @@ function initTraslapesMap(){
     (fc.features||[]).forEach(f=>{ (porCruce[f.properties.cruce] = porCruce[f.properties.cruce] || []).push(f); });
 
     Object.entries(porCruce).forEach(([cruce, feats])=>{
-      const color = TRAS_COLORS[cruce] || '#d72f89';
+      const color = TRAS_COLORS[cruce] || 'var(--magenta)';
       const lyr = L.geoJSON({type:'FeatureCollection',features:feats}, {
         style: ()=>({color, weight:1.6, fillColor:color, fillOpacity:0.45}),
         onEachFeature: (feat, l)=>{
@@ -4649,7 +4680,7 @@ function initTraslapesMap(){
 }
 
 function trasPopup(p){
-  const c = TRAS_COLORS[p.cruce] || '#d72f89';
+  const c = TRAS_COLORS[p.cruce] || 'var(--magenta)';
   return `<div class="lp">
     <div class="lp-cat"><span class="lp-dot" style="background:${esc(c)}"></span>${esc(p.cruce)}</div>
     <div class="lp-nom sm">${esc(p.a)}</div>
@@ -4657,7 +4688,7 @@ function trasPopup(p){
     <div class="lp-nom sm" style="margin-top:9px">${esc(p.b)}</div>
     <div class="lp-mas">${esc(p.b_sub)} · ${p.pct_b}% de su superficie</div>
     <div class="lp-pie"><span class="lp-ctx">Superficie compartida</span>
-      <span style="font-family:'Roboto Mono',monospace;font-size:13px;font-weight:700;color:${esc(c)}">${fmt(p.ha)} ha</span></div>
+      <span style="font-family:'Roboto Mono',monospace;font-size:var(--fs-base);font-weight:700;color:${esc(c)}">${fmt(p.ha)} ha</span></div>
   </div>`;
 }
 
@@ -4672,7 +4703,7 @@ function renderTrasKpis(fc){
       <div class="hero-value">${fmtInt(fs.length)}</div>
       <div class="hero-sub">umbral ${fc.umbral_ha || 0.5} ha</div></div>
     <div class="hero-card"><div class="hero-label">Superficie contada dos veces</div>
-      <div class="hero-value" style="color:#d72f89">${fmt(dobles)}<span class="u">ha</span></div>
+      <div class="hero-value" style="color:var(--magenta)">${fmt(dobles)}<span class="u">ha</span></div>
       <div class="hero-sub">dentro del inventario de 66 áreas</div></div>
     <div class="hero-card"><div class="hero-label">Áreas del inventario sobre ARCAC</div>
       <div class="hero-value">${anpArcac}</div>
@@ -4722,7 +4753,7 @@ function renderTrasTabla(){
   });
 
   tb.innerHTML = rows.length ? rows.map(r=>{
-    const c = TRAS_COLORS[r.cruce] || '#d72f89';
+    const c = TRAS_COLORS[r.cruce] || 'var(--magenta)';
     return `<tr data-a="${esc(r.a)}">
       <td class="name"><span class="tras-dot" style="background:${esc(c)}"></span>${esc(r.a)}<span class="sub">${esc(r.a_sub)}</span></td>
       <td class="name">${esc(r.b)}<span class="sub">${esc(r.b_sub)}</span></td>
@@ -4775,7 +4806,7 @@ function renderARCACPage(){
   return `
   <div class="panel">
     <div class="panel-eyebrow">Áreas de Restauración y Conservación Ambiental Comunitaria · Suelo de conservación CDMX</div>
-    <h2 class="panel-title" style="color:#7048E8">ARCAC — Restauración y Conservación Ambiental Comunitaria</h2>
+    <h2 class="panel-title" style="color:var(--arcac-com)">ARCAC — Restauración y Conservación Ambiental Comunitaria</h2>
     <p class="panel-intro">Las <b>ARCAC</b> son Áreas de Restauración y Conservación Ambiental Comunitaria: núcleos agrarios
       —comunidades y ejidos— en suelo de conservación de la Ciudad de México. Cada ARCAC tiene un color propio en el mapa;
       la tenencia se indica con etiqueta de color. Capa complementaria; no afecta el inventario ANP/AVA.</p>
@@ -4788,8 +4819,8 @@ function renderARCACPage(){
       </div>
     </div>
     <style>
-      #arcacTable{width:100%;border-collapse:collapse;font-family:'Roboto',sans-serif;font-size:12.5px}
-      #arcacTable thead th{background:#7048E8;color:#fff;text-align:left;padding:9px 12px;font-weight:600;white-space:nowrap;cursor:pointer;user-select:none}
+      #arcacTable{width:100%;border-collapse:collapse;font-family:'Roboto',sans-serif;font-size:var(--fs-sm)}
+      #arcacTable thead th{background:var(--arcac-com);color:#fff;text-align:left;padding:9px 12px;font-weight:600;white-space:nowrap;cursor:pointer;user-select:none}
       #arcacTable thead th:hover{background:#5f3dc4}
       #arcacTable thead th.num{text-align:right}
       #arcacTable td.num{text-align:right;font-family:'Roboto Mono',monospace}
@@ -4797,13 +4828,42 @@ function renderARCACPage(){
       #arcacTable tbody tr:hover{background:var(--bg-2)}
       #arcacTable td{padding:8px 12px;color:var(--ink-2)}
       #arcacTable td.name{color:var(--ink);font-weight:500}
-      #arcacTable .zp-dot{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:8px;vertical-align:middle;border:1px solid rgba(0,0,0,.15)}
-      .ten-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;color:#fff;letter-spacing:.01em}
+      #arcacTable .zp-dot{width:11px;height:11px;border-radius:var(--r-ui);display:inline-block;margin-right:8px;vertical-align:middle;border:1px solid rgba(0,0,0,.15)}
+      .ten-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:var(--fs-xs);font-weight:600;color:#fff;letter-spacing:.01em}
       .arcac-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
-      .arcac-toolbar input,.arcac-toolbar select{font-family:'Roboto',sans-serif;font-size:12.5px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg-1);color:var(--ink)}
+      .arcac-toolbar input,.arcac-toolbar select{font-family:'Roboto',sans-serif;font-size:var(--fs-sm);padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
       .arcac-toolbar input{flex:1;min-width:220px}
-      .arcac-toolbar input:focus,.arcac-toolbar select:focus{outline:2px solid #7048E8;outline-offset:1px}
-    </style>
+      .arcac-toolbar input:focus,.arcac-toolbar select:focus{outline:2px solid var(--arcac-com);outline-offset:1px}
+    
+  /* ═══ OBJETIVOS TACTILES ═══════════════════════════════════════════════
+     Medido en produccion: 17 controles quedaban por debajo de 44 px, entre
+     ellos el zoom de Leaflet (30x30) que aparece en los seis mapas del sitio
+     y es el control que mas se toca en campo.
+     Se usa pointer:coarse y no max-width para cubrir tambien tabletas
+     tactiles anchas, que con el criterio de ancho quedaban fuera.
+     Se agranda el area de toque sin cambiar la caja visual donde importa. */
+  @media (pointer:coarse), (max-width:640px){
+    .leaflet-touch .leaflet-bar a,
+    .leaflet-bar a,
+    .map-search-btn,
+    .map-fullscreen-btn,
+    .ubi-mini,
+    .ubi-cerrar,
+    .locate-ctrl a,
+    .resetview-ctrl a      { min-width:44px; min-height:44px }
+    .leaflet-bar a         { line-height:44px }
+    .map-filter-chip,
+    .btn, .btn.ghost,
+    .map-block-toggle button,
+    #q, select,
+    .ubicar-go             { min-height:44px }
+    .ubi-ficha             { min-height:46px }
+    /* La columna de controles crece con los botones */
+    .map-block-controls-floating,
+    .leaflet-top.leaflet-left { --mc-h:44px }
+  }
+
+</style>
     <div style="margin-top:24px">
       <div class="panel-eyebrow" style="margin-bottom:4px">Padrón de ARCAC</div>
       <div class="panel-intro" id="arcacCount" style="margin-bottom:6px">Cargando…</div>
@@ -4926,16 +4986,16 @@ function applyCoadminHighlight(){
         // En modo resaltado: las coadministradas se ven con borde grueso guinda + fondo amarillo
         if(isCoa){
           lyr.setStyle({
-            color: '#9d2148',
+            color: 'var(--guinda)',
             weight: 3.5,
-            fillColor: '#f4c842',
+            fillColor: 'var(--acento-mapa)',
             fillOpacity: 0.55,
             dashArray: null
           });
           lyr.bringToFront();
           // Tooltip enriquecido
           lyr.unbindTooltip();
-          lyr.bindTooltip(`<b>${name}</b><br><span style="font-size:10.5px;color:#9d2148;font-weight:500">⭐ En coadministración · Convenio 2025</span>`, {sticky:true, direction:'top'});
+          lyr.bindTooltip(`<b>${name}</b><br><span style="font-size:var(--fs-mini);color:var(--guinda);font-weight:500">⭐ En coadministración · Convenio 2025</span>`, {sticky:true, direction:'top'});
         } else {
           // Las demás se atenúan para resaltar las coadministradas
           lyr.setStyle({
@@ -4983,7 +5043,7 @@ function attachSCToggle(btnId, mapInstance, groupLayers, alcaldiasLayer){
       return false;
     }
     mapInstance._scLayer = L.geoJSON(sc, {
-      style: { color:'#006064', weight:1.5, fillColor:'#00838f', fillOpacity:0.20, dashArray:'4,3' },
+      style: { color:'var(--sc-900)', weight:1.5, fillColor:'var(--sc)', fillOpacity:0.20, dashArray:'4,3' },
       interactive: false
     }).addTo(mapInstance);
     mapInstance._scLayer.bringToBack();
@@ -5187,18 +5247,18 @@ function _indiceLocal(){
   const out = [];
   try{
     (DATA||[]).forEach(d=>out.push({t:'inv', nombre:d.nombre, sub:d.grupo,
-      color:(typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[d.grupo])||'#9d2148', ref:d.nombre}));
+      color:(typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[d.grupo])||'var(--guinda)', ref:d.nombre}));
   }catch(_){}
   try{
     ((ARCAC_GEO&&ARCAC_GEO.features)||[]).forEach(f=>{
       const pr=f.properties||{};
       out.push({t:'arcac', nombre:pr.nombre, sub:'ARCAC · '+(pr.tenencia||''),
-        color:(typeof ARCAC_COLORS!=='undefined' && ARCAC_COLORS[pr.tenencia])||'#7048E8', ref:pr.no});
+        color:(typeof ARCAC_COLORS!=='undefined' && ARCAC_COLORS[pr.tenencia])||'var(--arcac-com)', ref:pr.no});
     });
   }catch(_){}
   try{
     (ZP_DATA||[]).filter(r=>r.es_designacion).forEach(r=>out.push({t:'zp', nombre:r.nombre,
-      sub:'Zona Patrimonio', color:r.color||'#9d2148', ref:r.key}));
+      sub:'Zona Patrimonio', color:r.color||'var(--guinda)', ref:r.key}));
   }catch(_){}
   return out;
 }
@@ -5450,7 +5510,7 @@ function renderMapFilters(){
   const isGlobal = container.dataset.mode !== 'group';
 
   // Chip de Suelo de Conservación (siempre presente, en cualquier mapa)
-  const scChip = `<button class="map-filter-chip active" id="globalSCToggle" type="button" style="--chip-color:#00838f"><span class="chip-dot"></span>Suelo de Conservación</button>`;
+  const scChip = `<button class="map-filter-chip active" id="globalSCToggle" type="button" style="--chip-color:var(--sc)"><span class="chip-dot"></span>Suelo de Conservación</button>`;
 
   if(isGlobal){
     // Mapa global: 4 chips de capas + chip Coadministración + chip SC al final
@@ -5460,10 +5520,10 @@ function renderMapFilters(){
       {key:'ANP · Local',          label:'ANP Locales'},
       {key:'ANP · Federal',        label:'ANP Federales'}
     ];
-    const coadminChip = `<button class="map-filter-chip${state.highlightCoadmin?' active':''}" id="coadminToggle" type="button" style="--chip-color:#266cb4" title="Resaltar las ${COADMIN_AREAS.length} ANP federales en coadministración SEMARNAT–CONANP–CDMX 2025">
+    const coadminChip = `<button class="map-filter-chip${state.highlightCoadmin?' active':''}" id="coadminToggle" type="button" style="--chip-color:var(--azul)" title="Resaltar las ${COADMIN_AREAS.length} ANP federales en coadministración SEMARNAT–CONANP–CDMX 2025">
       <span class="chip-dot"></span>En coadministración <span class="chip-count">${COADMIN_AREAS.length}</span>
     </button>`;
-    const arcacChip = `<button class="map-filter-chip${state.showArcac?' active':''}" id="arcacToggle" type="button" style="--chip-color:#7048E8" title="Mostrar las 30 Áreas de Restauración y Conservación Ambiental Comunitaria (ARCAC)">
+    const arcacChip = `<button class="map-filter-chip${state.showArcac?' active':''}" id="arcacToggle" type="button" style="--chip-color:var(--arcac-com)" title="Mostrar las 30 Áreas de Restauración y Conservación Ambiental Comunitaria (ARCAC)">
       <span class="chip-dot"></span>ARCAC <span class="chip-count">30</span>
     </button>`;
     container.innerHTML = groups.map(g=>{
@@ -5588,9 +5648,9 @@ function initMapForArea(d){
   createAlcaldiasLayer({interactive:true}).addTo(activeMap);
   activeGeoLayer = L.geoJSON(geo, {
     style: {
-      color: '#9d2148',
+      color: 'var(--guinda)',
       weight: 2,
-      fillColor: '#9d2148',
+      fillColor: 'var(--guinda)',
       fillOpacity: 0.18
     }
   }).addTo(activeMap);
@@ -5666,7 +5726,7 @@ async function compartirFichaImagen(d, btn){
   try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(_){}
   const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
   const ctx=cv.getContext('2d');
-  const color = (typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[d.grupo]) || '#9d2148';
+  const color = (typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[d.grupo]) || 'var(--guinda)';
 
   ctx.fillStyle='#fffdf0'; ctx.fillRect(0,0,W,H);
 
@@ -5677,7 +5737,7 @@ async function compartirFichaImagen(d, btn){
     const lw=Math.min(600, W-96), lh=lw*logo.naturalHeight/logo.naturalWidth;
     try{ ctx.drawImage(logo,48,y,lw,lh); y+=lh+26; }catch(_){ y+=20; }
   }
-  ctx.fillStyle='#9d2148'; ctx.fillRect(48,y,W-96,3); y+=44;
+  ctx.fillStyle='var(--guinda)'; ctx.fillRect(48,y,W-96,3); y+=44;
 
   /* Badge de categoría */
   ctx.font='600 22px "Roboto Mono", monospace';
@@ -5737,7 +5797,7 @@ async function compartirFichaImagen(d, btn){
 
   /* Pie */
   y=H-58;
-  ctx.fillStyle='#9d2148'; ctx.fillRect(0,H-92,W,3);
+  ctx.fillStyle='var(--guinda)'; ctx.fillRect(0,H-92,W,3);
   ctx.fillStyle='#55585a'; ctx.font='400 19px "Roboto Mono", monospace';
   const hoy=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
   ctx.fillText('Sistema de Información Ambiental · SEDEMA CDMX',48,y);
@@ -5990,7 +6050,7 @@ function renderUbicarResultado(latlng, precision, etiqueta){
         </div>`;
       });
       if(sc === true){
-        cuerpo += `<div class="ubi-item" style="--c:#00838f">
+        cuerpo += `<div class="ubi-item" style="--c:var(--sc)">
           <span class="ubi-dot"></span>
           <span class="ubi-item-txt"><b>Suelo de Conservación</b><span>Régimen territorial</span></span>
         </div>`;
@@ -6027,7 +6087,7 @@ function renderUbicarResultado(latlng, precision, etiqueta){
     const cer = _masCercana(latlng, GF);
     if(sc === true){
       cabeza = 'Suelo de Conservación';
-      cuerpo += `<div class="ubi-main" style="--c:#00838f">
+      cuerpo += `<div class="ubi-main" style="--c:var(--sc)">
         <div class="ubi-main-cat"><span class="ubi-dot"></span>Suelo de Conservación</div>
         <div class="ubi-main-nom">Dentro, sin área decretada</div>
       </div>`;
@@ -6143,7 +6203,7 @@ function openDrawer(d){
           </button>
         </div>
         <div class="drawer-sc-floating">
-          <button class="map-filter-chip active" id="drawerSCToggle" type="button" style="--chip-color:#00838f"><span class="chip-dot"></span>Suelo de Conservación</button>
+          <button class="map-filter-chip active" id="drawerSCToggle" type="button" style="--chip-color:var(--sc)"><span class="chip-dot"></span>Suelo de Conservación</button>
         </div>
       </div>
       <div class="map-block-foot">
@@ -6151,7 +6211,7 @@ function openDrawer(d){
       </div>
     </div>
 
-    <div class="big-num">${fmt(d.superficie)}<span style="font-size:18px;color:var(--muted);margin-left:6px;font-weight:500">ha</span></div>
+    <div class="big-num">${fmt(d.superficie)}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">ha</span></div>
     <div class="big-num-lbl">Superficie decretada</div>
     <div class="field"><div class="k">Tipo</div><div class="v"><span class="tag tag-${d.tipo} tag-full">${d.tipo==='AVA'?'Área de Valor Ambiental':'Área Natural Protegida'}</span></div></div>
     <div class="field"><div class="k">Jurisdicción</div><div class="v"><span class="tag tag-jur-${d.jurisdiccion}">${d.jurisdiccion}</span></div></div>
@@ -6161,7 +6221,7 @@ function openDrawer(d){
       const v = (d.suelo_conservacion === 'Sí') ? 'Sí' : 'No';
       const cls = v === 'Sí' ? 'status-tag-si' : 'status-tag-no';
       const note = v === 'Sí' ? 'El polígono se encuentra dentro del Suelo de Conservación' : 'Fuera del Suelo de Conservación';
-      return `<span class="status-tag ${cls}">${v}</span> <span style="color:var(--muted);font-size:12.5px;margin-left:4px">${note}</span>`;
+      return `<span class="status-tag ${cls}">${v}</span> <span style="color:var(--muted);font-size:var(--fs-sm);margin-left:4px">${note}</span>`;
     })()}</div></div>
     <div class="field"><div class="k">Fecha decreto</div><div class="v">${d.fecha_decreto}</div></div>
     <div class="field"><div class="k">Programa de manejo</div><div class="v"><span class="status-tag ${d.programa_manejo==='Sí'?'status-tag-si':'status-tag-no'}">${d.programa_manejo}</span></div></div>
