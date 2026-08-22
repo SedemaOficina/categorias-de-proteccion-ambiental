@@ -1276,7 +1276,35 @@
     .sia-footer-sep{display:none}
   }
 
-  </style>
+    /* ═══ OBJETIVOS TACTILES ═══════════════════════════════════════════════
+     Medido en produccion: 17 controles quedaban por debajo de 44 px, entre
+     ellos el zoom de Leaflet (30x30) que aparece en los seis mapas del sitio
+     y es el control que mas se toca en campo.
+     Se usa pointer:coarse y no max-width para cubrir tambien tabletas
+     tactiles anchas, que con el criterio de ancho quedaban fuera.
+     Se agranda el area de toque sin cambiar la caja visual donde importa. */
+  @media (pointer:coarse), (max-width:640px){
+    .leaflet-touch .leaflet-bar a,
+    .leaflet-bar a,
+    .map-search-btn,
+    .map-fullscreen-btn,
+    .ubi-mini,
+    .ubi-cerrar,
+    .locate-ctrl a,
+    .resetview-ctrl a      { min-width:44px; min-height:44px }
+    .leaflet-bar a         { line-height:44px }
+    .map-filter-chip,
+    .btn, .btn.ghost,
+    .map-block-toggle button,
+    #q, select,
+    .ubicar-go             { min-height:44px }
+    .ubi-ficha             { min-height:46px }
+    /* La columna de controles crece con los botones */
+    .map-block-controls-floating,
+    .leaflet-top.leaflet-left { --mc-h:44px }
+  }
+
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -4835,34 +4863,6 @@ function renderARCACPage(){
       .arcac-toolbar input{flex:1;min-width:220px}
       .arcac-toolbar input:focus,.arcac-toolbar select:focus{outline:2px solid var(--arcac-com);outline-offset:1px}
     
-  /* ═══ OBJETIVOS TACTILES ═══════════════════════════════════════════════
-     Medido en produccion: 17 controles quedaban por debajo de 44 px, entre
-     ellos el zoom de Leaflet (30x30) que aparece en los seis mapas del sitio
-     y es el control que mas se toca en campo.
-     Se usa pointer:coarse y no max-width para cubrir tambien tabletas
-     tactiles anchas, que con el criterio de ancho quedaban fuera.
-     Se agranda el area de toque sin cambiar la caja visual donde importa. */
-  @media (pointer:coarse), (max-width:640px){
-    .leaflet-touch .leaflet-bar a,
-    .leaflet-bar a,
-    .map-search-btn,
-    .map-fullscreen-btn,
-    .ubi-mini,
-    .ubi-cerrar,
-    .locate-ctrl a,
-    .resetview-ctrl a      { min-width:44px; min-height:44px }
-    .leaflet-bar a         { line-height:44px }
-    .map-filter-chip,
-    .btn, .btn.ghost,
-    .map-block-toggle button,
-    #q, select,
-    .ubicar-go             { min-height:44px }
-    .ubi-ficha             { min-height:46px }
-    /* La columna de controles crece con los botones */
-    .map-block-controls-floating,
-    .leaflet-top.leaflet-left { --mc-h:44px }
-  }
-
 </style>
     <div style="margin-top:24px">
       <div class="panel-eyebrow" style="margin-bottom:4px">Padrón de ARCAC</div>
