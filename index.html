@@ -1005,7 +1005,11 @@
   .map-block-foot a:hover{text-decoration:underline}
   /* Leaflet override · suaviza tooltips para identidad institucional */
         @media (max-width:640px){
-    .map-canvas{height:280px}
+    /* Con los controles a 44 px la columna izquierda mide 178 px y a 280 px
+       de alto se encimaba con el chip de Suelo de Conservacion (14 px de
+       traslape, medido en produccion). 340 px deja 46 px de holgura y de paso
+       da mas mapa util en campo. */
+    .map-canvas{height:340px}
     /* En táctil agrandamos los toggles para superar 32px de alto (recomendación WCAG) */
     .map-block-toggle button{padding:11px 14px;font-size:var(--fs-mini)}
     .map-block-toggle{flex-shrink:0}
@@ -5236,6 +5240,7 @@ async function siaSugerirDirecciones(q){
            dice la entidad; repetirla en el renglon es ruido. */
         secundario: sec.replace(/,\s*M[eé]xico\s*$/i,'')
                        .replace(/,\s*(CDMX|M[eé]x\.?|Mor\.?)\s*$/i,'')
+                       .replace(/,\s*Ciudad de M[eé]xico\s*$/i,'')
                        .trim(),
         d: (typeof pp.distanceMeters === 'number') ? pp.distanceMeters : null };
     })
@@ -6330,8 +6335,9 @@ function _marcarNavegables(){
 let _navPend = false;
 new MutationObserver(muts=>{
   if(_navPend) return;
+  const OJO = 'tr,.item,.map-search-result-item';
   const hayFilas = muts.some(m=>[...m.addedNodes].some(n=>
-    n.nodeType===1 && (n.tagName==='TR' || (n.querySelector && n.querySelector('tr,.item')))));
+    n.nodeType===1 && ((n.matches && n.matches(OJO)) || (n.querySelector && n.querySelector(OJO)))));
   if(!hayFilas) return;
   _navPend = true;
   requestAnimationFrame(()=>{ _navPend = false; _marcarNavegables(); });
