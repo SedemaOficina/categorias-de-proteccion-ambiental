@@ -138,43 +138,6 @@
   .ubicar-sugerencias .item:hover{background:var(--bg-2)}
   .ubicar-sugerencias .item .sw{position:absolute;left:12px;top:14px;width:8px;height:8px;border-radius:2px}
   .ubicar-sugerencias .item .meta{display:block;font-size:11px;color:var(--muted);margin-top:2px}
-  .ubicar-sugerencias .item .rt{position:absolute;right:10px;top:9px;text-align:right}
-  .ubicar-sugerencias .item .dist{display:block;font-family:'Roboto Mono',monospace;font-size:10px;
-    color:var(--guinda);font-weight:700;margin-top:3px}
-  .ubicar-sugerencias .item.ext{background:var(--bg-2)}
-  .ubicar-sugerencias .item.dir{padding-left:12px;padding-right:90px}
-
-  /* Chips de entidad federativa: el ambito de busqueda incluye colindantes */
-  .ent{display:inline-block;font-family:'Roboto Mono',monospace;font-size:8.5px;letter-spacing:.1em;
-    font-weight:700;padding:2px 6px;border-radius:2px;color:#fff;vertical-align:middle}
-  .e-cdmx{background:var(--guinda)}
-  .e-mex{background:var(--azul)}
-  .e-mor{background:var(--verde)}
-  /* Distintivo de area cuyo poligono cruza el limite estatal */
-  .lim{display:inline-flex;align-items:center;gap:4px;font-family:'Roboto Mono',monospace;font-size:8.5px;
-    letter-spacing:.09em;font-weight:700;text-transform:uppercase;background:var(--dorado);color:#fff;
-    padding:2px 6px;border-radius:2px;white-space:nowrap}
-
-  .ubicar-kbd{display:none}
-  /* Escritorio: el modulo se colapsa a una franja de una linea.
-     El boton de GPS se oculta porque en escritorio navigator.geolocation
-     resuelve por IP y WiFi (cientos de metros a kilometros): con poligonos
-     de 20 ha ese margen no distingue nada y el dato no es utilizable. */
-  @media (min-width:761px){
-    .ubicar-bar{display:flex;align-items:center;gap:12px;background:var(--bg-2);
-      border-left-width:3px;padding:8px 12px;margin-bottom:12px}
-    .ubicar-head{margin:0;flex:0 0 auto;align-items:center;flex-wrap:nowrap;gap:8px}
-    .ubicar-kicker{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:.11em;
-      color:var(--ink-2);font-weight:700}
-    .ubicar-kicker::before{content:'\25CE  ';color:var(--guinda)}
-    .ubicar-hint{display:none}
-    .ubicar-gps{display:none}
-    .ubicar-row{flex:1;min-width:0}
-    .ubicar-input-wrap input{height:30px;font-size:12.5px;border-radius:4px 0 0 4px}
-    .ubicar-go{width:34px;border-radius:0 4px 4px 0}
-    .ubicar-kbd{display:inline-block;flex:0 0 auto;font-family:'Roboto Mono',monospace;font-size:9.5px;
-      color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:2px 6px;white-space:nowrap}
-  }
 
   @media (max-width:760px){
     .ubicar-bar{padding:14px;border-left-width:4px}
@@ -824,9 +787,7 @@
     font-size:11.5px;color:var(--dorado-text);border-radius:0 3px 3px 0;line-height:1.35}
   .lp-pie{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;
     padding-top:9px;border-top:1px solid var(--line-soft)}
-  .lp-ctx{font-family:'Roboto Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:.03em;
-    min-width:0;line-height:1.5}
-  .lp-warn.rojo{background:#fdf0f3;border-left-color:var(--guinda);color:#8a2242}
+  .lp-ctx{font-family:'Roboto Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:.03em;min-width:0}
   .lp-ficha{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;background:var(--guinda);color:#fff;
     border:none;border-radius:3px;padding:6px 11px;cursor:pointer;font-family:'Roboto',sans-serif;
     font-size:12px;font-weight:700;max-width:150px;overflow:hidden;white-space:nowrap}
@@ -1284,7 +1245,6 @@
         <div class="ubicar-sugerencias" id="ubicarSug" hidden></div>
       </div>
     </div>
-    <span class="ubicar-kbd" aria-hidden="true">Ctrl K</span>
   </section>
 
   <section id="ubicarResultado" hidden></section>
@@ -3506,47 +3466,6 @@ function _alcaldiaEn(latlng){
   const hit = fs.find(f=>f.geometry && geoContainsPoint(latlng.lng, latlng.lat, f.geometry));
   return hit ? (hit.properties.nombre || '—') : null;
 }
-
-/* ── Ambito territorial · CDMX + entidades colindantes ───────────────────
-   Dentro de la CDMX la entidad se resuelve por interseccion contra la capa
-   de alcaldias. Fuera, se infiere por posicion: Morelos solo colinda al sur.
-   PENDIENTE: sustituir la inferencia por data/entidades.geojson del Marco
-   Geoestadistico del INEGI para que la atribucion sea citable. */
-const _ENT_SIGLA = { 'CDMX':'CDMX', 'Estado de México':'MÉX', 'Morelos':'MOR' };
-function _entidadEn(latlng){
-  if(_alcaldiaEn(latlng)) return 'CDMX';
-  if(latlng.lat < 19.13 && latlng.lng > -99.40 && latlng.lng < -98.90) return 'Morelos';
-  return 'Estado de México';
-}
-function _entChip(ent){
-  const k = ent === 'CDMX' ? 'cdmx' : (ent === 'Morelos' ? 'mor' : 'mex');
-  return `<span class="ent e-${k}">${esc(_ENT_SIGLA[ent] || ent)}</span>`;
-}
-/* Metadato precalculado en data/geometrias.geojson (campo limitrofe).
-   Se precalcula fuera del navegador: el cruce contra la frontera es pesado. */
-function _limitrofeDe(nombre){
-  try{
-    const fs = (typeof GEOMETRIES!=='undefined' && GEOMETRIES && GEOMETRIES.features) || [];
-    const f = fs.find(x=>x.properties && x.properties.nombre === nombre);
-    return (f && f.properties.limitrofe) || null;
-  }catch(_){ return null; }
-}
-/* Area que cruza el limite estatal mas cercana dentro del radio dado */
-function _limitrofeCerca(latlng, radio){
-  let best = null;
-  try{
-    ((typeof GEOMETRIES!=='undefined' && GEOMETRIES && GEOMETRIES.features) || []).forEach(f=>{
-      const l = f.properties && f.properties.limitrofe;
-      if(!l || l.clase !== 'cruza' || !f.geometry) return;
-      const d = _geomDistM(latlng.lat, latlng.lng, f.geometry);
-      if(d <= radio && (!best || d < best.d))
-        best = { d, nombre:f.properties.nombre, grupo:f.properties.grupo, lim:l };
-    });
-  }catch(_){}
-  return best;
-}
-/* Domicilio resuelto por Places (CP y colonia) para la ultima busqueda */
-let _ubicarDomicilio = null;
 function _enSueloConservacion(latlng){
   const fs = (SUELO_CONSERVACION && SUELO_CONSERVACION.features) || null;
   if(!fs || !fs.length) return null;                    // capa aún no cargada
@@ -3714,94 +3633,47 @@ function _doLocate(map,getContainment,btn,getFeatures){
    van aquí: están a un toque de distancia en la ficha. */
 function _locatePopupHTML(latlng, accuracy, _i1, _i2, opts){
   opts = opts || {};
-  const acc    = accuracy ? Math.round(accuracy) : null;
-  const alc    = _alcaldiaEn(latlng);
-  const ent    = _entidadEn(latlng);
-  const enCDMX = ent === 'CDMX';
-  const sc     = _enSueloConservacion(latlng);
-  const covs   = _coberturasEn(latlng);
-  const GF     = (typeof GEOMETRIES!=='undefined' && GEOMETRIES && GEOMETRIES.features) || [];
+  const coord = `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+  const acc   = accuracy ? Math.round(accuracy) : null;
+  const alc   = _alcaldiaEn(latlng);
+  const sc    = _enSueloConservacion(latlng);
+  const covs  = _coberturasEn(latlng);
 
-  /* Pie: lugar + chip de entidad en la primera linea, precision en la segunda */
-  const lugar = enCDMX ? (alc || 'Ciudad de México') : 'Fuera de la CDMX';
-  const pie = esc(lugar) + ' ' + _entChip(ent) + (acc ? `<br>± ${acc} m` : '');
+  /* Contexto en una sola línea: alcaldía · precisión */
+  const pie = [alc || 'Fuera de la CDMX', acc ? `± ${acc} m` : null].filter(Boolean).join(' · ');
 
   let html = '<div class="lp">';
 
   if(covs.length){
-    /* CASOS 1 y 2 · el punto cae dentro de un poligono */
-    const c      = covs[0];                       // la de mayor jerarquia normativa
+    const c = covs[0];                       // la de mayor jerarquía normativa
     const extras = covs.slice(1).map(x=>x.tag);
     if(sc === true) extras.push('Suelo de Conservación');
-    const lim   = _limitrofeDe(c.nombre);
-    const esLim = !!(lim && lim.clase === 'cruza');
+
     const cerca = (acc && isFinite(c.borde) && c.borde < acc);
-
-    let aviso = '';
-    if(!enCDMX){
-      /* CASO 1 · dentro del poligono pero fuera de la CDMX: el error mas caro */
-      aviso = `<div class="lp-warn rojo"><b>Pero en territorio de ${esc(ent)}.</b> `
-            + (esLim ? `El ${lim.pct_fuera}% de esta área (${lim.ha_fuera} ha) está fuera de la CDMX. ` : '')
-            + `La atribución de competencia no es automática: verifica el instrumento aplicable.</div>`;
-    } else if(esLim){
-      /* CASO 2 · dentro y del lado correcto, pero el poligono continua afuera */
-      aviso = `<div class="lp-warn">Área limítrofe: ${lim.ha_fuera} ha del polígono se extienden a `
-            + `${esc(lim.entidad || 'otra entidad')}. Este punto sí está en la CDMX.</div>`;
-    } else if(cerca){
-      aviso = `<div class="lp-warn">A ${Math.round(c.borde)} m del límite · dentro del margen del GPS</div>`;
-    }
-
-    html += `<div class="lp-cat"><span class="lp-dot" style="background:${esc(c.color)}"></span>${esc(c.tag)}`
-          + (esLim ? ' <span class="lim">Limítrofe</span>' : '') + `</div>
+    html += `<div class="lp-cat"><span class="lp-dot" style="background:${esc(c.color)}"></span>${esc(c.tag)}</div>
       <div class="lp-nom">${esc(c.nombre)}</div>
-      ${!enCDMX ? '<div class="lp-mas">Estás dentro del polígono decretado</div>'
-                : (extras.length ? `<div class="lp-mas">+ ${extras.map(esc).join(' · ')}</div>` : '')}
-      ${aviso}
-      <div class="lp-pie"><span class="lp-ctx">${pie}</span>
+      ${extras.length ? `<div class="lp-mas">+ ${extras.map(esc).join(' · ')}</div>` : ''}
+      ${cerca ? `<div class="lp-warn">A ${Math.round(c.borde)} m del límite · dentro del margen del GPS</div>` : ''}
+      <div class="lp-pie"><span class="lp-ctx">${esc(pie)}</span>
         <button type="button" class="lp-ficha" data-ficha="${esc(c.ficha)}">Ficha <span class="ar">→</span></button></div>`;
-
-  } else if(!enCDMX){
-    /* CASOS 3 y 4 · fuera de la CDMX y fuera de todo poligono */
-    const lim = _limitrofeCerca(latlng, 500);
-    const cer = _masCercana(latlng, GF);
-    html += `<div class="lp-cat gris"><span class="lp-dot" style="background:#8a8d8f"></span>Fuera del ámbito de la CDMX</div>
-      <div class="lp-nom sm">El punto está en otra entidad federativa</div>`;
-    if(lim){
-      /* CASO 3 · junto a un area cuyo poligono si cruza el limite */
-      html += `<div class="lp-mas">A ${_fmtDist(lim.d)} de <b>${esc(lim.nombre)}</b> <span class="lim">Limítrofe</span></div>
-        <div class="lp-warn">Esta área cruza el límite estatal (${lim.lim.ha_fuera} ha del lado de `
-        + `${esc(lim.lim.entidad || 'la entidad vecina')}). Si verificas lindero, considera que el polígono continúa en esta entidad.</div>`;
-    } else if(cer){
-      /* CASO 4 · fuera y lejos: solo el aviso de competencia */
-      html += `<div class="lp-mas">Más cercana · <b>${esc(cer.nombre)}</b> a ${_fmtDist(cer.d)}</div>
-        <div class="lp-warn">La competencia de la Secretaría no alcanza este punto. Verifica con la autoridad estatal.</div>`;
-    } else {
-      html += `<div class="lp-warn">La competencia de la Secretaría no alcanza este punto.</div>`;
-    }
-    const ref = lim ? lim.nombre : (cer ? cer.nombre : null);
-    html += `<div class="lp-pie"><span class="lp-ctx">${pie}</span>`
-          + (ref ? `<button type="button" class="lp-ficha" data-ficha="inv::${esc(ref)}">Ficha <span class="ar">→</span></button>` : '')
-          + `</div>`;
-
   } else if(sc === true){
-    const cer = _masCercana(latlng, GF);
-    html += `<div class="lp-cat" style="color:#00838f"><span class="lp-dot" style="background:#00838f"></span>Suelo de Conservación</div>
-      <div class="lp-nom sm">Sin área decretada en este punto</div>
-      ${cer ? `<div class="lp-mas">Más cercana · <b>${esc(cer.nombre)}</b> a ${_fmtDist(cer.d)}</div>` : ''}
-      <div class="lp-pie"><span class="lp-ctx">${pie}</span>`
-      + (cer ? `<button type="button" class="lp-ficha" data-ficha="inv::${esc(cer.nombre)}">Ficha <span class="ar">→</span></button>` : '')
-      + `</div>`;
-
+    const cer = _masCercana(latlng, (typeof GEOMETRIES!=='undefined' && GEOMETRIES && GEOMETRIES.features)||[]);
+    html += `<div class="lp-cat"><span class="lp-dot" style="background:#00838f"></span>Suelo de Conservación</div>
+      <div class="lp-nom">Dentro del Suelo de Conservación</div>
+      <div class="lp-mas">Sin área decretada en este punto</div>
+      ${cer ? `<div class="lp-pie"><span class="lp-ctx">${esc(pie)} · más cercana a ${_fmtDist(cer.d)}</span>
+        <button type="button" class="lp-ficha" data-ficha="inv::${esc(cer.nombre)}">${esc(cer.nombre.length>18?cer.nombre.slice(0,17)+'…':cer.nombre)} <span class="ar">→</span></button></div>`
+        : `<div class="lp-pie"><span class="lp-ctx">${esc(pie)}</span></div>`}`;
   } else {
-    const cer = _masCercana(latlng, GF);
-    html += `<div class="lp-cat gris"><span class="lp-dot" style="background:#8a8d8f"></span>Sin protección ambiental</div>`;
+    const cer = _masCercana(latlng, (typeof GEOMETRIES!=='undefined' && GEOMETRIES && GEOMETRIES.features)||[]);
+    html += `<div class="lp-cat gris"><span class="lp-dot" style="background:#8a8d8f"></span>Sin área decretada</div>`;
     if(cer){
-      html += `<div class="lp-nom sm">El punto no cae en área decretada ni en Suelo de Conservación</div>
-        <div class="lp-mas">Más cercana · <b>${esc(cer.nombre)}</b> a ${_fmtDist(cer.d)}</div>
-        <div class="lp-pie"><span class="lp-ctx">${pie}</span>
+      html += `<div class="lp-nom sm">Lo más cercano: ${esc(cer.nombre)}</div>
+        <div class="lp-mas">${esc(cer.grupo||'')} · a ${_fmtDist(cer.d)}</div>
+        <div class="lp-pie"><span class="lp-ctx">${esc(pie)}</span>
           <button type="button" class="lp-ficha" data-ficha="inv::${esc(cer.nombre)}">Ficha <span class="ar">→</span></button></div>`;
     } else {
-      html += `<div class="lp-pie"><span class="lp-ctx">${pie}</span></div>`;
+      html += `<div class="lp-pie"><span class="lp-ctx">${esc(pie)}</span></div>`;
     }
   }
   return html + '</div>';
@@ -5029,28 +4901,6 @@ function cargarGooglePlaces(){
 /* Sesgo a la CDMX: mismas coordenadas que ya usa el buscador de Nominatim */
 const _CDMX_BOUNDS = { west:-99.366, south:19.045, east:-98.940, north:19.593 };
 
-/* Ambito de busqueda de direcciones: la CDMX y sus dos entidades colindantes.
-   El inventario termina en el limite estatal (10 areas lo cruzan, 1,236.6 ha
-   quedan fuera), asi que restringir a la CDMX dejaria ciego a quien verifica
-   linderos desde el otro lado. Se usa locationRestriction (regla dura) en vez
-   de locationBias (mera preferencia): son mutuamente excluyentes.
-   El rectangulo roza Hidalgo, Puebla, Tlaxcala, Queretaro, Michoacan y
-   Guerrero, asi que el recorte fino lo hace _entidadDeTexto en el navegador:
-   sin llamadas adicionales y sin costo. */
-const _AMBITO_BOUNDS = { west:-100.62, south:18.32, east:-98.55, north:20.30 };
-const _AMBITO_ORDEN  = { 'CDMX':0, 'Estado de México':1, 'Morelos':2 };
-function _entidadDeTexto(txt){
-  const t = String(txt || '');
-  if(/\bCDMX\b|Ciudad de M[eé]xico|Distrito Federal/i.test(t))            return 'CDMX';
-  if(/\bMor\.?\s*,|\bMorelos\b/i.test(t))                                 return 'Morelos';
-  if(/\bM[eé]x\.?\s*,|Estado de M[eé]xico|\bEdo\.?\s*de\s*M[eé]x/i.test(t)) return 'Estado de México';
-  return null;   // fuera del ambito: se descarta
-}
-/* Origen para calcular distancias en las sugerencias (gratis: viene en la
-   propia prediccion cuando se manda origin) y domicilio de la ultima
-   direccion resuelta, para mostrar colonia y CP en el panel de resultado. */
-let _ubicarOrigen = null;
-
 /* Sugerencias de dirección · una sola implementación para los mapas y la barra
    «¿Dónde estoy?». El session token agrupa tecleo + selección en un solo cobro. */
 let _sesionPlaces = null;
@@ -5062,27 +4912,16 @@ async function siaSugerirDirecciones(q){
     const { AutocompleteSuggestion, AutocompleteSessionToken } =
       await google.maps.importLibrary('places');
     if(!_sesionPlaces) _sesionPlaces = new AutocompleteSessionToken();
-    const peticion = {
-      input: q, sessionToken: _sesionPlaces, locationRestriction: _AMBITO_BOUNDS,
+    const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+      input: q, sessionToken: _sesionPlaces, locationBias: _CDMX_BOUNDS,
       includedRegionCodes: ['mx'], language: 'es-MX'
-    };
-    if(_ubicarOrigen) peticion.origin = _ubicarOrigen;   // habilita distanceMeters
-    const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions(peticion);
-    return (suggestions||[]).map(sg=>{
-      const pp  = sg.placePrediction;
-      const sec = (pp.secondaryText && pp.secondaryText.text) || '';
-      const ent = _entidadDeTexto(sec) || _entidadDeTexto((pp.text && pp.text.text) || '');
-      return { place: pp, ent,
+    });
+    return (suggestions||[]).slice(0,5).map(sg=>{
+      const pp = sg.placePrediction;
+      return { place: pp,
         principal: (pp.mainText && pp.mainText.text) || (pp.text && pp.text.text) || '',
-        /* El sufijo ", CDMX, México" es ruido en el 100% de los casos */
-        secundario: sec.replace(/,\s*(CDMX|M[eé]x\.|Mor\.)\s*,\s*M[eé]xico\s*$/i,'')
-                       .replace(/,\s*M[eé]xico\s*$/i,''),
-        d: (typeof pp.distanceMeters === 'number') ? pp.distanceMeters : null };
-    })
-    .filter(x => x.principal && x.ent)                    // fuera del ambito: se descarta
-    .sort((a,b) => (_AMBITO_ORDEN[a.ent] - _AMBITO_ORDEN[b.ent])
-                   || ((a.d == null ? 1e9 : a.d) - (b.d == null ? 1e9 : b.d)))
-    .slice(0,5);
+        secundario: (pp.secondaryText && pp.secondaryText.text) || '' };
+    }).filter(x=>x.principal);
   }catch(err){
     console.warn('[Buscador] Google Places no disponible:', err && err.message);
     return [];
@@ -5092,21 +4931,9 @@ async function siaSugerirDirecciones(q){
 /* Resuelve una sugerencia de Places a coordenadas */
 async function siaResolverLugar(pred){
   const place = pred.toPlace();
-  /* addressComponents es tarifa Essentials, la misma que location y
-     formattedAddress: colonia y CP no cambian de escalon de cobro.
-     displayName si subiria a Pro, por eso no se pide. */
-  await place.fetchFields({fields:['location','formattedAddress','addressComponents']});
+  await place.fetchFields({fields:['location','formattedAddress']});
   const loc = place.location;
   siaCerrarSesionPlaces();
-  const comp = place.addressComponents || [];
-  const buscar = (...tipos)=>{
-    const c = comp.find(x => (x.types||[]).some(t => tipos.indexOf(t) >= 0));
-    return c ? (c.longText || c.shortText || '') : '';
-  };
-  _ubicarDomicilio = {
-    cp:      buscar('postal_code'),
-    colonia: buscar('neighborhood','sublocality_level_1','sublocality')
-  };
   return { lat: loc.lat(), lng: loc.lng(), etiqueta: place.formattedAddress || '' };
 }
 
@@ -5738,14 +5565,6 @@ function initUbicarBar(){
   document.addEventListener('click', e=>{
     if(!e.target.closest('#ubicarBar')) sug.hidden = true;
   });
-  /* Ctrl+K / Cmd+K enfoca la franja: en escritorio es la unica via de entrada */
-  document.addEventListener('keydown', e=>{
-    if((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')){
-      e.preventDefault();
-      inp.focus(); inp.select();
-      try{ document.getElementById('ubicarBar').scrollIntoView({block:'nearest'}); }catch(_){}
-    }
-  });
 
   inp.addEventListener('input', ()=>{
     const q = inp.value.trim();
@@ -5781,10 +5600,8 @@ function pintarUbicarSug(locales, direcciones){
       `<div class="item" data-local="${i}"><span class="sw" style="background:${esc(x.color)}"></span>${esc(x.nombre)}<span class="meta">${esc(x.sub||'')}</span></div>`).join('');
   }
   if(direcciones.length){
-    html += '<div class="res-group">Direcciones · CDMX · Méx. · Mor.</div>' + direcciones.map((d,i)=>
-      `<div class="item dir${d.ent && d.ent !== 'CDMX' ? ' ext' : ''}" data-dir="${i}">
-         <span class="rt">${d.ent ? _entChip(d.ent) : ''}${d.d != null ? `<span class="dist">${_fmtDist(d.d)}</span>` : ''}</span>
-         ${esc(d.principal)}<span class="meta">${esc(d.secundario||'')}</span></div>`).join('');
+    html += '<div class="res-group">Direcciones</div>' + direcciones.map((d,i)=>
+      `<div class="item" data-dir="${i}">${esc(d.principal)}<span class="meta">${esc(d.secundario||'')}</span></div>`).join('');
   }
   if(!html){ sug.hidden = true; return; }
   sug.innerHTML = html; sug.hidden = false;
@@ -5818,7 +5635,7 @@ function ubicarDesdeTexto(txt){
   const q = String(txt||'').trim();
   if(!q) return;
   const c = parseCoordsSia(q);
-  if(c){ _ubicarDomicilio = null; ubicarResolver(c, null, null); return; }
+  if(c){ ubicarResolver(c, null, null); return; }
   const loc = _buscarLocal(q);
   if(loc.length){
     const x = loc[0];
@@ -5844,7 +5661,6 @@ function ubicarPorGPS(){
   btn.disabled = true; if(span) span.textContent = 'Ubicando…';
   navigator.geolocation.getCurrentPosition(pos=>{
     btn.disabled = false; if(span) span.textContent = txt;
-    _ubicarDomicilio = null;                       // el punto no viene de una direccion
     ubicarResolver({lat:pos.coords.latitude, lng:pos.coords.longitude}, pos.coords.accuracy, null);
   }, err=>{
     btn.disabled = false; if(span) span.textContent = txt;
@@ -5859,7 +5675,6 @@ async function ubicarResolver(latlng, precision, etiqueta){
   sec.innerHTML = '<div class="panel"><div class="ubi-cargando">Consultando capas…</div></div>';
   sec.scrollIntoView({behavior:'smooth', block:'start'});
   await _cargarCapasCobertura();
-  _ubicarOrigen = { lat: latlng.lat, lng: latlng.lng };   // habilita distancias en las sugerencias
   sec.innerHTML = renderUbicarResultado(latlng, precision, etiqueta);
   const cerrar = document.getElementById('ubicarCerrar');
   if(cerrar) cerrar.addEventListener('click', ()=>{ sec.hidden = true; sec.innerHTML=''; if(ubicarMap){ try{ubicarMap.remove();}catch(e){} ubicarMap=null; } });
@@ -5874,50 +5689,19 @@ function renderUbicarResultado(latlng, precision, etiqueta){
   const covs = _coberturasEn(latlng);
   const cerca = d => (acc && isFinite(d) && d < acc);
 
-  const ent    = _entidadEn(latlng);
-  const enCDMX = ent === 'CDMX';
-  const GF     = (typeof GEOMETRIES!=='undefined' && GEOMETRIES && GEOMETRIES.features) || [];
-  const dom    = _ubicarDomicilio;
-
-  /* Contexto en dos lineas: administrativa arriba, geodesica abajo.
-     Colonia y CP solo existen cuando el punto vino de una direccion. */
-  const sep = '&nbsp;&nbsp;·&nbsp;&nbsp;';
-  const ctx = [ enCDMX ? (alc || 'Ciudad de México') : 'Fuera de la CDMX',
-                dom && dom.colonia ? 'Col. ' + dom.colonia : null,
-                dom && dom.cp      ? 'CP ' + dom.cp        : null ]
-              .filter(Boolean).map(esc).join(sep)
-            + ' ' + _entChip(ent) + '<br>'
-            + [coord, acc ? `± ${acc} m` : null].filter(Boolean).join(sep);
+  /* Una sola línea de contexto: no merece una tabla */
+  const ctx = [alc || 'Fuera de la CDMX', coord, acc ? `± ${acc} m` : null]
+              .filter(Boolean).join('&nbsp;&nbsp;·&nbsp;&nbsp;');
 
   let cabeza, cuerpo = '';
 
   if(covs.length){
-    const c     = covs[0];
-    const lim   = _limitrofeDe(c.nombre);
-    const esLim = !!(lim && lim.clase === 'cruza');
-    cabeza = !enCDMX
-      ? 'Dentro del polígono, fuera de la CDMX'
-      : (covs.length === 1 ? 'Estás dentro de' : `Estás dentro de ${covs.length} áreas`);
-
-    let aviso = '';
-    if(!enCDMX){
-      /* CASO 1 · el punto cae en la porcion del poligono que esta en otra entidad */
-      aviso = `<div class="ubi-warn"><b>El punto está en territorio de ${esc(ent)}.</b> `
-            + (esLim ? `El ${lim.pct_fuera}% de esta área (${lim.ha_fuera} ha) queda fuera de la CDMX. ` : '')
-            + `La atribución de competencia no es automática: verifica el instrumento aplicable.</div>`;
-    } else if(esLim){
-      /* CASO 2 · dentro y del lado correcto; el poligono continua afuera */
-      aviso = `<div class="ubi-warn">Área limítrofe: ${lim.ha_fuera} ha del polígono se extienden a `
-            + `${esc(lim.entidad || 'otra entidad')}. Este punto sí está en la CDMX.</div>`;
-    } else if(cerca(c.borde)){
-      aviso = `<div class="ubi-warn">A ${Math.round(c.borde)} m del límite · dentro del margen de error del GPS</div>`;
-    }
-
+    const c = covs[0];
+    cabeza = covs.length === 1 ? 'Estás dentro de' : `Estás dentro de ${covs.length} áreas`;
     cuerpo += `<div class="ubi-main" style="--c:${esc(c.color)}">
-      <div class="ubi-main-cat"><span class="ubi-dot"></span>${esc(c.tag)}`
-      + (esLim ? ' <span class="lim">Limítrofe</span>' : '') + `</div>
+      <div class="ubi-main-cat"><span class="ubi-dot"></span>${esc(c.tag)}</div>
       <div class="ubi-main-nom">${esc(c.nombre)}</div>
-      ${aviso}
+      ${cerca(c.borde) ? `<div class="ubi-warn">A ${Math.round(c.borde)} m del límite · dentro del margen de error del GPS</div>` : ''}
       <button type="button" class="ubi-ficha" data-ficha="${esc(c.ficha)}">Ver ficha completa <span class="ar">→</span></button>
     </div>`;
 
@@ -5939,34 +5723,8 @@ function renderUbicarResultado(latlng, precision, etiqueta){
       }
       cuerpo += '</div>';
     }
-  } else if(!enCDMX){
-    /* CASOS 3 y 4 · fuera del ambito territorial de la Secretaria */
-    const limc = _limitrofeCerca(latlng, 500);
-    const cer  = _masCercana(latlng, GF);
-    cabeza = 'Fuera del ámbito de la CDMX';
-    cuerpo += `<div class="ubi-main ubi-vacio" style="--c:#8a8d8f">
-      <div class="ubi-main-cat"><span class="ubi-dot"></span>Otra entidad federativa</div>
-      <div class="ubi-main-nom">El punto está en ${esc(ent)}</div>
-      <div class="ubi-warn">La competencia de la Secretaría no alcanza este punto. Verifica con la autoridad estatal.</div>
-    </div>`;
-    if(limc){
-      /* CASO 3 · hay un area cuyo poligono si cruza el limite a menos de 500 m */
-      cuerpo += `<div class="ubi-lista">
-        <div class="ubi-item" style="--c:${esc((typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[limc.grupo])||'#b28e5c')}">
-          <span class="ubi-dot"></span>
-          <span class="ubi-item-txt"><b>${esc(limc.nombre)}</b><span>Limítrofe · a ${_fmtDist(limc.d)} · ${limc.lim.ha_fuera} ha en ${esc(limc.lim.entidad||'esta entidad')}</span></span>
-          <button type="button" class="ubi-mini" data-ficha="inv::${esc(limc.nombre)}" aria-label="Ver ficha">→</button>
-        </div></div>`;
-    } else if(cer){
-      cuerpo += `<div class="ubi-lista">
-        <div class="ubi-item" style="--c:${esc((typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[cer.grupo])||'#8a8d8f')}">
-          <span class="ubi-dot"></span>
-          <span class="ubi-item-txt"><b>${esc(cer.nombre)}</b><span>Más cercana · ${esc(cer.grupo||'')} · a ${_fmtDist(cer.d)}</span></span>
-          <button type="button" class="ubi-mini" data-ficha="inv::${esc(cer.nombre)}" aria-label="Ver ficha">→</button>
-        </div></div>`;
-    }
   } else {
-    const cer = _masCercana(latlng, GF);
+    const cer = _masCercana(latlng, (typeof GEOMETRIES!=='undefined' && GEOMETRIES && GEOMETRIES.features)||[]);
     if(sc === true){
       cabeza = 'Suelo de Conservación';
       cuerpo += `<div class="ubi-main" style="--c:#00838f">
