@@ -9,22 +9,44 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-08-22n';
+const CACHE_VERSION = 'sia-v35-2026-08-25a';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
-/* Recursos críticos: pre-cacheados al instalar el SW */
+/* Recursos críticos: lo mínimo para que la app arranque y se vea.
+   La vista por defecto es la tabla del inventario, que no necesita geometrías. */
 const CORE_ASSETS = [
   './',
   './index.html',
   './SIA_LOGO-03.png',
+  './favicon.png'
+];
+
+/* Capas que sí conviene tener offline, pero que no deben bloquear el install ni
+   competir por ancho de banda con el primer render. Se precachean en segundo plano
+   cuando el hilo está ocioso. suelo_conservacion.geojson salió de aquí: index.html
+   ya lo pide al arrancar y la estrategia same-origin lo deja cacheado igual —
+   estaba descargándose dos veces en cada primera visita.
+   sipam_fao, arcac, embarcaderos y traslapes siguen siendo bajo demanda. */
+const DEFERRED_ASSETS = [
   './data/geometrias.geojson',
   './data/zona_patrimonio.geojson',
-  './data/alcaldias.geojson',
-  './data/suelo_conservacion.geojson'
-  // Nota: sipam_fao, arcac, embarcaderos y traslapes NO se precachean (se cargan bajo
-  // demanda al abrir su pestaña y quedan en caché runtime tras la primera visita)
+  './data/alcaldias.geojson'
 ];
+
+/* Precache diferido: no forma parte del waitUntil del install, así que el SW queda
+   activo de inmediato y estos 380 KB viajan cuando ya no estorban. */
+function precacheDiferido(){
+  const arranque = () => caches.open(CACHE_VERSION).then(cache =>
+    Promise.all(DEFERRED_ASSETS.map(url =>
+      cache.match(url).then(hit => hit ? null :
+        cache.add(url).catch(err => console.warn('[SW] Diferido, no se pudo cachear:', url, err))
+      )
+    ))
+  );
+  if(typeof requestIdleCallback === 'function') requestIdleCallback(arranque, {timeout:15000});
+  else setTimeout(arranque, 3000);
+}
 
 /* === INSTALL: pre-cachear assets críticos === */
 self.addEventListener('install', event => {
@@ -35,7 +57,7 @@ self.addEventListener('install', event => {
           cache.add(url).catch(err => console.warn('[SW] No se pudo cachear:', url, err))
         )
       );
-    }).then(() => self.skipWaiting())
+    }).then(() => { precacheDiferido(); return self.skipWaiting(); })
   );
 });
 

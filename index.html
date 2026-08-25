@@ -8,29 +8,46 @@
 <!-- Metadatos institucionales -->
 <meta name="description" content="Sistema de Información Ambiental de la CDMX. Dashboard institucional de las 66 Áreas Naturales Protegidas, Áreas de Valor Ambiental y Zonas Comunitarias de Conservación Ecológica del territorio capitalino.">
 <meta name="author" content="Secretaría del Medio Ambiente · Gobierno de la Ciudad de México">
-<meta name="theme-color" content="var(--guinda)">
+<meta name="theme-color" content="#9d2148">
 <meta name="robots" content="index,follow">
 
 <!-- Favicon institucional -->
-<link rel="icon" type="image/png" href="./SIA_LOGO-03.png">
-<link rel="apple-touch-icon" href="./SIA_LOGO-03.png">
+<link rel="icon" type="image/png" href="./favicon.png">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
 
 <!-- Open Graph (vista previa al compartir) -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="Dashboard · Categorías de Protección Ambiental · SEDEMA CDMX">
 <meta property="og:description" content="Sistema institucional de las 66 áreas protegidas de la Ciudad de México: ANP, AVA y ZCEC.">
-<meta property="og:image" content="https://sedemaoficina.github.io/categorias-de-proteccion-ambiental/SIA_LOGO-03.png">
+<meta property="og:image" content="https://sedemaoficina.github.io/categorias-de-proteccion-ambiental/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="https://sedemaoficina.github.io/categorias-de-proteccion-ambiental/">
 <meta property="og:locale" content="es_MX">
 <meta property="og:site_name" content="SIA · SEDEMA CDMX">
 
+<!-- Twitter Card · vista previa al compartir en X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Dashboard · Categorías de Protección Ambiental · SEDEMA CDMX">
+<meta name="twitter:description" content="Sistema institucional de las 66 áreas protegidas de la Ciudad de México: ANP, AVA y ZCEC.">
+<meta name="twitter:image" content="https://sedemaoficina.github.io/categorias-de-proteccion-ambiental/og-image.png">
+
+<link rel="canonical" href="https://sedemaoficina.github.io/categorias-de-proteccion-ambiental/">
+
+<!-- Política de seguridad de contenido · defensa en profundidad.
+     No mitiga XSS (el sitio es HTML+CSS+JS inline sin build, obliga a unsafe-inline),
+     pero acota a qué dominios puede hablar la página y bloquea <base> y plugins.
+     frame-ancestors se omite a propósito: los navegadores lo ignoran cuando llega por
+     <meta> y solo ensucia la consola; para impedir el embebido hace falta cabecera HTTP. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://docs.google.com https://googleusercontent.com https://*.googleusercontent.com https://maps.googleapis.com https://places.googleapis.com https://nominatim.openstreetmap.org https://*.basemaps.cartocdn.com https://cartodb-basemaps-a.global.ssl.fastly.net https://server.arcgisonline.com; object-src 'none'; base-uri 'none'">
+
 <!-- DNS prefetch para CDNs externas -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cabin:wght@500;600;700&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <!-- DNS prefetch para CDNs y tiles de mapa -->
-<link rel="dns-prefetch" href="https://unpkg.com">
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
 <link rel="dns-prefetch" href="https://cartodb-basemaps-a.global.ssl.fastly.net">
 <link rel="dns-prefetch" href="https://server.arcgisonline.com">
 
@@ -40,6 +57,7 @@
 <style>
   :root{
     /* Paleta oficial · Gobierno de la Ciudad de México */
+    --font-titulo:'Cabin','Roboto',sans-serif;  /* Identidad: Cabin para títulos */
     --guinda:#9d2148;   /* Pantone 7420 C — institucional primario */
     --dorado:#b28e5c;   /* Pantone 465 C — institucional primario (uso gráfico) */
     --dorado-text:#7a5d35;  /* Variante oscura para texto (contraste 5.6:1 sobre crema, AA) */
@@ -128,9 +146,10 @@
   header.top{display:flex;align-items:center;justify-content:space-between;gap:26px;padding:6px 0 14px;border-bottom:2px solid var(--guinda);margin-bottom:16px}
   .brand{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0;max-width:780px}
   /* .eyebrow eliminada en v34 — el span se removió del header en v33 */
-  h1{font-family:'Roboto',sans-serif;font-weight:900;font-size:var(--fs-hero);line-height:1.1;letter-spacing:-.02em;color:var(--ink);max-width:900px}
+  h1{font-family:var(--font-titulo);font-weight:700;font-size:var(--fs-hero);line-height:1.1;letter-spacing:-.02em;color:var(--ink);max-width:900px}
   h1 em{font-style:normal;color:var(--guinda);font-weight:900}
-  .sub{color:var(--ink-2);margin-top:10px;font-size:var(--fs-md);font-weight:400}
+  .sub{color:var(--ink-2);margin-top:6px;margin-bottom:0;font-size:var(--fs-md);font-weight:400;text-wrap:balance}
+  @media (min-width:1100px){ .sub{white-space:nowrap} }
   .meta{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:right;letter-spacing:.05em;line-height:1.8}
   .meta b{color:var(--guinda);font-weight:500}
 
@@ -632,10 +651,17 @@
   .toolbar{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:14px;display:grid;grid-template-columns:1.4fr .7fr .8fr 1fr 1fr .9fr .7fr 1fr auto;gap:8px;align-items:end;margin-bottom:14px;box-shadow:var(--shadow)}
   .toolbar .lab{font-size:var(--fs-micro);letter-spacing:.06em}
   .toolbar select,.toolbar input{font-size:var(--fs-sm);padding:7px 8px}
+  /* Visible solo para lectores de pantalla (captions de tabla, etiquetas de contexto) */
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+  .skip-link{position:absolute;left:-9999px;top:0;z-index:var(--z-toast,100000);background:var(--guinda);color:#fff;padding:10px 18px;font-family:'Roboto',sans-serif;font-size:var(--fs-base);border-radius:0 0 var(--radius) 0;text-decoration:none}
+  .skip-link:focus{left:0}
   .toolbar label{display:flex;flex-direction:column;gap:4px}
   .lab{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
   input[type=search],select{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:9px 11px;font-family:'Roboto',sans-serif;font-size:var(--fs-md);color:var(--ink);outline:none;transition:border-color .15s;width:100%}
   input[type=search]:focus,select:focus{border-color:var(--guinda)}
+  /* El indicador de foco de estos controles era un borde de 1px, el más débil de la
+     interfaz, justo en los controles más usados. Se alinea con el resto del sitio. */
+  input[type=search]:focus-visible,select:focus-visible{outline:2px solid var(--guinda);outline-offset:1px}
   .btn{background:var(--guinda);color:var(--crema);border:none;border-radius:var(--radius);padding:0 16px;font-family:'Roboto',sans-serif;font-weight:500;font-size:var(--fs-base);letter-spacing:.02em;cursor:pointer;transition:background .15s;height:38px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
   .btn:hover{background:#7a1a37}
   .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
@@ -1272,6 +1298,13 @@
   .sia-footer-text{color:var(--guinda);font-weight:600}
   .sia-footer-text-2{color:var(--ink-2);font-weight:400}
   .sia-footer-sep{color:var(--line);font-weight:300}
+  /* Procedencia del dato · exigencia de gobierno digital: fuente, corte, unidad
+     responsable, carácter no vinculante y vía de contacto ciudadano. */
+  .sia-proc{max-width:900px;margin:0 auto 18px;padding:0 20px;display:flex;flex-direction:column;gap:8px;font-family:'Roboto',sans-serif;font-size:var(--fs-xs);line-height:1.55;color:var(--ink-2);text-align:center}
+  .sia-proc p{margin:0}
+  .sia-proc b{color:var(--ink);font-weight:500}
+  .sia-proc-aviso{border-left:3px solid var(--dorado);background:var(--warn-bg,rgba(178,142,92,.08));padding:10px 14px;text-align:left;border-radius:0 var(--radius) var(--radius) 0}
+  .sia-proc-contacto a{color:var(--guinda);font-weight:500}
 
   /* ============================================================
    * E3 · INDICADOR DE ESTADO DE CONEXIÓN (Service Worker)
@@ -1323,12 +1356,14 @@
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main-content">Saltar al contenido principal</a>
 <div class="wrap">
   <header class="top">
     <img src="./SIA_LOGO-03.png" alt="Gobierno de la Ciudad de México · Secretaría del Medio Ambiente · Sistema de Información Ambiental" class="logo-inst">
     <span class="brand-divider" aria-hidden="true"></span>
     <div class="brand">
       <h1>Dashboard de Categorías de <em>Protección Ambiental</em></h1>
+      <p class="sub">Secretaría del Medio Ambiente (SEDEMA) · Gobierno de la Ciudad de México</p>
     </div>
     <div class="meta">
       <div>REGISTROS · <b id="metaCount">—</b></div>
@@ -1351,12 +1386,13 @@
       </button>
       <div class="ubicar-input-wrap">
         <input type="text" id="ubicarInput" autocomplete="off"
+               role="combobox" aria-expanded="false" aria-controls="ubicarSug" aria-autocomplete="list"
                placeholder="Dirección, coordenadas (lat, lng) o nombre de área…"
                aria-label="Dirección, coordenadas o nombre de área">
         <button type="button" class="ubicar-go" id="ubicarGo" aria-label="Buscar">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         </button>
-        <div class="ubicar-sugerencias" id="ubicarSug" hidden></div>
+        <div class="ubicar-sugerencias" id="ubicarSug" role="listbox" aria-label="Sugerencias" hidden></div>
       </div>
     </div>
     <span class="ubicar-kbd" aria-hidden="true">Ctrl K</span>
@@ -1380,7 +1416,7 @@
       <div class="btn-group"><button class="btn ghost" id="btnReset">Limpiar</button><button class="btn" id="btnExport">↓ CSV</button></div>
     </div>
     <div class="counter-row">
-      <span>Mostrando <b id="showCount">0</b> de <b id="totalCount">0</b> registros · Suma filtrada: <b id="sumFiltered">0</b> ha</span>
+      <span id="counterLive" aria-live="polite" aria-atomic="true">Mostrando <b id="showCount">0</b> de <b id="totalCount">0</b> registros · Suma filtrada: <b id="sumFiltered">0</b> ha</span>
       <span id="sortInfo">Orden · Nombre ↑</span>
     </div>
     <div class="tip-row">
@@ -1389,6 +1425,7 @@
     </div>
     <div class="table-wrap"><div class="table-scroll">
       <table class="t">
+        <caption class="sr-only">Inventario de áreas protegidas de la Ciudad de México · filtrable por tipo, jurisdicción, subcategoría, alcaldía, programa de manejo, suelo de conservación y dirección general responsable</caption>
         <thead class="t-head"><tr>
           <th scope="col" data-k="nombre">Nombre <span class="arrow">▲</span></th>
           <th scope="col" data-k="tipo">Tipo <span class="arrow">▲</span></th>
@@ -1414,6 +1451,19 @@
 
   <!-- Footer institucional · siempre visible -->
   <footer class="sia-footer" role="contentinfo">
+    <div class="sia-proc">
+      <p><b>Fuente:</b> Secretaría del Medio Ambiente (SEDEMA), Gobierno de la Ciudad de México ·
+         <b>Unidad responsable:</b> Dirección General del Sistema de Áreas Naturales Protegidas y
+         Áreas de Valor Ambiental (DGSANPAVA) ·
+         <b>Última consulta al inventario:</b> <span id="footerCorte">—</span></p>
+      <p class="sia-proc-aviso">Los límites, superficies y demás datos que se muestran tienen fines
+         informativos y de consulta; no constituyen deslinde catastral ni sustituyen los decretos,
+         programas de manejo u otros instrumentos jurídicos vigentes, que prevalecen en caso de
+         discrepancia. Las superficies calculadas a partir de la cartografía pueden diferir de la
+         superficie decretada.</p>
+      <p class="sia-proc-contacto">¿Encontraste un dato desactualizado o un error?
+         <a href="mailto:CORREO_INSTITUCIONAL@sedema.cdmx.gob.mx">Repórtalo a SEDEMA</a>.</p>
+    </div>
     <div class="sia-footer-inner">
       <span class="sia-footer-text">Sistema de Información Ambiental · Secretaría del Medio Ambiente</span>
       <span class="sia-footer-sep">·</span>
@@ -1686,7 +1736,7 @@ const LEGAL = {
   instrumentoFederal: {
     nombre: "Ley General del Equilibrio Ecológico y la Protección al Ambiente",
     abreviatura: "LGEEPA",
-    publicacion: "Cámara de Diputados del H. Congreso de la Unión",
+    publicacion: "Diario Oficial de la Federación · 28 de enero de 1988",
     ultimaReforma: "Última reforma publicada en el DOF el 19 de enero de 2026",
     alcance: "Regula las ANP de jurisdicción federal (fracciones I a VIII y XI del Art. 46). Concurre con la LACM cuando el GCDMX administra ANP de competencia federal conforme al Art. 136 LACM. Establece el marco nacional al que se ajustan las legislaciones locales en materia de áreas naturales protegidas.",
     url: "data/normativa/LGEEPA_Ley_General_Equilibrio_Ecologico.pdf",
@@ -1909,8 +1959,11 @@ function tabSubtitle(g, compact){
     : `${subset.length} REG · ${fmt(ha)} HA`;
 }
 
-function tabHTML(g, compact){
-  return `<button class="tab ${g.cls||''} ${state.tab===g.id?'active':''}" data-id="${g.id}" aria-label="Ver ${g.label}" title="${g.label}">
+function tabHTML(g, compact, comoItemDeMenu){
+  /* aria-current comunica la pestaña activa a los lectores de pantalla: antes el
+     único indicador era el color de fondo, invisible para tecnología asistiva. */
+  const rol = comoItemDeMenu ? ' role="menuitem"' : '';
+  return `<button class="tab ${g.cls||''} ${state.tab===g.id?'active':''}" data-id="${g.id}"${rol} aria-current="${state.tab===g.id?'true':'false'}" aria-label="Ver ${g.label}" title="${g.label}">
       <span class="tab-icon" aria-hidden="true">${TAB_ICONS[g.id]||''}</span>
       <span class="tab-content">
         <span class="tab-name">${g.label}</span>
@@ -1922,9 +1975,15 @@ function tabHTML(g, compact){
 function closeMoreMenu(){
   const mw = document.getElementById('moreWrap');
   if(!mw || !mw.classList.contains('open')) return;
+  /* Si el foco estaba dentro del menú, hay que devolverlo al botón que lo abrió:
+     de lo contrario queda huérfano en el documento y el usuario pierde su lugar. */
+  const teniaFoco = mw.contains(document.activeElement);
   mw.classList.remove('open');
   const mb = document.getElementById('moreBtn');
-  if(mb) mb.setAttribute('aria-expanded','false');
+  if(mb){
+    mb.setAttribute('aria-expanded','false');
+    if(teniaFoco){ try{ mb.focus(); }catch(_){} }
+  }
 }
 
 function buildTabs(){
@@ -1943,7 +2002,7 @@ function buildTabs(){
           <span class="tab-num">${activeSec ? tabSubtitle(activeSec,true) : '3 MÓDULOS'}</span>
         </span>
       </button>
-      <div class="more-menu" id="moreMenu" role="menu">${secondary.map(g=>tabHTML(g,false)).join('')}</div>
+      <div class="more-menu" id="moreMenu" role="menu">${secondary.map(g=>tabHTML(g,false,true)).join('')}</div>
     </div>`;
   const mb = document.getElementById('moreBtn');
   if(mb) mb.addEventListener('click', ev=>{
@@ -2939,7 +2998,7 @@ function renderLegalDashboard(){
     <div class="panel" style="border-left:3px solid var(--azul)">
       <div class="panel-title" style="color:var(--azul)">Áreas Naturales Protegidas de competencia federal</div>
       <h3>Marco normativo <em>federal</em> aplicable en CDMX</h3>
-      <p class="panel-intro" style="margin-bottom:18px">Las ANP de competencia federal ubicadas dentro del territorio de la Ciudad de México se rigen por la <b>LGEEPA</b> y son administradas por la <b>CONANP</b>. La Ciudad de México coadyuva en su administración mediante el Convenio Marco vigente.</p>
+      <p class="panel-intro" style="margin-bottom:18px">Las ANP de competencia federal ubicadas dentro del territorio de la Ciudad de México se rigen por la <b>LGEEPA</b> y son administradas por la <b>CONANP</b> (Comisión Nacional de Áreas Naturales Protegidas). La Ciudad de México coadyuva en su administración mediante el Convenio Marco vigente.</p>
 
       <!-- 3.1 LGEEPA -->
       <div class="anp-fed-card">
@@ -2980,7 +3039,7 @@ function renderLegalDashboard(){
         <div class="norma-header">
           <div class="norma-header-left">
             <h4 style="font-family:'Roboto',sans-serif;font-size:var(--fs-xl);font-weight:700;color:var(--ink);margin:0 0 8px;letter-spacing:-.01em">Convenio Marco SEMARNAT–CONANP–CDMX 2025</h4>
-            <p style="color:var(--ink-2);font-size:var(--fs-base);line-height:1.6;margin:0">Suscrito el <b>10 de marzo de 2025</b> entre el Ejecutivo Federal, a través de SEMARNAT por conducto de la CONANP, y el Gobierno de la Ciudad de México, a través de la SEDEMA. <b>Vigencia hasta el 30 de septiembre de 2030</b>.</p>
+            <p style="color:var(--ink-2);font-size:var(--fs-base);line-height:1.6;margin:0">Suscrito el <b>10 de marzo de 2025</b> entre el Ejecutivo Federal, a través de la <b>SEMARNAT</b> (Secretaría de Medio Ambiente y Recursos Naturales) por conducto de la CONANP, y el Gobierno de la Ciudad de México, a través de la SEDEMA. <b>Vigencia hasta el 30 de septiembre de 2030</b>.</p>
           </div>
           <div class="norma-header-right">
             <a class="btn-pdf btn-pdf-federal" href="data/normativa/CONVENIO_SEMARNAT-CONANP-CDMX_2025.pdf" download>
@@ -3330,6 +3389,14 @@ function loadAlcaldiasData(){
 let ALCALDIAS_EMBEDDED = { type:'FeatureCollection', features:[] };
 
 /* Colores institucionales por grupo para el mapa global */
+/* Colores semánticos que viven en JS porque los consumen Leaflet y Canvas,
+   donde var(--token) no se resuelve. Una sola fuente de verdad por concepto:
+   antes había 3 azules casi idénticos y 4 grises sin relación entre sí. */
+const COL_GRIS_NEUTRO = '#8a8d8f';  /* sin protección · fuera de ámbito */
+const COL_GRIS_REF    = '#888888';  /* geometría de referencia (alcaldías) */
+const COL_AZUL_UBIC   = '#1971c2';  /* ubicación del usuario · GPS */
+const COL_AZUL_EMB    = '#1864ab';  /* embarcaderos */
+
 const GROUP_COLORS = {
   'AVA · Bosque Urbano': 'var(--verde)',
   'AVA · Barranca':       'var(--marron)',
@@ -3508,7 +3575,7 @@ function openEmbFicha(e){
   if(zpMap){ try{ zpMap.setView([e.lat, e.lng], 17); }catch(err){} }   // solo zoom
   if(typeof destroyMap === 'function'){ try{ destroyMap(); }catch(err){} }
   const p = e.props || {};
-  const col = (typeof EMB_COLORS!=='undefined' && EMB_COLORS[e.tipo]) || '#1864AB';
+  const col = (typeof EMB_COLORS!=='undefined' && EMB_COLORS[e.tipo]) || COL_AZUL_EMB;
   drIn.innerHTML = `
     <div class="drawer-header-row"><div class="drawer-header-left">
       <div class="kat" style="color:${col}">Embarcadero · ${e.tipo}</div>
@@ -3825,7 +3892,7 @@ function addLocateControl(map, getContainment, getFeatures){
       const c = L.DomUtil.create('div','leaflet-bar locate-ctrl');
       const a = L.DomUtil.create('a','',c);
       a.href='#'; a.title='Ubicarme'; a.setAttribute('role','button'); a.setAttribute('aria-label','Ubicarme');
-      a.style.cssText = 'display:flex;align-items:center;justify-content:center;color:#1971C2';
+      a.style.cssText = 'display:flex;align-items:center;justify-content:center;color:' + COL_AZUL_UBIC;
       a.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg>';
       L.DomEvent.on(a,'click',L.DomEvent.stopPropagation).on(a,'click',L.DomEvent.preventDefault)
         .on(a,'click',()=>_doLocate(map,getContainment,a,getFeatures));
@@ -3841,8 +3908,8 @@ function _doLocate(map,getContainment,btn,getFeatures){
     if(btn) btn.style.opacity = '';
     const prev=_locateRefs.get(map);
     if(prev){ try{map.removeLayer(prev.m);map.removeLayer(prev.c);}catch(_){} }
-    const c=L.circle(e.latlng,{radius:e.accuracy||30,color:'#1971C2',weight:1,fillColor:'#1971C2',fillOpacity:0.12}).addTo(map);
-    const m=L.circleMarker(e.latlng,{radius:7,color:'#fff',weight:2,fillColor:'#1971C2',fillOpacity:1}).addTo(map);
+    const c=L.circle(e.latlng,{radius:e.accuracy||30,color:COL_AZUL_UBIC,weight:1,fillColor:COL_AZUL_UBIC,fillOpacity:0.12}).addTo(map);
+    const m=L.circleMarker(e.latlng,{radius:7,color:'#fff',weight:2,fillColor:COL_AZUL_UBIC,fillOpacity:1}).addTo(map);
     _locateRefs.set(map,{m,c});
     m.bindPopup('<div class="lp"><div class="loc-loading">Consultando capas…</div></div>',
                 _popupOpts(map)).openPopup();
@@ -3914,7 +3981,7 @@ function _locatePopupHTML(latlng, accuracy, _i1, _i2, opts){
     /* CASOS 3 y 4 · fuera de la CDMX y fuera de todo poligono */
     const lim = _limitrofeCerca(latlng, 500);
     const cer = _masCercana(latlng, GF);
-    html += `<div class="lp-cat gris"><span class="lp-dot" style="background:#8a8d8f"></span>Fuera del ámbito de la CDMX</div>
+    html += `<div class="lp-cat gris"><span class="lp-dot" style="background:${COL_GRIS_NEUTRO}"></span>Fuera del ámbito de la CDMX</div>
       <div class="lp-nom sm">El punto está en otra entidad federativa</div>`;
     if(lim){
       /* CASO 3 · junto a un area cuyo poligono si cruza el limite */
@@ -3944,7 +4011,7 @@ function _locatePopupHTML(latlng, accuracy, _i1, _i2, opts){
 
   } else {
     const cer = _masCercana(latlng, GF);
-    html += `<div class="lp-cat gris"><span class="lp-dot" style="background:#8a8d8f"></span>Sin protección ambiental</div>`;
+    html += `<div class="lp-cat gris"><span class="lp-dot" style="background:${COL_GRIS_NEUTRO}"></span>Sin protección ambiental</div>`;
     if(cer){
       html += `<div class="lp-nom sm">El punto no cae en área decretada ni en Suelo de Conservación</div>
         <div class="lp-mas">Más cercana · <b>${esc(cer.nombre)}</b> a ${_fmtDist(cer.d)}</div>
@@ -4032,7 +4099,7 @@ function initZPFichaMap(row){
                  .find(f => f.properties && f.properties.capa === row.key);
   if(!feat){
     container.classList.add('no-data');
-    container.innerHTML = '<div><b>Polígono no disponible aún</b>Cuando se integre el archivo cartográfico se mostrará el polígono georreferenciado en este espacio.</div>';
+    container.innerHTML = '<div><b>Polígono no disponible aún.</b> Cuando se integre el archivo cartográfico se mostrará el polígono georreferenciado en este espacio.</div>';
     return;
   }
   container.classList.remove('no-data');
@@ -4254,7 +4321,7 @@ async function initZPMap(){
       const [lng,lat] = f.geometry.coordinates;
       zpEmb['E'+i] = { props:p, tipo, lat, lng };
       return `<tr data-emb="E${i}">
-        <td class="name"><span class="zp-dot" style="background:${EMB_COLORS[tipo]||'#1864AB'}"></span>${p.nombre||'—'}</td>
+        <td class="name"><span class="zp-dot" style="background:${EMB_COLORS[tipo]||COL_AZUL_EMB}"></span>${p.nombre||'—'}</td>
         <td>${tipo}</td><td>${p.alcaldia||'—'}</td><td>${p.clasificacion||'—'}</td>
         <td class="num">${p.sup_m2!=null?fmt(p.sup_m2):'—'}</td></tr>`;
     }).join('');
@@ -4329,7 +4396,7 @@ function renderZonaPatrimonioPage(){
       .zp-desig td:first-child{font-style:normal}
       .zp-desig{background:rgba(157,33,72,.035)}
       #zpEmbTable{width:100%;border-collapse:collapse;font-family:'Roboto',sans-serif;font-size:var(--fs-sm)}
-      #zpEmbTable thead th{background:#1864AB;color:#fff;text-align:left;padding:9px 12px;font-weight:600;white-space:nowrap}
+      #zpEmbTable thead th{background:${COL_AZUL_EMB};color:#fff;text-align:left;padding:9px 12px;font-weight:600;white-space:nowrap}
       #zpEmbTable td.num{text-align:right}
       #zpEmbTable tbody tr{cursor:pointer;border-top:1px solid var(--line-soft);transition:background .12s}
       #zpEmbTable tbody tr:hover{background:var(--bg-2)}
@@ -4353,6 +4420,7 @@ function renderZonaPatrimonioPage(){
         Clic en una fila —o en un polígono del mapa— para abrir la ficha lateral.</p>
       <div style="overflow-x:auto;border:1px solid var(--line);border-radius:10px">
         <table id="zpTable">
+          <caption class="sr-only">Designaciones de la Zona Patrimonio Mundial Natural y Cultural de la Humanidad en Xochimilco, Tláhuac y Milpa Alta</caption>
           <thead><tr>
             <th>Área / Declaratoria</th><th>Instrumento / Categoría</th><th>Grupo / Ámbito</th>
             <th>Alcaldía(s)</th><th>Decreto / Inscripción</th><th>Sup. (ha)</th><th>P. Manejo / Act.</th>
@@ -4377,6 +4445,7 @@ function renderZonaPatrimonioPage(){
       <div class="panel-intro" id="zpEmbCount" style="margin-bottom:10px">Cargando…</div>
       <div style="overflow-x:auto;border:1px solid var(--line);border-radius:10px">
         <table id="zpEmbTable">
+          <caption class="sr-only">Embarcaderos registrados en la Zona Patrimonio</caption>
           <thead><tr><th>Embarcadero</th><th>Tipo</th><th>Alcaldía</th><th>Clasificación</th><th>Sup. (m²)</th></tr></thead>
           <tbody></tbody>
         </table>
@@ -4668,6 +4737,7 @@ function renderTraslapesPage(){
       </div>
       <div style="overflow-x:auto;border:1px solid var(--line);border-radius:10px;max-height:520px">
         <table id="trasTable">
+          <caption class="sr-only">Traslapes cartográficos entre áreas del inventario y entre éstas y el Suelo de Conservación</caption>
           <thead><tr>
             <th data-sort="a">Área A<span class="sort-ind"></span></th>
             <th data-sort="b">Área B<span class="sort-ind"></span></th>
@@ -4884,6 +4954,9 @@ function renderARCACPage(){
     <p class="panel-intro">Las <b>ARCAC</b> son Áreas de Restauración y Conservación Ambiental Comunitaria: núcleos agrarios
       —comunidades y ejidos— en suelo de conservación de la Ciudad de México. Cada ARCAC tiene un color propio en el mapa;
       la tenencia se indica con etiqueta de color. Capa complementaria; no afecta el inventario ANP/AVA.</p>
+    <p class="panel-intro" style="margin-top:-6px"><b>Marco de referencia:</b> el régimen de conservación en núcleos
+      agrarios está previsto en el Capítulo VI de la Ley Ambiental de la Ciudad de México, «De las Áreas Comunitarias
+      de Conservación Ecológica» (Art. 152 a 158), consultable en la pestaña <b>Marco Jurídico</b>.</p>
     <div class="map-filters" id="arcacFilters" style="margin-top:14px"></div>
     <div class="map-canvas" id="arcacMapCanvas" style="position:relative;height:560px;border-radius:12px;overflow:hidden;margin-top:6px">
       <div class="map-search-float" id="arcacMapSearch">
@@ -4920,6 +4993,7 @@ function renderARCACPage(){
       </div>
       <div style="overflow-x:auto;border:1px solid var(--line);border-radius:10px">
         <table id="arcacTable">
+          <caption class="sr-only">Núcleos agrarios con acciones de restauración y conservación ambiental comunitaria (ARCAC)</caption>
           <thead><tr>
             <th data-sort="nombre">Núcleo agrario<span class="sort-ind"></span></th>
             <th data-sort="tenencia">Tenencia<span class="sort-ind"></span></th>
@@ -5007,13 +5081,11 @@ async function initGlobalMap(){
   addLocateControl(globalMap, ll=>featuresContaining(GEOMETRIES&&GEOMETRIES.features, ll), ()=>(GEOMETRIES&&GEOMETRIES.features)||[]);
   addResetViewControl(globalMap, 'Vista general · todas las áreas');
 
-  // Overlay ARCAC (núcleos agrarios) — apagado por defecto, se activa con su chip
+  // Overlay ARCAC (núcleos agrarios) — apagado por defecto, se activa con su chip.
+  // La descarga (291 KB) se difiere hasta que el chip se enciende: antes bajaba en
+  // cada primera apertura del mapa global aunque la capa quedara invisible.
   globalArcacLayer = null;
-  loadARCAC().then(fc=>{
-    if(!globalMap) return;
-    globalArcacLayer = buildArcacGeoLayer(fc, globalMap);
-    if(state.showArcac) globalArcacLayer.addTo(globalMap);
-  });
+  if(state.showArcac) asegurarCapaArcacGlobal();
 }
 
 /* === Pantalla completa (Fullscreen API nativa) === */
@@ -5133,10 +5205,17 @@ function attachFullscreenBtn(canvas, mapInstance){
     }
   });
 
-  // Recalcular tamaño del mapa al entrar/salir de fullscreen
+  // Recalcular tamaño del mapa al entrar/salir de fullscreen.
+  // Esta función se invoca desde 4 sitios y antes acumulaba 2 listeners de document
+  // por invocación, sin removerlos nunca. Se guarda la referencia y se limpia.
+  if(attachFullscreenBtn._onChange){
+    document.removeEventListener('fullscreenchange', attachFullscreenBtn._onChange);
+    document.removeEventListener('webkitfullscreenchange', attachFullscreenBtn._onChange);
+  }
   const onChange = () => {
     setTimeout(() => { if(mapInstance) mapInstance.invalidateSize(); }, 100);
   };
+  attachFullscreenBtn._onChange = onChange;
   document.addEventListener('fullscreenchange', onChange);
   document.addEventListener('webkitfullscreenchange', onChange);
 }
@@ -5178,8 +5257,6 @@ function cargarGooglePlaces(){
 }
 
 /* Sesgo a la CDMX: mismas coordenadas que ya usa el buscador de Nominatim */
-const _CDMX_BOUNDS = { west:-99.366, south:19.045, east:-98.940, north:19.593 };
-
 /* Ambito de busqueda de direcciones: la CDMX y sus dos entidades colindantes.
    El inventario termina en el limite estatal (10 areas lo cruzan, 1,236.6 ha
    quedan fuera), asi que restringir a la CDMX dejaria ciego a quien verifica
@@ -5348,18 +5425,11 @@ function attachMapSearch(containerId, mapInstance, getFeatures){
   //   (19.4326, -99.1332)        — con paréntesis (estilo Google Maps al copiar)
   //   [19.4326, -99.1332]        — con corchetes (estilo GeoJSON)
   //   19.4326;  -99.1332         — separadores variados y espacios extras
+  /* Una sola implementación del parser: parseCoordsSia es la fuente de verdad
+     (declaración de función, se hoistea). Aquí solo se adapta el formato de salida. */
   function parseCoords(q){
-    // 1. Limpiar la entrada: quitar paréntesis/corchetes envolventes y normalizar espacios
-    const clean = q.trim()
-      .replace(/^[\(\[\{]+|[\)\]\}]+$/g, '')   // quita ( [ { iniciales y ) ] } finales
-      .replace(/\s+/g, ' ')                    // colapsa espacios múltiples a uno
-      .trim();
-    // 2. Match flexible con coma, punto y coma o espacio como separador
-    const m = clean.match(/^(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)$/);
-    if(!m) return null;
-    const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
-    if(isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
-    return [lat, lng];
+    const r = parseCoordsSia(q);
+    return r ? [r.lat, r.lng] : null;
   }
 
   function clearMarker(){
@@ -5532,9 +5602,34 @@ function attachMapSearch(containerId, mapInstance, getFeatures){
     if(e.key === 'Enter'){ e.preventDefault(); doSearch(); }
     if(e.key === 'Escape'){ results.hidden = true; }
   });
-  // Cerrar resultados al clickear fuera
-  document.addEventListener('click', e => {
+  // Cerrar resultados al clickear fuera.
+  // initMapForArea llama a attachMapSearch en CADA apertura de ficha (hasta 66 por
+  // sesión); sin esta limpieza se acumulaba un handler de click por apertura.
+  if(attachMapSearch._fuera) document.removeEventListener('click', attachMapSearch._fuera);
+  const cerrarSiEsFuera = e => {
     if(!container.contains(e.target)) results.hidden = true;
+  };
+  attachMapSearch._fuera = cerrarSiEsFuera;
+  document.addEventListener('click', cerrarSiEsFuera);
+}
+
+/* Carga perezosa de la capa ARCAC del mapa global. Idempotente: si ya está
+   construida no vuelve a pedir el GeoJSON. */
+let _arcacGlobalPend = false;
+function asegurarCapaArcacGlobal(){
+  if(globalArcacLayer || _arcacGlobalPend) return Promise.resolve(globalArcacLayer);
+  _arcacGlobalPend = true;
+  return loadARCAC().then(fc=>{
+    _arcacGlobalPend = false;
+    if(!globalMap) return null;
+    globalArcacLayer = buildArcacGeoLayer(fc, globalMap);
+    if(state.showArcac) globalArcacLayer.addTo(globalMap);
+    return globalArcacLayer;
+  }).catch(err=>{
+    _arcacGlobalPend = false;
+    console.warn('[ARCAC] No se pudo cargar la capa:', err && err.message);
+    siaToast('No se pudo cargar la capa de núcleos agrarios.');
+    return null;
   });
 }
 
@@ -5627,9 +5722,14 @@ function renderMapFilters(){
     arcacBtn.addEventListener('click', () => {
       state.showArcac = !state.showArcac;
       arcacBtn.classList.toggle('active', state.showArcac);
-      if(!globalArcacLayer || !globalMap) return;
-      if(state.showArcac) globalArcacLayer.addTo(globalMap);
-      else globalMap.removeLayer(globalArcacLayer);
+      if(!globalMap) return;
+      if(state.showArcac){
+        // Primera vez que se enciende el chip: aquí se paga la descarga, no antes.
+        if(!globalArcacLayer) asegurarCapaArcacGlobal();
+        else globalArcacLayer.addTo(globalMap);
+      } else if(globalArcacLayer){
+        globalMap.removeLayer(globalArcacLayer);
+      }
     });
   }
 }
@@ -5684,7 +5784,7 @@ function initMapForArea(d){
   const geo = findGeometry(d);
   if(!geo){
     container.classList.add('no-data');
-    container.innerHTML = '<div><b>Polígono no disponible aún</b>Cuando se integre el archivo cartográfico se mostrará el polígono georreferenciado en este espacio.</div>';
+    container.innerHTML = '<div><b>Polígono no disponible aún.</b> Cuando se integre el archivo cartográfico se mostrará el polígono georreferenciado en este espacio.</div>';
     return;
   }
   container.classList.remove('no-data');
@@ -5809,7 +5909,7 @@ async function compartirFichaImagen(d, btn){
   ctx.strokeStyle='#eae4cf'; ctx.lineWidth=2; ctx.strokeRect(48,y,W-96,boxH);
   if(geo) _drawGeoInBox(ctx,geo,48,y,W-96,boxH,color);
   else{
-    ctx.fillStyle='#8a8d8f'; ctx.font='400 26px Roboto, sans-serif';
+    ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='400 26px Roboto, sans-serif';
     ctx.fillText('Polígono no disponible',48+30,y+boxH/2);
   }
   y+=boxH+50;
@@ -5818,9 +5918,9 @@ async function compartirFichaImagen(d, btn){
   ctx.fillStyle=color; ctx.font='900 70px Roboto, sans-serif';
   ctx.fillText(fmt(d.superficie),48,y);
   const sw=ctx.measureText(fmt(d.superficie)).width;
-  ctx.fillStyle='#8a8d8f'; ctx.font='400 30px Roboto, sans-serif'; ctx.fillText(' ha',48+sw+10,y);
+  ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='400 30px Roboto, sans-serif'; ctx.fillText(' ha',48+sw+10,y);
   y+=34;
-  ctx.fillStyle='#8a8d8f'; ctx.font='500 20px "Roboto Mono", monospace';
+  ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='500 20px "Roboto Mono", monospace';
   ctx.fillText('SUPERFICIE DECRETADA',48,y); y+=52;
 
   /* Datos duros */
@@ -5833,7 +5933,7 @@ async function compartirFichaImagen(d, btn){
     ['DG RESPONSABLE', d.dg_responsable||'—']
   ];
   filas.forEach(([k,v])=>{
-    ctx.fillStyle='#8a8d8f'; ctx.font='500 19px "Roboto Mono", monospace'; ctx.fillText(k,48,y);
+    ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='500 19px "Roboto Mono", monospace'; ctx.fillText(k,48,y);
     ctx.fillStyle='#2a2a2a'; ctx.font='500 25px Roboto, sans-serif';
     const lines=_wrapText(ctx,v,W-96-330);
     ctx.fillText(lines[0]||'',378,y);
@@ -5848,7 +5948,7 @@ async function compartirFichaImagen(d, btn){
   ctx.fillStyle='#55585a'; ctx.font='400 19px "Roboto Mono", monospace';
   const hoy=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
   ctx.fillText('Sistema de Información Ambiental · SEDEMA CDMX',48,y);
-  ctx.fillStyle='#8a8d8f'; ctx.font='400 17px "Roboto Mono", monospace';
+  ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='400 17px "Roboto Mono", monospace';
   ctx.fillText('Consulta: '+hoy,48,y+26);
 
   /* Compartir o descargar */
@@ -6109,7 +6209,7 @@ function renderUbicarResultado(latlng, precision, etiqueta){
     const limc = _limitrofeCerca(latlng, 500);
     const cer  = _masCercana(latlng, GF);
     cabeza = 'Fuera del ámbito de la CDMX';
-    cuerpo += `<div class="ubi-main ubi-vacio" style="--c:#8a8d8f">
+    cuerpo += `<div class="ubi-main ubi-vacio" style="--c:${COL_GRIS_NEUTRO}">
       <div class="ubi-main-cat"><span class="ubi-dot"></span>Otra entidad federativa</div>
       <div class="ubi-main-nom">El punto está en ${esc(ent)}</div>
       <div class="ubi-warn">La competencia de la Secretaría no alcanza este punto. Verifica con la autoridad estatal.</div>
@@ -6124,7 +6224,7 @@ function renderUbicarResultado(latlng, precision, etiqueta){
         </div></div>`;
     } else if(cer){
       cuerpo += `<div class="ubi-lista">
-        <div class="ubi-item" style="--c:${esc((typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[cer.grupo])||'#8a8d8f')}">
+        <div class="ubi-item" style="--c:${esc((typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[cer.grupo])||COL_GRIS_NEUTRO)}">
           <span class="ubi-dot"></span>
           <span class="ubi-item-txt"><b>${esc(cer.nombre)}</b><span>Más cercana · ${esc(cer.grupo||'')} · a ${_fmtDist(cer.d)}</span></span>
           <button type="button" class="ubi-mini" data-ficha="inv::${esc(cer.nombre)}" aria-label="Ver ficha">→</button>
@@ -6140,14 +6240,14 @@ function renderUbicarResultado(latlng, precision, etiqueta){
       </div>`;
     } else {
       cabeza = 'Sin área decretada';
-      cuerpo += `<div class="ubi-main ubi-vacio" style="--c:#8a8d8f">
+      cuerpo += `<div class="ubi-main ubi-vacio" style="--c:${COL_GRIS_NEUTRO}">
         <div class="ubi-main-cat"><span class="ubi-dot"></span>Sin cobertura</div>
         <div class="ubi-main-nom">Ninguna AVA, ANP, ARCAC ni Suelo de Conservación</div>
       </div>`;
     }
     if(cer){
       cuerpo += `<div class="ubi-lista">
-        <div class="ubi-item" style="--c:${esc((typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[cer.grupo])||'#8a8d8f')}">
+        <div class="ubi-item" style="--c:${esc((typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[cer.grupo])||COL_GRIS_NEUTRO)}">
           <span class="ubi-dot"></span>
           <span class="ubi-item-txt"><b>${esc(cer.nombre)}</b><span>Más cercana · ${esc(cer.grupo||'')} · a ${_fmtDist(cer.d)}</span></span>
           <button type="button" class="ubi-mini" data-ficha="inv::${esc(cer.nombre)}" aria-label="Ver ficha">→</button>
@@ -6195,9 +6295,9 @@ function initUbicarMap(latlng, precision){
   });
 
   if(precision){
-    L.circle([latlng.lat,latlng.lng],{radius:precision,color:'#1971C2',weight:1,fillColor:'#1971C2',fillOpacity:.12}).addTo(ubicarMap);
+    L.circle([latlng.lat,latlng.lng],{radius:precision,color:COL_AZUL_UBIC,weight:1,fillColor:COL_AZUL_UBIC,fillOpacity:.12}).addTo(ubicarMap);
   }
-  L.circleMarker([latlng.lat,latlng.lng],{radius:7,color:'#fff',weight:2,fillColor:'#1971C2',fillOpacity:1}).addTo(ubicarMap);
+  L.circleMarker([latlng.lat,latlng.lng],{radius:7,color:'#fff',weight:2,fillColor:COL_AZUL_UBIC,fillOpacity:1}).addTo(ubicarMap);
 
   if(bounds.isValid()){ ubicarMap.fitBounds(bounds,{padding:[24,24],maxZoom:16}); ubicarMap._siaHome = bounds; }
   else ubicarMap.setView([latlng.lat,latlng.lng],15);
@@ -6330,8 +6430,34 @@ const _NAVEGABLES = 'tr[data-i],tr[data-emb],tr[data-zpkey],tr[data-no],tr[data-
 function _marcarNavegables(){
   document.querySelectorAll(_NAVEGABLES).forEach(el=>{
     if(!el.hasAttribute('tabindex')) el.setAttribute('tabindex','0');
+    /* El tabindex hizo la fila alcanzable, pero el lector de pantalla seguía
+       anunciandola como una fila de tabla cualquiera, sin pista de que Enter
+       abre la ficha. role + nombre accesible cierran esa mitad. */
+    if(el.tagName === 'TR' && !el.hasAttribute('role')){
+      el.setAttribute('role','button');
+      const celda = el.querySelector('.name') || el.querySelector('td');
+      const nombre = celda && celda.textContent ? celda.textContent.trim() : '';
+      if(nombre && !el.hasAttribute('aria-label')) el.setAttribute('aria-label','Ver ficha de ' + nombre);
+    }
+    /* Las sugerencias del buscador principal eran <div> mudos, a diferencia de las
+       de los mini-mapas, que sí declaran su rol. */
+    if(el.classList.contains('item') && el.closest('.ubicar-sugerencias') && !el.hasAttribute('role')){
+      el.setAttribute('role','option');
+    }
   });
 }
+
+/* El combobox debe declarar si su lista está desplegada. #ubicarSug se abre y cierra
+   alternando el atributo hidden, así que se observa ese atributo en vez de tocar las
+   cinco funciones que lo alternan. */
+(function(){
+  const sug = document.getElementById('ubicarSug');
+  const inp = document.getElementById('ubicarInput');
+  if(!sug || !inp) return;
+  const sincronizar = ()=> inp.setAttribute('aria-expanded', sug.hasAttribute('hidden') ? 'false' : 'true');
+  new MutationObserver(sincronizar).observe(sug, {attributes:true, attributeFilter:['hidden']});
+  sincronizar();
+})();
 let _navPend = false;
 new MutationObserver(muts=>{
   if(_navPend) return;
@@ -6371,17 +6497,32 @@ document.addEventListener('keydown', e=>{
    ir ANTES de los addEventListener de abajo: esos capturan la referencia
    en el momento de enlazar. */
 let _focoPrevio = null;
+/* La ficha se oculta con transform, no con display:none, así que estando "cerrada"
+   su botón de cierre y todos sus enlaces seguían siendo alcanzables con Tab fuera de
+   pantalla. inert los retira del orden de tabulación Y del árbol de accesibilidad,
+   sin romper la transición CSS. Aplicado en espejo sobre .wrap, aísla el fondo del
+   lector de pantalla mientras el diálogo está abierto — que es lo que aria-modal
+   promete y por sí solo no consigue en modo de exploración. */
+const _drEl   = document.getElementById('dr');
+const _wrapEl = document.querySelector('.wrap');
+if(_drEl && !_drEl.classList.contains('open')) _drEl.setAttribute('inert','');
 const _openDrawerOrig = openDrawer, _closeDrawerOrig = closeDrawer;
 openDrawer = function(){
   _focoPrevio = document.activeElement;
+  if(_drEl) _drEl.removeAttribute('inert');
   const r = _openDrawerOrig.apply(this, arguments);
   try{ document.getElementById('dr').setAttribute('aria-modal','true'); }catch(_){}
+  if(_wrapEl) _wrapEl.setAttribute('inert','');
   setTimeout(()=>{ const b = document.getElementById('drClose'); if(b) b.focus(); }, 80);
   return r;
 };
 closeDrawer = function(){
   const r = _closeDrawerOrig.apply(this, arguments);
   try{ document.getElementById('dr').removeAttribute('aria-modal'); }catch(_){}
+  /* El orden importa: primero se devuelve la interactividad al fondo, luego se
+     retira del drawer, y solo entonces se puede enfocar el elemento de origen. */
+  if(_wrapEl) _wrapEl.removeAttribute('inert');
+  if(_drEl) _drEl.setAttribute('inert','');
   if(_focoPrevio && document.contains(_focoPrevio)){ try{ _focoPrevio.focus(); }catch(_){} }
   _focoPrevio = null;
   return r;
@@ -6422,6 +6563,17 @@ document.getElementById('btnExport').addEventListener('click',()=>{
 });
 
 document.getElementById('metaCount').textContent = fmtInt(DATA.length);
+
+/* Fecha de consulta del inventario en el pie institucional. Es un dato verificable
+   —cuándo leyó este navegador el Sheet—, no una fecha de corte declarada: esa debe
+   fijarla el área responsable en el propio inventario. */
+(function(){
+  const el = document.getElementById('footerCorte');
+  if(!el) return;
+  try{
+    el.textContent = new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+  }catch(_){ el.textContent = new Date().toISOString().slice(0,10); }
+})();
 
 /* =====================================================================
    ASISTENTE · Motor de consultas semánticas en lenguaje natural
@@ -6475,6 +6627,20 @@ if('serviceWorker' in navigator){
           });
         })
         .catch(err => console.warn('[SIA] No se pudo registrar el Service Worker:', err));
+
+      /* El SW usa skipWaiting + clients.claim: toma control de esta pestaña de
+         inmediato. Sin recargar, el JS viejo queda hablando con caché nueva —el
+         escenario de campo con red débil que justifica el SW en primer lugar. Se
+         recarga una sola vez; el guard evita el bucle si el navegador reemite. */
+      let _swRecargando = false;
+      const _habiaControlador = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        // En la PRIMERA visita el controlador pasa de null a activo por clients.claim():
+        // eso no es una actualización y no debe recargar nada.
+        if(!_habiaControlador || _swRecargando) return;
+        _swRecargando = true;
+        setTimeout(() => location.reload(), 600);
+      });
     });
   }
 }
@@ -6504,12 +6670,13 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
 } catch(err){
   console.error('[Dashboard] Error al inicializar:', err);
   document.body.insertAdjacentHTML('afterbegin',
-    '<div style="background:#fee;border:2px solid #c33;padding:16px 24px;margin:0;font-family:system-ui,sans-serif;color:#900">'+
-    '<b>⚠ Error al cargar el inventario</b><br>'+
-    'No se pudo leer el inventario desde Google Sheets. '+
-    'Verifica que el documento siga publicado en la web (Archivo → Compartir → Publicar en la web → CSV) y que la URL siga vigente. '+
-    'Si abriste el archivo localmente con doble-click, debes servirlo desde un servidor web (GitHub Pages, Live Server de VSCode, o <code>python -m http.server</code>).<br>'+
-    '<small style="color:#666">Detalle técnico: '+(err && err.message ? err.message : err)+'</small>'+
+    /* Mensaje de cara al ciudadano: sin lenguaje de desarrollador y sin revelar la
+       infraestructura de origen. El detalle técnico queda en la consola, no en el DOM. */
+    '<div style="background:var(--alert-bg,#fdf0f3);border:2px solid var(--guinda,#9d2148);'+
+    'padding:16px 24px;margin:0;font-family:Roboto,sans-serif;color:var(--ink,#2a2a2a)">'+
+    '<b>No se pudo cargar el inventario en este momento</b><br>'+
+    'Intenta recargar la página en unos minutos. Si el problema persiste, repórtalo a '+
+    '<a href="mailto:CORREO_INSTITUCIONAL@sedema.cdmx.gob.mx" style="color:var(--guinda,#9d2148)">SEDEMA</a>.'+
     '</div>');
 }
 })();
