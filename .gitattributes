@@ -1,0 +1,24 @@
+# Normalización de fines de línea · Dashboard SIA
+# Evita que Windows (CRLF) marque como modificados archivos sin cambios reales.
+
+* text=auto eol=lf
+
+# --- Texto explícito (el sitio y sus datos) ---
+*.html   text eol=lf
+*.js      text eol=lf
+*.json    text eol=lf
+*.geojson text eol=lf
+*.md      text eol=lf
+*.yml     text eol=lf
+*.py      text eol=lf
+*.css     text eol=lf
+
+# --- Binarios: git no debe tocarlos jamás ---
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.svg  binary
+*.pdf  binary
+*.zip  binary
+*.ico  binary
