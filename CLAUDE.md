@@ -7,7 +7,8 @@ Dashboard público de categorías de protección ambiental de la CDMX, en GitHub
 
 ## Arquitectura
 - **Toda la lógica vive en `index.html`** (HTML + CSS + JS inline). No hay pipeline de build ni framework.
-- `sw.js` es el Service Worker (caché offline).
+- `sw.js` es el Service Worker (caché offline). **Debe quedarse en la raíz**: el ámbito de un SW es la carpeta desde la que se sirve; moverlo a una subcarpeta lo deja sin control sobre `index.html` y elimina el offline.
+- Los recursos gráficos viven en `assets/` (`logo-sedema.png`, `favicon.png`, `apple-touch-icon.png`, `og-image.png`). La raíz solo conserva lo que GitHub exige ahí: `index.html`, `sw.js`, `README.md`, `CLAUDE.md`, `.nojekyll`, `.gitattributes`, `.gitignore`, `.github/`.
 - Los datos espaciales están en `data/*.geojson`. El inventario en vivo se lee de un **Google Sheet publicado como CSV** (la fuente autoritativa; el Sheet prevalece sobre valores calculados).
 
 ## Invariantes que NUNCA se rompen
@@ -128,7 +129,36 @@ Pestaña dentro de «Más ▾», primera de la lista. Color `#d72f89`.
 - Hallazgo que expone: **300.47 ha de doble conteo** dentro del inventario (suma 25,968.10 ha vs
   unión real 25,667.63 ha) y 17 pares ANP–ARCAC con doble instrumento.
 
+## Service Worker · purga condicionada (v27c, 27 ago 2026)
+`install` traga los errores de red en silencio (`cache.add().catch()`). Si un usuario recibe una
+versión nueva estando en una red que no alcanza el origen, la caché nueva queda vacía; el
+`activate` anterior borraba la previa en ese momento y lo dejaba **sin tablero ni siquiera offline**.
+
+- `activate` ahora llama a `repararCore()` (reintenta los `CORE_ASSETS` faltantes) y solo purga
+  las cachés viejas si `cacheUtilizable()` confirma que `./` **y** `./index.html` están presentes.
+- `cacheFirst` consulta primero la caché de la versión vigente y solo después el `caches.match()`
+  global. Sin ese orden, una caché conservada podría eclipsar al `index.html` nuevo.
+- No tocar esta lógica sin simular los tres escenarios: instala con red · bump sin red · vuelve la red.
+
+## Acceso desde redes móviles · hallazgo verificado (27 ago 2026)
+**Telcel no rutea a GitHub Pages desde datos móviles.** Verificado: el sitio responde 200 desde
+internet, el DNS resuelve normal (185.199.108–111.153 y `2606:50c0:800x::153`), pero en datos
+móviles agotan el tiempo tanto el dashboard como `sw.js` (6.7 KB) y `octocat.github.io` —un host
+ajeno nunca visitado—. No es peso, no es caché, no es filtrado del hostname: es la ruta al rango
+de GitHub Pages, probablemente por IPv6 sin fallback.
+
+- **Un dominio propio con `CNAME` a GitHub Pages NO lo resuelve**: apunta a las mismas IP.
+- Remediación: mover el alojamiento (Cloudflare Pages es la vía de menor fricción; conserva
+  GitHub como fuente y despliega en cada push).
+- Mitigación operativa mientras tanto: el Service Worker. Quien abra el tablero una vez en Wi-Fi
+  lo conserva funcionando en datos. Instrucción de campo: **cargar el tablero antes de salir**.
+
 ## Pendientes / riesgos conocidos
+- **Migrar fuera de las IP de GitHub Pages** (ver hallazgo de arriba). Al hacerlo hay que actualizar
+  `canonical`, `og:url`, `og:image`, `twitter:image` en `index.html` y la restricción de origen de
+  la llave de Google en Cloud Console.
+- **Rotar la `GOOGLE_MAPS_API_KEY`:** sigue viva en el historial de git (los `index.html.bak`
+  borrados el 27-ago no la sacan de los commits anteriores). Ocultarla no es remediación.
 - **Continuidad institucional:** el Google Sheet del inventario y el proyecto de Google Cloud deberían colgar de cuentas institucionales de SEDEMA, no personales. Agregar un segundo propietario en IAM.
 - **Corregir el Sheet** en la fila de Bosque de Tlalpan (y revisar las 8 parciales) según el hallazgo de arriba.
 - **Traslapes ANP–ARCAC** que el tablero no reportaba hasta v36 (ej. Cumbres del Ajusco ∩ ARCAC San Miguel Ajusco). Vale la pena inventariarlos.

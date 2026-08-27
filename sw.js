@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-08-27a';
+const CACHE_VERSION = 'sia-v35-2026-08-27c';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
@@ -18,8 +18,8 @@ const CACHE_DATA    = 'sia-data-v35';
 const CORE_ASSETS = [
   './',
   './index.html',
-  './SIA_LOGO-03.png',
-  './favicon.png'
+  './assets/logo-sedema.png',
+  './assets/favicon.png'
 ];
 
 /* Capas que sí conviene tener offline, pero que no deben bloquear el install ni
@@ -61,14 +61,46 @@ self.addEventListener('install', event => {
   );
 });
 
-/* === ACTIVATE: limpiar caches viejos === */
+/* Reintenta los CORE_ASSETS que el install no pudo bajar (red caída o filtrada).
+   Los que ya están en caché no se vuelven a pedir. */
+async function repararCore(){
+  const cache = await caches.open(CACHE_VERSION);
+  await Promise.all(CORE_ASSETS.map(async url => {
+    if(await cache.match(url)) return;
+    try { await cache.add(url); }
+    catch(err){ console.warn('[SW] No se pudo reparar:', url, err); }
+  }));
+}
+
+/* ¿La caché de ESTA versión alcanza para arrancar la app sin red? */
+async function cacheUtilizable(){
+  const cache = await caches.open(CACHE_VERSION);
+  const raiz  = await cache.match('./');
+  const index = await cache.match('./index.html');
+  return !!(raiz && index);
+}
+
+/* === ACTIVATE: limpiar caches viejos, pero NUNCA a ciegas ===
+   El install traga los errores de red en silencio. Si el usuario recibe una
+   versión nueva estando en una red que no alcanza el origen (caso real: datos
+   móviles Telcel, que no rutea a GitHub Pages), la caché nueva queda vacía.
+   Borrar la anterior en ese momento deja al usuario de campo sin tablero,
+   ni siquiera offline. Por eso solo se purga cuando hay reemplazo verificado;
+   si no, se conservan las cachés previas y `cacheFirst` las usa de respaldo. */
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.filter(k => k !== CACHE_VERSION && k !== CACHE_RUNTIME && k !== CACHE_DATA)
-          .map(k => caches.delete(k))
-    )).then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    await repararCore();
+    if(await cacheUtilizable()){
+      const keys = await caches.keys();
+      await Promise.all(
+        keys.filter(k => k !== CACHE_VERSION && k !== CACHE_RUNTIME && k !== CACHE_DATA)
+            .map(k => caches.delete(k))
+      );
+    } else {
+      console.warn('[SW] Caché nueva incompleta (sin acceso al origen). Se conservan las anteriores.');
+    }
+    await self.clients.claim();
+  })());
 });
 
 /* === FETCH: estrategia mixta === */
@@ -113,12 +145,15 @@ self.addEventListener('fetch', event => {
 
 /* === Estrategia: cache-first === */
 async function cacheFirst(req, cacheName){
-  const cached = await caches.match(req);
+  /* Primero la caché de la versión vigente; si activate conservó cachés
+     anteriores por falta de red, sirven de respaldo. El orden importa: sin él
+     una caché vieja puede eclipsar al index.html nuevo. */
+  const cache = await caches.open(cacheName);
+  const cached = (await cache.match(req)) || (await caches.match(req));
   if(cached) return cached;
   try {
     const response = await fetch(req);
     if(response && response.status === 200){
-      const cache = await caches.open(cacheName);
       cache.put(req, response.clone());
     }
     return response;

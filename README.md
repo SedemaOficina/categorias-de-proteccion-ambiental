@@ -55,8 +55,18 @@ Soporta deep linking a fichas individuales por slug:
 categorias-de-proteccion-ambiental/
 ├── index.html                          ← dashboard completo (HTML+CSS+JS)
 ├── sw.js                               ← Service Worker (offline + caché)
-├── SIA_LOGO-03.png                     ← logo institucional
 ├── README.md                           ← este archivo
+├── CLAUDE.md                           ← contexto y reglas del proyecto
+├── .nojekyll                           ← desactiva el procesamiento Jekyll de Pages
+├── assets/
+│   ├── logo-sedema.png                 ← logo institucional
+│   ├── favicon.png
+│   ├── apple-touch-icon.png
+│   └── og-image.png                    ← tarjeta para redes (1200×630)
+├── tools/
+│   └── traslapes.py                    ← regenera data/traslapes.geojson
+├── .github/workflows/
+│   └── validar.yml                     ← CI: JS, GeoJSON, invariante 66, bump de CACHE_VERSION
 └── data/
     ├── geometrias.geojson              ← 66 polígonos de áreas protegidas (inventario)
     ├── zona_patrimonio.geojson         ← módulo Zona Patrimonio (UNESCO / Ramsar / AICA)
@@ -65,6 +75,7 @@ categorias-de-proteccion-ambiental/
     ├── embarcaderos.geojson             ← capa de puntos · embarcaderos (Turístico/Productivo)
     ├── alcaldias.geojson               ← polígonos de las 16 alcaldías
     ├── suelo_conservacion.geojson      ← capa de Suelo de Conservación
+    ├── traslapes.geojson               ← 35 pares de intersección precalculados
     └── normativa/
         ├── CPCDMX_Constitucion_CDMX.pdf
         ├── LACM_Ley_Ambiental_CDMX.pdf
@@ -248,20 +259,24 @@ Cualquier cambio sustantivo en datos o lógica requiere bumpear la versión del 
 
 ```js
 // sw.js
-const CACHE_VERSION = 'sia-v35-2026-08-19f';   // ← incrementar fecha/sufijo
+const CACHE_VERSION = 'sia-v35-2026-08-27c';   // ← incrementar fecha/sufijo
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
+/* Solo lo mínimo para arrancar: la vista por defecto es la tabla. */
 const CORE_ASSETS = [
-  './', './index.html', './SIA_LOGO-03.png',
+  './', './index.html',
+  './assets/logo-sedema.png',
+  './assets/favicon.png'
+];
+
+/* Se precachean en segundo plano (requestIdleCallback), fuera del install. */
+const DEFERRED_ASSETS = [
   './data/geometrias.geojson',
   './data/zona_patrimonio.geojson',
-  './data/sipam_fao.geojson',
-  './data/embarcaderos.geojson',
-  './data/arcac.geojson',
-  './data/alcaldias.geojson',
-  './data/suelo_conservacion.geojson'
+  './data/alcaldias.geojson'
 ];
+/* sipam_fao, arcac, embarcaderos y traslapes: bajo demanda, caché en runtime. */
 ```
 
 Sin este cambio, los usuarios con Service Worker activo seguirán viendo la versión previa hasta que expire el caché.
@@ -271,7 +286,8 @@ Sin este cambio, los usuarios con Service Worker activo seguirán viendo la vers
 | Recurso | Estrategia |
 |---|---|
 | HTML, CSS, JS, imágenes propias | cache-first |
-| `data/*.geojson` | cache-first (precargado en `install`) |
+| `data/geometrias`, `zona_patrimonio`, `alcaldias` | cache-first (precache diferido) |
+| `data/sipam_fao`, `arcac`, `embarcaderos`, `traslapes` | cache-first bajo demanda |
 | Tiles de mapa (CartoDB, ArcGIS) | cache-first runtime |
 | Google Sheets CSV | network-first con fallback a caché |
 | Nominatim | network-only |
