@@ -50,7 +50,8 @@ Dashboard público de categorías de protección ambiental de la CDMX, en GitHub
 - **Inventario** (Global + Bosques Urbanos + Barrancas + ANP Local + ANP Federal): mapa global con overlays, tabla, ficha lateral (drawer) con mini-mapa.
 - **Zona Patrimonio (ZP):** UNESCO 7,534.17 ha · Ramsar 1363 2,657 ha · AICA 37 2,860.32 ha · SIPAM FAO 1,875.65 ha (6 zonas) · embarcaderos.
 - **ARCAC:** 30 Áreas de Restauración y Conservación Ambiental Comunitaria (17 comunidades + 13 ejidos, 22,567.71 ha).
-- Navegación: **7 pestañas visibles** + menú **«Más ▾»** con Análisis, Metas y Marco Jurídico (`SECONDARY_TABS`). `GROUPS` sigue teniendo los 10.
+- Navegación: **cuatro destinos** (ver «Rediseño de UX» abajo). `GROUPS` sigue teniendo los 11 ids
+  y `state.tab` sigue siendo un id de grupo; lo que cambió es cómo se agrupan en pantalla.
 
 ## Ficha de ubicación en campo (v36)
 Público objetivo: **personal de SEDEMA en campo**, no ciudadanía. Mismo popup para el botón «Ubicarme» y para el buscador de coordenadas.
@@ -153,6 +154,50 @@ de GitHub Pages, probablemente por IPv6 sin fallback.
 - Mitigación operativa mientras tanto: el Service Worker. Quien abra el tablero una vez en Wi-Fi
   lo conserva funcionando en datos. Instrucción de campo: **cargar el tablero antes de salir**.
 
+## Rediseño de UX/UI (v38 · 10 sep 2026)
+Diagnóstico: once destinos en un solo nivel mezclaban filtros del inventario, inventarios
+independientes y herramientas de análisis; había dos buscadores para lo mismo; el cuarto KPI era
+el inverso aritmético del tercero; ocho filtros con el mismo peso visual; el mapa vivía debajo de
+la tabla en un producto cuyo uso dominante es de campo; y el semáforo rojo/verde competía con el
+guinda institucional.
+
+**Navegación de dos niveles.** `DESTINOS` (cuatro) agrupa ids de `GROUPS` que ya existían:
+`UBICAR` (sin grupo) · `INVENTARIO` → ALL, BU, BR, ANPL, ANPF · `CAPAS` → ZP, ARCAC, TRASLAPES ·
+`ANALITICA` → ANALISIS, METAS, LEGAL. `state.dest` guarda el destino; `state.tab` no cambia de
+contrato, así que **ninguna función de render cambió de firma**. `buildTabs()` pinta la barra de
+destinos y los subfiltros. `SECONDARY_TABS`, `.tabs`, `.tab` y el menú «Más ▾» quedaron sin uso;
+`closeMoreMenu()` se conserva como no-op porque otros listeners la invocan.
+
+**Reglas visuales nuevas:**
+- El **guinda es el único color de marca**: señala lo activo y lo accionable. Por eso
+  `GROUP_COLORS['ANP · Local']` pasó de `var(--guinda)` a `var(--anpl)` (naranja): antes la misma
+  categoría tenía un color en el mapa y otro en las pestañas, y competía con la marca.
+- **El estado no se codifica por matiz.** `.status-tag` es un punto: lleno = sí, hueco = no
+  (Suelo de Conservación en turquesa). El verde ya significa «Bosque Urbano».
+- **La categoría se lee en el filete lateral de la fila** (`tr[data-g]`, alimentado por
+  `GRUPO_CLS`), no en un relleno saturado dentro de la tabla.
+- **Piso tipográfico de 11 px** (antes 9.5) y escala de once tamaños a seis; en ≤760 px el cuerpo
+  sube un escalón completo.
+
+**Estructura:**
+- `#globalMapSection` vive **fuera** de `#tableSection` (el destino Ubicar lo muestra con la tabla
+  oculta) y va **antes** de la tabla.
+- **Vista partida ≥1200 px:** `main#main-content` es un grid de dos columnas; el mapa queda
+  `sticky` a la izquierda y la tabla corre a la derecha con seis columnas (se ocultan Tipo,
+  Jurisdicción, Decreto, Fecha PM y DG resp.; siguen en la ficha y en el CSV).
+- **Celular:** la barra de destinos es `position:fixed` al pie (48 px, alcance del pulgar), el
+  destino por defecto es `UBICAR`, la barra «¿Dónde estoy?» solo aparece en ese destino, y la
+  tabla se reduce a Nombre (con categoría y alcaldía en segunda línea) · Superficie · PM · SC.
+- **Filtros jerarquizados:** Búsqueda, Alcaldía y Programa de manejo a la vista; Tipo,
+  Jurisdicción, Subcategoría, SC y DG tras «Más filtros», con conteo de activos. Si hay un filtro
+  avanzado activo, el panel se despliega solo (`sincronizarMasFiltros()`).
+- Las cuatro tarjetas KPI se sustituyeron por `resumenHTML()`: tres cifras y una barra de
+  cobertura de programas de manejo que muestra logro y brecha a la vez.
+
+**Al validar:** la copia de trabajo se prueba con un doble de Leaflet y un CSV sintético de 66
+filas (el contenedor no alcanza `docs.google.com` ni `unpkg.com`). Eso verifica arranque,
+navegación, filtros y tabla; **no verifica los mapas**, que hay que revisar en el navegador real.
+
 ## Pendientes / riesgos conocidos
 - **Migrar fuera de las IP de GitHub Pages** (ver hallazgo de arriba). Al hacerlo hay que actualizar
   `canonical`, `og:url`, `og:image`, `twitter:image` en `index.html` y la restricción de origen de
@@ -160,5 +205,10 @@ de GitHub Pages, probablemente por IPv6 sin fallback.
 - **Rotar la `GOOGLE_MAPS_API_KEY`:** sigue viva en el historial de git (los `index.html.bak`
   borrados el 27-ago no la sacan de los commits anteriores). Ocultarla no es remediación.
 - **Continuidad institucional:** el Google Sheet del inventario y el proyecto de Google Cloud deberían colgar de cuentas institucionales de SEDEMA, no personales. Agregar un segundo propietario en IAM.
+- **Validar en navegador real los cuatro destinos con mapas** (Ubicar, Inventario, Capas): el
+  entorno de pruebas no puede pintar Leaflet.
+- **Confirmar el cambio de color de ANP Local** (guinda → naranja) con la identidad institucional.
+- **Colores de Zona Patrimonio confundibles:** AICA `#7F77DD` con ARCAC `#7048E8`, y SIPAM
+  `#EF9F27` con ANP Local `#F08217`. Propuesta pendiente de validación: `#4C4F9E` y `#C77D0A`.
 - **Corregir el Sheet** en la fila de Bosque de Tlalpan (y revisar las 8 parciales) según el hallazgo de arriba.
 - **Traslapes ANP–ARCAC** que el tablero no reportaba hasta v36 (ej. Cumbres del Ajusco ∩ ARCAC San Miguel Ajusco). Vale la pena inventariarlos.
