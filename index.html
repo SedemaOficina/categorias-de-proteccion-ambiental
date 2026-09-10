@@ -4516,7 +4516,7 @@ function initARCACFichaMap(no){
   if(!feat){ container.classList.add('no-data'); container.innerHTML='<div><b>Polígono no disponible</b></div>'; return; }
   container.classList.remove('no-data');
   activeMap = L.map(container, { zoomControl:true, scrollWheelZoom:false, attributionControl:true });
-  activeBaseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO', maxZoom:19}).addTo(activeMap);
+  activeBaseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_32cg_1_639fb69171e990c64b31e73f',{attribution:'© OpenStreetMap © CARTO', maxZoom:19}).addTo(activeMap);
   try{ createAlcaldiasLayer({interactive:false}).addTo(activeMap); }catch(e){}
   const col = feat.properties._color || 'var(--arcac-com)';
   activeGeoLayer = L.geoJSON(feat, {style:{color:col, weight:2, fillColor:col, fillOpacity:0.28}}).addTo(activeMap);
@@ -4588,7 +4588,7 @@ async function initARCACMap(){
   const fc = await loadARCAC();
 
   arcacMap = L.map(canvas, {zoomControl:true, scrollWheelZoom:false});
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO', maxZoom:19}).addTo(arcacMap);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_32cg_1_639fb69171e990c64b31e73f',{attribution:'© OpenStreetMap © CARTO', maxZoom:19}).addTo(arcacMap);
   try{ createAlcaldiasLayer({interactive:false}).addTo(arcacMap); }catch(e){}
 
   const bounds = L.latLngBounds([]);
@@ -5741,7 +5741,7 @@ function findGeometry(d){
 
 const TILE_LAYERS = {
   positron: {
-    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_32cg_1_639fb69171e990c64b31e73f',
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OSM</a> · © <a href="https://carto.com/attributions">CARTO</a>',
     maxZoom: 19
   },
