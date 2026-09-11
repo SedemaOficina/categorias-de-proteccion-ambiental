@@ -1612,6 +1612,116 @@
     .leaflet-top.leaflet-left { --mc-h:44px }
   }
 
+/* ═══════════════════════════════════════════════════════════════════
+   SISTEMA «GOOGLE MAPS» · adaptación del kit de Figma (11 sep 2026)
+   ───────────────────────────────────────────────────────────────────
+   Se toma del kit la GEOMETRÍA y la ELEVACIÓN —cápsulas de radio
+   completo, botones redondos de 48/56, sombras de tres niveles, la
+   barra inferior con pastilla teñida detrás del icono, las filas de
+   lista sobre fondo gris—. NO se toma su paleta: el turquesa del kit
+   es la marca de Google. En su lugar va el guinda institucional, que
+   es lo que este tablero señala como activo y accionable.
+   Este bloque va DELIBERADAMENTE al final de la hoja: varias reglas
+   compiten con las de arriba con la misma especificidad y aquí gana
+   el orden, no el `!important`.
+   ═══════════════════════════════════════════════════════════════════ */
+:root{
+  /* Tres niveles de elevación del kit, con el gris de sombra de Material */
+  --gm-e1:0 1px 2px rgba(60,64,67,.30), 0 1px 3px 1px rgba(60,64,67,.15);
+  --gm-e2:0 1px 2px rgba(60,64,67,.30), 0 2px 6px 2px rgba(60,64,67,.15);
+  --gm-e3:0 1px 3px rgba(60,64,67,.30), 0 4px 8px 3px rgba(60,64,67,.15);
+  --gm-tint:rgba(157,33,72,.11);     /* el «teal claro» del kit, en guinda */
+  --gm-tint-fuerte:rgba(157,33,72,.18);
+}
+/* Asa de arrastre (componente `handle` del kit) */
+.gm-handle{width:34px;height:4px;border-radius:2px;background:#dadce0;margin:8px auto 4px}
+
+@media (max-width:760px){
+  /* ── NAVBAR (componente `navbar`) ──────────────────────────────────
+     El kit no pinta el destino activo como un bloque de color: pone una
+     pastilla teñida DETRÁS DEL ICONO y deja la etiqueta en texto oscuro
+     en negritas. Se lee igual de rápido y no mete un rectángulo saturado
+     al pie de cada pantalla. */
+  .destbar{gap:0;padding:6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    background:var(--card);border-top:1px solid var(--line-soft);box-shadow:var(--gm-e2)}
+  .dest{flex-direction:column;gap:3px;height:auto;padding:2px 0 0;
+    font-size:var(--fs-mini);font-weight:500;color:var(--ink-2);background:transparent}
+  .dest:hover{background:transparent;color:var(--ink)}
+  .dest .dest-ico{width:auto;height:26px;min-width:58px;padding:0 18px;border-radius:13px;
+    transition:background .18s}
+  .dest .dest-ico svg{width:20px;height:20px}
+  .dest .dest-lbl{overflow:visible;text-overflow:clip;line-height:1.1}
+  .dest.active{background:transparent;color:var(--ink);font-weight:700;box-shadow:none}
+  .dest.active .dest-ico{background:var(--gm-tint);color:var(--guinda)}
+
+  /* ── SEARCH BAR (componente `search-bar`) ─────────────────────────
+     Cápsula blanca con sombra, icono guía a la izquierda y acción a la
+     derecha. Sustituye a la caja con borde y esquinas de 6 px: es el
+     elemento que más distingue a Google Maps de un formulario web. */
+  .ubicar-bar{background:var(--card);border:none;border-left:none;border-radius:28px;
+    padding:6px 6px 6px 8px;box-shadow:var(--gm-e2);margin-bottom:12px}
+  .wrap:not(.dest-ubicar) .ubicar-bar{padding:6px 6px 6px 8px;gap:0}
+  .ubicar-head{display:none}
+  .dest-ubicar .ubicar-bar{box-shadow:var(--gm-e2);background:var(--card)}
+  .dest-ubicar .ubicar-head{display:none}
+  .ubicar-row{gap:6px;align-items:center}
+  .ubicar-input-wrap{align-items:center}
+  /* El icono de lupa se dibuja como fondo del campo: no exige tocar el HTML */
+  .ubicar-input-wrap input{height:44px;border:none;border-radius:24px;padding:0 10px 0 40px;
+    background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2355585A' stroke-width='2' stroke-linecap='round'><circle cx='11' cy='11' r='7'/><path d='m20 20-3.6-3.6'/></svg>") no-repeat 12px center/18px 18px;
+    font-size:var(--fs-md)}
+  .ubicar-input-wrap input:focus{border:none;box-shadow:inset 0 0 0 2px var(--gm-tint-fuerte)}
+  .ubicar-go{display:none}                       /* la lupa ya está en el campo */
+  .ubicar-sugerencias{border:none;border-radius:16px;box-shadow:var(--gm-e3);top:calc(100% + 8px);
+    overflow:hidden}
+
+  /* ── FAB (componente `Button /Round`) ─────────────────────────────
+     «Usar mi ubicación» deja de ser un botón rectangular con texto: es
+     el gesto que más repite el personal en campo y en el kit eso es un
+     círculo. Guinda relleno = acción primaria. */
+  .ubicar-gps{width:44px;height:44px;min-width:44px;padding:0;border-radius:50%;
+    background:var(--guinda);color:#fff;box-shadow:var(--gm-e1);flex:0 0 auto}
+  .ubicar-gps span{display:none}
+  .ubicar-gps svg{width:20px;height:20px}
+  .ubicar-gps:active{box-shadow:var(--gm-e2);transform:scale(.96)}
+  .wrap:not(.dest-ubicar) .ubicar-gps{width:44px;height:44px;padding:0}
+  /* En «Ubicar» el alto lo fijaban dos reglas de escritorio (52 y 48 px) que
+     estiraban el círculo a óvalo. La cápsula es de una sola altura. */
+  .dest-ubicar .ubicar-row{flex-direction:row;align-items:center;gap:6px}
+  .dest-ubicar .ubicar-gps{width:44px;height:44px;align-self:center;font-size:0}
+  /* En el kit la acción de la derecha cierra la cápsula (ahí va el avatar).
+     El GPS está primero en el HTML por orden de lectura con lector de
+     pantalla; `order` lo mueve solo en pantalla. */
+  .ubicar-gps{order:2}
+  .ubicar-input-wrap{order:1}
+  .dest-ubicar .ubicar-input-wrap input{height:44px;font-size:var(--fs-md)}
+
+  /* ── LIST ITEM (componente `list-item`) ───────────────────────────
+     Filas blancas separadas por el fondo, no por líneas. El punto de
+     color se conserva —aquí el color SÍ significa territorio— pero la
+     fila adopta el ritmo del kit. */
+  .ubi-item{background:var(--card);border:none;border-radius:12px;margin-bottom:6px;
+    padding:13px 12px;box-shadow:var(--gm-e1);align-items:center}
+  .ubi-lista{background:transparent;gap:0}
+  .ubi-main{border-radius:16px;box-shadow:var(--gm-e2);border:none;
+    border-left:4px solid var(--c, var(--guinda))}
+
+  /* ── ACTION BUTTON (componente `Button /Action`) ──────────────────
+     Pastilla de radio completo con icono a la izquierda. El kit tiene
+     dos pesos: relleno para la acción principal, teñido para las demás. */
+  .ubi-ficha{border-radius:24px;min-height:48px;padding:0 22px;box-shadow:var(--gm-e1);
+    font-weight:700;letter-spacing:.01em}
+  .ubi-ficha:active{transform:scale(.98)}
+  .ubi-mini{width:40px;height:40px;border-radius:50%;background:var(--gm-tint);
+    border:none;color:var(--guinda);font-size:var(--fs-lg);flex:0 0 auto}
+
+  /* ── PILLS (componente `pills`) ───────────────────────────────────
+     Los subfiltros ya eran pastillas; se les da la sombra y el blanco
+     del kit para que floten sobre el fondo en vez de dibujar borde. */
+  .subchip{border:none;background:var(--card);box-shadow:var(--gm-e1);height:38px;border-radius:19px}
+  .subchip.active{background:var(--guinda);box-shadow:var(--gm-e2)}
+}
+
 </style>
 </head>
 <body>
@@ -2313,8 +2423,11 @@ const currentData = () => {
  * «Ubicar» no tiene grupo: es una acción, y vive en `state.dest`.
  * ════════════════════════════════════════════════════════════════════ */
 const DEST_ICONS = {
-  UBICAR:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/></svg>',
-  INVENTARIO:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>',
+  /* Iconos tomados del kit de Figma: el pin de «location» para Ubicar y
+     «layers» para Inventario. El de Análisis no existe en el kit y se
+     conserva el de barras, que es el estándar de la casa. */
+  UBICAR:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-6.2 7-11.4A7 7 0 0 0 5 10.6C5 15.8 12 22 12 22Z"/><circle cx="12" cy="10.4" r="2.4"/></svg>',
+  INVENTARIO:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>',
   ANALITICA:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>'
 };
 /* Tres destinos (11-sep-2026). «Capas» desapareció: sus dos módulos se
@@ -7156,6 +7269,6 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
 </style>
 <div class="cinta-borrador" role="note"><b>Versión en revisión · rediseño v38.</b>
   La página oficial es <a href="./">la portada del sitio</a>.
-  <span class="ver">sia-v35-2026-09-11y</span></div>
+  <span class="ver">sia-v35-2026-09-11z</span></div>
 </body>
 </html>
