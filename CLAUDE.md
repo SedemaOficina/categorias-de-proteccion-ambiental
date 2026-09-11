@@ -201,6 +201,23 @@ destinos y los subfiltros. `SECONDARY_TABS`, `.tabs`, `.tab` y el menú «Más �
 - **Tabla en vista partida (11 sep):** además de Nombre, Subcategoría, Alcaldía, Superficie, PM y
   SC se muestran **Tipo** y **DG responsable**; solo se ocultan Jurisdicción, Decreto y Fecha PM.
   La columna Nombre baja a 28% y el grid del `main` pasa a `0.88fr / 1fr` para darle ancho a la tabla.
+- **Columnas redundantes (11 sep):** la tabla obedece la misma regla que los filtros. En
+  `populateFilters()` se calcula, sobre `currentData()`, qué columnas tienen un solo valor en el
+  subconjunto activo y se marca la tabla con `oc-<n>` (CSS `table.t.oc-2 th:nth-child(2)`…).
+  Se calcula sobre el grupo, no sobre las filas filtradas, para que no aparezcan y desaparezcan
+  columnas mientras se teclea. Resultado con el inventario vigente:
+
+  | Subconjunto | Columnas visibles |
+  |---|---|
+  | Todas | Nombre · Tipo · Subcat. · Alcaldía · Sup. · PM · SC · DG resp. |
+  | Bosques Urbanos | Nombre · Alcaldía · Sup. · PM |
+  | Barrancas | Nombre · Alcaldía · Sup. · PM · SC |
+  | ANP Locales y Federales | Nombre · Subcat. · Alcaldía · Sup. · PM · SC · DG resp. |
+
+- **Sello de versión (11 sep):** la cinta de `rediseno-v38.html` muestra el `CACHE_VERSION` con el
+  que se compiló. Sirve para saber de un vistazo si el navegador está sirviendo una copia vieja
+  desde el Service Worker. El archivo se arma con `python armar-revision.py`, que lee la versión
+  de `sw.js` y la inyecta.
 - **Descarga CSV retirada (11 sep):** el botón `↓ CSV` del inventario y su listener `btnExport`
   se eliminaron a petición del usuario. El módulo Traslapes conserva el suyo (`trasCsv` →
   `exportTraslapesCSV()`), que es independiente. Las columnas que la tabla oculta en vista

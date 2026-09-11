@@ -612,6 +612,19 @@
   #globalMapSection{display:block;margin-top:0;margin-bottom:14px}
   #globalMapSection > .panel{margin-bottom:0}
 
+  /* ═══ Columnas redundantes · rediseño 2026-09-11 ═══
+     Misma regla que en los filtros: una columna cuyo subconjunto activo tiene un
+     solo valor no informa nada. Dentro de «Barrancas» la columna Tipo repite AVA
+     veintiséis veces y Subcategoría repite Barranca. Se retiran mientras ese
+     subconjunto esté activo y vuelven en «Todas». Lo decide el dato, no una lista. */
+  table.t.oc-2  th:nth-child(2),  table.t.oc-2  td:nth-child(2),
+  table.t.oc-3  th:nth-child(3),  table.t.oc-3  td:nth-child(3),
+  table.t.oc-4  th:nth-child(4),  table.t.oc-4  td:nth-child(4),
+  table.t.oc-5  th:nth-child(5),  table.t.oc-5  td:nth-child(5),
+  table.t.oc-8  th:nth-child(8),  table.t.oc-8  td:nth-child(8),
+  table.t.oc-10 th:nth-child(10), table.t.oc-10 td:nth-child(10),
+  table.t.oc-11 th:nth-child(11), table.t.oc-11 td:nth-child(11){display:none}
+
   /* ═══ Vista partida · rediseño 2026-09-10 ═══
      El mapa vivia debajo de la tabla, en un producto cuyo uso dominante es de
      campo: obligaba a recorrer toda la pagina y nunca se veian juntos. A partir
@@ -2344,6 +2357,23 @@ function populateFilters(){
     if(!util && e.value){ e.value = ''; state[id] = ''; }
     if(util && ['fTipo','fJur','fCat','fSC','fDG'].includes(id)) avanzadosVisibles++;
   });
+
+  /* La tabla obedece la misma regla que los filtros: la columna cuyo valor no
+     cambia en el subconjunto activo se retira. Se calcula sobre currentData(),
+     no sobre las filas filtradas, para que no aparezcan y desaparezcan columnas
+     mientras se teclea en la busqueda. */
+  const COL_CAMPO = {2:'tipo', 3:'jurisdiccion', 4:'categoria', 5:'alcaldia',
+                     8:'programa_manejo', 10:'suelo_conservacion', 11:'dg_responsable'};
+  const tabla = document.querySelector('table.t');
+  if(tabla){
+    Object.keys(COL_CAMPO).forEach(n=>{
+      const campo = COL_CAMPO[n];
+      const vals = campo === 'alcaldia'
+        ? new Set(explode(subset,'alcaldia'))
+        : new Set(subset.map(d=>d[campo] || '—'));
+      tabla.classList.toggle('oc-'+n, subset.length > 0 && vals.size <= 1);
+    });
+  }
 
   /* Si ningun filtro avanzado aporta algo, el boton que los despliega tampoco. */
   const btnMas = document.getElementById('btnMasFiltros');
@@ -7054,10 +7084,12 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
     box-shadow:0 -2px 10px rgba(42,42,42,.25)}
   .cinta-borrador b{color:#f5aeb8}
   .cinta-borrador a{color:#fffdf0;text-decoration:underline}
+  .cinta-borrador .ver{font-family:'Roboto Mono',monospace;font-size:11px;opacity:.72;margin-left:10px}
   body{padding-bottom:34px}
   @media (max-width:760px){ .cinta-borrador{bottom:64px} body{padding-bottom:106px} }
 </style>
 <div class="cinta-borrador" role="note"><b>Versión en revisión · rediseño v38.</b>
-  La página oficial es <a href="./">la portada del sitio</a>.</div>
+  La página oficial es <a href="./">la portada del sitio</a>.
+  <span class="ver">sia-v35-2026-09-11e</span></div>
 </body>
 </html>
