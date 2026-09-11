@@ -445,6 +445,11 @@ Lo que el rehacer sacó a la luz, con el inventario de hoy:
   Robles ocupaban media gráfica sin un solo decreto. Ahora cada barra es un **periodo completo** a
   nombre de quien lo encabezó (AMLO, Ebrard, Mancera, Sheinbaum, Brugada), con el interinato
   contado dentro del periodo que cierra. 1997–2000 sale por no tener decretos que reportar.
+- **Metas · el titular sobre el periodo.** Las dos columnas se distinguían solo por cuatro
+  dígitos. Ahora llevan encima **Claudia Sheinbaum** (2018–2024) y **Clara Brugada** (2024–2030):
+  un sexenio se reconoce por quien lo encabeza antes que por sus fechas. El periodo 2018–2024 se
+  cuenta completo a nombre de Sheinbaum —el interinato de Batres queda dentro—, con el mismo
+  criterio que la cronología por administración.
 - **Tooltips de las cronologías en celular.** En un teléfono no hay «pasar el cursor» y el globo
   flotante —170 px sobre una barra de 20 px, dentro de un panel que se desplaza en horizontal—
   salía cortado. Las barras son ahora `tabindex="0"` con `role="button"` y el globo se muestra

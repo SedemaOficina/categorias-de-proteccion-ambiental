@@ -998,6 +998,12 @@
   .meta-col-base{border-top:3px solid var(--gris)}
   .meta-col-goal{border-top:3px solid var(--guinda);background:linear-gradient(to bottom, rgba(157,33,72,.03), var(--card))}
   .meta-col-head{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--line-soft);padding-bottom:12px}
+  /* El nombre de quien encabeza va ARRIBA del periodo: un sexenio se reconoce
+     por su titular antes que por sus cuatro dígitos, y así las dos columnas se
+     distinguen de un vistazo sin leer las fechas. */
+  .meta-titular{font-family:var(--font-titulo);font-size:var(--fs-md);font-weight:700;
+    color:var(--ink-2);letter-spacing:-.01em;line-height:1.2}
+  .meta-col-goal .meta-titular{color:var(--guinda)}
   .meta-period{font-family:'Roboto',sans-serif;font-size:var(--fs-xl);font-weight:900;color:var(--ink);letter-spacing:-.02em}
   .meta-col-goal .meta-period{color:var(--guinda)}
   .meta-label{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
@@ -3100,7 +3106,10 @@ function renderCronologiaSection(){
 }
 
 function renderMetaComparable(){
-  // Administración anterior (5 dic 2018 – 4 oct 2024) · cierre de Sheinbaum + Batres
+  /* Administración 2018–2024, a nombre de Claudia Sheinbaum. El periodo se
+     cuenta COMPLETO —el interinato de Batres queda dentro—, igual que en la
+     cronología por administración: partirlo repartiría los decretos del sexenio
+     entre dos columnas y ninguna diría cuánto se decretó. */
   const anterior = computeAdminStats('2018-12-05', '2024-10-04');
   // Administración actual (5 oct 2024 – en curso) · toma de posesión Brugada
   const hoyIso = new Date().toISOString().slice(0,10);
@@ -3140,6 +3149,7 @@ function renderMetaComparable(){
       <div class="meta-hero">
         <div class="meta-col meta-col-base">
           <div class="meta-col-head">
+            <span class="meta-titular">Claudia Sheinbaum</span>
             <span class="meta-period">2018 — 2024</span>
             <span class="meta-label">Línea base · 6 años</span>
           </div>
@@ -3154,6 +3164,7 @@ function renderMetaComparable(){
         <div class="meta-arrow">→</div>
         <div class="meta-col meta-col-goal">
           <div class="meta-col-head">
+            <span class="meta-titular">Clara Brugada</span>
             <span class="meta-period">2024 — 2030</span>
             <span class="meta-label">Administración actual · meta por superar</span>
           </div>
@@ -6824,6 +6835,6 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
 </style>
 <div class="cinta-borrador" role="note"><b>Versión en revisión · rediseño v38.</b>
   La página oficial es <a href="./">la portada del sitio</a>.
-  <span class="ver">sia-v35-2026-09-11q</span></div>
+  <span class="ver">sia-v35-2026-09-11r</span></div>
 </body>
 </html>
