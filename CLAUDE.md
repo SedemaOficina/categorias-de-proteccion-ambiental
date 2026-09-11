@@ -331,6 +331,97 @@ destinos y los subfiltros. `SECONDARY_TABS`, `.tabs`, `.tab` y el menú «Más �
   `TRASLAPES` se agregó además a `isSpecialTab()`: estaba fuera por descuido y hacía que
   `render()` y `populateFilters()` trabajaran sobre una tabla oculta.
 
+### Auditoría y limpieza · 11 sep 2026
+
+**Traslape de elementos.** Arnés `verif/traslapes-ui.mjs`: recorre las nueve vistas en tres anchos
+(390 / 834 / 1500) y, para cada par de elementos interactivos o de lectura que se superponen más de
+3 px, comprueba con `elementFromPoint` si uno **tapa** al otro; verifica además que no haya scroll
+horizontal y que `.wrap` reserve hueco bajo la barra fija. Resultado final: **0 pares en 27
+combinaciones**. Lo que encontró y se corrigió:
+- **El mapa se comía la barra de navegación en celular.** `--z-sticky` había desaparecido de la
+  declaración de variables —una limpieza anterior borró la línea entera en lugar de una variable—,
+  así que `.destbar` computaba `z-index:auto` y el lienzo de Leaflet quedaba encima. Restaurada.
+  *Lección: al retirar una variable CSS, comprobar que no comparta línea con otras.*
+- **El pie quedaba 15 px por debajo de la barra fija.** `.wrap` reservaba 40 px en ≤420 px contra
+  55 px de barra. Ahora existe `--destbar-h:56px` como única fuente y los tres `padding-bottom`
+  se calculan a partir de ella, más `env(safe-area-inset-bottom)`.
+- **Scroll horizontal en tableta.** Los globos de la primera y la última barra de las dos
+  cronologías desbordaban el panel aunque estuvieran invisibles: ocupan caja. Se alinean hacia
+  dentro con `:first-child`/`:last-child` sobre la columna, no sobre la barra.
+
+**Mapas en celular (11 sep).**
+- **Sin botones +/−**: `.leaflet-control-zoom{display:none}` en ≤760 px. Se acerca con dos dedos, y
+  esa columna era la que terminaba pisando la barra inferior. «Ubicarme» y «Vista general» se
+  quedan: no tienen gesto equivalente.
+- **El gesto vertical es de la página, no del mapa.** El mapa ocupa casi toda la pantalla; con el
+  gesto completo, arrastrar hacia abajo movía el mapa y la página no avanzaba. `touch-action:pan-y`
+  sobre `.leaflet-container` y las tres clases que Leaflet alterna (`leaflet-touch-drag`,
+  `leaflet-touch-zoom` y su combinación, que declara `touch-action:none`): el navegador se queda el
+  desplazamiento vertical y a Leaflet le siguen llegando el arrastre horizontal y el pellizco.
+- **Pies de mapa retirados**: «Límites de alcaldía (referencia)», «Clic en un polígono para abrir la
+  ficha» y «Clic en el mapa para activar zoom» (×3). Con ellos se fue `.map-block-foot`.
+- Retirado el bloque de contacto con `CORREO_INSTITUCIONAL@sedema.cdmx.gob.mx`, que era un
+  marcador de posición, y la misma dirección en el aviso de error de carga.
+
+**Código zombie retirado (~34 KB, de 419 a 385 KB).** Auditado con un subagente y verificado a mano
+candidato por candidato (la trampa son las clases que el JS construye por interpolación):
+- Cadena de las 11 pestañas: `tabHTML`, `TAB_ICONS`, `tabSubtitle`, `MORE_ICON`, `SECONDARY_TABS`,
+  `DEST_DE_TAB` (se llenaba y nunca se leía), `closeMoreMenu` y sus dos listeners no-op sobre
+  `document`; y en CSS toda la familia `.tabs/.tab*/.more*` en cuatro zonas, incluidas tres
+  media queries.
+- Página independiente de ARCAC: `renderARCACPage`, `initARCACMap`, `renderArcacRows`, `arcacTbl`,
+  `arcacLayers`, `arcacMap`. **Antes de borrarla se rescató la regla `.ten-badge`**, que vivía en su
+  `<style>` anidado —nunca inyectado— mientras la ficha ARCAC sí emite la insignia: llevaba tiempo
+  pintándose sin estilo.
+- CSS del buscador flotante, `.ley-link*`, `.dist/.bar-row/.track/.fill`, `.tip-*`,
+  `.sc-toggle-btn/.sc-swatch`, `.btn-share-area.copied`, el fragmento `.backdrop.show`, la errata
+  `.tag-dg-dgcorenadr` y seis variables sin consumir.
+- **Vivos, desmentidos**: `exportTraslapesCSV` (cableado a `#trasCsv`; la descarga retirada fue la
+  del inventario), `EMB_COLORS`/`normEmbTipo`/`loadEmbarcaderos` (los usa Zona Patrimonio),
+  `.legal-list-cols-2` y todas las clases interpoladas (`tag-${tipo}`, `sub-${subCode()}`, `oc-${n}`,
+  `e-${k}`, `doc-link-${tipo}`).
+- Pendiente detectado, no resuelto: `legalList(..., 'compact')` emite `.legal-list-compact` y esa
+  regla no existe —la línea está vacía bajo su propio comentario—. Es un bug de estilo, no código
+  muerto.
+
+### Análisis · Brechas y distribución · reescrito (11 sep 2026)
+
+El chip prometía «Brechas y distribución» y la página entregaba composición y cronología, mientras
+el diagnóstico de brechas vivía dentro de **Metas**, que responde otra pregunta (qué hizo cada
+administración). Se mudó a donde el chip lo anuncia y se reconstruyó. **Ninguna cifra está escrita a
+mano: todas se calculan sobre `DATA` en cada render**, así que la página no puede volver a quedar
+desfasada del Sheet.
+
+Estructura: tres cifras de encabezado · Brecha 1 programas de manejo por grupo · Brecha 2 vigencia
+de lo publicado · Brecha 3 decreto sin programa · carga por dirección responsable · composición ·
+reparto por alcaldía · cronología.
+
+Lo que el rehacer sacó a la luz, con el inventario de hoy:
+- **La brecha se lee distinta según se mida.** Por número de áreas el rezago de programas de manejo
+  es 42%; **por superficie es 64%** (17,621.81 ha de 27,747.05), porque las áreas sin programa son
+  las grandes. El encabezado ahora lidera con la superficie.
+- **Vigencia, indicador nuevo.** 26 de los 38 programas publicados tienen diez años o más; el más
+  antiguo es de 2005. Tener programa no es tenerlo vigente.
+- **Las 5 áreas con decreto de más de 30 años sin programa son todas federales** (1936–1938,
+  3,749.97 ha). La página lo dice —y sólo lo dice si de verdad lo son, porque la frase está
+  condicionada a `every(d => d.jurisdiccion === 'Federal')`—, lo que sitúa el rezago en la
+  coadministración con SEMARNAT y CONANP, no en una decisión local.
+- **Carga institucional, panel nuevo.** DGCORENADER: 7 áreas (10.6%) pero **50.1% de la superficie**
+  y 1 de 7 con programa. DGSANPAVA: 59 áreas, 49.9% de la superficie, 37 de 59. Es el dato con
+  consecuencia presupuestal más directa de la página.
+- **Concentración**: 4 de las 66 áreas reúnen la mitad de la superficie; mediana 43.66 ha contra un
+  promedio de 420.41 ha.
+- **Se retiró una inferencia que no se sostenía.** El panel anterior listaba «las cinco alcaldías con
+  menos áreas protegidas» como «posibles candidatas a iniciativas de declaratoria». Contar polígonos
+  no mide desprotección: Benito Juárez no necesita un decreto, necesita suelo. Ahora el reparto por
+  alcaldía se ordena **por superficie**, y las tres demarcaciones sin áreas (Azcapotzalco, Benito
+  Juárez, Iztacalco) se enuncian como descripción del inventario con la advertencia explícita de que
+  no son un diagnóstico.
+- Fuera también: la promesa de «exportación» (la descarga ya no existe) y el «posible doble conteo
+  (p. ej. Cerro de la Estrella)», que el módulo Traslapes mide exacto.
+- **Sin semáforo.** Las tarjetas de encabezado usaban rojo y azul; el azul es «ANP Federal» en todo
+  el tablero. Ahora guinda para lo que exige decisión y dorado para lo que contextualiza.
+
 **Al validar:** la copia de trabajo se prueba en Chromium (Playwright) interceptando la red.
 Hasta el 11 de septiembre se usaba un doble de Leaflet, que no pinta nada; **ahora se sirve
 Leaflet 1.9.4 real desde `npm` y tejas PNG sintéticas**, así que los mapas SÍ se verifican:
@@ -347,6 +438,7 @@ Places, que el contenedor no alcanza.
   borrados el 27-ago no la sacan de los commits anteriores). Ocultarla no es remediación.
 - **Continuidad institucional:** el Google Sheet del inventario y el proyecto de Google Cloud deberían colgar de cuentas institucionales de SEDEMA, no personales. Agregar un segundo propietario en IAM.
 - **Confirmar el cambio de color de ANP Local** (guinda → naranja) con la identidad institucional.
+- **Falta la regla `.legal-list-compact`** (la emite `legalList(..., 'compact')` en Marco Jurídico).
 - **Colores de Zona Patrimonio confundibles:** AICA `#7F77DD` con ARCAC `#7048E8`, y SIPAM
   `#EF9F27` con ANP Local `#F08217`. Propuesta pendiente de validación: `#4C4F9E` y `#C77D0A`.
 - **Corregir el Sheet** en la fila de Bosque de Tlalpan (y revisar las 8 parciales) según el hallazgo de arriba.

@@ -61,13 +61,10 @@
     --guinda:#9d2148;   /* Pantone 7420 C — institucional primario */
     --dorado:#b28e5c;   /* Pantone 465 C — institucional primario (uso gráfico) */
     --dorado-text:#7a5d35;  /* Variante oscura para texto (contraste 5.6:1 sobre crema, AA) */
-    --amarillo:#fdc60a;
     --naranja:#f08217;
     --marron:#ac6d14;
-    --rosa-claro:#f5aeb8;
     --magenta:#d72f89;
     --rojo:#e5074c;
-    --azul-claro:#73cae6;
     --verde:#027a35;
     --azul:#266cb4;
     --gris:#55585a;
@@ -88,9 +85,6 @@
     --magenta-900:#c2277a;  /* idem · 5.32:1 */
     --line:#d9d3c0;
     --line-soft:#eae4cf;
-    --accent:var(--guinda);
-    --accent-2:var(--dorado);
-    --danger:var(--rojo);
     --card:#ffffff;
 
     /* Colores por grupo */
@@ -118,13 +112,16 @@
 
     --r-chip:2px;       /* insignias y puntos de color */
     --r-ui:5px;         /* botones, campos, celdas */
-    --r-card:var(--radius);
 
     --sh-1:0 1px 3px rgba(42,42,42,.08);      /* tarjeta en reposo */
     --sh-2:0 4px 14px rgba(42,42,42,.12);     /* control flotante */
     --sh-3:0 8px 24px rgba(42,42,42,.22);     /* ficha, popup, toast */
 
-    --z-mapa:1; --z-flotante:500; --z-sticky:900;
+    --z-flotante:500; --z-sticky:900;
+    /* Alto de la barra de destinos fija en celular. Lo usan la propia barra y
+       el hueco que .wrap reserva al pie: si se tocan en un solo sitio no vuelven
+       a desincronizarse (el pie quedaba 15 px por debajo de la barra). */
+    --destbar-h:56px;
     --z-drawer:1000; --z-drawer-top:1001; --z-modal:1500; --z-toast:2000;
 
     --guinda-900:#7d1839;   /* hover del guinda */
@@ -225,8 +222,7 @@
   /* Filas de tabla operables con teclado: sin esto, examinar el inventario
      y abrir una ficha —el flujo central— es imposible sin raton. */
   tr[tabindex]:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px}
-  .ubicar-sugerencias .item:focus-visible,
-  .map-search-result-item:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px;background:var(--bg-2)}
+  .ubicar-sugerencias .item:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px;background:var(--bg-2)}
   .ubicar-kbd{display:none}
   /* Escritorio: el modulo se colapsa a una franja de una linea.
      El boton de GPS se oculta porque en escritorio navigator.geolocation
@@ -373,61 +369,6 @@
     .subnav-lbl{display:none}
   }
 
-  .tabs{display:flex;align-items:stretch;gap:2px;background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:4px;margin-bottom:18px;box-shadow:var(--shadow)}
-  .tab{flex:1 1 0;min-width:0;padding:9px 10px;background:transparent;border:none;cursor:pointer;font-family:'Roboto',sans-serif;font-size:var(--fs-sm);color:var(--ink-2);border-radius:var(--r-ui);transition:transform .18s,background .18s,box-shadow .18s,color .18s;display:flex;flex-direction:row;align-items:center;gap:9px;text-align:left;font-weight:500;position:relative}
-  .tab:hover{background:var(--bg-2);transform:translateY(-1px)}
-  .tab:hover .tab-icon{transform:scale(1.06)}
-  .tab:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
-  .tab.active{background:var(--guinda);color:var(--crema);box-shadow:0 2px 8px rgba(157,33,72,.25)}
-  .tab.active .tab-num{color:var(--crema);opacity:.88}
-  .tab.active .tab-icon{color:var(--crema)}
-  .tab-icon{flex-shrink:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--ink-2);transition:color .18s,transform .18s}
-  .tab-icon svg{width:100%;height:100%}
-  .tab-content{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
-  .tab-name{font-weight:700;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tab-num{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);color:var(--muted);letter-spacing:.06em;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  /* Color del icono por grupo cuando inactivo, da identidad visual */
-  .tab[data-id="ALL"]:not(.active) .tab-icon{color:var(--guinda)}
-  .tab[data-id="BU"]:not(.active) .tab-icon{color:var(--verde)}
-  .tab[data-id="BR"]:not(.active) .tab-icon{color:var(--marron)}
-  .tab[data-id="ANPL"]:not(.active) .tab-icon{color:var(--guinda)}
-  .tab[data-id="ANPF"]:not(.active) .tab-icon{color:var(--azul)}
-  .tab[data-id="ZP"]:not(.active) .tab-icon{color:var(--guinda)}
-  .tab[data-id="ANALISIS"]:not(.active) .tab-icon{color:var(--dorado)}
-  .tab[data-id="METAS"]:not(.active) .tab-icon{color:var(--guinda)}
-  .tab[data-id="LEGAL"]:not(.active) .tab-icon{color:var(--legal)}
-  /* Estados activos por grupo (mantienen los originales) */
-  .tab[data-id="BU"].active{background:var(--bu);color:var(--crema)}
-  .tab[data-id="BR"].active{background:var(--br);color:var(--crema)}
-  .tab[data-id="ANPL"].active{background:var(--anpl);color:var(--ink)}
-  .tab[data-id="ANPL"].active .tab-num{color:var(--ink);opacity:.75}
-  .tab[data-id="ANPL"].active .tab-icon{color:var(--ink)}
-  .tab[data-id="ANPF"].active{background:var(--anpf);color:var(--crema)}
-  .tab[data-id="ZP"].active{background:var(--guinda);color:var(--crema)}
-  .tab[data-id="ARCAC"]:not(.active) .tab-icon{color:var(--arcac-com)}
-  .tab[data-id="ARCAC"].active{background:var(--arcac-com);color:var(--crema)}
-  .tab[data-id="TRASLAPES"]:not(.active) .tab-icon{color:var(--magenta)}
-  .tab[data-id="TRASLAPES"].active{background:var(--magenta);color:var(--crema)}
-  .tab[data-id="METAS"].active{background:var(--guinda);color:var(--crema)}
-  .tab[data-id="LEGAL"].active{background:var(--legal);color:var(--crema)}
-
-  /* === Menú «Más» · overflow de módulos analíticos (Análisis · Metas · Marco Jurídico) ===
-     El botón reutiliza la clase .tab: hereda toda la maquetación y el responsive de una
-     pestaña normal, y solo sobreescribe fondo y borde para leerse como control. */
-  .more-wrap{position:relative;flex:1 1 0;min-width:0;display:flex}
-  .more-btn{flex:1 1 auto;width:100%;background:var(--bg-2);border-left:1px solid var(--line);box-shadow:inset 0 0 0 1px rgba(178,142,92,.18)}
-  .more-btn:hover{background:var(--bg-3)}
-  .more-btn .tab-icon{color:var(--dorado-text)}
-  .more-btn.active{background:var(--guinda);color:var(--crema);border-left-color:transparent;
-    box-shadow:0 2px 8px rgba(157,33,72,.25)}
-  .more-btn.active .tab-icon,.more-btn.active .tab-num{color:var(--crema)}
-  .more-caret{font-size:var(--fs-micro);opacity:.65;margin-left:5px;display:inline-block;transition:transform .18s}
-  .more-wrap.open .more-caret{transform:rotate(180deg)}
-  .more-menu{position:absolute;right:0;top:calc(100% + 6px);min-width:272px;background:var(--card);
-    border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 10px 28px -8px rgba(42,42,42,.3);
-    padding:5px;z-index:60;display:none}
-  .more-wrap.open .more-menu{display:block}
-  .more-menu .tab{width:100%;flex:1 1 auto;padding:10px 12px}
 
   .panel{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:26px 28px;margin-bottom:20px;box-shadow:var(--shadow)}
   .panel-title{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--guinda);margin-bottom:10px;font-weight:500}
@@ -441,7 +382,7 @@
      a la institucion y la tabla se lee como lista.
      ═══════════════════════════════════════════════════════════════ */
   @media (max-width:760px){
-    .wrap{padding-bottom:96px}
+    .wrap{padding-bottom:calc(var(--destbar-h) + 24px + env(safe-area-inset-bottom, 0px))}
     header.top{padding:0 0 8px;margin-bottom:10px;gap:8px}
     h1{font-size:var(--fs-md);font-weight:600}
     .sub{display:none}
@@ -543,15 +484,26 @@
   /* ============================================================
    * BRECHAS · CSS
    * ============================================================ */
-  /* Variantes hero para diagnóstico de brechas */
-  .hero-card.hero-warning::before{background:var(--rojo)}
-  .hero-card.hero-info::before{background:var(--azul)}
-  .hero-eyebrow{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.15em;text-transform:uppercase;color:var(--rojo);font-weight:600;margin-bottom:8px}
-  .hero-card.hero-info .hero-eyebrow{color:var(--azul)}
-  .hero-card:not(.hero-warning):not(.hero-info) .hero-eyebrow{color:var(--guinda)}
+  /* Variantes hero para diagnóstico de brechas.
+     Sin semáforo (v38): el rojo y el azul de antes competían con la marca y
+     con los colores de categoría —el azul es «ANP Federal» en todo el tablero—.
+     El guinda marca lo que exige decisión; el dorado, lo que solo contextualiza. */
+  .hero-card.hero-warning::before{background:var(--guinda)}
+  .hero-card.hero-info::before{background:var(--dorado)}
+  .hero-eyebrow{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.15em;text-transform:uppercase;color:var(--guinda);font-weight:600;margin-bottom:8px}
+  .hero-card.hero-info .hero-eyebrow{color:var(--dorado-text)}
   .hero-meta{font-size:var(--fs-xs);color:var(--muted);margin-top:10px;font-family:'Roboto Mono',monospace;letter-spacing:.04em;line-height:1.3}
 
   /* Grid de tarjetas de brecha por grupo (2 columnas en desktop) */
+  /* Etiqueta de grupo dentro de las tablas de Análisis: el color lo pone el JS
+     con GROUP_COLORS; aquí solo el tamaño y la caja tipográfica. */
+  .grp-mini{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);white-space:nowrap}
+  /* Nota de lectura al pie de un panel: dice cómo NO leer la cifra de arriba.
+     Filete dorado, no rojo: advierte sobre la interpretación, no alarma. */
+  .nota-analisis{margin-top:16px;padding:13px 16px;background:var(--bg-2);
+    border-left:3px solid var(--dorado);border-radius:0 var(--radius) var(--radius) 0;
+    font-size:var(--fs-sm);color:var(--ink-2);line-height:1.55}
+  .nota-analisis b{color:var(--ink)}
   .brechas-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
   .brecha-card{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:18px 20px;border-left:3px solid var(--card-color, var(--guinda));position:relative}
   .brecha-card-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;gap:10px}
@@ -597,6 +549,12 @@
   .cron-bar:hover{background:var(--guinda-900);transform:translateY(-2px)}
   .cron-bar-tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--crema);padding:10px 12px;border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:var(--fs-sm);line-height:1.4;white-space:normal;width:220px;box-shadow:var(--sh-3);opacity:0;pointer-events:none;transition:opacity .15s;z-index:10}
   .cron-bar:hover .cron-bar-tooltip{opacity:1}
+  /* El globo de la primera y la última barra se salía del panel y empujaba la
+     página a scroll horizontal en tabletas —aunque esté invisible, ocupa caja—.
+     En los extremos se alinea hacia dentro en vez de centrarse. La barra cuelga
+     de .cron-bar-col, así que el :first-child/:last-child va en la columna. */
+  .cron-bar-col:first-child .cron-bar-tooltip{left:0;transform:none}
+  .cron-bar-col:last-child  .cron-bar-tooltip{left:auto;right:0;transform:none}
   .cron-tt-decada{font-weight:700;font-size:var(--fs-sm);margin-bottom:2px;color:#fff}
   .cron-tt-count{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.06em;color:var(--acento-mapa);margin-bottom:8px;text-transform:uppercase}
   .cron-tt-list{list-style:none;padding:0;margin:0;font-size:var(--fs-xs);line-height:1.45}
@@ -613,6 +571,10 @@
   .cron-gob-bar:hover{filter:brightness(1.08);transform:translateY(-2px)}
   .cron-gob-tooltip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--crema);padding:12px 14px;border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:var(--fs-sm);line-height:1.45;white-space:normal;width:260px;box-shadow:var(--sh-3);opacity:0;pointer-events:none;transition:opacity .15s;z-index:15}
   .cron-gob-bar:hover .cron-gob-tooltip{opacity:1}
+  /* Mismo caso que la cronología por década: los globos de los extremos se
+     alinean hacia dentro para no desbordar el panel. */
+  .cron-gob-col:first-child .cron-gob-tooltip{left:0;transform:none}
+  .cron-gob-col:last-child  .cron-gob-tooltip{left:auto;right:0;transform:none}
   .cron-gob-tt-title{font-weight:700;font-size:var(--fs-base);color:#fff;margin-bottom:4px;line-height:1.3}
   .cron-gob-tt-period{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.04em;color:var(--acento-mapa);margin-bottom:6px}
   .cron-gob-tt-meta{font-size:var(--fs-xs);color:rgba(255,253,240,.85);margin-bottom:6px;font-style:italic}
@@ -761,14 +723,6 @@
   .share-fill.bu{background:var(--bu)} .share-fill.br{background:var(--br)}
   .share-fill.anpl{background:var(--anpl)} .share-fill.anpf{background:var(--anpf)}
 
-  .dist{display:flex;flex-direction:column;gap:6px}
-  .bar-row{display:grid;grid-template-columns:1.2fr 2.4fr auto;gap:12px;align-items:center;font-size:var(--fs-base)}
-  .bar-row .lbl{color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400}
-  .bar-row .track{position:relative;height:20px;background:var(--bg-2);border-radius:var(--r-ui);overflow:hidden}
-  .bar-row .fill{position:absolute;left:0;top:0;bottom:0;background:var(--guinda);border-radius:var(--r-ui);transition:width .4s cubic-bezier(.2,.8,.2,1)}
-  .bar-row .fill.bu{background:var(--bu)} .bar-row .fill.br{background:var(--br)}
-  .bar-row .fill.anpl{background:var(--anpl)} .bar-row .fill.anpf{background:var(--anpf)}
-  .bar-row .v{font-family:'Roboto Mono',monospace;font-size:var(--fs-sm);color:var(--ink);white-space:nowrap;min-width:80px;text-align:right;font-weight:500}
 
   /* === Barra apilada de Áreas por Alcaldía (desglose por tipo) === */
   .alc-legend{display:flex;flex-wrap:wrap;gap:14px 18px;margin:8px 0 14px;padding:10px 12px;background:var(--bg-2);border-radius:var(--radius);font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.04em;color:var(--ink-2);text-transform:uppercase}
@@ -863,19 +817,6 @@
   .panel-accent-anp .panel-title{color:var(--guinda)}
 
   /* Enlaces a textos oficiales de leyes · pie institucional del panel */
-  .ley-link{display:inline-flex;align-items:center;gap:10px;margin-top:14px;padding:9px 14px;background:var(--bg-2);border:1px solid var(--line-soft);border-radius:var(--radius);text-decoration:none;font-size:var(--fs-sm);color:var(--ink-2);transition:all .15s;font-family:'Roboto',sans-serif;line-height:1.4;max-width:100%}
-  .ley-link:hover{background:#fff;transform:translateY(-1px)}
-  .ley-link-ico{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-width:24px;border-radius:50%;font-size:var(--fs-sm);font-weight:700}
-  .ley-link-txt{flex:1;min-width:0;word-wrap:break-word;overflow-wrap:break-word}
-  .ley-link-txt b{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.04em;font-weight:500}
-  .ley-link-local{border-left:3px solid var(--guinda)}
-  .ley-link-local:hover{border-color:var(--guinda);color:var(--guinda)}
-  .ley-link-local .ley-link-ico{background:var(--guinda);color:var(--crema)}
-  .ley-link-local .ley-link-txt b{color:var(--guinda)}
-  .ley-link-federal{border-left:3px solid var(--azul)}
-  .ley-link-federal:hover{border-color:var(--azul);color:var(--azul)}
-  .ley-link-federal .ley-link-ico{background:var(--azul);color:var(--crema)}
-  .ley-link-federal .ley-link-txt b{color:var(--azul)}
 
   /* Listado de fracciones del Art. 46 LGEEPA — compacto, todas federales */
   .fracciones-list{list-style:none;padding:0;margin:12px 0 0 0}
@@ -931,9 +872,6 @@
 
   /* Indicadores de interactividad — ayuda contextual para nuevos usuarios */
   .tabla-hint{font-size:var(--fs-xs);color:var(--muted);margin-bottom:8px;line-height:1.4}
-  .tip-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-  .tip-chip{display:inline-flex;align-items:center;gap:8px;padding:5px 11px;background:var(--bg-2);border:1px dashed var(--line);border-radius:var(--r-ui);font-size:var(--fs-xs);color:var(--muted);font-weight:400;line-height:1.3}
-  .tip-chip .tip-ico{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:var(--card);border:1px solid var(--line-soft);border-radius:50%;font-weight:700;color:var(--guinda);font-size:var(--fs-xs)}
 
   .table-wrap{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
   .table-scroll{max-height:70vh;overflow:auto}
@@ -995,6 +933,11 @@
   .tag-ANP.tag-full{background:rgba(157,33,72,.08)}
 
   /* SUBCATEGORÍA — todas con color único basado en paleta GCDMX */
+  /* Etiqueta de tenencia de la ficha ARCAC. Vivía dentro del <style> de la
+     página independiente de ARCAC, que nunca se inyectaba: la insignia se
+     pintaba sin estilo. Rescatada al retirar esa página (11-sep-2026). */
+  .ten-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:var(--fs-xs);
+    font-weight:600;color:#fff;letter-spacing:.01em}
   .tag-sub{display:inline-block;padding:2px 8px;border-radius:var(--r-chip);font-size:var(--fs-mini);font-family:'Roboto Mono',monospace;letter-spacing:.03em;white-space:nowrap;font-weight:500;max-width:100%;overflow:hidden;text-overflow:ellipsis}
   /* Variante full: nombre completo dentro del recuadro con su color característico */
   .tag-sub.tag-sub-full{padding:4px 12px;font-size:var(--fs-xs);letter-spacing:.02em;white-space:normal}
@@ -1085,7 +1028,7 @@
   }
 
   .backdrop{position:fixed;inset:0;background:rgba(42,42,42,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:var(--z-drawer)}
-  .backdrop.show,.backdrop.open{opacity:1;pointer-events:auto}
+  .backdrop.open{opacity:1;pointer-events:auto}
   .drawer{position:fixed;top:0;right:0;bottom:0;width:min(580px,94vw);background:var(--card);border-left:3px solid var(--guinda);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:var(--z-drawer-top);overflow-y:auto}
   .drawer.open{transform:translateX(0)}
   .drawer-inner{padding:30px 34px 50px}
@@ -1102,8 +1045,6 @@
   .btn-share-area{display:inline-flex;align-items:center;gap:8px;background:var(--card);color:var(--ink-2);padding:8px 14px;border:1.5px solid var(--line);border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:var(--fs-sm);font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;margin-top:4px}
   .btn-share-area:hover{border-color:var(--guinda);color:var(--guinda);background:#fff}
   .btn-share-area:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
-  .btn-share-area.copied{background:var(--verde);color:#fff;border-color:var(--verde)}
-  .btn-share-area.copied:hover{background:var(--verde);color:#fff}
 
   /* Mapa Leaflet dentro del drawer */
   .map-block{margin-top:8px;margin-bottom:22px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-soft);position:relative;background:var(--bg-2)}
@@ -1114,27 +1055,6 @@
   .map-fullscreen-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;background:var(--card);border:none;border-radius:var(--radius);cursor:pointer;color:var(--ink-2);box-shadow:var(--sh-2);transition:all .15s;padding:0}
   .map-fullscreen-btn:hover{background:#fff;color:var(--guinda)}
   .map-fullscreen-btn:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
-  /* Buscador de direcciones/coordenadas (esquina superior izquierda, debajo del control de zoom) */
-  /* Solo estructura. Posicion, fondo, borde, sombra y ancho maximo los fija
-     el SISTEMA UNIFICADO DE CONTROLES DE MAPA v36, mas abajo: antes estaban
-     declarados en los dos sitios y ganaba el segundo por orden de aparicion. */
-  .map-search-results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--sh-3);max-height:280px;overflow-y:auto;font-family:'Roboto',sans-serif}
-  .map-search-result-item{padding:9px 12px;cursor:pointer;border-bottom:1px dotted var(--line-soft);font-size:var(--fs-sm);color:var(--ink-2);line-height:1.4;transition:background .12s}
-  .map-search-result-item:last-child{border-bottom:none}
-  .map-search-result-item:hover,.map-search-result-item:focus-visible{background:var(--bg-2);outline:none}
-  .map-search-result-item .res-title{font-weight:500;color:var(--ink);display:block}
-  .map-search-result-item .res-meta{font-size:var(--fs-xs);color:var(--muted);font-family:'Roboto Mono',monospace;margin-top:2px;display:block}
-  /* Encabezados de grupo y color de categoría en las sugerencias */
-  .map-search-results .res-group{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.11em;
-    text-transform:uppercase;color:var(--muted);padding:8px 12px 5px;background:var(--bg-2);
-    border-bottom:1px solid var(--line-soft);position:sticky;top:0;z-index:2}
-  .map-search-result-item{position:relative;z-index:1;padding-left:12px;background:var(--card)}
-  .map-search-result-item .res-swatch{position:absolute;left:12px;top:12px;width:8px;height:8px;
-    border-radius:var(--r-chip);flex-shrink:0}
-  .map-search-result-item:has(.res-swatch){padding-left:28px}
-  .map-search-result-item:has(.res-swatch) .res-title,
-  .map-search-result-item:has(.res-swatch) .res-meta{margin-left:0}
-  .map-search-empty{padding:14px 12px;text-align:center;color:var(--muted);font-size:var(--fs-sm);font-family:'Roboto',sans-serif}
   /* Mapa en pantalla completa — usa Fullscreen API nativa */
   #globalMapCanvas:fullscreen,#mapCanvas:fullscreen,#zpMapCanvas:fullscreen{height:100vh !important;width:100vw !important;background:var(--card)}
   #globalMapCanvas:-webkit-full-screen,#mapCanvas:-webkit-full-screen,#zpMapCanvas:-webkit-full-screen{height:100vh !important;width:100vw !important;background:var(--card)}
@@ -1263,6 +1183,22 @@
      al ras superior. Antes se apilaban en dos filas y entre el buscador de
      ancho completo y la tarjeta de vista se comían medio mapa. */
   @media (max-width:760px){
+    /* Los botones +/− se retiran: en un teléfono se acerca con dos dedos, y la
+       columna de controles terminaba pisando la barra de navegación inferior.
+       Quedan «Ubicarme» y «Vista general», que no tienen gesto equivalente. */
+    .leaflet-control-zoom{display:none !important}
+
+    /* El mapa ocupa casi toda la pantalla: si se queda con el gesto completo,
+       arrastrar hacia abajo mueve el mapa y la página no avanza. Con pan-y el
+       navegador se queda el desplazamiento vertical —la página baja— y a
+       Leaflet le siguen llegando el arrastre horizontal y el pellizco de dos
+       dedos, que es como se acerca. Las tres clases son las que Leaflet pone
+       según los gestos activos; hay que ganarles a las tres. */
+    .leaflet-container,
+    .leaflet-container.leaflet-touch-drag,
+    .leaflet-container.leaflet-touch-zoom,
+    .leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{touch-action:pan-y !important}
+
     .leaflet-top.leaflet-left{top:10px}
     .map-block-controls-floating{top:10px; right:10px}
     /* El popup no debe exceder el ancho del mapa */
@@ -1276,9 +1212,6 @@
     .lp-ctx{font-size:var(--fs-mini)}
   }
   .map-canvas.no-data b{display:block;color:var(--ink-2);margin-bottom:6px;font-size:var(--fs-base)}
-  .map-block-foot{display:flex;align-items:center;gap:14px;padding:7px 12px;background:#fff;border-top:1px solid var(--line-soft);font-size:var(--fs-xs);color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.04em}
-  .map-block-foot a{color:var(--guinda);text-decoration:none;font-weight:500}
-  .map-block-foot a:hover{text-decoration:underline}
   /* Leaflet override · suaviza tooltips para identidad institucional */
         @media (max-width:640px){
     /* Con los controles a 44 px la columna izquierda mide 178 px y a 280 px
@@ -1380,15 +1313,6 @@
   @media (max-width:1200px){
     .wrap{padding:28px 22px 70px}
     h1{font-size:var(--fs-2xl)}
-    .tabs{flex-wrap:wrap;position:relative}
-    .tab{flex:1 1 calc(25% - 3px);padding:9px 10px;gap:9px;font-size:var(--fs-sm)}
-    .tab-name{font-size:var(--fs-sm)}
-    .tab-num{display:none}
-    .tab-icon{width:20px;height:20px}
-    .more-wrap{flex:1 1 calc(25% - 3px);position:static}
-    .more-btn{flex:1 1 auto;border-left:none}
-    /* Anclado a .tabs (no al botón): se abre a todo el ancho de la barra */
-    .more-menu{left:4px;right:4px;width:auto;min-width:0;top:calc(100% + 4px)}
     .hero{grid-template-columns:repeat(2,1fr)}
     .legal-grid-3{grid-template-columns:1fr 1fr}
   }
@@ -1417,16 +1341,13 @@
     .hero{grid-template-columns:repeat(2,1fr);gap:10px}
     .hero-card{padding:16px 18px}
     .hero-value{font-size:var(--fs-hero)}
-    .tab{min-width:0;font-size:var(--fs-sm);padding:10px 10px;gap:9px}
-    .tab-name{font-size:var(--fs-sm)}
-    .tab-icon{width:20px;height:20px}
         .constitucion-card h4{font-size:var(--fs-md)}
     .panel h3{font-size:var(--fs-xl)}
   }
 
   /* ===== BREAKPOINT 4 — Móvil grande (≤640px) ===== */
   @media (max-width:640px){
-    .wrap{padding:14px 14px 96px}
+    .wrap{padding:14px 14px calc(var(--destbar-h) + 24px + env(safe-area-inset-bottom, 0px))}
     h1{font-size:var(--fs-md);font-weight:600}
     .hero{grid-template-columns:1fr}
     .legal-grid-3{grid-template-columns:1fr}
@@ -1444,9 +1365,6 @@
     .field{grid-template-columns:100px 1fr;gap:10px}
     .field .k{font-size:var(--fs-micro)}
     .field .v{font-size:var(--fs-base)}
-    .bar-row{grid-template-columns:1fr;gap:6px}
-    .bar-row .lbl{white-space:normal;overflow:visible;text-overflow:unset;font-weight:500}
-    .bar-row .v{text-align:left;min-width:auto}
     .comp{font-size:var(--fs-sm)}
     .comp th,.comp td{padding:8px 6px}
     .comp-scroll{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 24px),transparent 100%);mask-image:linear-gradient(to right,#000 calc(100% - 24px),transparent 100%)}
@@ -1487,26 +1405,11 @@
     .btn-share-area{padding:8px 10px}
     .btn-share-area .btn-share-text{display:none}
     .drawer h2{font-size:var(--fs-2xl)}
-    .tabs{padding:4px;flex-wrap:wrap;overflow:visible;-webkit-mask-image:none;mask-image:none;gap:3px}
-    .tab{flex:0 0 calc(25% - 3px);min-width:0;padding:8px 4px;flex-direction:column;align-items:center;gap:4px;text-align:center}
-    .more-wrap{flex:0 0 calc(25% - 3px)}
-    .more-btn{flex:1 1 auto}
-    /* Las filas del menú vuelven a ser horizontales y alineadas a la izquierda:
-       heredaban .tab-content{align-items:center} y el texto se salía del panel. */
-    .more-menu .tab{flex-direction:row;align-items:center;text-align:left;padding:11px 12px;gap:10px}
-    .more-menu .tab .tab-icon{margin:0}
-    .more-menu .tab .tab-content{align-items:flex-start;text-align:left;width:auto;gap:2px;min-width:0}
-    .more-menu .tab .tab-name{white-space:nowrap;font-size:var(--fs-sm);text-align:left}
-    .more-menu .tab .tab-num{display:block;font-size:var(--fs-mini)}
-    .tab-icon{width:20px;height:20px;margin:0 auto}
-    .tab-content{align-items:center;text-align:center;width:100%;gap:0}
-    .tab-name{font-size:var(--fs-mini);line-height:1.2;white-space:normal;text-align:center}
-    .tab-num{display:none}
   }
 
   /* ===== BREAKPOINT 5 — Móvil pequeño (≤420px) ===== */
   @media (max-width:420px){
-    .wrap{padding:16px 12px 40px}
+    .wrap{padding:16px 12px calc(var(--destbar-h) + 20px + env(safe-area-inset-bottom, 0px))}
     h1{font-size:var(--fs-xl)}
     .hero-card{padding:14px 14px}
     .hero-value{font-size:var(--fs-2xl)}
@@ -1514,17 +1417,11 @@
     .toolbar{grid-template-columns:1fr}
     .btn-group{grid-column:span 1}
     .tab-name{font-size:var(--fs-mini);line-height:1.15}
-    .tab{padding:7px 3px;gap:3px}
     .tab-icon{width:18px;height:18px}
   }
 
 
   /* === Suelo de Conservación: capa overlay === */
-  .sc-toggle-btn{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:var(--r-ui);background:#fff;cursor:pointer;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:500;transition:all .15s}
-  .sc-toggle-btn:hover{background:#e0f7fa;color:var(--sc-900);border-color:#4dd0e1}
-  .sc-toggle-btn.active{background:var(--sc);border-color:var(--sc-900);color:#fff}
-  .sc-toggle-btn .sc-swatch{width:10px;height:10px;border:1.5px solid var(--sc-900);background:rgba(0,131,143,.25);display:inline-block;border-radius:var(--r-chip)}
-  .sc-toggle-btn.active .sc-swatch{background:rgba(255,255,255,.4);border-color:#fff}
   /* Estado (PM · SC): se lee por RELLENO, no por matiz. El verde ya significa
      «Bosque Urbano» y el rojo leia como alarma en un dato que solo describe
      una condicion territorial. Punto lleno = si · punto hueco = no. */
@@ -1547,10 +1444,9 @@
   /* En la ficha el dato es protagonista y conserva recuadro; en la tabla no. */
   .field .tag-dg{padding:2px 8px;border-radius:var(--r-ui);border:1px solid var(--line);background:var(--bg-2)}
   .tag-dg-dgsanpava{color:var(--guinda)}
-  .tag-dg-dgcorenader,.tag-dg-dgcorenadr{color:#1f5a99}
+  .tag-dg-dgcorenader{color:#1f5a99}
   .dg-empty{color:var(--muted);font-family:'Roboto Mono',monospace;font-size:var(--fs-xs)}
   @media (max-width: 480px){
-    .sc-toggle-btn{padding:9px 12px;font-size:var(--fs-mini)}
   }
 
   
@@ -1729,8 +1625,6 @@
          programas de manejo u otros instrumentos jurídicos vigentes, que prevalecen en caso de
          discrepancia. Las superficies calculadas a partir de la cartografía pueden diferir de la
          superficie decretada.</p>
-      <p class="sia-proc-contacto">¿Encontraste un dato desactualizado o un error?
-         <a href="mailto:CORREO_INSTITUCIONAL@sedema.cdmx.gob.mx">Repórtalo a SEDEMA</a>.</p>
     </div>
     <div class="sia-footer-inner">
       <span class="sia-footer-text">Sistema de Información Ambiental · Secretaría del Medio Ambiente</span>
@@ -2237,26 +2131,6 @@ const currentData = () => {
   return DATA.filter(d=>d.grupo===currentGroup().key);
 };
 
-/* Iconos institucionales por categoría — SVG inline para identidad visual */
-const TAB_ICONS = {
-  ALL: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>',
-  BU: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L7 10 L9.5 10 L5.5 16 L9 16 L4.5 22 L19.5 22 L15 16 L18.5 16 L14.5 10 L17 10 Z"/><line x1="12" y1="22" x2="12" y2="17"/></svg>',
-  BR: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6 L7 8 L11 4 L13 4 L17 8 L21 6 L21 11 L17 19 L13 19 L11 14 L7 19 L3 11 Z"/></svg>',
-  ANPL: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22 C12 22 18 14.5 18 9 C18 5.7 15.3 3 12 3 C8.7 3 6 5.7 6 9 C6 14.5 12 22 12 22 Z"/><circle cx="12" cy="9" r="2.6"/></svg>',
-  ANPF: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 L14.5 9.2 L21.5 9.5 L16 14 L17.8 21 L12 17 L6.2 21 L8 14 L2.5 9.5 L9.5 9.2 Z"/></svg>',
-  ANALISIS: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="20" x2="21" y2="20"/><rect x="5" y="11" width="3" height="9"/><rect x="10.5" y="6" width="3" height="14"/><rect x="16" y="14" width="3" height="6"/></svg>',
-  METAS: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>',
-  LEGAL: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M6 6 L3 13 H9 L6 6"/><path d="M18 6 L15 13 H21 L18 6"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="6" x2="12" y2="3"/></svg>',
-  ZP: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L20 8 H4 Z"/><line x1="4" y1="8" x2="4" y2="19"/><line x1="12" y1="8" x2="12" y2="19"/><line x1="20" y1="8" x2="20" y2="19"/><line x1="3" y1="19" x2="21" y2="19"/></svg>',
-  ARCAC: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8 L12 4 L21 8 L12 12 Z"/><path d="M3 8 v8 l9 4 l9-4 V8"/><line x1="12" y1="12" x2="12" y2="20"/></svg>',
-  TRASLAPES: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>'
-};
-
-/* Módulos analíticos: no tienen superficie ni registros que contar y se consultan
-   de forma ocasional → viven en el menú «Más ▾» para dejar la nav en una sola fila.
-   NO altera DATA, GEOMETRIES, contadores ni filtros. */
-const SECONDARY_TABS = new Set(['TRASLAPES','ANALISIS','METAS','LEGAL']);
-
 /* ════════════════════════════════════════════════════════════════════
  * Navegación de dos niveles · rediseño 2026-09-10
  * Cuatro destinos. Cada uno agrupa ids de GROUPS que ya existían, así que
@@ -2278,8 +2152,6 @@ const DESTINOS = [
   { id:'INVENTARIO', label:'Inventario', sub:['ALL','BU','BR','ANPL','ANPF','ARCAC','ZP'] },
   { id:'ANALITICA',  label:'Análisis',   sub:['ANALISIS','TRASLAPES','METAS','LEGAL'] },
 ];
-const DEST_DE_TAB = {};
-DESTINOS.forEach(d => d.sub.forEach(t => { DEST_DE_TAB[t] = d.id; }));
 
 /* Punto de color del subfiltro: solo donde el color significa territorio. */
 const SUB_SW = {
@@ -2304,34 +2176,8 @@ function subCount(id){
   return g ? fmtInt(DATA.filter(d=>d.grupo===g.key).length) : '';
 }
 
-const MORE_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>';
 
-function tabSubtitle(g, compact){
-  if(g.id==='LEGAL') return 'LACM · 18 JUL 2024';
-  if(g.id==='METAS') return 'LÍNEA BASE 2018-2024';
-  if(g.id==='ANALISIS') return 'DATOS · DISTRIBUCIÓN';
-  if(g.id==='TRASLAPES') return compact ? '35 PARES' : 'SUPERPOSICIONES · 35 PARES';
-  if(g.id==='ZP') return compact ? 'UNESCO · 7,534 HA' : 'PATRIMONIO · 7,534 HA';
-  if(g.id==='ARCAC') return compact ? '30 NÚCLEOS' : 'NÚCLEOS AGRARIOS · 30';
-  const subset = g.id==='ALL' ? DATA : DATA.filter(d=>d.grupo===g.key);
-  const ha = sum(subset,'superficie');
-  return compact
-    ? `${subset.length} · ${fmtInt(Math.round(ha))} HA`
-    : `${subset.length} REG · ${fmt(ha)} HA`;
-}
 
-function tabHTML(g, compact, comoItemDeMenu){
-  /* aria-current comunica la pestaña activa a los lectores de pantalla: antes el
-     único indicador era el color de fondo, invisible para tecnología asistiva. */
-  const rol = comoItemDeMenu ? ' role="menuitem"' : '';
-  return `<button class="tab ${g.cls||''} ${state.tab===g.id?'active':''}" data-id="${g.id}"${rol} aria-current="${state.tab===g.id?'true':'false'}" aria-label="Ver ${g.label}" title="${g.label}">
-      <span class="tab-icon" aria-hidden="true">${TAB_ICONS[g.id]||''}</span>
-      <span class="tab-content">
-        <span class="tab-name">${g.label}</span>
-        <span class="tab-num">${tabSubtitle(g, compact)}</span>
-      </span>
-    </button>`;
-}
 
 function buildTabs(){
   const el = document.getElementById('tabs');
@@ -2385,14 +2231,6 @@ function limpiarFiltros(){
   if(typeof sincronizarMasFiltros === 'function') sincronizarMasFiltros();
 }
 
-/* El menu «Mas» desaparecio con la navegacion de dos niveles; la funcion se
-   conserva como no-op porque otros listeners la invocan. */
-function closeMoreMenu(){}
-
-/* Listeners globales del menú: se registran una sola vez (buildTabs se re-ejecuta
-   en cada cambio de módulo y no debe acumular handlers). */
-document.addEventListener('click', closeMoreMenu);
-document.addEventListener('keydown', ev=>{ if(ev.key === 'Escape') closeMoreMenu(); });
 
 function populateFilters(){
   if(isSpecialTab(state.tab)) return;
@@ -2651,158 +2489,281 @@ function renderGlobalDashboard(){
 
 /* ===== Página Metas: comparativo de administraciones + sección Brechas ===== */
 function renderMetasPage(){
-  return renderMetaComparable() + renderBrechasSection();
+  /* Las brechas se mudaron a «Análisis» el 11-sep-2026: el chip de allá las
+     promete por nombre y aquí quedaban escondidas detrás de otra pregunta. */
+  return renderMetaComparable();
 }
 
-/* ===== Página Análisis: distribución, territorial, hitos, década ===== */
+/* ═══ Análisis · Brechas y distribución ═══════════════════════════════
+   Reescrito el 11-sep-2026. Lo que había mezclaba dos cosas: el chip decía
+   «Brechas y distribución» pero la página entregaba composición y cronología,
+   mientras que el diagnóstico de brechas vivía escondido dentro de Metas, que
+   es otra pregunta (qué hizo cada administración). Aquí van las dos que el
+   chip promete: qué falta y cómo se reparte.
+   Todas las cifras se calculan sobre DATA en cada render: ninguna está escrita
+   a mano, así que la página no puede quedar desfasada del Sheet. */
 function renderAnalisisPage(){
-  const total = DATA.length;
+  const total   = DATA.length;
   const totArea = sum(DATA,'superficie');
+  const pct     = (n, d) => d ? (n/d*100) : 0;
+  const anio    = iso => (String(iso||'').match(/^(\d{4})/)||[])[1] || null;
+  const ANIO_HOY = new Date().getFullYear();
 
-  // 1. Distribución por tipo y jurisdicción
-  const maxArea = Math.max(...GROUPS.filter(g=>!['ALL','LEGAL','METAS','ANALISIS'].includes(g.id)).map(g=>sum(DATA.filter(d=>d.grupo===g.key),'superficie')));
-  const distRows = GROUPS.filter(g=>!['ALL','LEGAL','METAS','ANALISIS'].includes(g.id)).map(g=>{
+  const GRUPOS_INV = GROUPS.filter(g=>['BU','BR','ANPL','ANPF'].includes(g.id));
+
+  /* ── 1 · Brecha de programas de manejo ─────────────────────────────── */
+  const sinPM     = DATA.filter(d=>d.programa_manejo!=='Sí');
+  const supSinPM  = sum(sinPM,'superficie');
+
+  /* ── 2 · Vigencia de los programas publicados ──────────────────────── */
+  const conPM     = DATA.filter(d=>d.programa_manejo==='Sí');
+  const conPMFecha= conPM.filter(d=>anio(d.fecha_pm_iso));
+  const pmViejos  = conPMFecha.filter(d=>ANIO_HOY - +anio(d.fecha_pm_iso) >= 10)
+                              .sort((a,b)=>a.fecha_pm_iso.localeCompare(b.fecha_pm_iso));
+
+  /* ── 3 · Decretos añejos sin programa ──────────────────────────────── */
+  const viejoSinPM = sinPM.filter(d=>anio(d.fecha_decreto_iso) && ANIO_HOY - +anio(d.fecha_decreto_iso) > 30)
+                          .sort((a,b)=>a.fecha_decreto_iso.localeCompare(b.fecha_decreto_iso));
+
+  /* ── 4 · Carga por dirección responsable ───────────────────────────── */
+  const porDG = {};
+  DATA.forEach(d=>{
+    const k = d.dg_responsable || 'Sin asignar';
+    (porDG[k] = porDG[k] || {n:0, sup:0, pm:0});
+    porDG[k].n++; porDG[k].sup += +d.superficie||0;
+    if(d.programa_manejo==='Sí') porDG[k].pm++;
+  });
+  const dgRows = Object.entries(porDG).sort((a,b)=>b[1].sup-a[1].sup);
+
+  /* ── 5 · Concentración de la superficie ────────────────────────────── */
+  const porTam = [...DATA].sort((a,b)=>b.superficie-a.superficie);
+  let acum = 0, nMitad = 0;
+  for(const d of porTam){ acum += +d.superficie||0; nMitad++; if(acum >= totArea/2) break; }
+  const mediana = (()=>{ const v=[...DATA].map(d=>+d.superficie||0).sort((a,b)=>a-b);
+    const m=v.length>>1; return v.length%2 ? v[m] : (v[m-1]+v[m])/2; })();
+
+  /* ── 6 · Reparto territorial ───────────────────────────────────────── */
+  const ALC16 = ['Álvaro Obregón','Azcapotzalco','Benito Juárez','Coyoacán','Cuajimalpa de Morelos',
+    'Cuauhtémoc','Gustavo A. Madero','Iztacalco','Iztapalapa','La Magdalena Contreras','Miguel Hidalgo',
+    'Milpa Alta','Tláhuac','Tlalpan','Venustiano Carranza','Xochimilco'];
+  const alcStats = {};
+  DATA.forEach(d => explode([d],'alcaldia').forEach(a=>{
+    const k = a.split(' (')[0].trim(); if(!k) return;
+    if(!alcStats[k]) alcStats[k] = {'AVA · Bosque Urbano':0,'AVA · Barranca':0,'ANP · Local':0,'ANP · Federal':0,total:0,sup:0};
+    if(alcStats[k][d.grupo] !== undefined){ alcStats[k][d.grupo]++; alcStats[k].total++; alcStats[k].sup += +d.superficie||0; }
+  }));
+  const alcSorted = Object.entries(alcStats).sort((a,b)=>b[1].sup - a[1].sup);
+  const maxAlcSup = Math.max(...alcSorted.map(([,s])=>s.sup));
+  const sinAreas  = ALC16.filter(a=>!alcStats[a]);
+
+  /* ── Composición por grupo ─────────────────────────────────────────── */
+  const maxSupGrupo = Math.max(...GRUPOS_INV.map(g=>sum(DATA.filter(d=>d.grupo===g.key),'superficie')));
+  const compRows = GRUPOS_INV.map(g=>{
     const arr = DATA.filter(d=>d.grupo===g.key);
     const s = sum(arr,'superficie');
-    const pmSi = arr.filter(d=>d.programa_manejo==='Sí').length;
-    const pmNo = arr.length - pmSi;
+    const pm = arr.filter(d=>d.programa_manejo==='Sí').length;
     return `<tr>
       <td class="grp"><span class="chip ${g.cls}"></span>${g.label}</td>
       <td class="num">${fmtInt(arr.length)}</td>
       <td class="num">${fmt(s)}</td>
-      <td class="num">${pmSi} / ${arr.length}</td>
-      <td class="num" style="color:var(--rojo)">${pmNo}</td>
-      <td style="min-width:140px"><div class="share"><div class="share-fill ${g.cls}" style="width:${(s/maxArea)*100}%"></div></div></td>
-      <td class="num">${((s/totArea)*100).toFixed(1)}%</td>
+      <td class="num">${fmt(s/arr.length)}</td>
+      <td class="num">${pm} / ${arr.length}</td>
+      <td style="min-width:120px"><div class="share"><div class="share-fill ${g.cls}" style="width:${pct(s,maxSupGrupo)}%"></div></div></td>
+      <td class="num">${pct(s,totArea).toFixed(1)}%</td>
     </tr>`;
   }).join('');
 
-  // 2. Áreas por alcaldía — desglosado por grupo (BU/BR/ANPL/ANPF) para barra apilada
-  const alcStats = {};
-  DATA.forEach(d => explode([d],'alcaldia').forEach(a=>{
-    const key = a.split(' (')[0];
-    if(!alcStats[key]){
-      alcStats[key] = {
-        'AVA · Bosque Urbano': 0,
-        'AVA · Barranca': 0,
-        'ANP · Local': 0,
-        'ANP · Federal': 0,
-        total: 0
-      };
-    }
-    if(alcStats[key][d.grupo] !== undefined){
-      alcStats[key][d.grupo]++;
-      alcStats[key].total++;
-    }
-  }));
-  const alcSorted = Object.entries(alcStats).sort((a,b)=>b[1].total - a[1].total);
-  const maxAlc = Math.max(...alcSorted.map(([_,s]) => s.total));
-
-  // 3. Hitos
-  const oldest = [...DATA].sort((a,b)=>a.fecha_decreto_iso.localeCompare(b.fecha_decreto_iso))[0];
-  const newest = [...DATA].sort((a,b)=>b.fecha_decreto_iso.localeCompare(a.fecha_decreto_iso))[0];
-  const biggest = [...DATA].sort((a,b)=>b.superficie-a.superficie)[0];
-
   return `
     <div class="panel" style="border-left:3px solid var(--guinda)">
-      <div class="panel-title" style="color:var(--guinda)">Análisis del sistema · Datos comparativos y temporales</div>
-      <h3>Composición, distribución <em>territorial</em> y línea histórica</h3>
-      <p class="panel-intro" style="margin-top:8px">Información complementaria para análisis técnico, presentaciones y procesos de planeación. Cada panel está disponible para consulta individual o exportación.</p>
+      <div class="panel-title" style="color:var(--guinda)">Análisis del sistema</div>
+      <h3>Brechas y <em>distribución</em></h3>
+      <p class="panel-intro" style="margin-top:8px">Dos preguntas: qué le falta al sistema y cómo se
+        reparte. Todo se calcula sobre el inventario en vivo, así que estas cifras cambian solas cuando
+        cambia el Sheet. Para el comparativo entre administraciones, vaya a <b>Metas</b>; para la
+        superposición de instrumentos sobre un mismo predio, a <b>Traslapes</b>.</p>
+    </div>
+
+    <div class="hero">
+      <div class="hero-card hero-warning">
+        <div class="hero-eyebrow">Brecha principal</div>
+        <div class="hero-value">${pct(supSinPM,totArea).toFixed(0)}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:4px;font-weight:500">%</span></div>
+        <div class="hero-label">de la superficie protegida no tiene programa de manejo</div>
+        <div class="hero-meta">${fmtInt(sinPM.length)} de ${total} áreas · ${fmt(supSinPM)} ha</div>
+      </div>
+      <div class="hero-card hero-warning">
+        <div class="hero-eyebrow">Vigencia</div>
+        <div class="hero-value">${pmViejos.length}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:4px;font-weight:500">/${conPMFecha.length}</span></div>
+        <div class="hero-label">programas publicados hace diez años o más</div>
+        <div class="hero-meta">el más antiguo es de ${conPMFecha.length ? anio(pmViejos.length?pmViejos[0].fecha_pm_iso:conPMFecha[0].fecha_pm_iso) : '—'}</div>
+      </div>
+      <div class="hero-card hero-info">
+        <div class="hero-eyebrow">Concentración</div>
+        <div class="hero-value">${nMitad}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:4px;font-weight:500">/${total}</span></div>
+        <div class="hero-label">áreas reúnen la mitad de la superficie</div>
+        <div class="hero-meta">mediana ${fmt(mediana)} ha · promedio ${fmt(totArea/total)} ha</div>
+      </div>
     </div>
 
     <div class="panel">
-      <div class="panel-title">Composición del sistema</div>
-      <h3>Distribución por <em>tipo y jurisdicción</em></h3>
-      <p class="panel-intro" style="margin-top:8px;margin-bottom:0">Comparativo de los cuatro grupos institucionales que integran el sistema: número de áreas, superficie acumulada, cobertura del Programa de Manejo y peso relativo en el total.</p>
-      <div class="comp-scroll" style="margin-top:18px">
-        <table class="comp">
-          <thead><tr><th scope="col">Grupo</th><th scope="col" style="text-align:right">Áreas</th><th scope="col" style="text-align:right">Sup. total (ha)</th><th scope="col" style="text-align:right" title="Con Programa de Manejo">Con PM</th><th scope="col" style="text-align:right" title="Sin Programa de Manejo">Sin PM</th><th scope="col">Proporción</th><th scope="col" style="text-align:right">% total</th></tr></thead>
-          <tbody>${distRows}</tbody>
-          <tfoot><tr style="border-top:2px solid var(--guinda)">
-            <td class="grp" style="font-weight:600">Total</td>
-            <td class="num" style="font-weight:600">${fmtInt(total)}</td>
-            <td class="num" style="font-weight:600">${fmt(totArea)}</td>
-            <td class="num" style="font-weight:600">${DATA.filter(d=>d.programa_manejo==='Sí').length} / ${total}</td>
-            <td class="num" style="font-weight:600;color:var(--rojo)">${DATA.filter(d=>d.programa_manejo!=='Sí').length}</td>
-            <td></td>
-            <td class="num" style="font-weight:600">100%</td>
-          </tr></tfoot>
-        </table>
-      </div>
-    </div>
-
-    <div class="panel panel-compact">
-      <div class="panel-title">Territorial · detallado</div>
-      <h3>Áreas por <em>alcaldía</em> · desglose por tipo</h3>
-      <p class="panel-intro" style="margin-top:8px;margin-bottom:10px">Conteo de polígonos presentes en cada demarcación territorial, segmentados por tipo de área. Una misma área puede contabilizarse en más de una alcaldía si su superficie cruza límites administrativos. Pase el cursor sobre cada segmento para ver el detalle.</p>
-
-      <div class="alc-legend">
-        <span class="alc-leg-item"><span class="alc-leg-swatch" style="background:var(--verde)"></span>Bosque Urbano</span>
-        <span class="alc-leg-item"><span class="alc-leg-swatch" style="background:var(--marron)"></span>Barranca</span>
-        <span class="alc-leg-item"><span class="alc-leg-swatch" style="background:var(--guinda)"></span>ANP Local</span>
-        <span class="alc-leg-item"><span class="alc-leg-swatch" style="background:var(--azul)"></span>ANP Federal</span>
-      </div>
-
-      <div class="alc-stacked">
-        ${alcSorted.map(([k,s]) => {
-          const bu  = s['AVA · Bosque Urbano'];
-          const br  = s['AVA · Barranca'];
-          const apl = s['ANP · Local'];
-          const apf = s['ANP · Federal'];
-          const totalWidth = (s.total / maxAlc) * 100;  // ancho relativo de toda la barra
-
-          // Construir segmentos solo para los que tienen valor > 0
-          const segs = [
-            {n: bu,  cls: 'seg-bu',  color: 'var(--verde)', label: 'Bosques Urbanos'},
-            {n: br,  cls: 'seg-br',  color: 'var(--marron)', label: 'Barrancas'},
-            {n: apl, cls: 'seg-apl', color: 'var(--guinda)', label: 'ANP Locales'},
-            {n: apf, cls: 'seg-apf', color: 'var(--azul)', label: 'ANP Federales'}
-          ];
-
-          const segsHTML = segs.filter(seg => seg.n > 0).map(seg => {
-            const segPct = (seg.n / s.total) * 100;
-            return `<div class="alc-seg" style="width:${segPct}%;background:${seg.color}" title="${k} · ${seg.label}: ${seg.n}">
-              ${segPct >= 12 ? `<span class="alc-seg-num">${seg.n}</span>` : ''}
-            </div>`;
-          }).join('');
-
-          return `<div class="alc-row">
-            <span class="alc-name">${k}</span>
-            <div class="alc-track" style="width:${totalWidth}%">${segsHTML}</div>
-            <span class="alc-total">${s.total} ${s.total===1?'área':'áreas'}</span>
+      <div class="panel-title">Brecha 1 · Programas de manejo</div>
+      <h3>Dónde se concentra el <em>rezago</em></h3>
+      <p class="panel-intro">El programa de manejo es el instrumento rector de operación de cada área
+        (LACM arts. 122, 144 y 156). Contado por áreas el rezago es de
+        ${pct(sinPM.length,total).toFixed(0)}%; medido en superficie sube a
+        ${pct(supSinPM,totArea).toFixed(0)}%, porque las áreas sin programa son las grandes.</p>
+      <div class="brechas-grid">
+        ${GRUPOS_INV.map(g=>{
+          const arr = DATA.filter(d=>d.grupo===g.key);
+          const falta = arr.filter(d=>d.programa_manejo!=='Sí');
+          const p = pct(falta.length, arr.length);
+          const color = GROUP_COLORS[g.key];
+          return `<div class="brecha-card" style="--card-color:${color}">
+            <div class="brecha-card-header">
+              <span class="brecha-card-grupo">${g.label}</span>
+              <span class="brecha-card-pct">${p.toFixed(0)}%</span>
+            </div>
+            <div class="brecha-card-num">${falta.length}<span style="font-size:var(--fs-md);color:var(--muted);margin-left:4px;font-weight:500">/${arr.length}</span></div>
+            <div class="brecha-card-lbl">sin programa · ${fmt(sum(falta,'superficie'))} ha</div>
+            <div class="brecha-card-bar"><div class="brecha-card-bar-fill" style="width:${p}%;background:${color}"></div></div>
+            ${falta.length ? `<details class="brecha-card-details">
+              <summary>Ver listado (${falta.length})</summary>
+              <ul class="brecha-list">${falta.sort((a,b)=>b.superficie-a.superficie)
+                .map(d=>`<li><span>${d.nombre}</span><span class="brecha-list-meta">${fmt(d.superficie)} ha</span></li>`).join('')}</ul>
+            </details>` : ''}
           </div>`;
         }).join('')}
       </div>
     </div>
 
-    <div class="grid-2">
-      <div class="panel panel-compact">
-        <div class="panel-title">Línea del tiempo</div>
-        <h3>Hitos de <em>decreto</em></h3>
-        <table class="hitos-table" style="margin-top:12px">
-          <tbody>
-            <tr>
-              <th scope="row">Más antiguo</th>
-              <td class="hitos-val">${oldest.fecha_decreto_iso.slice(0,4)}</td>
-              <td class="hitos-ctx">${oldest.nombre}</td>
-            </tr>
-            <tr>
-              <th scope="row">Más reciente</th>
-              <td class="hitos-val">${newest.fecha_decreto_iso.slice(0,4)}</td>
-              <td class="hitos-ctx">${newest.nombre}</td>
-            </tr>
-            <tr>
-              <th scope="row">Mayor superficie</th>
-              <td class="hitos-val">${fmt(biggest.superficie)} <span class="hitos-u">ha</span></td>
-              <td class="hitos-ctx">${biggest.nombre}</td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="panel-note">
-          Posible doble conteo en zonas de traslape federal–local (p. ej. Cerro de la Estrella, Sierra de Santa Catarina).
-        </div>
-      </div>
+    <div class="panel">
+      <div class="panel-title">Brecha 2 · Vigencia de lo publicado</div>
+      <h3>Programas con <em>diez años o más</em></h3>
+      <p class="panel-intro">Tener programa no equivale a tenerlo vigente. De los ${conPMFecha.length}
+        programas con fecha registrada, ${pmViejos.length} se publicaron hace una década o más y operan
+        sobre diagnósticos anteriores a la ciudad actual. El dato no implica caducidad jurídica: señala
+        a qué áreas conviene mirar primero en una revisión.</p>
+      ${pmViejos.length ? `<div class="comp-scroll"><table class="comp">
+        <thead><tr><th scope="col">Área</th><th scope="col">Grupo</th>
+          <th scope="col" style="text-align:right">Publicado</th>
+          <th scope="col" style="text-align:right">Antigüedad</th>
+          <th scope="col" style="text-align:right">Superficie</th></tr></thead>
+        <tbody>${pmViejos.map(d=>`<tr>
+          <td><b>${d.nombre}</b></td>
+          <td><span class="grp-mini" style="color:${GROUP_COLORS[d.grupo]||'var(--ink-2)'}">${d.grupo}</span></td>
+          <td class="num">${anio(d.fecha_pm_iso)}</td>
+          <td class="num">${ANIO_HOY - +anio(d.fecha_pm_iso)} años</td>
+          <td class="num">${fmt(d.superficie)} ha</td></tr>`).join('')}</tbody>
+      </table></div>` : '<p class="panel-intro">Todos los programas vigentes se publicaron en la última década.</p>'}
     </div>
+
+    <div class="panel">
+      <div class="panel-title">Brecha 3 · Decreto sin programa</div>
+      <h3>Áreas decretadas hace más de <em>treinta años</em> que siguen sin programa</h3>
+      <p class="panel-intro">${viejoSinPM.length
+        ? `Son ${viejoSinPM.length}${viejoSinPM.every(d=>d.jurisdiccion==='Federal')
+            ? ', todas de jurisdicción federal, lo que sitúa la gestión del rezago en la coadministración con SEMARNAT y CONANP más que en una decisión local' : ''}.`
+        : 'No hay ninguna: todas las áreas con decreto anterior a ' + (ANIO_HOY-30) + ' cuentan con programa.'}</p>
+      ${viejoSinPM.length ? `<div class="comp-scroll"><table class="comp">
+        <thead><tr><th scope="col">Área</th><th scope="col">Grupo</th>
+          <th scope="col" style="text-align:right">Decreto</th>
+          <th scope="col" style="text-align:right">Antigüedad</th>
+          <th scope="col" style="text-align:right">Superficie</th></tr></thead>
+        <tbody>${viejoSinPM.map(d=>`<tr>
+          <td><b>${d.nombre}</b></td>
+          <td><span class="grp-mini" style="color:${GROUP_COLORS[d.grupo]||'var(--ink-2)'}">${d.grupo}</span></td>
+          <td class="num" title="${d.fecha_decreto||''}">${anio(d.fecha_decreto_iso)}</td>
+          <td class="num">${ANIO_HOY - +anio(d.fecha_decreto_iso)} años</td>
+          <td class="num">${fmt(d.superficie)} ha</td></tr>`).join('')}</tbody>
+        <tfoot><tr style="border-top:2px solid var(--guinda)">
+          <td colspan="4" style="font-weight:600">Superficie sin instrumento rector</td>
+          <td class="num" style="font-weight:600">${fmt(sum(viejoSinPM,'superficie'))} ha</td>
+        </tr></tfoot>
+      </table></div>` : ''}
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Carga institucional</div>
+      <h3>Reparto por <em>dirección responsable</em></h3>
+      <p class="panel-intro">El número de áreas y la superficie a cargo no van de la mano, y la cobertura
+        de programas tampoco. Es el dato con consecuencia presupuestal más directa de esta página.</p>
+      <div class="comp-scroll"><table class="comp">
+        <thead><tr><th scope="col">Dirección</th>
+          <th scope="col" style="text-align:right">Áreas</th>
+          <th scope="col" style="text-align:right">% de las áreas</th>
+          <th scope="col" style="text-align:right">Superficie</th>
+          <th scope="col" style="text-align:right">% de la superficie</th>
+          <th scope="col" style="text-align:right">Con programa</th></tr></thead>
+        <tbody>${dgRows.map(([k,v])=>`<tr>
+          <td><b>${k}</b></td>
+          <td class="num">${v.n}</td>
+          <td class="num">${pct(v.n,total).toFixed(1)}%</td>
+          <td class="num">${fmt(v.sup)} ha</td>
+          <td class="num">${pct(v.sup,totArea).toFixed(1)}%</td>
+          <td class="num">${v.pm} / ${v.n}</td></tr>`).join('')}</tbody>
+      </table></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Composición</div>
+      <h3>Los cuatro grupos del <em>inventario</em></h3>
+      <p class="panel-intro">Número de áreas, superficie acumulada, tamaño medio, cobertura de programa y
+        peso en el total. Las superficies son las decretadas; la suma de las cuatro excede la superficie
+        realmente protegida, porque hay predios cubiertos por dos instrumentos a la vez.</p>
+      <div class="comp-scroll" style="margin-top:16px"><table class="comp">
+        <thead><tr><th scope="col">Grupo</th>
+          <th scope="col" style="text-align:right">Áreas</th>
+          <th scope="col" style="text-align:right">Superficie</th>
+          <th scope="col" style="text-align:right">Tamaño medio</th>
+          <th scope="col" style="text-align:right">Con programa</th>
+          <th scope="col">Proporción</th>
+          <th scope="col" style="text-align:right">% total</th></tr></thead>
+        <tbody>${compRows}</tbody>
+        <tfoot><tr style="border-top:2px solid var(--guinda)">
+          <td class="grp" style="font-weight:600">Total</td>
+          <td class="num" style="font-weight:600">${fmtInt(total)}</td>
+          <td class="num" style="font-weight:600">${fmt(totArea)}</td>
+          <td class="num" style="font-weight:600">${fmt(totArea/total)}</td>
+          <td class="num" style="font-weight:600">${conPM.length} / ${total}</td>
+          <td></td>
+          <td class="num" style="font-weight:600">100%</td>
+        </tr></tfoot>
+      </table></div>
+    </div>
+
+    <div class="panel panel-compact">
+      <div class="panel-title">Territorio</div>
+      <h3>Reparto por <em>alcaldía</em></h3>
+      <p class="panel-intro" style="margin-bottom:10px">Ordenado por superficie, no por número de áreas:
+        una barranca de 8 ha y un parque nacional de 6,000 ha cuentan igual en un conteo y no se parecen
+        en nada en el territorio. Un área que cruza límites aparece en cada demarcación que toca.</p>
+
+      <div class="alc-legend">
+        ${GRUPOS_INV.map(g=>`<span class="alc-leg-item"><span class="alc-leg-swatch" style="background:${GROUP_COLORS[g.key]}"></span>${g.label}</span>`).join('')}
+      </div>
+
+      <div class="alc-stacked">
+        ${alcSorted.map(([k,s])=>{
+          const segs = GRUPOS_INV.map(g=>({n:s[g.key], color:GROUP_COLORS[g.key], label:g.label}))
+                                 .filter(x=>x.n>0);
+          return `<div class="alc-row">
+            <span class="alc-name">${k}</span>
+            <div class="alc-track" style="width:${pct(s.sup,maxAlcSup)}%">
+              ${segs.map(x=>{
+                const p = pct(x.n, s.total);
+                return `<div class="alc-seg" style="width:${p}%;background:${x.color}" title="${k} · ${x.label}: ${x.n}">${p>=16?`<span class="alc-seg-num">${x.n}</span>`:''}</div>`;
+              }).join('')}
+            </div>
+            <span class="alc-total">${fmt(s.sup)} ha · ${s.total}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      ${sinAreas.length ? `<div class="nota-analisis">
+        <b>${sinAreas.length} de las 16 alcaldías no registran ninguna área:</b> ${sinAreas.join(', ')}.
+        Es una descripción del inventario, no un diagnóstico: para saber si ahí falta protección hay que
+        mirar el suelo disponible y su uso, no el número de polígonos.
+      </div>` : ''}
+    </div>
+
     ${renderCronologiaSection()}
   `;
 }
@@ -2823,198 +2784,6 @@ function computeAdminStats(desde, hasta){
   return {dec, pm};
 }
 
-/* ============================================================
- * BRECHAS · sección integrada dentro del tab Metas
- * ============================================================ */
-function renderBrechasSection(){
-  const total = DATA.length;
-  const sinPM = DATA.filter(d => d.programa_manejo !== 'Sí');
-  const sinPMPct = (sinPM.length / total * 100).toFixed(1);
-
-  // Agrupar áreas sin PM por grupo
-  const sinPMporGrupo = {
-    'AVA · Bosque Urbano': sinPM.filter(d => d.grupo === 'AVA · Bosque Urbano'),
-    'AVA · Barranca':       sinPM.filter(d => d.grupo === 'AVA · Barranca'),
-    'ANP · Local':          sinPM.filter(d => d.grupo === 'ANP · Local'),
-    'ANP · Federal':        sinPM.filter(d => d.grupo === 'ANP · Federal')
-  };
-
-  // Áreas con decreto antiguo (>30 años) sin actualización del PM
-  const hoy = new Date();
-  const cutoff30 = new Date(hoy.getFullYear() - 30, hoy.getMonth(), hoy.getDate()).toISOString().slice(0,10);
-  const decretoAntiguoSinPM = DATA.filter(d =>
-    d.fecha_decreto_iso && d.fecha_decreto_iso < cutoff30 && d.programa_manejo !== 'Sí'
-  ).sort((a,b) => a.fecha_decreto_iso.localeCompare(b.fecha_decreto_iso));
-
-  // Áreas decretadas pero sin polígono georreferenciado disponible
-  const sinGeometria = !GEOMETRIES ? [] : DATA.filter(d => {
-    if(!GEOM_INDEX) return false;
-    return !(GEOM_INDEX[slugify(d.nombre)] || GEOM_INDEX[d.id]);
-  });
-
-  // Top alcaldías por número de áreas (ranking)
-  const porAlcaldia = {};
-  DATA.forEach(d => {
-    (d.alcaldia || '').split(/[,;]/).forEach(a => {
-      const alc = a.trim();
-      if(!alc) return;
-      if(!porAlcaldia[alc]) porAlcaldia[alc] = { cuenta: 0, sup: 0 };
-      porAlcaldia[alc].cuenta++;
-      porAlcaldia[alc].sup += +d.superficie || 0;
-    });
-  });
-  const alcaldias16 = ['Álvaro Obregón','Azcapotzalco','Benito Juárez','Coyoacán','Cuajimalpa de Morelos','Cuauhtémoc','Gustavo A. Madero','Iztacalco','Iztapalapa','La Magdalena Contreras','Miguel Hidalgo','Milpa Alta','Tláhuac','Tlalpan','Venustiano Carranza','Xochimilco'];
-  const sinAreas = alcaldias16.filter(a => !porAlcaldia[a]);
-  const rankAlcaldias = Object.entries(porAlcaldia)
-    .sort((a,b) => a[1].cuenta - b[1].cuenta)
-    .slice(0, 5);
-
-  return `
-    <!-- Separador institucional · diferencia esta sección del bloque Metas -->
-    <div class="seccion-divider">
-      <span class="seccion-divider-eyebrow">DIAGNÓSTICO COMPLEMENTARIO</span>
-      <h2 class="seccion-divider-title">Brechas · <em>prioridades operativas</em></h2>
-      <p class="seccion-divider-sub">A diferencia de las metas comparativas anteriores (qué se hizo en cada administración), este apartado identifica <b>qué falta</b> en el sistema actual: rezagos en Programa de Manejo, áreas con decreto desactualizado y vacíos en cobertura territorial. Insumo directo para planeación operativa.</p>
-    </div>
-
-    <div class="hero">
-      <div class="hero-card hero-warning">
-        <div class="hero-eyebrow">PRIORIDAD ALTA</div>
-        <div class="hero-value">${sinPM.length}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">/${total}</span></div>
-        <div class="hero-label">áreas sin Programa de Manejo</div>
-        <div class="hero-meta">${sinPMPct}% del sistema</div>
-      </div>
-      <div class="hero-card hero-warning">
-        <div class="hero-eyebrow">REVISIÓN URGENTE</div>
-        <div class="hero-value">${decretoAntiguoSinPM.length}</div>
-        <div class="hero-label">áreas con decreto > 30 años sin PM</div>
-        <div class="hero-meta">requieren actualización normativa</div>
-      </div>
-      <div class="hero-card hero-info">
-        <div class="hero-eyebrow">COBERTURA</div>
-        <div class="hero-value">${16 - sinAreas.length}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">/16</span></div>
-        <div class="hero-label">alcaldías con áreas protegidas</div>
-        <div class="hero-meta">${sinAreas.length} sin áreas registradas</div>
-      </div>
-    </div>
-
-    <div class="panel" style="border-left:3px solid var(--rojo)">
-      <div class="panel-title" style="color:var(--rojo)">Brecha 1 · Áreas sin Programa de Manejo, por grupo</div>
-      <h3>Distribución del rezago en planeación</h3>
-      <p class="panel-intro">El Programa de Manejo es el instrumento rector de operación de cada área (LACM Arts. 122, 144, 156). Su ausencia limita la capacidad de actuación de SEDEMA y la procedencia de proyectos en el territorio.</p>
-      <div class="brechas-grid">
-        ${Object.entries(sinPMporGrupo).map(([grupo, arr]) => {
-          const totGrupo = DATA.filter(d => d.grupo === grupo).length;
-          const pct = totGrupo > 0 ? (arr.length / totGrupo * 100).toFixed(0) : 0;
-          const color = GROUP_COLORS[grupo];
-          return `
-            <div class="brecha-card" style="--card-color:${color}">
-              <div class="brecha-card-header">
-                <span class="brecha-card-grupo">${grupo.replace(' · ', ' · ')}</span>
-                <span class="brecha-card-pct">${pct}%</span>
-              </div>
-              <div class="brecha-card-num">${arr.length}<span style="font-size:var(--fs-md);color:var(--muted);margin-left:4px;font-weight:500">/${totGrupo}</span></div>
-              <div class="brecha-card-lbl">sin PM</div>
-              <div class="brecha-card-bar">
-                <div class="brecha-card-bar-fill" style="width:${pct}%;background:${color}"></div>
-              </div>
-              ${arr.length > 0 ? `<details class="brecha-card-details">
-                <summary>Ver listado (${arr.length})</summary>
-                <ul class="brecha-list">${arr.map(d => `<li><span>${d.nombre}</span><span class="brecha-list-meta">${fmt(d.superficie)} ha</span></li>`).join('')}</ul>
-              </details>` : ''}
-            </div>
-          `;
-        }).join('')}
-      </div>
-    </div>
-
-    <div class="panel" style="border-left:3px solid var(--rojo)">
-      <div class="panel-title" style="color:var(--rojo)">Brecha 2 · Áreas con decreto > 30 años sin Programa de Manejo</div>
-      <h3>Inventario para revisión normativa <em>prioritaria</em></h3>
-      <p class="panel-intro">Áreas decretadas hace más de 30 años (anteriores a ${new Date().getFullYear() - 30}) que aún no cuentan con Programa de Manejo. Representan riesgo institucional por desactualización del marco operativo.</p>
-      ${decretoAntiguoSinPM.length === 0
-        ? '<p style="color:var(--verde);font-weight:500;padding:14px 0">✓ No hay áreas con decreto antiguo sin PM.</p>'
-        : `<div class="comp-scroll">
-          <table class="comp">
-            <thead>
-              <tr>
-                <th scope="col" style="width:36px;text-align:center">#</th>
-                <th scope="col">Nombre</th>
-                <th scope="col">Grupo</th>
-                <th scope="col">Decreto</th>
-                <th scope="col" style="text-align:right">Antigüedad</th>
-                <th scope="col" style="text-align:right">Superficie</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${decretoAntiguoSinPM.map((d,i) => {
-                // Cálculo robusto: validar que la fecha ISO sea AAAA-MM-DD (4 dígitos al inicio + guion)
-                const iso = (d.fecha_decreto_iso || '').toString();
-                const m = iso.match(/^(\d{4})-/);
-                const anioDec = m ? parseInt(m[1], 10) : null;
-                const anioActual = new Date().getFullYear();
-                // Si la fecha es inválida o el año está fuera de rango razonable, mostrar "—"
-                const antig = (anioDec && anioDec >= 1900 && anioDec <= anioActual)
-                  ? (anioActual - anioDec)
-                  : null;
-                const antigStr = antig !== null ? `${antig} ${antig === 1 ? 'año' : 'años'}` : '—';
-                return `<tr><td style="text-align:center">${i+1}</td><td><b>${d.nombre}</b></td><td><span style="color:${GROUP_COLORS[d.grupo]||'var(--ink-2)'};font-size:var(--fs-xs);font-family:'Roboto Mono',monospace">${d.grupo}</span></td><td>${d.fecha_decreto || '—'}</td><td style="text-align:right;color:${antig !== null ? 'var(--rojo)' : 'var(--muted)'};font-weight:500">${antigStr}</td><td style="text-align:right">${fmt(d.superficie)} ha</td></tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        </div>`
-      }
-    </div>
-
-    <div class="panel" style="border-left:3px solid var(--azul)">
-      <div class="panel-title" style="color:var(--azul)">Brecha 3 · Cobertura territorial por alcaldía</div>
-      <h3>Demarcaciones con menor número de áreas protegidas</h3>
-      <p class="panel-intro">Las cinco alcaldías con menos áreas protegidas registradas en el inventario, posibles candidatas a iniciativas de declaratoria.</p>
-      <div class="brechas-rank">
-        ${rankAlcaldias.map((entry, i) => {
-          const [alc, datos] = entry;
-          const maxCount = Math.max(...Object.values(porAlcaldia).map(x => x.cuenta));
-          const widthPct = (datos.cuenta / maxCount * 100).toFixed(0);
-          return `
-            <div class="rank-row">
-              <span class="rank-pos">${i+1}</span>
-              <div class="rank-body">
-                <div class="rank-header">
-                  <span class="rank-name">${alc}</span>
-                  <span class="rank-count">${datos.cuenta} ${datos.cuenta===1?'área':'áreas'} · ${fmt(datos.sup)} ha</span>
-                </div>
-                <div class="rank-bar"><div class="rank-bar-fill" style="width:${widthPct}%"></div></div>
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-      ${sinAreas.length > 0 ? `
-        <div style="margin-top:18px;padding:14px 16px;background:var(--bg-2);border-radius:var(--radius);border-left:3px solid var(--rojo)">
-          <div style="font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.12em;text-transform:uppercase;color:var(--rojo);font-weight:500;margin-bottom:8px">SIN ÁREAS REGISTRADAS</div>
-          <div style="font-size:var(--fs-base);color:var(--ink-2);line-height:1.55">Las siguientes alcaldías no tienen áreas en el inventario actual: <b>${sinAreas.join(', ')}</b>.</div>
-        </div>
-      ` : ''}
-    </div>
-
-    ${sinGeometria.length > 0 ? `
-      <div class="panel" style="border-left:3px solid var(--dorado)">
-        <div class="panel-title" style="color:var(--dorado-text)">Brecha 4 · Áreas sin polígono georreferenciado</div>
-        <h3>Inventario cartográfico <em>incompleto</em></h3>
-        <p class="panel-intro">Áreas decretadas que aún no cuentan con polígono cargado en el sistema. Limitan la visualización territorial y el análisis espacial.</p>
-        <ul class="brecha-list" style="padding:0;margin:10px 0 0">
-          ${sinGeometria.map(d => `<li><span><b>${d.nombre}</b> · ${d.grupo}</span><span class="brecha-list-meta">${fmt(d.superficie)} ha</span></li>`).join('')}
-        </ul>
-      </div>
-    ` : `
-      <div class="panel" style="border-left:3px solid var(--verde)">
-        <div class="panel-title" style="color:var(--verde)">Cobertura cartográfica</div>
-        <h3>Inventario espacial <em>completo</em></h3>
-        <p class="panel-intro">✓ Todas las áreas decretadas cuentan con polígono georreferenciado en el sistema.</p>
-      </div>
-    `}
-  `;
-}
 
 /* ============================================================
  * CRONOLOGÍA · sección integrada dentro del tab Análisis
@@ -3079,7 +2848,6 @@ function renderCronologiaSection(){
   // Rango total del eje (en años decimales)
   const ejeStart = minDec;
   const ejeEnd = maxDec + 10;
-  const ejeRange = ejeEnd - ejeStart;
 
   return `
     <div class="panel" style="margin-top:18px">
@@ -3948,7 +3716,6 @@ let ALCALDIAS_EMBEDDED = { type:'FeatureCollection', features:[] };
    donde var(--token) no se resuelve. Una sola fuente de verdad por concepto:
    antes había 3 azules casi idénticos y 4 grises sin relación entre sí. */
 const COL_GRIS_NEUTRO = '#8a8d8f';  /* sin protección · fuera de ámbito */
-const COL_GRIS_REF    = '#888888';  /* geometría de referencia (alcaldías) */
 const COL_AZUL_UBIC   = '#1971c2';  /* ubicación del usuario · GPS */
 const COL_AZUL_EMB    = '#1864ab';  /* embarcaderos */
 
@@ -4055,10 +3822,6 @@ function renderMapaPage(g){
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M21 8V5a2 2 0 0 0-2-2h-3"></path><path d="M3 16v3a2 2 0 0 0 2 2h3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg>
             </button>
           </div>
-        </div>
-        <div class="map-block-foot">
-          <span style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:14px;height:2px;background:#888;border-top:1px dashed #888"></span> Límites de alcaldía (referencia)</span>
-          <span style="margin-left:auto">Clic en un polígono para abrir la ficha</span>
         </div>
       </div>
     </div>
@@ -4614,9 +4377,6 @@ function openZPDrawer(row){
 
     <div class="map-block" id="zpFichaMapBlock">
       <div class="map-canvas" id="mapCanvas" style="position:relative"></div>
-      <div class="map-block-foot">
-        <span style="margin-left:auto">Clic en el mapa para activar zoom</span>
-      </div>
     </div>
 
     <div class="big-num">${sup}</div>
@@ -5007,9 +4767,7 @@ function renderZonaPatrimonioPage(){
  * Módulo ARCAC · Núcleos agrarios en suelo de conservación (AISLADO)
  * No toca DATA ni el inventario. Fuente propia: data/arcac.geojson
  * ============================================================ */
-let arcacMap = null, ARCAC_GEO = null, globalArcacLayer = null;
-let arcacLayers = {}, arcacByNo = {};
-let arcacTbl = { q:'', ten:'todos', alc:'todos', sort:'no', dir:'asc' };
+let ARCAC_GEO = null, globalArcacLayer = null, arcacByNo = {};
 const ARCAC_COLORS = { 'Comunidad':'var(--arcac-com)', 'Ejido':'#E8590C' };   // color de TENENCIA (badges/filtros)
 
 /* Badge de tenencia (color) para tabla y ficha */
@@ -5048,7 +4806,6 @@ function openARCACFicha(no){
     </div></div>
     <div class="map-block" id="arcacFichaMapBlock">
       <div class="map-canvas" id="mapCanvas" style="position:relative"></div>
-      <div class="map-block-foot"><span style="margin-left:auto">Clic en el mapa para activar zoom</span></div>
     </div>
     <div class="big-num">${fmt(p.sup_ha)}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">ha</span></div>
     <div class="big-num-lbl">Superficie</div>
@@ -5097,101 +4854,7 @@ function buildArcacGeoLayer(fc, zoomMap){
 }
 
 /* Render de filas de la tabla ARCAC (búsqueda + filtros + orden) */
-function renderArcacRows(){
-  const tb = document.querySelector('#arcacTable tbody');
-  if(!tb || !ARCAC_GEO) return;
-  let rows = (ARCAC_GEO.features||[]).map(f=>f.properties);
-  const q = arcacTbl.q.trim().toLowerCase();
-  if(q) rows = rows.filter(p=> `${p.nombre} ${p.alcaldia} ${p.tenencia}`.toLowerCase().includes(q));
-  if(arcacTbl.ten!=='todos') rows = rows.filter(p=>p.tenencia===arcacTbl.ten);
-  if(arcacTbl.alc!=='todos') rows = rows.filter(p=>p.alcaldia===arcacTbl.alc);
-  const k=arcacTbl.sort, dir=arcacTbl.dir==='asc'?1:-1;
-  rows = rows.slice().sort((a,b)=>{
-    const va=a[k], vb=b[k];
-    if(typeof va==='string') return va.localeCompare(vb,'es')*dir;
-    return ((va||0)-(vb||0))*dir;
-  });
-  tb.innerHTML = rows.map(p=>`<tr data-no="${p.no}">
-    <td class="name"><span class="zp-dot" style="background:${p._color}"></span>${p.nombre}</td>
-    <td>${arcacBadge(p.tenencia)}</td>
-    <td>${p.alcaldia}</td>
-    <td class="num">${fmt(p.sup_ha)}</td></tr>`).join('');
-  tb.querySelectorAll('tr[data-no]').forEach(tr=>{
-    tr.addEventListener('click', ()=>{
-      const no=+tr.dataset.no; openARCACFicha(no);
-      const f=(ARCAC_GEO.features||[]).find(x=>x.properties.no===no);
-      if(f && arcacMap){ try{ arcacMap.fitBounds(L.geoJSON(f).getBounds(), {padding:[30,30], maxZoom:15}); }catch(e){} }
-    });
-  });
-  const nc=rows.filter(p=>p.tenencia==='Comunidad').length, ne=rows.filter(p=>p.tenencia==='Ejido').length;
-  const st=rows.reduce((s,p)=>s+(p.sup_ha||0),0), tot=(ARCAC_GEO.features||[]).length;
-  const cnt=document.getElementById('arcacCount');
-  if(cnt) cnt.innerHTML = `<b>${rows.length}</b> de ${tot} ARCAC · ${nc} comunidades · ${ne} ejidos · ${fmt(st)} ha`;
-  document.querySelectorAll('#arcacTable thead th[data-sort]').forEach(th=>{
-    const ind = th.querySelector('.sort-ind');
-    if(ind) ind.textContent = (th.dataset.sort===arcacTbl.sort) ? (arcacTbl.dir==='asc'?' ▲':' ▼') : '';
-  });
-}
 
-async function initARCACMap(){
-  const canvas = document.getElementById('arcacMapCanvas');
-  if(!canvas || typeof L==='undefined') return;
-  if(arcacMap){ arcacMap.remove(); arcacMap=null; }
-  arcacLayers = {};
-  const fc = await loadARCAC();
-
-  arcacMap = L.map(canvas, {zoomControl:true, scrollWheelZoom:false});
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_32cg_1_639fb69171e990c64b31e73f',{attribution:'© OpenStreetMap © CARTO', maxZoom:19}).addTo(arcacMap);
-  try{ createAlcaldiasLayer({interactive:false}).addTo(arcacMap); }catch(e){}
-
-  const bounds = L.latLngBounds([]);
-  ['Comunidad','Ejido'].forEach(ten=>{
-    const feats = (fc.features||[]).filter(f=>f.properties.tenencia===ten);
-    if(!feats.length) return;
-    const lyr = buildArcacGeoLayer({type:'FeatureCollection',features:feats}, arcacMap);
-    lyr.addTo(arcacMap);
-    arcacLayers[ten] = {layer:lyr, color:ARCAC_COLORS[ten], label:`${ten}s (${feats.length})`};
-    try{ bounds.extend(lyr.getBounds()); }catch(e){}
-  });
-  if(bounds.isValid()){ arcacMap.fitBounds(bounds,{padding:[20,20]}); arcacMap._siaHome = bounds; }
-
-  // Chips: filtro del mapa por tenencia (color = badge de tenencia)
-  const cont = document.getElementById('arcacFilters');
-  if(cont){
-    cont.innerHTML = Object.entries(arcacLayers).map(([k,it])=>`<button class="map-filter-chip active" style="--chip-color:${it.color}" data-key="${k}" type="button"><span class="chip-dot"></span>${it.label}</button>`).join('');
-    cont.querySelectorAll('.map-filter-chip').forEach(chip=>{
-      chip.addEventListener('click', ()=>{
-        const it = arcacLayers[chip.dataset.key]; if(!it) return;
-        const on = chip.classList.toggle('active');
-        if(on) it.layer.addTo(arcacMap); else arcacMap.removeLayer(it.layer);
-      });
-    });
-  }
-
-  // Barra de filtros + búsqueda + orden de la tabla
-  const alcSel = document.getElementById('arcacAlcFilter');
-  if(alcSel){
-    const alcs = [...new Set((fc.features||[]).map(f=>f.properties.alcaldia))].sort((a,b)=>a.localeCompare(b,'es'));
-    alcSel.innerHTML = '<option value="todos">Todas las alcaldías</option>' + alcs.map(a=>`<option>${a}</option>`).join('');
-  }
-  arcacTbl = { q:'', ten:'todos', alc:'todos', sort:'no', dir:'asc' };
-  const sEl=document.getElementById('arcacSearch'); if(sEl){ sEl.value=''; sEl.oninput = e=>{ arcacTbl.q=e.target.value; renderArcacRows(); }; }
-  const tEl=document.getElementById('arcacTenFilter'); if(tEl){ tEl.value='todos'; tEl.onchange = e=>{ arcacTbl.ten=e.target.value; renderArcacRows(); }; }
-  const aEl=document.getElementById('arcacAlcFilter'); if(aEl){ aEl.onchange = e=>{ arcacTbl.alc=e.target.value; renderArcacRows(); }; }
-  document.querySelectorAll('#arcacTable thead th[data-sort]').forEach(th=>{
-    th.onclick = ()=>{
-      const kk=th.dataset.sort;
-      if(arcacTbl.sort===kk) arcacTbl.dir = arcacTbl.dir==='asc'?'desc':'asc';
-      else { arcacTbl.sort=kk; arcacTbl.dir='asc'; }
-      renderArcacRows();
-    };
-  });
-  renderArcacRows();
-
-  addResetViewControl(arcacMap, 'Vista general · ARCAC');
-  addLocateControl(arcacMap, ll=>featuresContaining((ARCAC_GEO&&ARCAC_GEO.features)||[], ll), ()=>(ARCAC_GEO&&ARCAC_GEO.features)||[]);
-  setTimeout(()=>{ try{ arcacMap.invalidateSize(); }catch(e){} }, 120);
-}
 
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -5492,61 +5155,6 @@ function exportTraslapesCSV(){
   siaToast('CSV descargado.');
 }
 
-function renderARCACPage(){
-  return `
-  <div class="panel">
-    <div class="panel-eyebrow">Áreas de Restauración y Conservación Ambiental Comunitaria · Suelo de conservación CDMX</div>
-    <h2 class="panel-title" style="color:var(--arcac-com)">ARCAC — Restauración y Conservación Ambiental Comunitaria</h2>
-    <p class="panel-intro">Las <b>ARCAC</b> son Áreas de Restauración y Conservación Ambiental Comunitaria: núcleos agrarios
-      —comunidades y ejidos— en suelo de conservación de la Ciudad de México. Cada ARCAC tiene un color propio en el mapa;
-      la tenencia se indica con etiqueta de color. Capa complementaria; no afecta el inventario ANP/AVA.</p>
-    <p class="panel-intro" style="margin-top:-6px"><b>Marco de referencia:</b> el régimen de conservación en núcleos
-      agrarios está previsto en el Capítulo VI de la Ley Ambiental de la Ciudad de México, «De las Áreas Comunitarias
-      de Conservación Ecológica» (Art. 152 a 158), consultable en la pestaña <b>Marco Jurídico</b>.</p>
-    <div class="map-filters" id="arcacFilters" style="margin-top:14px"></div>
-    <div class="map-canvas" id="arcacMapCanvas" style="position:relative;height:560px;border-radius:12px;overflow:hidden;margin-top:6px">
-    </div>
-    <style>
-      #arcacTable{width:100%;border-collapse:collapse;font-family:'Roboto',sans-serif;font-size:var(--fs-sm)}
-      #arcacTable thead th{background:var(--arcac-com);color:#fff;text-align:left;padding:9px 12px;font-weight:600;white-space:nowrap;cursor:pointer;user-select:none}
-      #arcacTable thead th:hover{background:#5f3dc4}
-      #arcacTable thead th.num{text-align:right}
-      #arcacTable td.num{text-align:right;font-family:'Roboto Mono',monospace}
-      #arcacTable tbody tr{cursor:pointer;border-top:1px solid var(--line-soft);transition:background .12s}
-      #arcacTable tbody tr:hover{background:var(--bg-2)}
-      #arcacTable td{padding:8px 12px;color:var(--ink-2)}
-      #arcacTable td.name{color:var(--ink);font-weight:500}
-      #arcacTable .zp-dot{width:11px;height:11px;border-radius:var(--r-ui);display:inline-block;margin-right:8px;vertical-align:middle;border:1px solid rgba(0,0,0,.15)}
-      .ten-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:var(--fs-xs);font-weight:600;color:#fff;letter-spacing:.01em}
-      .arcac-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
-      .arcac-toolbar input,.arcac-toolbar select{font-family:'Roboto',sans-serif;font-size:var(--fs-sm);padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
-      .arcac-toolbar input{flex:1;min-width:220px}
-      .arcac-toolbar input:focus,.arcac-toolbar select:focus{outline:2px solid var(--arcac-com);outline-offset:1px}
-    
-</style>
-    <div style="margin-top:24px">
-      <div class="panel-eyebrow" style="margin-bottom:4px">Padrón de ARCAC</div>
-      <div class="panel-intro" id="arcacCount" style="margin-bottom:6px">Cargando…</div>
-      <div class="arcac-toolbar">
-        <input id="arcacSearch" type="text" placeholder="Buscar núcleo o alcaldía…">
-        <select id="arcacTenFilter"><option value="todos">Todas las tenencias</option><option value="Comunidad">Comunidad</option><option value="Ejido">Ejido</option></select>
-        <select id="arcacAlcFilter"><option value="todos">Todas las alcaldías</option></select>
-      </div>
-      <div style="overflow-x:auto;border:1px solid var(--line);border-radius:10px">
-        <table id="arcacTable">
-          <caption class="sr-only">Núcleos agrarios con acciones de restauración y conservación ambiental comunitaria (ARCAC)</caption>
-          <thead><tr>
-            <th data-sort="nombre">Núcleo agrario<span class="sort-ind"></span></th>
-            <th data-sort="tenencia">Tenencia<span class="sort-ind"></span></th>
-            <th data-sort="alcaldia">Alcaldía<span class="sort-ind"></span></th>
-            <th data-sort="sup_ha" class="num">Sup. (ha)<span class="sort-ind"></span></th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </div>`;
-}
 
 async function initGlobalMap(){
   const canvas = document.getElementById('globalMapCanvas');
@@ -6745,9 +6353,6 @@ function openDrawer(d){
           <button class="map-filter-chip active" id="drawerSCToggle" type="button" style="--chip-color:var(--sc)"><span class="chip-dot"></span>Suelo de Conservación</button>
         </div>
       </div>
-      <div class="map-block-foot">
-        <span style="margin-left:auto">Clic en el mapa para activar zoom</span>
-      </div>
     </div>
 
     <div class="big-num">${fmt(d.superficie)}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">ha</span></div>
@@ -6821,7 +6426,7 @@ function closeDrawer(){
    sugerencias se activaban solo con clic. Aqui se les da foco y se traduce
    Enter/Espacio al mismo clic, sin tocar las funciones de render. */
 const _NAVEGABLES = 'tr[data-i],tr[data-emb],tr[data-zpkey],tr[data-no],tr[data-a],'
-                  + '.ubicar-sugerencias .item,.map-search-result-item';
+                  + '.ubicar-sugerencias .item';
 function _marcarNavegables(){
   document.querySelectorAll(_NAVEGABLES).forEach(el=>{
     if(!el.hasAttribute('tabindex')) el.setAttribute('tabindex','0');
@@ -6856,7 +6461,7 @@ function _marcarNavegables(){
 let _navPend = false;
 new MutationObserver(muts=>{
   if(_navPend) return;
-  const OJO = 'tr,.item,.map-search-result-item';
+  const OJO = 'tr,.item';
   const hayFilas = muts.some(m=>[...m.addedNodes].some(n=>
     n.nodeType===1 && ((n.matches && n.matches(OJO)) || (n.querySelector && n.querySelector(OJO)))));
   if(!hayFilas) return;
@@ -7061,8 +6666,7 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
     '<div style="background:var(--alert-bg,#fdf0f3);border:2px solid var(--guinda,#9d2148);'+
     'padding:16px 24px;margin:0;font-family:Roboto,sans-serif;color:var(--ink,#2a2a2a)">'+
     '<b>No se pudo cargar el inventario en este momento</b><br>'+
-    'Intenta recargar la página en unos minutos. Si el problema persiste, repórtalo a '+
-    '<a href="mailto:CORREO_INSTITUCIONAL@sedema.cdmx.gob.mx" style="color:var(--guinda,#9d2148)">SEDEMA</a>.'+
+    'Intenta recargar la página en unos minutos.'+
     '</div>');
 }
 })();
@@ -7080,6 +6684,6 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
 </style>
 <div class="cinta-borrador" role="note"><b>Versión en revisión · rediseño v38.</b>
   La página oficial es <a href="./">la portada del sitio</a>.
-  <span class="ver">sia-v35-2026-09-11n</span></div>
+  <span class="ver">sia-v35-2026-09-11p</span></div>
 </body>
 </html>
