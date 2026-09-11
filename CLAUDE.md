@@ -155,6 +155,13 @@ de GitHub Pages, probablemente por IPv6 sin fallback.
   lo conserva funcionando en datos. Instrucción de campo: **cargar el tablero antes de salir**.
 
 ## Rediseño de UX/UI (v38 · 10 sep 2026)
+
+> **Dónde vive (11 sep 2026):** el rediseño NO está en `index.html`. Vive en
+> **`rediseno-v38.html`**, como versión en revisión con una cinta al pie que lo identifica, para
+> poder compararlo contra el original sin alterar la página oficial. `index.html` es el original
+> (el mismo que sirve GitHub Pages). Al aprobarlo: renombrar `rediseno-v38.html` → `index.html`,
+> quitar el bloque `.cinta-borrador` del final del archivo y bumpear `CACHE_VERSION`.
+
 Diagnóstico: once destinos en un solo nivel mezclaban filtros del inventario, inventarios
 independientes y herramientas de análisis; había dos buscadores para lo mismo; el cuarto KPI era
 el inverso aritmético del tercero; ocho filtros con el mismo peso visual; el mapa vivía debajo de
@@ -183,14 +190,24 @@ destinos y los subfiltros. `SECONDARY_TABS`, `.tabs`, `.tab` y el menú «Más �
 - `#globalMapSection` vive **fuera** de `#tableSection` (el destino Ubicar lo muestra con la tabla
   oculta) y va **antes** de la tabla.
 - **Vista partida ≥1200 px:** `main#main-content` es un grid de dos columnas; el mapa queda
-  `sticky` a la izquierda y la tabla corre a la derecha con seis columnas (se ocultan Tipo,
-  Jurisdicción, Decreto, Fecha PM y DG resp.; siguen en la ficha y en el CSV).
+  `sticky` a la izquierda y la tabla corre a la derecha (columnas visibles, abajo).
 - **Celular:** la barra de destinos es `position:fixed` al pie (48 px, alcance del pulgar), el
   destino por defecto es `UBICAR`, la barra «¿Dónde estoy?» solo aparece en ese destino, y la
-  tabla se reduce a Nombre (con categoría y alcaldía en segunda línea) · Superficie · PM · SC.
+  tabla se reduce a Nombre · Superficie · PM · SC, con Tipo, Subcategoría, Alcaldía y DG en una
+  segunda línea bajo el nombre.
 - **Filtros jerarquizados:** Búsqueda, Alcaldía y Programa de manejo a la vista; Tipo,
   Jurisdicción, Subcategoría, SC y DG tras «Más filtros», con conteo de activos. Si hay un filtro
   avanzado activo, el panel se despliega solo (`sincronizarMasFiltros()`).
+- **Tabla en vista partida (11 sep):** además de Nombre, Subcategoría, Alcaldía, Superficie, PM y
+  SC se muestran **Tipo** y **DG responsable**; solo se ocultan Jurisdicción, Decreto y Fecha PM.
+  La columna Nombre baja a 28% y el grid del `main` pasa a `0.88fr / 1fr` para darle ancho a la tabla.
+- **Filtros redundantes (11 sep):** `populateFilters()` oculta todo filtro cuyo subconjunto activo
+  tenga **un solo valor posible**, porque ahí no filtra nada. Regla general, no lista fija: dentro
+  de Bosques Urbanos desaparecen Tipo, Jurisdicción, Subcategoría, SC y DG (todas son AVA · Local ·
+  Bosque Urbano, fuera de SC y DGSANPAVA); en Barrancas, Tipo, Jurisdicción, Subcategoría y DG; en
+  ANP Locales y Federales solo Tipo y Jurisdicción, porque su Subcategoría sí varía (6 y 2 valores).
+  Si ningún filtro avanzado queda útil, el botón «Más filtros» también se oculta, y
+  `sincronizarMasFiltros()` no cuenta los filtros ocultos.
 - Las cuatro tarjetas KPI se sustituyeron por `resumenHTML()`: tres cifras y una barra de
   cobertura de programas de manejo que muestra logro y brecha a la vez.
 

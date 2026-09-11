@@ -617,7 +617,7 @@
      campo: obligaba a recorrer toda la pagina y nunca se veian juntos. A partir
      de 1200 px comparten pantalla; el mapa queda fijo mientras la tabla corre. */
   @media (min-width:1200px){
-    main#main-content{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);
+    main#main-content{display:grid;grid-template-columns:minmax(0,0.88fr) minmax(0,1fr);
       gap:16px;align-items:start}
     main#main-content > .ubicar-bar,
     main#main-content > #ubicarResultado,
@@ -634,23 +634,31 @@
     #tableSection > .toolbar .filtros-av{grid-template-columns:1fr 1fr}
     #tableSection > .table-wrap{max-height:calc(100vh - 40px);overflow:auto}
     #globalMapCanvas{height:calc(100vh - 250px);min-height:460px}
-    /* En vista partida la tabla es estrecha: se retiran las columnas de menor
-       consulta. Siguen disponibles en la ficha y en la descarga CSV. */
-    #tableSection table.t th:nth-child(2),#tableSection table.t td:nth-child(2),
+    /* En vista partida se retiran solo las tres columnas de menor consulta:
+       Jurisdicción (redundante con el Tipo y con el filete), Decreto y Fecha PM.
+       Tipo y DG responsable permanecen: identifican competencia y responsable,
+       que es lo que se consulta al repartir trabajo. Siguen todas en el CSV. */
     #tableSection table.t th:nth-child(3),#tableSection table.t td:nth-child(3),
     #tableSection table.t th:nth-child(6),#tableSection table.t td:nth-child(6),
-    #tableSection table.t th:nth-child(9),#tableSection table.t td:nth-child(9),
-    #tableSection table.t th:nth-child(11),#tableSection table.t td:nth-child(11){display:none}
-    #tableSection table.t th:nth-child(1),#tableSection table.t td:nth-child(1){width:33%}
-    #tableSection table.t th:nth-child(4),#tableSection table.t td:nth-child(4){width:20%}
-    #tableSection table.t th:nth-child(5),#tableSection table.t td:nth-child(5){width:21%}
-    #tableSection table.t th:nth-child(7),#tableSection table.t td:nth-child(7){width:14%}
-    #tableSection table.t th:nth-child(8),#tableSection table.t td:nth-child(8){width:6%}
-    #tableSection table.t th:nth-child(10),#tableSection table.t td:nth-child(10){width:6%}
-    #tableSection thead.t-head th{padding:9px 6px}
+    #tableSection table.t th:nth-child(9),#tableSection table.t td:nth-child(9){display:none}
+    #tableSection table.t th:nth-child(1),#tableSection table.t td:nth-child(1){width:28%}
+    #tableSection table.t th:nth-child(2),#tableSection table.t td:nth-child(2){width:7%}
+    #tableSection table.t th:nth-child(4),#tableSection table.t td:nth-child(4){width:15%}
+    #tableSection table.t th:nth-child(5),#tableSection table.t td:nth-child(5){width:15%}
+    #tableSection table.t th:nth-child(7),#tableSection table.t td:nth-child(7){width:13%}
+    #tableSection table.t th:nth-child(8),#tableSection table.t td:nth-child(8){width:5%}
+    #tableSection table.t th:nth-child(10),#tableSection table.t td:nth-child(10){width:5%}
+    #tableSection table.t th:nth-child(11),#tableSection table.t td:nth-child(11){width:12%}
+    #tableSection thead.t-head th:nth-child(2) .arrow,
+    #tableSection thead.t-head th:nth-child(11) .arrow{display:none}
+    /* La sigla larga no cabe entera en 14%: se abrevia visualmente y el nombre
+       completo queda en el title de la celda. */
+    #tableSection td .tag-dg{font-size:var(--fs-mini)}
+    #tableSection thead.t-head th{padding:9px 5px;letter-spacing:.04em}
     #tableSection thead.t-head th:nth-child(8) .arrow,
     #tableSection thead.t-head th:nth-child(10) .arrow{display:none}
-    #tableSection tbody.t-body td{padding:9px 6px}
+    #tableSection tbody.t-body td{padding:9px 5px}
+    #tableSection tbody.t-body td.name{padding-left:16px}
   }
   .panel-compact h3{font-size:var(--fs-xl);margin-bottom:10px}
 
@@ -2310,18 +2318,39 @@ function populateFilters(){
   const alcs = [...new Set(explode(subset,'alcaldia'))].sort((a,b)=>a.localeCompare(b,'es'));
   document.getElementById('fCat').innerHTML = '<option value="">Todas</option>'+cats.map(c=>`<option>${c}</option>`).join('');
   document.getElementById('fAlc').innerHTML = '<option value="">Todas</option>'+alcs.map(a=>`<option>${a}</option>`).join('');
-  // Si el tab actual es de tipo específico (BU/BR/ANPL/ANPF), ocultar el filtro Tipo y Jur (redundantes)
-  // Mantenerlos visibles solo en Global y ALL
-  const fTipo = document.getElementById('fTipo');
-  const fJurEl = document.getElementById('fJur');
-  if(state.tab === 'ALL'){
-    if(fTipo) fTipo.parentElement.style.display = '';
-    if(fJurEl) fJurEl.parentElement.style.display = '';
-  } else {
-    // Pre-seleccionar valores correspondientes al tab y deshabilitar visualmente
-    if(fTipo) fTipo.parentElement.style.display = '';
-    if(fJurEl) fJurEl.parentElement.style.display = '';
-  }
+
+  /* ── Filtros redundantes ──────────────────────────────────────────────
+     Un filtro cuyo subconjunto tiene un solo valor posible no filtra nada:
+     dentro de «Bosques Urbanos» el Tipo ya es AVA y la Jurisdicción ya es
+     Local. En vez de mantenerlos como adorno, se retiran mientras ese
+     subconjunto esté activo, y vuelven al regresar a «Todas». La regla es
+     general —un valor único, fuera— y se aplica sola a cualquier columna. */
+  const valores = {
+    fTipo: new Set(subset.map(d=>d.tipo).filter(Boolean)),
+    fJur:  new Set(subset.map(d=>d.jurisdiccion).filter(Boolean)),
+    fCat:  new Set(cats),
+    fAlc:  new Set(alcs),
+    fPM:   new Set(subset.map(d=>d.programa_manejo).filter(Boolean)),
+    fSC:   new Set(subset.map(d=>d.suelo_conservacion).filter(Boolean)),
+    fDG:   new Set(subset.map(d=>d.dg_responsable || '__sin__'))
+  };
+  let avanzadosVisibles = 0;
+  Object.keys(valores).forEach(id=>{
+    const e = document.getElementById(id);
+    if(!e) return;
+    const lab = e.closest('label');
+    const util = valores[id].size > 1;
+    if(lab) lab.style.display = util ? '' : 'none';
+    if(!util && e.value){ e.value = ''; state[id] = ''; }
+    if(util && ['fTipo','fJur','fCat','fSC','fDG'].includes(id)) avanzadosVisibles++;
+  });
+
+  /* Si ningun filtro avanzado aporta algo, el boton que los despliega tampoco. */
+  const btnMas = document.getElementById('btnMasFiltros');
+  const panelAv = document.getElementById('filtrosAvanzados');
+  if(btnMas) btnMas.style.display = avanzadosVisibles ? '' : 'none';
+  if(panelAv && !avanzadosVisibles){ panelAv.hidden = true; if(btnMas) btnMas.setAttribute('aria-expanded','false'); }
+  if(typeof sincronizarMasFiltros === 'function') sincronizarMasFiltros();
 }
 
 function renderDashboard(){
@@ -3488,7 +3517,7 @@ function render(){
   } else {
     tb.innerHTML = rows.map(d=>`
       <tr data-i="${DATA.indexOf(d)}" data-g="${GRUPO_CLS[d.grupo]||''}">
-        <td class="name">${d.nombre}<span class="name-sub">${subShort(d.categoria)} · ${d.alcaldia}</span></td>
+        <td class="name">${d.nombre}<span class="name-sub">${d.tipo} · ${subShort(d.categoria)} · ${d.alcaldia}${d.dg_responsable ? ` · ${d.dg_responsable}` : ''}</span></td>
         <td><span class="tag tag-${d.tipo}">${d.tipo}</span></td>
         <td><span class="tag tag-jur-${d.jurisdiccion}">${d.jurisdiccion}</span></td>
         <td><span class="tag-sub sub-${subCode(d.categoria)}" title="${d.categoria}">${subShort(d.categoria)}</span></td>
@@ -3539,7 +3568,12 @@ function sincronizarMasFiltros(){
   const num  = document.getElementById('masFiltrosN');
   if(!cont || !btn || !num) return;
   const activos = ['fTipo','fJur','fCat','fSC','fDG']
-    .filter(id=>{ const e=document.getElementById(id); return e && e.value; }).length;
+    .filter(id=>{
+      const e = document.getElementById(id);
+      if(!e || !e.value) return false;
+      const lab = e.closest('label');
+      return !lab || lab.style.display !== 'none';   // un filtro oculto no cuenta
+    }).length;
   num.textContent = activos;
   num.hidden = activos === 0;
   /* Un filtro activo escondido es una trampa: si lo hay, el panel se abre solo. */
