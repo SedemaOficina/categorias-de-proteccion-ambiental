@@ -49,7 +49,7 @@ Dashboard público de categorías de protección ambiental de la CDMX, en GitHub
 ## Módulos actuales
 - **Inventario** (Global + Bosques Urbanos + Barrancas + ANP Local + ANP Federal): mapa global con overlays, tabla, ficha lateral (drawer) con mini-mapa.
 - **Zona Patrimonio (ZP):** UNESCO 7,534.17 ha · Ramsar 1363 2,657 ha · AICA 37 2,860.32 ha · SIPAM FAO 1,875.65 ha (6 zonas) · embarcaderos.
-- **ARCAC:** 30 Áreas de Restauración y Conservación Ambiental Comunitaria (17 comunidades + 13 ejidos, 22,567.71 ha).
+- **ARCAC:** 30 Áreas de Restauración y Conservación Ambiental Comunitaria (17 comunidades + 13 ejidos, 22,567.71 ha). Desde v38 es un chip del **Inventario**, no de Capas, pero sigue fuera de las 66 áreas (ver «ARCAC dentro del inventario» abajo).
 - Navegación: **cuatro destinos** (ver «Rediseño de UX» abajo). `GROUPS` sigue teniendo los 11 ids
   y `state.tab` sigue siendo un id de grupo; lo que cambió es cómo se agrupan en pantalla.
 
@@ -253,6 +253,33 @@ destinos y los subfiltros. `SECONDARY_TABS`, `.tabs`, `.tab` y el menú «Más �
   ANP Locales y Federales solo Tipo y Jurisdicción, porque su Subcategoría sí varía (6 y 2 valores).
   Si ningún filtro avanzado queda útil, el botón «Más filtros» también se oculta, y
   `sincronizarMasFiltros()` no cuenta los filtros ocultos.
+- **ARCAC dentro del inventario (11 sep):** el chip ARCAC salió de Capas y entró a la barra de
+  categorías del Inventario, junto a Bosques Urbanos, Barrancas y las dos ANP. La invariante de
+  las 66 áreas no se toca: ARCAC vive en `DATA_ARCAC`, un arreglo aparte que `construirDatosArcac()`
+  arma al vuelo desde `data/arcac.geojson`; **nunca entra a `DATA` ni a `GEOMETRIES`**, y el
+  contador institucional del encabezado sigue diciendo 66. Lo único compartido es la tabla:
+  `currentData()` devuelve `DATA_ARCAC` cuando `state.tab === 'ARCAC'`.
+  - **Columnas.** Los núcleos agrarios no tienen decreto, jurisdicción, programa de manejo ni
+    dirección responsable, así que la regla de redundancia los deja fuera sola —no hay excepción
+    codificada— y la tabla queda en cuatro columnas: Nombre · Tenencia · Alcaldía · Sup. (ha).
+    El encabezado «Subcat.» se renombra a «Tenencia» solo en esta pestaña.
+  - **Identidad por `no`, no por nombre.** Cinco nombres se repiten en la capa (San Bernabé
+    Ocotepec, San Miguel Ajusco, San Miguel Topilejo, San Nicolás Totolapan, Santa Rosa Xochiac) y
+    la repetición es legítima: un registro es ejido y el otro comunidad. Además cuatro nombres
+    coinciden con áreas del inventario. Por eso la fila lleva `data-no` y no `data-i`, y el
+    manejador de `#tb` enruta `tr[data-no]` a `openARCACFicha()`.
+  - **Alcaldía normalizada:** la capa trae «Magdalena Contreras» y «La Magdalena Contreras»; el
+    constructor las unifica para que el filtro de alcaldía no las parta en dos.
+  - **Carga diferida con candado.** `arcac.geojson` no está en `CORE_ASSETS`. Como `renderDashboard`
+    dispara la carga y la carga vuelve a llamar a `renderDashboard`, el estado
+    `_arcacTablaEstado` ('sin-cargar' | 'cargando' | 'listo') corta el ciclo; si la descarga falla,
+    la tabla muestra el aviso en lugar de reintentar en bucle.
+  - **Resumen propio:** `resumenArcacHTML()` reporta 30 núcleos, 22,567.70 ha y el reparto de
+    tenencia (17 comunidad · 13 ejido), y cierra con la leyenda «Capa complementaria: no forma
+    parte de las 66 áreas del inventario» para que nadie sume ARCAC al universo protegido.
+  - **Sin columna de Suelo de Conservación:** se descartó por ahora. Sería un dato derivado y el
+    cálculo por muestreo tiene ±2 puntos de error; si se quiere, hay que calcularlo con
+    `tools/traslapes.py` y escribirlo como propiedad en `arcac.geojson`, no estimarlo en el cliente.
 - Las cuatro tarjetas KPI se sustituyeron por `resumenHTML()`: tres cifras y una barra de
   cobertura de programas de manejo que muestra logro y brecha a la vez.
 
@@ -273,4 +300,6 @@ navegación, filtros y tabla; **no verifica los mapas**, que hay que revisar en 
 - **Colores de Zona Patrimonio confundibles:** AICA `#7F77DD` con ARCAC `#7048E8`, y SIPAM
   `#EF9F27` con ANP Local `#F08217`. Propuesta pendiente de validación: `#4C4F9E` y `#C77D0A`.
 - **Corregir el Sheet** en la fila de Bosque de Tlalpan (y revisar las 8 parciales) según el hallazgo de arriba.
+- **Suelo de Conservación de ARCAC:** falta calcularlo con exactitud (`tools/traslapes.py`) y
+  escribirlo como propiedad en `arcac.geojson` si se quiere mostrar la columna.
 - **Traslapes ANP–ARCAC** que el tablero no reportaba hasta v36 (ej. Cumbres del Ajusco ∩ ARCAC San Miguel Ajusco). Vale la pena inventariarlos.

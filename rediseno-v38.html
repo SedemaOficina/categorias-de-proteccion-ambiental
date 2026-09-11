@@ -621,6 +621,7 @@
   table.t.oc-3  th:nth-child(3),  table.t.oc-3  td:nth-child(3),
   table.t.oc-4  th:nth-child(4),  table.t.oc-4  td:nth-child(4),
   table.t.oc-5  th:nth-child(5),  table.t.oc-5  td:nth-child(5),
+  table.t.oc-6  th:nth-child(6),  table.t.oc-6  td:nth-child(6),
   table.t.oc-8  th:nth-child(8),  table.t.oc-8  td:nth-child(8),
   table.t.oc-10 th:nth-child(10), table.t.oc-10 td:nth-child(10),
   table.t.oc-11 th:nth-child(11), table.t.oc-11 td:nth-child(11){display:none}
@@ -660,6 +661,9 @@
     #tableSection table.t:not(.con-decreto) td:nth-child(6){display:none}
     #tableSection table.t.con-decreto th:nth-child(6),
     #tableSection table.t.con-decreto td:nth-child(6){width:9%}
+    /* Si el subconjunto no tiene fechas —ARCAC—, la columna se va igual. */
+    #tableSection table.t.oc-6 th:nth-child(6),
+    #tableSection table.t.oc-6 td:nth-child(6){display:none}
     #tableSection table.t th:nth-child(1),#tableSection table.t td:nth-child(1){width:28%}
     /* Caso lleno: ocho columnas con el año. Se reparte a mano para que ni el
        encabezado «Decreto» ni su flecha de orden queden cortados. */
@@ -942,6 +946,7 @@
   tbody.t-body tr[data-g="br"]  {box-shadow:inset 3px 0 0 var(--br)}
   tbody.t-body tr[data-g="anpl"]{box-shadow:inset 3px 0 0 var(--anpl)}
   tbody.t-body tr[data-g="anpf"]{box-shadow:inset 3px 0 0 var(--anpf)}
+  tbody.t-body tr[data-g="arcac"]{box-shadow:inset 3px 0 0 var(--arcac-com)}
   tbody.t-body td{padding:10px 8px;font-size:var(--fs-base);color:var(--ink-2);vertical-align:top;font-weight:400;position:relative;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   tbody.t-body td.name{color:var(--ink);font-weight:500;padding-left:18px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
   /* En celular la fila se lee como ficha: la categoria y la alcaldia bajan
@@ -2196,8 +2201,42 @@ let state = { tab:'ALL', dest:'INVENTARIO', sortKey:'nombre', sortDir:1, q:'', f
   mapFilters:{ 'AVA · Bosque Urbano':true, 'AVA · Barranca':true, 'ANP · Local':true, 'ANP · Federal':true },
   highlightCoadmin: false };
 const currentGroup = () => GROUPS.find(g=>g.id===state.tab);
-const isSpecialTab = (id) => id==='LEGAL' || id==='METAS' || id==='ANALISIS' || id==='ZP' || id==='ARCAC';
+const isSpecialTab = (id) => id==='LEGAL' || id==='METAS' || id==='ANALISIS' || id==='ZP';
+/* ════════════════════════════════════════════════════════════════════
+ * ARCAC en la tabla general · 11 sep 2026
+ * Los 30 núcleos NO entran a DATA ni a GEOMETRIES: el inventario sigue
+ * siendo 66 y ningún contador cambia. Lo que se comparte es la TABLA, que
+ * pinta el conjunto activo sea cual sea. Los campos que ARCAC no tiene
+ * —decreto, programa de manejo, suelo de conservación, dirección
+ * responsable— quedan vacíos y la regla de columnas redundantes los retira
+ * sola: nadie ve una columna llena de guiones.
+ * Identidad: el número de núcleo, no el nombre. Cinco nombres se repiten
+ * porque existen en versión comunal y ejidal, y otros cuatro coinciden con
+ * áreas del inventario.
+ * ════════════════════════════════════════════════════════════════════ */
+let DATA_ARCAC = [];
+let _arcacTablaEstado = 'sin-cargar';   // sin-cargar · cargando · listo
+function construirDatosArcac(fc){
+  DATA_ARCAC = ((fc && fc.features) || []).map(f=>{
+    const p = f.properties || {};
+    /* La alcaldía viene con dos grafías —«Magdalena Contreras» y «La Magdalena
+       Contreras»—, que partirían el filtro en dos entradas. */
+    let alc = String(p.alcaldia || '').trim();
+    if(alc === 'Magdalena Contreras') alc = 'La Magdalena Contreras';
+    return {
+      _arcacNo: p.no,
+      nombre: esc(String(p.nombre||'')), tipo:'ARCAC', jurisdiccion:'Local',
+      categoria: String(p.tenencia||''), alcaldia: esc(alc),
+      superficie: +p.sup_ha || 0, grupo:'ARCAC',
+      fecha_decreto:'', fecha_decreto_iso:'', programa_manejo:'', fecha_pm:'',
+      fecha_pm_iso:'', suelo_conservacion:'', dg_responsable:''
+    };
+  }).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  return DATA_ARCAC;
+}
+
 const currentData = () => {
+  if(state.tab==='ARCAC') return DATA_ARCAC;
   if(state.tab==='ALL' || isSpecialTab(state.tab)) return DATA;
   return DATA.filter(d=>d.grupo===currentGroup().key);
 };
@@ -2237,8 +2276,8 @@ const DEST_ICONS = {
 };
 const DESTINOS = [
   { id:'UBICAR',     label:'Ubicar',     sub:[] },
-  { id:'INVENTARIO', label:'Inventario', sub:['ALL','BU','BR','ANPL','ANPF'] },
-  { id:'CAPAS',      label:'Capas',      sub:['ZP','ARCAC','TRASLAPES'] },
+  { id:'INVENTARIO', label:'Inventario', sub:['ALL','BU','BR','ANPL','ANPF','ARCAC'] },
+  { id:'CAPAS',      label:'Capas',      sub:['ZP','TRASLAPES'] },
   { id:'ANALITICA',  label:'Análisis',   sub:['ANALISIS','METAS','LEGAL'] },
 ];
 const DEST_DE_TAB = {};
@@ -2391,12 +2430,23 @@ function populateFilters(){
     if(util && ['fTipo','fJur','fCat','fSC','fDG'].includes(id)) avanzadosVisibles++;
   });
 
+  /* Con ARCAC la columna «Subcat.» contiene la tenencia de la tierra: el
+     encabezado se renombra para que no mienta. */
+  const thSub = document.querySelector('thead.t-head th[data-k="categoria"]');
+  if(thSub){
+    const flecha = thSub.querySelector('.arrow');
+    thSub.textContent = (state.tab === 'ARCAC') ? 'Tenencia ' : 'Subcat. ';
+    thSub.title = (state.tab === 'ARCAC') ? 'Tenencia de la tierra' : 'Subcategoría';
+    if(flecha) thSub.appendChild(flecha);
+  }
+
   /* La tabla obedece la misma regla que los filtros: la columna cuyo valor no
      cambia en el subconjunto activo se retira. Se calcula sobre currentData(),
      no sobre las filas filtradas, para que no aparezcan y desaparezcan columnas
      mientras se teclea en la busqueda. */
   const COL_CAMPO = {2:'tipo', 3:'jurisdiccion', 4:'categoria', 5:'alcaldia',
-                     8:'programa_manejo', 10:'suelo_conservacion', 11:'dg_responsable'};
+                     6:'fecha_decreto', 8:'programa_manejo', 10:'suelo_conservacion',
+                     11:'dg_responsable'};
   const tabla = document.querySelector('table.t');
   if(tabla){
     Object.keys(COL_CAMPO).forEach(n=>{
@@ -2463,18 +2513,49 @@ function renderDashboard(){
     tblSec.style.display = 'none';
     if(mapSec) mapSec.style.display = 'none';
     setTimeout(() => initZPMap(), 60);
-  } else if(g.id==='ARCAC'){
-    dash.innerHTML = renderARCACPage();
-    tblSec.style.display = 'none';
-    if(mapSec) mapSec.style.display = 'none';
-    setTimeout(() => initARCACMap(), 60);
   } else if(g.id==='TRASLAPES'){
     dash.innerHTML = renderTraslapesPage();
     tblSec.style.display = 'none';
     if(mapSec) mapSec.style.display = 'none';
     setTimeout(() => initTraslapesMap(), 60);
+  } else if(g.id==='ARCAC'){
+    /* Los polígonos llegan bajo demanda; mientras tanto la tabla anuncia la
+       espera y, al resolver, se vuelve a pintar todo una sola vez. */
+    tblSec.style.display = '';
+    if(!DATA_ARCAC.length){
+      /* Una sola tentativa. Sin este cerrojo, un arcac.geojson que no responde
+         —o que responde vacío— deja a renderDashboard llamándose a sí mismo. */
+      dash.innerHTML = '';
+      if(_arcacTablaEstado === 'listo'){
+        _estadoTabla('No se pudieron cargar los núcleos agrarios. Revisa la conexión y recarga.');
+        if(mapSec){ mapSec.style.display='none'; mapSec.innerHTML=''; }
+        return;
+      }
+      if(_arcacTablaEstado === 'cargando') return;
+      _arcacTablaEstado = 'cargando';
+      _estadoTabla('Cargando los núcleos agrarios…');
+      loadARCAC().then(fc=>{
+        construirDatosArcac(fc);
+        _arcacTablaEstado = 'listo';
+        if(state.tab === 'ARCAC'){ populateFilters(); renderDashboard(); render(); }
+      }).catch(()=>{
+        _arcacTablaEstado = 'listo';
+        if(state.tab === 'ARCAC') renderDashboard();
+      });
+      return;
+    }
+    dash.innerHTML = resumenArcacHTML();
+    if(mapSec){
+      mapSec.style.display = '';
+      mapSec.innerHTML = renderMapaPage(g);
+      /* El mapa muestra los núcleos, no los grupos del inventario. */
+      Object.keys(state.mapFilters).forEach(k => state.mapFilters[k] = false);
+      state.showArcac = true;
+      setTimeout(() => { initGlobalMap(); asegurarCapaArcacGlobal(); }, 100);
+    }
   } else {
     tblSec.style.display = '';
+    state.showArcac = false;
     dash.innerHTML = g.id==='ALL' ? renderGlobalDashboard() : renderGroupDashboard(g);
     // Mapa: visible en TODAS las pestañas no especiales (Global y categorías)
     if(mapSec){
@@ -2529,6 +2610,35 @@ function resumenHTML(arr, titulo){
         <span class="res-s${sinPM?' res-alerta':''}">${sinPM
           ? `${sinPM} ${sinPM===1?'área':'áreas'} sin programa de manejo vigente`
           : 'Todas las áreas cuentan con programa de manejo'}</span>
+      </div>
+    </div>`;
+}
+
+/* El resumen general habla de cobertura de programas de manejo, que en ARCAC no
+   aplica: decir «30 áreas sin programa de manejo vigente» sería falso. Este
+   resumen habla de lo que sí hay: núcleos, tenencia y superficie. */
+function resumenArcacHTML(){
+  const arr = DATA_ARCAC;
+  const com = arr.filter(d=>d.categoria==='Comunidad').length;
+  const eji = arr.length - com;
+  const ha  = sum(arr,'superficie');
+  const p   = arr.length ? com/arr.length*100 : 0;
+  return `
+    <div class="resumen">
+      <div class="res-blk">
+        <span class="res-k">Núcleos agrarios · ARCAC</span>
+        <span class="res-v">${fmtInt(arr.length)}</span>
+      </div>
+      <div class="res-blk">
+        <span class="res-k">Superficie</span>
+        <span class="res-v">${fmt(ha)}<span class="u">ha</span></span>
+        <span class="res-s">${fmt(ha/100)} km²</span>
+      </div>
+      <div class="res-blk res-pm">
+        <div class="res-pm-top"><span class="res-k">Tenencia de la tierra</span>
+          <span class="mono" style="font-size:var(--fs-sm)">${com} comunidad · ${eji} ejido</span></div>
+        <div class="res-bar"><span style="width:${p.toFixed(1)}%;background:var(--arcac-com)"></span></div>
+        <span class="res-s">Capa complementaria: no forma parte de las 66 áreas del inventario</span>
       </div>
     </div>`;
 }
@@ -3584,7 +3694,7 @@ function render(){
     tb.innerHTML = `<tr><td colspan="11" class="empty">Sin resultados para los filtros actuales.</td></tr>`;
   } else {
     tb.innerHTML = rows.map(d=>`
-      <tr data-i="${DATA.indexOf(d)}" data-g="${GRUPO_CLS[d.grupo]||''}">
+      <tr ${d._arcacNo!=null ? `data-no="${d._arcacNo}"` : `data-i="${DATA.indexOf(d)}"`} data-g="${GRUPO_CLS[d.grupo]||'arcac'}">
         <td class="name">${d.nombre}<span class="name-sub">${d.tipo} · ${subShort(d.categoria)} · ${d.alcaldia} · ${anioDecreto(d)}${d.dg_responsable ? ` · ${d.dg_responsable}` : ''}</span></td>
         <td><span class="tag tag-${d.tipo}">${d.tipo}</span></td>
         <td><span class="tag tag-jur-${d.jurisdiccion}">${d.jurisdiccion}</span></td>
@@ -3907,6 +4017,10 @@ function renderMapaPage(g){
     const polyCount = (GEOMETRIES && GEOMETRIES.features) ? GEOMETRIES.features.length : DATA.length;
     eyebrow = '';
     title = `Mapa · <em>${polyCount}</em> polígonos`;
+    intro = '';
+  } else if(g.id === 'ARCAC'){
+    eyebrow = '';
+    title = `Mapa · <em>ARCAC</em> · ${DATA_ARCAC.length} núcleos agrarios`;
     intro = '';
   } else {
     eyebrow = '';
@@ -7040,6 +7154,8 @@ document.addEventListener('keydown', e=>{
 });
 
 document.getElementById('tb').addEventListener('click',e=>{
+  const trA = e.target.closest('tr[data-no]');
+  if(trA){ openARCACFicha(+trA.dataset.no); return; }
   const tr=e.target.closest('tr[data-i]'); if(!tr) return;
   openDrawer(DATA[+tr.dataset.i]);
   zoomGlobalToArea(DATA[+tr.dataset.i]);
@@ -7183,6 +7299,6 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
 </style>
 <div class="cinta-borrador" role="note"><b>Versión en revisión · rediseño v38.</b>
   La página oficial es <a href="./">la portada del sitio</a>.
-  <span class="ver">sia-v35-2026-09-11i</span></div>
+  <span class="ver">sia-v35-2026-09-11k</span></div>
 </body>
 </html>
