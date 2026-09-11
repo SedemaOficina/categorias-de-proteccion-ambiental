@@ -38,7 +38,10 @@ Dashboard público de categorías de protección ambiental de la CDMX, en GitHub
 
 ## Identidad institucional
 - Paleta: guinda `#9d2148`, dorado `#B28E5C`, gris `#55585A`. Tipografía Roboto (cuerpo) / Cabin (títulos).
-- Colores de capa (`GROUP_COLORS`): Bosque Urbano `#027a35` · Barranca `#ac6d14` · ANP Local `#9d2148` · ANP Federal `#266cb4`. ARCAC por tenencia: Comunidad `#7048E8` · Ejido `#E8590C`. Suelo de Conservación `#00838f`. ZP: UNESCO `#444441` · Ramsar `#1D9E75` · AICA `#7F77DD` · SIPAM `#EF9F27`.
+- Colores de capa (`GROUP_COLORS`): Bosque Urbano `#027a35` · Barranca `#ac6d14` · **ANP Local
+  `#F08217` (naranja)** · ANP Federal `#266cb4`. El naranja de ANP Local **quedó confirmado
+  institucionalmente el 11-sep-2026**: antes esa categoría era guinda y competía con la marca, que
+  en el rediseño v38 se reserva para lo activo y lo accionable. Contra el guinda está a ΔE 68.4. ARCAC por tenencia: Comunidad `#7048E8` · Ejido `#B3321A`. Suelo de Conservación `#00838f`. ZP: UNESCO `#444441` · Ramsar `#1D9E75` · AICA `#7F77DD` · SIPAM `#6B7A2F`.
 
 ## Flujo de trabajo
 - Editar `index.html` con ediciones precisas y quirúrgicas (no reescribir todo el archivo).
@@ -95,9 +98,38 @@ Cruce geométrico de las 66 áreas contra `data/suelo_conservacion.geojson` (uni
 | Parcial (0.5–50%) | 5 |
 | Fuera (<0.5%) | 42 |
 
-- **Bosque de Tlalpan traslapa 0.00% con SC.** El Programa de Manejo (Gaceta Oficial, 2011) lo confirma: *"el ANP se ubica en el territorio cuyo uso del suelo es catalogado como Uso Urbano"*. Si el Sheet lo marca como "Sí", **el Sheet está mal**.
+- **Bosque de Tlalpan traslapa 0.00% con SC.** El Programa de Manejo (Gaceta Oficial, 2011) lo confirma: *"el ANP se ubica en el territorio cuyo uso del suelo es catalogado como Uso Urbano"*. **Corregido: el Sheet ya dice «No»** (verificado el 11-sep-2026).
 - **La columna `suelo_conservacion` es binaria pero el territorio no.** Casos que un Sí/No no describe: Insurgente Miguel Hidalgo y Costilla 95.96% · Lago Tláhuac-Xico 65.71% · El Tepeyac 63.18% · Cerro de la Estrella federal 24.00% · Lomas de Padierna 11.83% · Magdalena Eslava 3.83% · Pachuquilla 1.32% · Atzoyapan 1.29%.
 - Recomendación: agregar `suelo_conservacion_pct` al Sheet, o un tercer valor "Parcial".
+  **Resuelto el 11-sep-2026: `suelo_conservacion_pct`.** Se recalculó el cruce con shapely sobre
+  EPSG:6372 (`tools/` → el script quedó en el arnés) y se generó la columna para las 66 áreas.
+  El resultado reproduce el hallazgo de agosto: **16 dentro · 8 parciales · 42 fuera**, y ningún
+  Sí/No del Sheet está hoy equivocado —lo que faltaba era el matiz, no una corrección—.
+
+### Migración a fuente única (11 sep 2026 · v39)
+
+La columna binaria `suelo_conservacion` **se eliminó del Sheet**. Queda un solo campo,
+`suelo_conservacion_pct`, y las etiquetas se derivan en código. El motivo no es estético: dos
+columnas que describen el mismo hecho terminan contradiciéndose y nadie las sincroniza a mano —
+un binario, además, no distingue Insurgente Miguel Hidalgo (95.96%) de Atzoyapan (1.29%), que
+son casos normativamente opuestos.
+
+**Único lugar donde se decide la etiqueta:** `scEstado(d)` →
+`dentro` (≥99.5%) · `parcial` (0.5–99.5%) · `fuera` (<0.5%) · `sindato` (celda vacía).
+`scTexto(d)` da la frase larga, `SC_CORTO(d)` la corta y `SC_CLS` la clase del punto. Si mañana
+se agrega un estado, se agrega ahí y lo heredan los cuatro puntos de render.
+
+- **Vacío es «Sin dato», no «Fuera».** La ausencia de un dato no es una afirmación sobre el
+  territorio. Los 30 núcleos ARCAC caen ahí (no se calculó su cruce), y por eso la columna y el
+  filtro de SC desaparecen solos en esa pestaña: un valor único no filtra nada.
+- **En «Parcial» la tabla imprime la cifra** (`.sc-pct`, «63%» junto al punto). El punto miente
+  por omisión —95.96% y 1.29% se ven igual— y en celular no hay tooltip que lo rescate.
+- **La columna SC ordena por número** (`data-k="suelo_conservacion_pct"`): 0% → 100%, y los
+  «Sin dato» al final. Antes ordenaba por el texto Sí/No.
+- **La regla de columnas redundantes admite función.** `COL_CAMPO[10]` es `scEstado`, no un
+  nombre de campo: la columna 10 no corresponde a ninguna columna del Sheet.
+- **Degrada limpio.** Verificado con un CSV sin ninguna columna de SC: 66 áreas en «Sin dato»,
+  filtro oculto, columna oculta, cero errores de JS. Con el Sheet vigente: 16 / 8 / 42.
 
 ## Barra «¿Dónde estoy?» · flujo principal de campo (v37)
 El uso dominante del tablero es de **personal de SEDEMA**, no público: en celular para ubicarse
@@ -179,6 +211,7 @@ destinos y los subfiltros. `SECONDARY_TABS`, `.tabs`, `.tab` y el menú «Más �
 - El **guinda es el único color de marca**: señala lo activo y lo accionable. Por eso
   `GROUP_COLORS['ANP · Local']` pasó de `var(--guinda)` a `var(--anpl)` (naranja): antes la misma
   categoría tenía un color en el mapa y otro en las pestañas, y competía con la marca.
+  **Confirmado institucionalmente el 11-sep-2026**; el pendiente queda cerrado.
 - **El estado no se codifica por matiz.** `.status-tag` es un punto: lleno = sí, hueco = no
   (Suelo de Conservación en turquesa). El verde ya significa «Bosque Urbano».
 - **La categoría se lee en el filete lateral de la fila** (`tr[data-g]`, alimentado por
@@ -504,6 +537,59 @@ real, exportado del Sheet. Arnés en `/home/claude/verif` (`mapa2.mjs`, `todos.m
 `coords.mjs`, `ficha.mjs`). Lo que sigue sin verificarse es el basemap real de CARTO y Google
 Places, que el contenedor no alcanza.
 
+### Barra de filtros compacta (11 sep 2026)
+
+Era una rejilla de campos de formulario —rótulo encima, 44 px de alto, media columna de ancho— y
+siete filtros así ocupaban unos 400 px que empujaban la tabla fuera de la pantalla. **El problema
+no era el número de columnas, era el tamaño de cada campo**: esto es una barra de filtros de
+tablero, no un formulario de captura. Ahora el rótulo va en línea con su control, cada campo mide
+lo que pide su contenido y la fila envuelve sola. Medido: **90 px cerrada y 179 px abierta** en
+escritorio, contra ~180 y ~400 antes.
+- Los rótulos largos se abreviaron con el nombre completo en el `title` («Suelo cons.», «DG resp.»,
+  «Programa»): en una barra compacta un rótulo no puede medir más que su control, y era lo que
+  provocaba desbordamiento horizontal a 1500 px.
+- La regla tardía `.toolbar label{flex-direction:column}` ganaba por orden de aparición y devolvía
+  el rótulo encima; el bloque compacto se movió después de la regla genérica de `select`/`input`,
+  que declara `width:100%`.
+
+### Color de capas · revisión con ΔE (11 sep 2026)
+
+Los pendientes de color se habían anotado comparando códigos hexadecimales, que no dice nada sobre
+si dos colores se distinguen. Medidos con **ΔE76** sobre las doce capas del tablero, los pares
+problemáticos (ΔE < 25) eran cuatro, y **dos de las propuestas anteriores estaban mal**:
+
+| Par | ΔE antes | Decisión |
+|---|---|---|
+| SIPAM × ANP Local | 16.5 | **SIPAM `#EF9F27` → `#6B7A2F`** (verde oliva). La propuesta anterior, `#C77D0A`, daba 16.7: no mejoraba nada y además quedaba a 12.1 de Barranca, peor que el original. El oliva sube el mínimo a 29.5 y además es semánticamente apto: SIPAM es patrimonio agrícola chinampero. |
+| ARCAC ejido × ANP Local | 19.3 | **Ejido `#E8590C` → `#B3321A`** (rojo ladrillo, mínimo 35.4). Este par no estaba anotado y es el más visible: desde que ARCAC entró al inventario, ambos se pintan en el mismo mapa. |
+| AICA × ARCAC comunidad | 37.5 | **Sin cambio.** Se distinguen de sobra; la alarma era falsa, nacida de que `#7F77DD` y `#7048E8` se parecen escritos. La propuesta `#4C4F9E` habría sido un cambio sin beneficio. |
+| Barranca × SIPAM | 24.8 | Resuelto por el cambio de SIPAM. |
+
+**Bosque Urbano × Ramsar** queda en 22.1, en el límite: se deja porque nunca se pintan en el mismo
+mapa (Ramsar solo vive en Zona Patrimonio).
+
+### Concurrencia ANP–ARCAC · inventariada (11 sep 2026)
+
+El pendiente pedía inventariar los traslapes que el tablero no reportaba antes de v36. Ya los
+reporta el módulo Traslapes; lo que faltaba era enunciar el hallazgo. Con `data/traslapes.geojson`
+vigente: **17 pares Inventario × ARCAC, 9,620.28 ha bajo dos instrumentos a la vez** —el 42.6% de
+la superficie ARCAC—, que involucran **10 áreas del inventario y 12 núcleos agrarios**. Los seis
+mayores concentran el 92%:
+
+| Área del inventario | ARCAC | ha | % del área | % del núcleo |
+|---|---|---|---|---|
+| San Miguel Topilejo | San Miguel Topilejo | 5,629.23 | 94.0% | 83.4% |
+| San Nicolás Totolapan | San Nicolás Totolapan | 1,377.53 | 69.3% | 99.8% |
+| San Miguel Ajusco | San Miguel Ajusco | 1,111.86 | 94.7% | 19.4% |
+| Cumbres del Ajusco | San Miguel Ajusco | 500.38 | **100.0%** | 8.7% |
+| Lago Tláhuac-Xico | Tláhuac | 407.08 | 11.5% | **100.0%** |
+| Ejidos de Xochimilco y San Gregorio | San Gregorio Atlapulco | 298.72 | 11.9% | **100.0%** |
+
+Once pares son con ANP Local y seis con ANP Federal. **Cumbres del Ajusco está 100% dentro de un
+ARCAC** y tres núcleos están 100% dentro de un área del inventario: ahí conviven una declaratoria y
+un acuerdo comunitario sobre el mismo suelo, lo que es materia de coordinación, no un error de
+datos. Regenerar con `python tools/traslapes.py` al cambiar cualquiera de las tres capas.
+
 ## Pendientes / riesgos conocidos
 - **Migrar fuera de las IP de GitHub Pages** (ver hallazgo de arriba). Al hacerlo hay que actualizar
   `canonical`, `og:url`, `og:image`, `twitter:image` en `index.html` y la restricción de origen de
@@ -511,11 +597,19 @@ Places, que el contenedor no alcanza.
 - **Rotar la `GOOGLE_MAPS_API_KEY`:** sigue viva en el historial de git (los `index.html.bak`
   borrados el 27-ago no la sacan de los commits anteriores). Ocultarla no es remediación.
 - **Continuidad institucional:** el Google Sheet del inventario y el proyecto de Google Cloud deberían colgar de cuentas institucionales de SEDEMA, no personales. Agregar un segundo propietario en IAM.
-- **Confirmar el cambio de color de ANP Local** (guinda → naranja) con la identidad institucional.
-- **Falta la regla `.legal-list-compact`** (la emite `legalList(..., 'compact')` en Marco Jurídico).
-- **Colores de Zona Patrimonio confundibles:** AICA `#7F77DD` con ARCAC `#7048E8`, y SIPAM
-  `#EF9F27` con ANP Local `#F08217`. Propuesta pendiente de validación: `#4C4F9E` y `#C77D0A`.
-- **Corregir el Sheet** en la fila de Bosque de Tlalpan (y revisar las 8 parciales) según el hallazgo de arriba.
-- **Suelo de Conservación de ARCAC:** falta calcularlo con exactitud (`tools/traslapes.py`) y
-  escribirlo como propiedad en `arcac.geojson` si se quiere mostrar la columna.
-- **Traslapes ANP–ARCAC** que el tablero no reportaba hasta v36 (ej. Cumbres del Ajusco ∩ ARCAC San Miguel Ajusco). Vale la pena inventariarlos.
+- **Subir los shapefiles de las zonificaciones de los programas de manejo.** Cada programa publicado
+  define zonas (núcleo, amortiguamiento, uso público…) que hoy no están en el tablero: solo se ve el
+  polígono del área completa. Al integrarlos: reproyectar a EPSG:4326 y 2D, un GeoJSON por área o
+  uno solo con `area` y `zona` en propiedades, fuera de `CORE_ASSETS` por peso, y join por `nombre`
+  exacto como el resto.
+- **Confirmar que el CSV publicado apunta al Sheet vigente.** `SHEET_URL` es una liga
+  `/pub?gid=0` cuya clave (`2PACX-…`) no revela a qué documento pertenece. Si el Sheet con
+  `suelo_conservacion_pct` fuera un documento **nuevo** —y no el de siempre editado en sitio—,
+  el tablero seguiría leyendo el viejo y mostraría todo en «Sin dato». Comprobación de un
+  minuto: abrir `SHEET_URL` en el navegador y ver si el encabezado trae `suelo_conservacion_pct`.
+  Si no, volver a publicar desde *Archivo → Compartir → Publicar en la web*, hoja «Inventario»,
+  formato CSV, y sustituir la constante.
+- **Verificar los tres traslapes menores al 4%** (Magdalena Eslava 3.83%, Pachuquilla 1.32%,
+  Atzoyapan 1.29%). Pueden ser artefactos de digitalización en el borde compartido y no
+  colindancia real; conviene contrastarlos con el texto del decreto antes de sostener la
+  etiqueta «Parcial» en un documento oficial. Los otros cinco son traslapes de fondo.

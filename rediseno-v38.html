@@ -635,11 +635,11 @@
     #tableSection{grid-column:2}
     /* Sin tabla (destinos Capas, Análisis o Ubicar) el mapa toma todo el ancho */
     main#main-content:has(#tableSection[style*="display: none"]) #globalMapSection{grid-column:1 / -1}
-    #tableSection > .toolbar{grid-template-columns:1fr 1fr;padding:12px}
-    #tableSection > .toolbar > label.f-buscar{grid-column:span 2}
-    #tableSection > .toolbar .btn-masf{grid-column:1}
-    #tableSection > .toolbar .btn-group{grid-column:2;justify-content:flex-end}
-    #tableSection > .toolbar .filtros-av{grid-template-columns:1fr 1fr}
+    /* En la columna estrecha de la vista partida, el buscador toma la primera
+       fila entero y los desplegables se reparten debajo. */
+    #tableSection > .toolbar > label.f-buscar{flex:1 1 100%}
+    #tableSection > .toolbar select{max-width:320px}   /* que un campo solo en su fila no se estire de lado a lado */
+    #tableSection > .toolbar label:not(.f-buscar){flex:1 1 150px}
     #tableSection > .table-wrap{max-height:calc(100vh - 40px);overflow:auto}
     #globalMapCanvas{height:calc(100vh - 250px);min-height:460px}
     /* En vista partida se retiran solo las tres columnas de menor consulta:
@@ -815,8 +815,22 @@
   .legal-list li .lbl{color:var(--ink);font-weight:500;display:block;margin-bottom:3px;word-wrap:break-word;overflow-wrap:break-word;hyphens:auto}
   .legal-list li .ref{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:.04em;font-weight:400;display:block;word-wrap:break-word;overflow-wrap:break-word;white-space:normal}
 
-  /* Variante compacta — ref a la izquierda (mono, pequeña) · contenido a la derecha */
-            
+  /* Variante compacta — ref a la izquierda (mono, pequeña) · contenido a la
+     derecha. El comentario anunciaba el bloque desde hace tiempo pero la regla
+     nunca se escribió: `legalList(LEGAL.sistema.items, 'compact')` emitía la
+     clase y el listado se pintaba como uno normal. Escrita el 11-sep-2026. */
+  .legal-list-compact li{display:grid;grid-template-columns:minmax(96px,auto) 1fr;
+    gap:4px 16px;align-items:baseline;padding:9px 0}
+  .legal-list-compact li .ref{order:-1;margin:0;text-align:right;white-space:nowrap;
+    font-size:var(--fs-mini);letter-spacing:.06em}
+  .legal-list-compact li .lbl{margin:0;font-weight:400;color:var(--ink-2)}
+  @media (max-width:640px){
+    /* En celular la referencia vuelve arriba: dos columnas dejan al texto en
+       una tira de 40 caracteres. */
+    .legal-list-compact li{grid-template-columns:1fr;gap:2px}
+    .legal-list-compact li .ref{text-align:left;white-space:normal}
+  }
+
   @media (max-width:640px){
     .legal-list-cols-2 ul{grid-template-columns:1fr;column-gap:0}
           }
@@ -846,28 +860,56 @@
   .legal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
   .legal-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
 
-  .toolbar{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:14px;display:grid;grid-template-columns:2fr 1fr 1fr auto auto;gap:10px;align-items:end;margin-bottom:14px;box-shadow:var(--shadow)}
+  /* ═══ Barra de filtros · compacta (11 sep 2026) ═══════════════════════
+     Antes era una rejilla de campos de formulario: cada filtro con su rótulo
+     encima, a 44 px de alto y a media columna de ancho. Siete filtros así
+     ocupaban unos 400 px de alto y empujaban la tabla fuera de la pantalla.
+     El problema no era el número de columnas, era el tamaño de cada campo:
+     esto es una barra de filtros de tablero, no un formulario de captura.
+     Ahora el rótulo va EN LÍNEA con su control, cada campo mide lo que su
+     contenido pide y la fila envuelve sola según el ancho disponible. */
+  .toolbar{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);
+    padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;
+    margin-bottom:12px;box-shadow:var(--shadow)}
+  .toolbar label{display:flex;flex-direction:row;align-items:center;gap:7px;flex:0 1 auto;min-width:0}
+  .toolbar .lab{white-space:nowrap;flex:0 0 auto}
+  .toolbar select{width:auto;min-width:0;max-width:190px}
+  .toolbar label.f-buscar{flex:1 1 210px;min-width:170px}
+  .toolbar label.f-buscar input{flex:1 1 auto;min-width:0}
   .btn-masf{gap:7px}
   .btn-masf .masf-caret{font-size:var(--fs-micro);opacity:.6;transition:transform .18s;display:inline-block}
   .btn-masf[aria-expanded="true"] .masf-caret{transform:rotate(180deg)}
   .btn-masf .masf-n{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);background:var(--guinda);
     color:var(--crema);border-radius:9px;padding:1px 7px;font-weight:700}
-  .filtros-av{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;
-    padding-top:12px;margin-top:2px;border-top:1px dashed var(--line)}
+  /* Los avanzados siguen la misma regla: una fila que envuelve, no una rejilla
+     de anchos iguales que estira «Tipo» hasta el tamaño de «Dirección». */
+  .filtros-av{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;
+    padding-top:10px;margin-top:2px;border-top:1px dashed var(--line)}
   .filtros-av[hidden]{display:none}
-  @media (max-width:900px){
-    .filtros-av{grid-template-columns:repeat(2,minmax(0,1fr))}
-  }
   .toolbar .lab{font-size:var(--fs-micro);letter-spacing:.06em}
-  .toolbar select,.toolbar input{font-size:var(--fs-sm);padding:7px 8px}
+  .toolbar select,.toolbar input{font-size:var(--fs-sm);padding:5px 8px;height:30px}
+  .toolbar select{padding-right:22px}
+  .toolbar .btn{height:30px;padding:0 13px;font-size:var(--fs-sm)}
+  .toolbar .btn-group{margin-left:auto;flex:0 0 auto}
   /* Visible solo para lectores de pantalla (captions de tabla, etiquetas de contexto) */
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
   .skip-link{position:absolute;left:-9999px;top:0;z-index:var(--z-toast,100000);background:var(--guinda);color:#fff;padding:10px 18px;font-family:'Roboto',sans-serif;font-size:var(--fs-base);border-radius:0 0 var(--radius) 0;text-decoration:none}
   .skip-link:focus{left:0}
-  .toolbar label{display:flex;flex-direction:column;gap:4px}
   .lab{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
   input[type=search],select{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:9px 11px;font-family:'Roboto',sans-serif;font-size:var(--fs-md);color:var(--ink);outline:none;transition:border-color .15s;width:100%}
   input[type=search]:focus,select:focus{border-color:var(--guinda)}
+  /* Después de la regla genérica de campos, que declara width:100% y un alto de
+     formulario: en la barra de filtros mandan estos. */
+  .toolbar label{display:flex;flex-direction:row;align-items:center;gap:7px;flex:0 1 auto;min-width:0}
+  .toolbar .lab{white-space:nowrap;flex:0 0 auto;font-size:var(--fs-micro);letter-spacing:.06em}
+  /* El desplegable se dimensiona por su contenido, no por el reparto del flex:
+     con `flex:0 0 auto` deja de encogerse y «Todas» no se corta. El tope de
+     ancho evita que «Zona de Protección Hidrológica y Ecológica» se lleve la
+     fila entera. */
+  .toolbar select{width:auto;flex:1 1 auto;min-width:88px;max-width:200px;
+    padding:5px 22px 5px 9px;height:30px;font-size:var(--fs-sm);text-overflow:ellipsis}
+  .toolbar input[type=search]{height:30px;padding:5px 9px;font-size:var(--fs-sm);width:auto;flex:1 1 auto;min-width:0}
+  .toolbar label.f-buscar{flex:1 1 230px;min-width:170px}
   /* El indicador de foco de estos controles era un borde de 1px, el más débil de la
      interfaz, justo en los controles más usados. Se alinea con el resto del sitio. */
   input[type=search]:focus-visible,select:focus-visible{outline:2px solid var(--guinda);outline-offset:1px}
@@ -1351,9 +1393,6 @@
     h1{font-size:var(--fs-2xl)}
     .grid-2,.legal-grid{grid-template-columns:1fr}
     .legal-grid-3{grid-template-columns:repeat(2,1fr)}
-    .toolbar{grid-template-columns:repeat(3,1fr)}
-    .btn-group{grid-column:span 3;justify-content:flex-end}
-    .toolbar > label:first-child{grid-column:span 3}  /* Búsqueda ocupa toda la fila en tablet */
     .constitucion-grid{grid-template-columns:1fr}
     .panel{padding:22px 22px}
     .hero-value{font-size:var(--fs-mega)}
@@ -1385,11 +1424,19 @@
     /* Header de norma en mobile: apilado vertical para que el botón quepa */
     .norma-header{flex-direction:column;align-items:stretch}
     .norma-header-right .btn-pdf{justify-content:center}
-    .toolbar{grid-template-columns:1fr 1fr;padding:12px}
-    .btn-group{grid-column:span 2}
-    .toolbar > label.f-buscar{grid-column:span 2}  /* Búsqueda completa en mobile */
-    .btn-masf{grid-column:span 2;justify-content:center}
-    .filtros-av{grid-template-columns:1fr}
+    /* En celular el buscador toma la fila entera y los desplegables van de a
+       dos; el rótulo sigue en línea, que es lo que ahorra la mitad del alto. */
+    /* En celular manda el ancho de la pantalla: el campo se encoge antes que
+       desbordar, y el rótulo puede partirse si hace falta. */
+    /* En celular manda el ancho de la pantalla: el campo se encoge antes que
+       desbordar y el desplegable puede bajar de su mínimo de escritorio. Sin
+       `min-width:0` en el propio label, el rótulo sin partir fija un piso que
+       la fila no puede respetar y la página termina con barra horizontal. */
+    .toolbar{padding:10px}
+    .toolbar > label.f-buscar{flex:1 1 100%}
+    .toolbar label:not(.f-buscar){flex:1 1 140px;min-width:0}
+    .toolbar select{max-width:none;flex:1 1 60px;min-width:0}
+    .toolbar .lab{white-space:normal;overflow-wrap:anywhere}
     .field{grid-template-columns:100px 1fr;gap:10px}
     .field .k{font-size:var(--fs-micro)}
     .field .v{font-size:var(--fs-base)}
@@ -1456,8 +1503,6 @@
     .hero-card{padding:14px 14px}
     .hero-value{font-size:var(--fs-2xl)}
         .panel h3{font-size:var(--fs-lg)}
-    .toolbar{grid-template-columns:1fr}
-    .btn-group{grid-column:span 1}
     .tab-name{font-size:var(--fs-mini);line-height:1.15}
     .tab-icon{width:18px;height:18px}
   }
@@ -1474,6 +1519,16 @@
   .status-tag-no::before{background:transparent;border:1.6px solid #c0bbaa}
   .status-tag-no{color:var(--muted)}
   .status-sc.status-tag-si::before{background:var(--sc)}
+  /* Tercer estado: dentro EN PARTE. El punto va medio lleno —relleno a la
+     izquierda, hueco a la derecha—, que es exactamente lo que dice el dato, y
+     mantiene la regla de v38: el estado no se codifica por matiz. */
+  .status-tag-parcial{color:var(--ink-2)}
+  .status-tag-nd::before{background:transparent;border:1.6px dashed #c0bbaa}
+  .status-tag-nd{color:var(--muted)}
+  .sc-pct{font-size:var(--fs-xs);color:var(--muted);margin-left:5px;
+          font-variant-numeric:tabular-nums;white-space:nowrap}
+  .status-tag-parcial::before{background:linear-gradient(90deg,var(--sc) 0 50%,transparent 50% 100%);
+    border:1.6px solid var(--sc)}
   /* Dentro de la ficha el indicador es un dato más: hereda el tamaño del valor y
      se alinea a su línea base, no a la del contenedor flexible. */
   .field .status-tag{font-size:inherit;align-items:baseline;gap:8px}
@@ -1612,7 +1667,7 @@
     <div class="toolbar">
       <label class="f-buscar"><span class="lab">Búsqueda</span><input id="q" type="search" placeholder="Buscar por nombre del área…" /></label>
       <label><span class="lab">Alcaldía</span><select id="fAlc"><option value="">Todas</option></select></label>
-      <label><span class="lab">Programa de manejo</span><select id="fPM"><option value="">Todos</option><option value="Sí">Con PM</option><option value="No">Sin PM</option></select></label>
+      <label><span class="lab" title="Programa de manejo">Programa</span><select id="fPM"><option value="">Todos</option><option value="Sí">Con PM</option><option value="No">Sin PM</option></select></label>
       <button type="button" class="btn ghost btn-masf" id="btnMasFiltros" aria-expanded="false" aria-controls="filtrosAvanzados">
         <span>Más filtros</span><span class="masf-n" id="masFiltrosN" hidden>0</span><span class="masf-caret" aria-hidden="true">▾</span>
       </button>
@@ -1621,8 +1676,8 @@
         <label><span class="lab">Tipo</span><select id="fTipo"><option value="">Todos</option><option value="AVA">AVA</option><option value="ANP">ANP</option></select></label>
         <label><span class="lab">Jurisdicción</span><select id="fJur"><option value="">Todas</option><option value="Local">Local</option><option value="Federal">Federal</option></select></label>
         <label><span class="lab" id="labCat">Subcategoría</span><select id="fCat"><option value="">Todas</option></select></label>
-        <label><span class="lab" title="Suelo de Conservación">Suelo de Conservación</span><select id="fSC"><option value="">Todos</option><option value="Sí">Dentro</option><option value="No">Fuera</option></select></label>
-        <label><span class="lab" title="Dirección General responsable">Dirección responsable</span><select id="fDG"><option value="">Todas</option><option value="DGSANPAVA">DGSANPAVA</option><option value="DGCORENADER">DGCORENADER</option><option value="__sin__">Sin asignar</option></select></label>
+        <label><span class="lab" title="Suelo de Conservación">Suelo cons.</span><select id="fSC"><option value="">Todos</option></select></label>
+        <label><span class="lab" title="Dirección General responsable">DG resp.</span><select id="fDG"><option value="">Todas</option><option value="DGSANPAVA">DGSANPAVA</option><option value="DGCORENADER">DGCORENADER</option><option value="__sin__">Sin asignar</option></select></label>
       </div>
     </div>
     <div class="counter-row">
@@ -1643,7 +1698,7 @@
           <th scope="col" data-k="superficie" style="text-align:right">Sup. (ha) <span class="arrow">▲</span></th>
           <th scope="col" data-k="programa_manejo" title="Programa de Manejo">PM <span class="arrow">▲</span></th>
           <th scope="col" data-k="fecha_pm_iso" style="text-align:right" title="Fecha del Programa de Manejo">Fecha PM <span class="arrow">▲</span></th>
-          <th scope="col" data-k="suelo_conservacion" title="Suelo de Conservación">SC <span class="arrow">▲</span></th>
+          <th scope="col" data-k="suelo_conservacion_pct" title="Suelo de Conservación · ordena por porcentaje">SC <span class="arrow">▲</span></th>
           <th scope="col" data-k="dg_responsable" title="Dirección General responsable">DG resp. <span class="arrow">▲</span></th>
         </tr></thead>
         <tbody class="t-body" id="tb"></tbody>
@@ -1852,7 +1907,7 @@ const DATA = DATA_RAW.map(d => {
      el valor CRUDO, arriba y abajo de este bloque, para que la comparacion y
      el parseo nunca vean entidades HTML. */
   const CAMPOS_LIBRES = ['nombre','categoria','alcaldia','fecha_decreto','fecha_pm',
-                         'programa_manejo','suelo_conservacion','grupo','fuente','observaciones','notas'];
+                         'programa_manejo','grupo','fuente','observaciones','notas'];
   const limpio = {};
   CAMPOS_LIBRES.forEach(k=>{ if(d[k] != null) limpio[k] = esc(String(d[k])); });
 
@@ -1862,6 +1917,20 @@ const DATA = DATA_RAW.map(d => {
     tipo: grupo.startsWith('AVA') ? 'AVA' : 'ANP',
     jurisdiccion: grupo.includes('Federal') ? 'Federal' : 'Local',
     dg_responsable: dg,
+    /* Porcentaje de la superficie del área dentro de Suelo de Conservación.
+       Desde el 11-sep-2026 es el ÚNICO campo de Suelo de Conservación del
+       Sheet: la columna binaria `suelo_conservacion` se retiró porque dos
+       campos que describen el mismo hecho terminan contradiciéndose y nadie
+       los sincroniza a mano. Las etiquetas (Dentro / Parcial / Fuera) las
+       deriva scEstado() de este número, así que el criterio vive en un solo
+       lugar. Vacío significa «Sin dato», NO «Fuera»: la ausencia de un dato
+       no es una afirmación sobre el territorio. */
+    suelo_conservacion_pct: (()=>{
+      const v = String(d.suelo_conservacion_pct ?? '').trim().replace(',','.');
+      if(!v) return null;
+      const n = parseFloat(v);
+      return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : null;
+    })(),
     fecha_decreto_iso:  cleanIso(d.fecha_decreto_iso, d.fecha_decreto),
     fecha_pm_iso:       cleanIso(d.fecha_pm_iso, d.fecha_pm),
     url_pdf_decreto:    cleanUrl(d.url_pdf_decreto),
@@ -2164,7 +2233,7 @@ function construirDatosArcac(fc){
       categoria: String(p.tenencia||''), alcaldia: esc(alc),
       superficie: +p.sup_ha || 0, grupo:'ARCAC',
       fecha_decreto:'', fecha_decreto_iso:'', programa_manejo:'', fecha_pm:'',
-      fecha_pm_iso:'', suelo_conservacion:'', dg_responsable:''
+      fecha_pm_iso:'', suelo_conservacion_pct:null, dg_responsable:''
     };
   }).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
   return DATA_ARCAC;
@@ -2320,6 +2389,20 @@ function populateFilters(){
   pinta('fAlc', alcs, 'Todas');
   pinta('fTipo', opcionesDe('fTipo','tipo'), 'Todos');
   pinta('fJur',  opcionesDe('fJur','jurisdiccion'), 'Todas');
+  /* Suelo de Conservación se arma del estado derivado del porcentaje, no de
+     una columna de texto. Cada opción aparece solo si hay áreas en ese caso:
+     dentro de Bosques Urbanos no se ofrece «Parcialmente dentro». */
+  (()=>{
+    const e = document.getElementById('fSC'); if(!e) return;
+    const orden = ['dentro','parcial','fuera','sindato'];
+    const etq = {dentro:'Dentro', parcial:'Parcialmente dentro', fuera:'Fuera',
+                 sindato:'Sin dato'};
+    const vivas = new Set(filasSalvo('fSC').map(d=>scEstado(d)));
+    if(state.fSC && !vivas.has(state.fSC)) state.fSC = '';
+    e.innerHTML = '<option value="">Todos</option>' +
+      orden.filter(k=>vivas.has(k)).map(k=>`<option value="${k}">${etq[k]}</option>`).join('');
+    e.value = state.fSC || '';
+  })();
 
   /* ── Filtros redundantes ──────────────────────────────────────────────
      Un filtro cuyo subconjunto tiene un solo valor posible no filtra nada:
@@ -2333,7 +2416,7 @@ function populateFilters(){
     fCat:  new Set(cats),
     fAlc:  new Set(alcs),
     fPM:   new Set(subset.map(d=>d.programa_manejo).filter(Boolean)),
-    fSC:   new Set(subset.map(d=>d.suelo_conservacion).filter(Boolean)),
+    fSC:   new Set(subset.map(d=>scEstado(d))),
     fDG:   new Set(subset.map(d=>d.dg_responsable || '__sin__'))
   };
   let avanzadosVisibles = 0;
@@ -2363,8 +2446,10 @@ function populateFilters(){
      cambia en el subconjunto activo se retira. Se calcula sobre currentData(),
      no sobre las filas filtradas, para que no aparezcan y desaparezcan columnas
      mientras se teclea en la busqueda. */
+  /* La 10 (Suelo de Conservación) no corresponde a una columna del Sheet:
+     es un estado derivado del porcentaje. Por eso admite función. */
   const COL_CAMPO = {2:'tipo', 3:'jurisdiccion', 4:'categoria', 5:'alcaldia',
-                     6:'fecha_decreto', 8:'programa_manejo', 10:'suelo_conservacion',
+                     6:'fecha_decreto', 8:'programa_manejo', 10:scEstado,
                      11:'dg_responsable'};
   const tabla = document.querySelector('table.t');
   if(tabla){
@@ -2372,7 +2457,9 @@ function populateFilters(){
       const campo = COL_CAMPO[n];
       const vals = campo === 'alcaldia'
         ? new Set(explode(subset,'alcaldia'))
-        : new Set(subset.map(d=>d[campo] || '—'));
+        : typeof campo === 'function'
+          ? new Set(subset.map(campo))
+          : new Set(subset.map(d=>d[campo] || '—'));
       tabla.classList.toggle('oc-'+n, subset.length > 0 && vals.size <= 1);
     });
     /* Cuenta las columnas que sobreviven en vista partida —sin Jurisdicción,
@@ -3672,7 +3759,9 @@ const PRUEBA_FILTRO = {
   fCat:  d => !state.fCat  || d.categoria === state.fCat,
   fAlc:  d => !state.fAlc  || normText(d.alcaldia).includes(normText(state.fAlc)),
   fPM:   d => !state.fPM   || d.programa_manejo === state.fPM,
-  fSC:   d => !state.fSC   || (d.suelo_conservacion || 'No') === state.fSC,
+  /* Lee el mismo estado que pinta la tabla: si el Sheet trae el porcentaje,
+     «Parcial» es un valor filtrable; si no, sigue siendo Sí/No. */
+  fSC:   d => !state.fSC   || scEstado(d) === state.fSC,
   fDG:   d => !state.fDG   || (state.fDG === '__sin__'
                                  ? !(d.dg_responsable || '')
                                  : (d.dg_responsable || '') === state.fDG)
@@ -3731,7 +3820,13 @@ function render(){
         <td class="num">${fmt(d.superficie)}</td>
         <td><span class="status-tag ${d.programa_manejo==='Sí'?'status-tag-si':'status-tag-no'}">${d.programa_manejo}</span></td>
         <td class="date" style="text-align:right;${d.fecha_pm?'':'color:var(--muted);font-style:italic'}">${d.fecha_pm || '—'}</td>
-        <td><span class="status-tag status-sc ${d.suelo_conservacion==='Sí'?'status-tag-si':'status-tag-no'}">${d.suelo_conservacion==='Sí'?'Sí':'No'}</span></td>
+        <td>${(()=>{ const e = scEstado(d), p = scPct(d);
+          /* El punto basta para dentro/fuera. En «parcial» el punto miente por
+             omisión —95.96% y 1.29% se ven igual—, así que ahí sí se imprime la
+             cifra: en celular no hay tooltip que la rescate. */
+          const pin = `<span class="status-tag status-sc ${SC_CLS[e]}" title="${scTexto(d)}">${SC_CORTO(d)}</span>`;
+          return e === 'parcial' ? pin + `<span class="sc-pct" title="${scTexto(d)}">${Math.round(p)}%</span>` : pin;
+        })()}</td>
         <td>${d.dg_responsable ? `<span class="tag-dg tag-dg-${d.dg_responsable.toLowerCase()}" title="${d.dg_responsable === 'DGSANPAVA' ? 'Dirección General del Sistema de Áreas Naturales Protegidas y Áreas de Valor Ambiental' : 'Dirección General de la Comisión de Recursos Naturales y Desarrollo Rural'}">${d.dg_responsable}</span>` : '<span class="dg-empty">—</span>'}</td>
       </tr>`).join('');
   }
@@ -3972,6 +4067,41 @@ const COL_GRIS_NEUTRO = '#8a8d8f';  /* sin protección · fuera de ámbito */
 const COL_AZUL_UBIC   = '#1971c2';  /* ubicación del usuario · GPS */
 const COL_AZUL_EMB    = '#1864ab';  /* embarcaderos */
 
+/* Lectura del traslape con Suelo de Conservación · fuente única.
+   El Sheet ya no trae Sí/No: trae el porcentaje y nada más. Aquí —y solo
+   aquí— se convierte en las cuatro etiquetas que usan tabla, ficha, filtro y
+   tarjeta compartible. «Parcial» es el caso que el binario no sabía decir:
+   entre 0.5% y 99.5% el área está dentro *en parte*, y hoy ocho áreas del
+   inventario caen ahí. Los cortes son los del cruce geométrico de agosto.
+   Los núcleos ARCAC no tienen este dato: caen en «sindato», no en «fuera». */
+const scPct = d => (d && typeof d.suelo_conservacion_pct === 'number') ? d.suelo_conservacion_pct : null;
+const scEstado = d => {
+  const p = scPct(d);
+  if(p === null) return 'sindato';
+  if(p >= 99.5) return 'dentro';
+  if(p < 0.5)   return 'fuera';
+  return 'parcial';
+};
+const scTexto = d => {
+  const p = scPct(d), e = scEstado(d);
+  const pp = p === null ? '' : ` · ${p.toFixed(p < 10 ? 2 : 1)}% de su superficie`;
+  if(e === 'dentro')  return 'Dentro del Suelo de Conservación' + (p !== null && p < 100 ? pp : '');
+  if(e === 'parcial') return 'Parcialmente dentro' + pp;
+  if(e === 'sindato') return 'Sin dato de Suelo de Conservación';
+  return 'Fuera del Suelo de Conservación';
+};
+/* Clase del punto y etiqueta corta. Un solo mapa: si mañana se agrega un
+   estado, se agrega aquí y lo heredan los cuatro puntos de render. */
+const SC_CLS = { dentro:'status-tag-si', parcial:'status-tag-parcial',
+                 fuera:'status-tag-no',  sindato:'status-tag-nd' };
+const SC_CORTO = d => {
+  const e = scEstado(d), p = scPct(d);
+  if(e === 'dentro')  return 'Dentro';
+  if(e === 'parcial') return 'Parcial · ' + p.toFixed(p < 10 ? 2 : 1) + '%';
+  if(e === 'sindato') return 'Sin dato';
+  return 'Fuera';
+};
+
 /* Clase corta del grupo · alimenta el filete lateral de cada fila. */
 const GRUPO_CLS = {
   'AVA · Bosque Urbano':'bu', 'AVA · Barranca':'br',
@@ -4123,7 +4253,7 @@ const ZP_DATA = [
   {key:'ZPM_POLIGONO', nombre:'Zona Patrimonio Mundial (UNESCO)', grupo:'Internacional', ambito:'Internacional', categoria:'Patrimonio Mundial Cultural y Natural · Sitio mixto', alcaldia:'Xochimilco, Tláhuac, Milpa Alta', fecha_decreto:'11/12/1987', superficie:7534.17, sup_nota:'oficial · ampliación 2014', fecha_pm:'Ampliación del polígono 2014', notas:'Inscripción UNESCO 1987; el Comité de Patrimonio Mundial amplió el polígono a 75.34 km² (7,534.17 ha) en 2014.', color:'#444441', es_designacion:true},
   {key:'RAMSAR_1363', nombre:'Sitio Ramsar No. 1363 · Sistema Lacustre EXSGA', grupo:'Internacional', ambito:'Internacional', categoria:'Humedal de Importancia Internacional (Convención Ramsar)', alcaldia:'Xochimilco, Tláhuac', fecha_decreto:'02/02/2004', superficie:2657.00, sup_nota:'oficial Ramsar', fecha_pm:'Actualización FIR 2023', notas:'Denominación oficial: “Sistema Lacustre Ejidos de Xochimilco y San Gregorio Atlapulco”. Sitio Ramsar no. 1363.', color:'#1D9E75', es_designacion:true},
   {key:'AICA_37', nombre:'AICA No. 37 · Ciénega de Tláhuac', grupo:'Internacional', ambito:'Internacional', categoria:'Área de Importancia para la Conservación de las Aves (CONABIO–CIPAMEX)', alcaldia:'Tláhuac', fecha_decreto:'1999', superficie:2860.32, sup_nota:'oficial CONABIO', fecha_pm:'—', notas:'Clave AICA-037. Superficie oficial 2,860.32 ha (CONABIO). Sitio reconocido por diversidad ornitológica del humedal de la Ciénega de Tláhuac.', color:'#7F77DD', es_designacion:true},
-  {key:'SIPAM_FAO', nombre:'SIPAM FAO · Sistema Agrícola Chinampero', grupo:'Internacional', ambito:'Internacional', categoria:'Sistema Importante del Patrimonio Agrícola Mundial (FAO–GIAHS)', alcaldia:'Xochimilco, Tláhuac, Milpa Alta', fecha_decreto:'07/2017', superficie:1875.65, sup_nota:'6 zonas chinamperas · SIG', fecha_pm:'—', notas:'Designación FAO (julio 2017). 6 zonas chinamperas, incluida Tetelco recuperada: Xochimilco 931.2 · Mixquic 316.4 · San Gregorio 241.4 · Tetelco 151.3 · San Pedro Tláhuac 147.1 · San Luis Tlaxialtemalco 88.2 ha.', color:'#EF9F27', es_designacion:true}
+  {key:'SIPAM_FAO', nombre:'SIPAM FAO · Sistema Agrícola Chinampero', grupo:'Internacional', ambito:'Internacional', categoria:'Sistema Importante del Patrimonio Agrícola Mundial (FAO–GIAHS)', alcaldia:'Xochimilco, Tláhuac, Milpa Alta', fecha_decreto:'07/2017', superficie:1875.65, sup_nota:'6 zonas chinamperas · SIG', fecha_pm:'—', notas:'Designación FAO (julio 2017). 6 zonas chinamperas, incluida Tetelco recuperada: Xochimilco 931.2 · Mixquic 316.4 · San Gregorio 241.4 · Tetelco 151.3 · San Pedro Tláhuac 147.1 · San Luis Tlaxialtemalco 88.2 ha.', color:'#6B7A2F', es_designacion:true}
 ];
 
 /* Abre la ficha correcta según el tipo de fila */
@@ -5031,7 +5161,7 @@ function renderZonaPatrimonioPage(){
  * No toca DATA ni el inventario. Fuente propia: data/arcac.geojson
  * ============================================================ */
 let ARCAC_GEO = null, globalArcacLayer = null, arcacByNo = {};
-const ARCAC_COLORS = { 'Comunidad':'var(--arcac-com)', 'Ejido':'#E8590C' };   // color de TENENCIA (badges/filtros)
+const ARCAC_COLORS = { 'Comunidad':'var(--arcac-com)', 'Ejido':'#B3321A' };   // color de TENENCIA (badges/filtros)
 
 /* Badge de tenencia (color) para tabla y ficha */
 function arcacBadge(ten){
@@ -5135,7 +5265,7 @@ const TRAS_COLORS = {
   'Inventario × ARCAC'          : 'var(--arcac-com)',
   'Inventario × Zona Patrimonio': '#444441',
   'ARCAC × Zona Patrimonio'     : '#B28E5C',
-  'ARCAC × ARCAC'               : '#E8590C'
+  'ARCAC × ARCAC'               : '#B3321A'
 };
 let TRASLAPES_GEO = null, traslapesMap = null, traslapesLayers = {};
 let trasState = { q:'', cruce:'todos', sortKey:'ha', sortDir:-1 };
@@ -6147,7 +6277,7 @@ async function compartirFichaImagen(d, btn){
     ['ALCALDÍA(S)',  d.alcaldia||'—'],
     ['DECRETO',      d.fecha_decreto||'—'],
     ['PROGRAMA DE MANEJO', d.programa_manejo==='Sí' ? ('Sí' + (d.fecha_pm ? ' · '+d.fecha_pm : '')) : 'No'],
-    ['SUELO DE CONSERVACIÓN', d.suelo_conservacion==='Sí' ? 'Dentro' : 'Fuera'],
+    ['SUELO DE CONSERVACIÓN', SC_CORTO(d)],
     ['DG RESPONSABLE', d.dg_responsable||'—']
   ];
   filas.forEach(([k,v])=>{
@@ -6625,13 +6755,10 @@ function openDrawer(d){
     <div class="field"><div class="k">Subcategoría</div><div class="v"><span class="tag-sub sub-${subCode(d.categoria)} tag-sub-full">${d.categoria}</span></div></div>
     <div class="field"><div class="k">Alcaldía(s)</div><div class="v">${d.alcaldia}</div></div>
     <div class="field"><div class="k">Suelo de Conservación</div><div class="v">${(() => {
-      const v = (d.suelo_conservacion === 'Sí') ? 'Sí' : 'No';
-      /* Antes eran dos elementos con tamaños distintos —el punto con «No» y, al
-         lado, «Fuera del Suelo de Conservación»—: decían lo mismo dos veces y la
-         línea base de uno no coincidía con la del otro. Ahora es uno solo. */
-      const cls = v === 'Sí' ? 'status-tag-si' : 'status-tag-no';
-      const txt = v === 'Sí' ? 'Dentro del Suelo de Conservación' : 'Fuera del Suelo de Conservación';
-      return `<span class="status-tag status-sc ${cls}">${txt}</span>`;
+      /* Un solo elemento: el punto y el texto que lo explica. Con la columna
+         de porcentaje el texto dice además cuánto, que es lo que el Sí/No
+         nunca pudo decir. */
+      return `<span class="status-tag status-sc ${SC_CLS[scEstado(d)]}">${scTexto(d)}</span>`;
     })()}</div></div>
     <div class="field"><div class="k">Fecha decreto</div><div class="v">${d.fecha_decreto}</div></div>
     <div class="field"><div class="k">Programa de manejo</div><div class="v"><span class="status-tag ${d.programa_manejo==='Sí'?'status-tag-si':'status-tag-no'}">${d.programa_manejo==='Sí'?'Publicado':'Sin programa vigente'}</span></div></div>
@@ -6971,6 +7098,6 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
 </style>
 <div class="cinta-borrador" role="note"><b>Versión en revisión · rediseño v38.</b>
   La página oficial es <a href="./">la portada del sitio</a>.
-  <span class="ver">sia-v35-2026-09-11s</span></div>
+  <span class="ver">sia-v35-2026-09-11v</span></div>
 </body>
 </html>
