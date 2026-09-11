@@ -212,8 +212,13 @@ destinos y los subfiltros. `SECONDARY_TABS`, `.tabs`, `.tab` y el menú «Más �
   | Todas | Nombre · Tipo · Subcat. · Alcaldía · Sup. · PM · SC · DG resp. |
   | Bosques Urbanos | Nombre · Alcaldía · Decreto · Sup. · PM |
   | Barrancas | Nombre · Alcaldía · Decreto · Sup. · PM · SC |
-  | ANP Locales y Federales | Nombre · Subcat. · Alcaldía · Sup. · PM · SC · DG resp. |
+  | ANP Locales y Federales | Nombre · Subcat. · Alcaldía · Decreto · Sup. · PM · SC · DG resp. |
 
+- **Ficha · indicadores de estado (11 sep):** Suelo de Conservación mostraba dos elementos con
+  tamaños distintos —el punto con «No» y, al lado, «Fuera del Suelo de Conservación»— que decían
+  lo mismo y no compartían línea base. Ahora es un solo `.status-tag`: el punto y el texto que lo
+  explica. Programa de manejo pasó de «Sí/No» a «Publicado / Sin programa vigente». En `.field`,
+  `.status-tag` hereda el tamaño del valor y alinea a la línea base; el punto se centra aparte.
 - **Parser de coordenadas (11 sep):** `parseCoordsSia()` es la única implementación y la usan la
   barra «¿Dónde estoy?» y los cinco buscadores de mapa (global, ficha, Zona Patrimonio, ARCAC y
   Traslapes), que la alcanzan por `parseCoords()` dentro de `attachMapSearch`. En los seis, la
@@ -229,8 +234,9 @@ destinos y los subfiltros. `SECONDARY_TABS`, `.tabs`, `.tab` y el menú «Más �
 - **Año del decreto (11 sep):** la columna Decreto muestra solo el año a cuatro dígitos
   (`anioDecreto()`, que lee `fecha_decreto_iso` y cae al texto DD/MM/AAAA); la fecha completa
   queda en el `title` de la celda y en la ficha. En vista partida la columna no se oculta siempre:
-  la clase `con-decreto` la habilita cuando la regla de redundancia dejó **seis columnas o menos**,
-  que hoy son Bosques Urbanos y Barrancas. El orden sigue siendo por fecha ISO, así que dentro de
+  la clase `con-decreto` la habilita cuando la regla de redundancia dejó **siete columnas o menos**,
+  lo que hoy deja fuera únicamente a «Todas». En el caso lleno (ocho columnas con el año) los
+  anchos se reparten a mano para que ni «Decreto» ni «DGCORENADER» queden cortados. El orden sigue siendo por fecha ISO, así que dentro de
   un mismo año ordena bien aunque solo se vea el año.
 - **Sello de versión (11 sep):** la cinta de `rediseno-v38.html` muestra el `CACHE_VERSION` con el
   que se compiló. Sirve para saber de un vistazo si el navegador está sirviendo una copia vieja

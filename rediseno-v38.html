@@ -653,13 +653,28 @@
        que es lo que se consulta al repartir trabajo. Las ocultas siguen en la ficha. */
     #tableSection table.t th:nth-child(3),#tableSection table.t td:nth-child(3),
     #tableSection table.t th:nth-child(9),#tableSection table.t td:nth-child(9){display:none}
-    /* El Decreto solo estorba cuando la tabla va llena. Si la regla de columnas
-       redundantes dejó seis o menos, cabe y entra: `con-decreto` lo decide. */
+    /* El Decreto solo estorba cuando la tabla va llena de verdad. Si la regla de
+       columnas redundantes dejó siete o menos, cabe y entra: `con-decreto` lo
+       decide. Hoy eso deja fuera únicamente a «Todas», con sus ocho columnas. */
     #tableSection table.t:not(.con-decreto) th:nth-child(6),
     #tableSection table.t:not(.con-decreto) td:nth-child(6){display:none}
     #tableSection table.t.con-decreto th:nth-child(6),
     #tableSection table.t.con-decreto td:nth-child(6){width:9%}
     #tableSection table.t th:nth-child(1),#tableSection table.t td:nth-child(1){width:28%}
+    /* Caso lleno: ocho columnas con el año. Se reparte a mano para que ni el
+       encabezado «Decreto» ni su flecha de orden queden cortados. */
+    #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(1),
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(1){width:24%}
+    #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(4),
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(4){width:16%}
+    #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(5),
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(5){width:13%}
+    #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(6),
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(6){width:11%}
+    #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(7),
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(7){width:12%}
+    #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(11),
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(11){width:12.5%}
     #tableSection table.t th:nth-child(2),#tableSection table.t td:nth-child(2){width:7%}
     #tableSection table.t th:nth-child(4),#tableSection table.t td:nth-child(4){width:15%}
     #tableSection table.t th:nth-child(5),#tableSection table.t td:nth-child(5){width:15%}
@@ -1519,6 +1534,10 @@
   .status-tag-no::before{background:transparent;border:1.6px solid #c0bbaa}
   .status-tag-no{color:var(--muted)}
   .status-sc.status-tag-si::before{background:var(--sc)}
+  /* Dentro de la ficha el indicador es un dato más: hereda el tamaño del valor y
+     se alinea a su línea base, no a la del contenedor flexible. */
+  .field .status-tag{font-size:inherit;align-items:baseline;gap:8px}
+  .field .status-tag::before{position:relative;top:-1px;align-self:center}
   /* En la tabla el punto basta; el texto queda solo para lectores de pantalla. */
   td .status-tag{font-size:0;gap:0}
   td .status-tag::before{width:10px;height:10px}
@@ -2389,9 +2408,9 @@ function populateFilters(){
     });
     /* Cuenta las columnas que sobreviven en vista partida —sin Jurisdicción,
        Decreto ni Fecha PM, que esa vista retira— y devuelve el año del decreto
-       cuando quedan seis o menos. */
+       cuando quedan siete o menos. */
     const vivas = [1,2,4,5,7,8,10,11].filter(n=>!tabla.classList.contains('oc-'+n)).length;
-    tabla.classList.toggle('con-decreto', vivas <= 6);
+    tabla.classList.toggle('con-decreto', vivas <= 7);
   }
 
   /* Si ningun filtro avanzado aporta algo, el boton que los despliega tampoco. */
@@ -6843,12 +6862,15 @@ function openDrawer(d){
     <div class="field"><div class="k">Alcaldía(s)</div><div class="v">${d.alcaldia}</div></div>
     <div class="field"><div class="k">Suelo de Conservación</div><div class="v">${(() => {
       const v = (d.suelo_conservacion === 'Sí') ? 'Sí' : 'No';
+      /* Antes eran dos elementos con tamaños distintos —el punto con «No» y, al
+         lado, «Fuera del Suelo de Conservación»—: decían lo mismo dos veces y la
+         línea base de uno no coincidía con la del otro. Ahora es uno solo. */
       const cls = v === 'Sí' ? 'status-tag-si' : 'status-tag-no';
-      const note = v === 'Sí' ? 'El polígono se encuentra dentro del Suelo de Conservación' : 'Fuera del Suelo de Conservación';
-      return `<span class="status-tag ${cls}">${v}</span> <span style="color:var(--muted);font-size:var(--fs-sm);margin-left:4px">${note}</span>`;
+      const txt = v === 'Sí' ? 'Dentro del Suelo de Conservación' : 'Fuera del Suelo de Conservación';
+      return `<span class="status-tag status-sc ${cls}">${txt}</span>`;
     })()}</div></div>
     <div class="field"><div class="k">Fecha decreto</div><div class="v">${d.fecha_decreto}</div></div>
-    <div class="field"><div class="k">Programa de manejo</div><div class="v"><span class="status-tag ${d.programa_manejo==='Sí'?'status-tag-si':'status-tag-no'}">${d.programa_manejo}</span></div></div>
+    <div class="field"><div class="k">Programa de manejo</div><div class="v"><span class="status-tag ${d.programa_manejo==='Sí'?'status-tag-si':'status-tag-no'}">${d.programa_manejo==='Sí'?'Publicado':'Sin programa vigente'}</span></div></div>
     <div class="field"><div class="k">Fecha Programa de Manejo</div><div class="v">${d.fecha_pm||'—'}</div></div>
     <div class="field"><div class="k">DG responsable</div><div class="v">${
       d.dg_responsable === 'DGSANPAVA' ? '<span class="tag-dg tag-dg-dgsanpava" title="Dirección General del Sistema de Áreas Naturales Protegidas y Áreas de Valor Ambiental">DGSANPAVA</span>' :
@@ -7161,6 +7183,6 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
 </style>
 <div class="cinta-borrador" role="note"><b>Versión en revisión · rediseño v38.</b>
   La página oficial es <a href="./">la portada del sitio</a>.
-  <span class="ver">sia-v35-2026-09-11g</span></div>
+  <span class="ver">sia-v35-2026-09-11i</span></div>
 </body>
 </html>
