@@ -418,10 +418,15 @@
     table.t th:nth-child(6), table.t td:nth-child(6),
     table.t th:nth-child(9), table.t td:nth-child(9),
     table.t th:nth-child(11),table.t td:nth-child(11){display:none}
-    table.t th:nth-child(1), table.t td:nth-child(1){width:54%}
-    table.t th:nth-child(7), table.t td:nth-child(7){width:26%}
-    table.t th:nth-child(8), table.t td:nth-child(8){width:10%}
-    table.t th:nth-child(10),table.t td:nth-child(10){width:10%}
+    /* `body` no adorna: sin él estas cuatro reglas pierden contra las anchuras
+       base de `table.t th:nth-child(n)`, que se declaran MÁS ABAJO en la hoja
+       con la misma especificidad. El bloque móvil llevaba tiempo sin aplicar y
+       las columnas se repartían por normalización de los porcentajes base
+       (57/14/12/17 en lugar de 52/24/10/14), que es lo que cortaba «6,000». */
+    body table.t th:nth-child(1), body table.t td:nth-child(1){width:48%}
+    body table.t th:nth-child(7), body table.t td:nth-child(7){width:22%}
+    body table.t th:nth-child(8), body table.t td:nth-child(8){width:10%}
+    body table.t th:nth-child(10),body table.t td:nth-child(10){width:20%}
     tbody.t-body td{padding:12px 6px;white-space:normal}
     tbody.t-body td.name{white-space:normal;line-height:1.3;font-size:var(--fs-md)}
     .name-sub{display:block;font-size:var(--fs-xs);color:var(--muted);font-weight:400;margin-top:3px}
@@ -670,15 +675,17 @@
     #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(6),
     #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(6){width:11%}
     #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(7),
-    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(7){width:12%}
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(7){width:9%}
+    #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(10),
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(10){width:8%}
     #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(11),
     #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(11){width:12.5%}
     #tableSection table.t th:nth-child(2),#tableSection table.t td:nth-child(2){width:7%}
     #tableSection table.t th:nth-child(4),#tableSection table.t td:nth-child(4){width:15%}
     #tableSection table.t th:nth-child(5),#tableSection table.t td:nth-child(5){width:15%}
-    #tableSection table.t th:nth-child(7),#tableSection table.t td:nth-child(7){width:13%}
+    #tableSection table.t th:nth-child(7),#tableSection table.t td:nth-child(7){width:10%}
     #tableSection table.t th:nth-child(8),#tableSection table.t td:nth-child(8){width:5%}
-    #tableSection table.t th:nth-child(10),#tableSection table.t td:nth-child(10){width:5%}
+    #tableSection table.t th:nth-child(10),#tableSection table.t td:nth-child(10){width:8%}
     #tableSection table.t th:nth-child(11),#tableSection table.t td:nth-child(11){width:12%}
     #tableSection thead.t-head th:nth-child(2) .arrow,
     #tableSection thead.t-head th:nth-child(11) .arrow{display:none}
@@ -937,10 +944,10 @@
   table.t th:nth-child(4), table.t td:nth-child(4){width:9%}     /* Subcat.       */
   table.t th:nth-child(5), table.t td:nth-child(5){width:12%}    /* Alcaldía (permite wrap a 2 líneas) */
   table.t th:nth-child(6), table.t td:nth-child(6){width:10%}    /* Decreto       */
-  table.t th:nth-child(7), table.t td:nth-child(7){width:8%}     /* Sup. (ha)     */
+  table.t th:nth-child(7), table.t td:nth-child(7){width:6%}     /* Sup. (ha) · redondeada */
   table.t th:nth-child(8), table.t td:nth-child(8){width:5%}     /* PM            */
   table.t th:nth-child(9), table.t td:nth-child(9){width:10%}    /* Fecha PM      */
-  table.t th:nth-child(10),table.t td:nth-child(10){width:5%}    /* SC            */
+  table.t th:nth-child(10),table.t td:nth-child(10){width:7%}    /* SC · punto + % en parciales */
   table.t th:nth-child(11),table.t td:nth-child(11){width:6%}    /* DG resp.      */
   /* Celda de Alcaldía permite wrap (puede ocupar 2 líneas si el nombre es largo) */
   table.t td.cell-alcaldia{white-space:normal;line-height:1.3;word-break:break-word}
@@ -1525,7 +1532,7 @@
   .status-tag-parcial{color:var(--ink-2)}
   .status-tag-nd::before{background:transparent;border:1.6px dashed #c0bbaa}
   .status-tag-nd{color:var(--muted)}
-  .sc-pct{font-size:var(--fs-xs);color:var(--muted);margin-left:5px;
+  .sc-pct{font-size:var(--fs-mini);color:var(--muted);margin-left:3px;
           font-variant-numeric:tabular-nums;white-space:nowrap}
   .status-tag-parcial::before{background:linear-gradient(90deg,var(--sc) 0 50%,transparent 50% 100%);
     border:1.6px solid var(--sc)}
@@ -2184,6 +2191,18 @@ const LEGAL = {
 /* ===== Helpers ===== */
 const fmt = n => n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtInt = n => n.toLocaleString('es-MX');
+/* Superficie en la TABLA: sin decimales. Los centésimos de hectárea no se
+   comparan de un vistazo entre renglones y cuestan ancho en una columna que
+   compite con SC y DG. El valor exacto sigue en el `title` de la celda, en la
+   ficha y en la suma del pie, que es donde sí se consulta con precisión.
+   Excepción: por debajo de 1 ha se conservan dos decimales, porque redondear
+   Vista Hermosa (0.32 ha) a «0» sería falso, no compacto. */
+const fmtSup = n => {
+  const v = +n || 0;
+  return (v > 0 && v < 1)
+    ? v.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})
+    : Math.round(v).toLocaleString('es-MX');
+};
 /* Año del decreto a cuatro dígitos. La tabla solo necesita el año —el día y el
    mes viven en la ficha— y así la columna cabe donde la regla de redundancia
    liberó espacio. Lee el ISO cuando existe y cae al texto DD/MM/AAAA si no. */
@@ -3856,7 +3875,7 @@ function render(){
         <td><span class="tag-sub sub-${subCode(d.categoria)}" title="${d.categoria}">${subShort(d.categoria)}</span></td>
         <td class="cell-alcaldia">${d.alcaldia}</td>
         <td class="date" style="text-align:right" title="${d.fecha_decreto||''}">${anioDecreto(d)}</td>
-        <td class="num">${fmt(d.superficie)}</td>
+        <td class="num" title="${fmt(d.superficie)} ha">${fmtSup(d.superficie)}</td>
         <td><span class="status-tag ${d.programa_manejo==='Sí'?'status-tag-si':'status-tag-no'}">${d.programa_manejo}</span></td>
         <td class="date" style="text-align:right;${d.fecha_pm?'':'color:var(--muted);font-style:italic'}">${d.fecha_pm || '—'}</td>
         <td>${(()=>{ const e = scEstado(d), p = scPct(d);
@@ -7137,6 +7156,6 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
 </style>
 <div class="cinta-borrador" role="note"><b>Versión en revisión · rediseño v38.</b>
   La página oficial es <a href="./">la portada del sitio</a>.
-  <span class="ver">sia-v35-2026-09-11x</span></div>
+  <span class="ver">sia-v35-2026-09-11y</span></div>
 </body>
 </html>
