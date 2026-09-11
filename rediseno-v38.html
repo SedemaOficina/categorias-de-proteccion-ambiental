@@ -1787,7 +1787,13 @@ function parseCSV(text){
  *
  * Para cambiar la fuente, modificar SHEET_URL.
  * ============================================================ */
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTjzQYJ2Qyj_LB2oFOU2irZa1Qp1yNt9Z44MGbU_2xkAMwxIPOuiviorX6JI4P_eb5kA3rkKqYomQo1/pub?gid=0&single=true&output=csv';
+/* gid=1601492810 es la pestaña «Inventario». Republicada el 11-sep-2026: al
+   reestructurar el Sheet (renombrar la hoja y agregar ARCAC, Traslapes y la
+   nota metodológica) la publicación anterior con gid=0 dejó de resolver y
+   Google empezó a devolver su página de error con HTTP 200. Si vuelve a
+   romperse, republicar SOLO esa hoja como CSV y traer el gid nuevo: no basta
+   con cambiar la clave 2PACX y conservar el gid viejo. */
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTjzQYJ2Qyj_LB2oFOU2irZa1Qp1yNt9Z44MGbU_2xkAMwxIPOuiviorX6JI4P_eb5kA3rkKqYomQo1/pub?gid=1601492810&single=true&output=csv';
 
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* ^ Escape de texto libre antes de insertarlo con innerHTML (defensa XSS).
@@ -1830,12 +1836,43 @@ async function loadInventarioCSV(){
   }
   if(!r.ok) throw new Error('No se pudo leer el inventario desde Google Sheets (HTTP ' + r.status + ')');
   const text = await r.text();
+
+  /* Google responde 200 con una página HTML —«No se pudo abrir el archivo en
+     este momento»— cuando la publicación del Sheet se rompe: la hoja
+     publicada se borró, cambió de gid, o la liga apunta a un documento que
+     ya no se publica. Sin esta guarda, parseCSV interpreta el HTML como si
+     fueran datos y el tablero pinta filas basura en lugar de avisar. */
+  if(/^\s*<(?:!doctype|html|head|meta)/i.test(text))
+    throw new Error('La liga publicada devolvió una página HTML, no el CSV. '
+                  + 'La publicación del Sheet está caída o apunta a un documento que ya no se publica: '
+                  + 'vuelve a publicar la hoja del inventario como CSV y actualiza SHEET_URL.');
+
   const rows = parseCSV(text);
   if(!rows.length) throw new Error('El inventario de Google Sheets está vacío o mal formado.');
+
+  /* El join con la geometría es por `nombre` exacto y el agrupamiento por
+     `grupo`: sin esas dos columnas no hay inventario, solo 66 registros
+     vacíos. Más vale un error legible que una tabla en blanco. */
+  const faltan = ['nombre','grupo'].filter(k => !(k in rows[0]));
+  if(faltan.length) throw new Error('El CSV no trae la columna «' + faltan.join('», «')
+                  + '». Revisa que la liga publicada apunte a la hoja del inventario.');
   return rows;
 }
 
-const DATA_RAW = await loadInventarioCSV();
+/* Un fallo del Sheet no debe tumbar el tablero entero. Ubicar, los mapas,
+   Zona Patrimonio y ARCAC no dependen del inventario y siguen sirviendo en
+   campo, que es el uso dominante. Se degrada a lista vacía y el motivo queda
+   a la vista en la tabla, no solo en la consola. */
+let INVENTARIO_ERROR = '';
+let DATA_RAW = [];
+try{
+  DATA_RAW = await loadInventarioCSV();
+}catch(err){
+  INVENTARIO_ERROR = (err && err.message) ? err.message : String(err);
+  console.error('[Inventario] ' + INVENTARIO_ERROR);
+  _estadoTabla('No se pudo cargar el inventario. ' + INVENTARIO_ERROR);
+  setTimeout(()=>{ try{ siaToast('No se pudo cargar el inventario desde Google Sheets.'); }catch(_){} }, 1200);
+}
 
 // Cargar polígonos de Suelo de Conservación (capa overlay)
 let SUELO_CONSERVACION = null;
@@ -3800,7 +3837,9 @@ function render(){
   const rows = sortRows(filter());
   const tb = document.getElementById('tb');
   if(!rows.length){
-    tb.innerHTML = `<tr><td colspan="11" class="empty">Sin resultados para los filtros actuales.</td></tr>`;
+    tb.innerHTML = INVENTARIO_ERROR
+      ? `<tr><td colspan="11" class="empty">No se pudo cargar el inventario.<br>${esc(INVENTARIO_ERROR)}</td></tr>`
+      : `<tr><td colspan="11" class="empty">Sin resultados para los filtros actuales.</td></tr>`;
   } else {
     tb.innerHTML = rows.map(d=>`
       <tr ${d._arcacNo!=null ? `data-no="${d._arcacNo}"` : `data-i="${DATA.indexOf(d)}"`} data-g="${GRUPO_CLS[d.grupo]||'arcac'}">
@@ -7098,6 +7137,6 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
 </style>
 <div class="cinta-borrador" role="note"><b>Versión en revisión · rediseño v38.</b>
   La página oficial es <a href="./">la portada del sitio</a>.
-  <span class="ver">sia-v35-2026-09-11v</span></div>
+  <span class="ver">sia-v35-2026-09-11x</span></div>
 </body>
 </html>

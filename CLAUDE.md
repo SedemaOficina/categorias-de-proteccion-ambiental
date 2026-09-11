@@ -131,6 +131,29 @@ se agrega un estado, se agrega ahí y lo heredan los cuatro puntos de render.
 - **Degrada limpio.** Verificado con un CSV sin ninguna columna de SC: 66 áreas en «Sin dato»,
   filtro oculto, columna oculta, cero errores de JS. Con el Sheet vigente: 16 / 8 / 42.
 
+## Carga del inventario · guardas de integridad (11 sep 2026)
+
+**Google responde HTTP 200 con una página HTML** —«No se pudo abrir el archivo en este
+momento»— cuando la publicación del Sheet se rompe: la hoja publicada se borró, cambió de
+`gid`, o la liga apunta a un documento que ya no se publica. Ocurrió al reestructurar el Sheet
+el 11-sep. Sin guarda, `parseCSV` interpretaba ese HTML como datos y el tablero pintaba filas
+basura: un fallo de publicación se veía como un fallo de datos.
+
+`loadInventarioCSV()` ahora verifica tres cosas antes de aceptar la respuesta:
+
+1. que el cuerpo no empiece con `<!doctype`, `<html`, `<head` o `<meta`;
+2. que `parseCSV` devuelva al menos una fila;
+3. que la primera fila traiga `nombre` **y** `grupo` —sin ellas no hay join por nombre ni
+   agrupamiento, solo 66 registros vacíos—.
+
+**Un fallo del Sheet ya no tumba el tablero entero.** Antes, el `throw` en el `await` de nivel
+superior abortaba el módulo y no se ejecutaba nada después: la página quedaba en el cascarón.
+Ahora el error se atrapa, `DATA_RAW` degrada a `[]`, el motivo queda escrito en el cuerpo de la
+tabla (`INVENTARIO_ERROR`, que `render()` respeta en su rama vacía) y sale un `siaToast`.
+Ubicar, los mapas, Zona Patrimonio y ARCAC **siguen funcionando**, que es el uso dominante en
+campo. Verificado con tres respuestas simuladas: HTML 200, CSV con encabezados ajenos y CSV
+correcto — en los tres, cero errores de JS y el mapa de Ubicar vivo.
+
 ## Barra «¿Dónde estoy?» · flujo principal de campo (v37)
 El uso dominante del tablero es de **personal de SEDEMA**, no público: en celular para ubicarse
 en campo, en escritorio para consultar tablas y estadística. La barra refleja eso.
@@ -602,6 +625,12 @@ datos. Regenerar con `python tools/traslapes.py` al cambiar cualquiera de las tr
   polígono del área completa. Al integrarlos: reproyectar a EPSG:4326 y 2D, un GeoJSON por área o
   uno solo con `area` y `zona` en propiedades, fuera de `CORE_ASSETS` por peso, y join por `nombre`
   exacto como el resto.
+- **[RESUELTO 11-sep] La publicación del Sheet se rompió al reestructurarlo.** Renombrar la
+  pestaña y agregar las hojas ARCAC / Traslapes / Nota dejó sin resolver la publicación con
+  `gid=0`: Google devolvía su página de error con HTTP 200. Se republicó solo la hoja
+  «Inventario» y `SHEET_URL` ahora apunta a **`gid=1601492810`**. Lección: al republicar no
+  basta con cambiar la clave `2PACX`; **el `gid` cambia y hay que traerlo**. El `gid` de una
+  pestaña no es estable frente a una reestructuración del documento.
 - **Confirmar que el CSV publicado apunta al Sheet vigente.** `SHEET_URL` es una liga
   `/pub?gid=0` cuya clave (`2PACX-…`) no revela a qué documento pertenece. Si el Sheet con
   `suelo_conservacion_pct` fuera un documento **nuevo** —y no el de siempre editado en sitio—,
