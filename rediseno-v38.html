@@ -6453,13 +6453,65 @@ function initUbicarBar(){
 }
 
 /* Mismo parser de coordenadas que usa el buscador de los mapas */
+/* ─────────────────────────────────────────────────────────────────────────
+   Parser único de coordenadas. Lo usan la barra «¿Dónde estoy?» y los cinco
+   buscadores de mapa (global, ficha, Zona Patrimonio, ARCAC y Traslapes), así
+   que cualquier formato que se acepte aquí se acepta en todo el tablero.
+
+   Acepta, normalizando espacios, paréntesis y signos tipográficos:
+     19.4237, -99.1421          (19.4237, -99.1421)      ( 19.4237 , -99.1421 )
+     [19.4237; -99.1421]        19.4237 -99.1421         19,4237, -99,1421
+     19.4237 N, 99.1421 W       N 19.4237  W 99.1421     19.4237°, -99.1421°
+     una URL de Google Maps pegada entera (toma el @lat,lng)
+   Y corrige el orden invertido: si el primer número no puede ser latitud
+   (|x| > 90) y el segundo sí, se intercambian. El popup muestra siempre la
+   coordenada resultante, así que la interpretación queda a la vista.
+   ───────────────────────────────────────────────────────────────────────── */
 function parseCoordsSia(q){
-  const clean = String(q||'').trim()
-    .replace(/^[\(\[\{]+|[\)\]\}]+$/g,'').replace(/\s+/g,' ').trim();
-  const m = clean.match(/^(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)$/);
+  let t = String(q||'').trim();
+  if(!t) return null;
+
+  /* Una URL de mapa pegada entera: se rescata el par y se ignora lo demás. */
+  const url = t.match(/[@?&=\/](-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)/);
+  if(/^https?:\/\//i.test(t) && url) t = url[1] + ',' + url[2];
+
+  t = t
+    .replace(/[−‒–—]/g, '-')   // menos tipográfico y guiones largos
+    .replace(/[°º'"´`′″]/g, ' ')          // grados, minutos, comillas
+    .replace(/^[\(\[\{@\s]+|[\)\]\}\s]+$/g, '')     // paréntesis y espacios de los extremos
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  /* Hemisferio en letra: define el signo y sale de la cadena. */
+  let sLat = 1, sLng = 1, conLetra = false;
+  t = t.replace(/([NSEOW])/gi, (m, l) => {
+    conLetra = true;
+    l = l.toUpperCase();
+    if(l === 'S') sLat = -1;
+    if(l === 'O' || l === 'W') sLng = -1;
+    return ' ';
+  }).replace(/\s+/g, ' ').trim();
+
+  /* Coma decimal (19,4237, -99,1421): cuatro grupos, el 2.º y el 4.º son
+     puras cifras. Solo se aplica cuando la lectura es inequívoca. */
+  const g = t.split(',').map(x => x.trim());
+  if(g.length === 4 && /^\d+$/.test(g[1]) && /^\d+$/.test(g[3])
+     && /^-?\d+$/.test(g[0]) && /^-?\d+$/.test(g[2])){
+    t = `${g[0]}.${g[1]}, ${g[2]}.${g[3]}`;
+  }
+
+  const m = t.match(/^(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)$/);
   if(!m) return null;
-  const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
-  if(isNaN(lat)||isNaN(lng)||lat<-90||lat>90||lng<-180||lng>180) return null;
+
+  let lat = parseFloat(m[1]) * (conLetra ? sLat : 1);
+  let lng = parseFloat(m[2]) * (conLetra ? sLng : 1);
+  if(isNaN(lat) || isNaN(lng)) return null;
+
+  /* Orden invertido: una latitud no puede pasar de 90, así que si el primero
+     se sale y el segundo cabe, venían al revés. */
+  if(Math.abs(lat) > 90 && Math.abs(lng) <= 90){ const tmp = lat; lat = lng; lng = tmp; }
+
+  if(lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
   return {lat, lng};
 }
 
@@ -7109,6 +7161,6 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
 </style>
 <div class="cinta-borrador" role="note"><b>Versión en revisión · rediseño v38.</b>
   La página oficial es <a href="./">la portada del sitio</a>.
-  <span class="ver">sia-v35-2026-09-11f</span></div>
+  <span class="ver">sia-v35-2026-09-11g</span></div>
 </body>
 </html>

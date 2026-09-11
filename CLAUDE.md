@@ -214,6 +214,18 @@ destinos y los subfiltros. `SECONDARY_TABS`, `.tabs`, `.tab` y el menú «Más �
   | Barrancas | Nombre · Alcaldía · Decreto · Sup. · PM · SC |
   | ANP Locales y Federales | Nombre · Subcat. · Alcaldía · Sup. · PM · SC · DG resp. |
 
+- **Parser de coordenadas (11 sep):** `parseCoordsSia()` es la única implementación y la usan la
+  barra «¿Dónde estoy?» y los cinco buscadores de mapa (global, ficha, Zona Patrimonio, ARCAC y
+  Traslapes), que la alcanzan por `parseCoords()` dentro de `attachMapSearch`. En los seis, la
+  coordenada tiene prioridad sobre Google Places: si el texto parsea, no se gasta una llamada.
+  Formatos aceptados, normalizando espacios y paréntesis: `19.42, -99.14` · `(19.42, -99.14)` ·
+  `( 19.42 , -99.14 )` · corchetes y llaves · separador coma, punto y coma o espacio ·
+  coma decimal (`19,42, -99,14`, solo cuando la lectura es inequívoca: cuatro grupos, 2.º y 4.º
+  puras cifras) · hemisferio en letra (`19.42 N, 99.14 W`, también `O`) · símbolo de grado ·
+  menos tipográfico `−` y guiones largos · una URL de Google Maps pegada entera (toma el `@lat,lng`).
+  **Corrige el orden invertido:** si el primer número excede ±90 no puede ser latitud, así que se
+  intercambia con el segundo. El popup siempre muestra la coordenada resultante, de modo que la
+  interpretación queda a la vista y el usuario puede desmentirla.
 - **Año del decreto (11 sep):** la columna Decreto muestra solo el año a cuatro dígitos
   (`anioDecreto()`, que lee `fecha_decreto_iso` y cae al texto DD/MM/AAAA); la fecha completa
   queda en el `title` de la celda y en la ficha. En vista partida la columna no se oculta siempre:
