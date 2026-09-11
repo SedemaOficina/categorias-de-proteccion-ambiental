@@ -277,15 +277,67 @@ destinos y los subfiltros. `SECONDARY_TABS`, `.tabs`, `.tab` y el menú «Más �
   - **Resumen propio:** `resumenArcacHTML()` reporta 30 núcleos, 22,567.70 ha y el reparto de
     tenencia (17 comunidad · 13 ejido), y cierra con la leyenda «Capa complementaria: no forma
     parte de las 66 áreas del inventario» para que nadie sume ARCAC al universo protegido.
+  - **El mapa necesitaba vista propia.** Con ARCAC los cuatro grupos del inventario
+    están apagados, así que `allBounds` quedaba inválido, `initGlobalMap` nunca llamaba a
+    `fitBounds` y el mapa salía en blanco. Dos correcciones, ambas generales:
+    `globalMap.setView([19.36,-99.13], 10)` **inmediatamente después de crear el mapa y antes
+    de agregar cualquier capa** —Leaflet falla en `_clipPoints` si dibuja vectores sin vista—,
+    y el encuadre de ARCAC lo aporta su propia capa en `asegurarCapaArcacGlobal()`
+    (`invalidateSize()` + `fitBounds`) cuando ningún grupo está activo.
+  - **`zoomSnap: 0.25` en el mapa global.** Con pasos enteros, la extensión de ARCAC se pasaba
+    del nivel 11 por unos pocos píxeles y caía al 10: el contenido ocupaba la mitad del marco.
+    Con zoom fraccionario el encuadre queda en 10.75 y llena la vista. Aplica a todas las
+    pestañas; ninguna empeoró (ocupación verificada ≥93% del ancho en las seis).
+  - **Color por tenencia, no por núcleo.** `loadARCAC()` asignaba 30 matices por ángulo áureo
+    (`hsl(i*137.508…)`): una rueda de colores que no codificaba ningún dato y competía con la
+    paleta institucional. Ahora el polígono toma `ARCAC_COLORS[tenencia]` —comunidad
+    `#7048E8`, ejido `#E8590C`—, de modo que mapa, badge de la tabla y filete de la fila dicen
+    lo mismo.
+  - **Filtro de tenencia:** el `<label>` de `fCat` se renombra a «Tenencia» en esta pestaña
+    (id `labCat`), igual que el encabezado de la columna.
   - **Sin columna de Suelo de Conservación:** se descartó por ahora. Sería un dato derivado y el
     cálculo por muestreo tiene ±2 puntos de error; si se quiere, hay que calcularlo con
     `tools/traslapes.py` y escribirlo como propiedad en `arcac.geojson`, no estimarlo en el cliente.
 - Las cuatro tarjetas KPI se sustituyeron por `resumenHTML()`: tres cifras y una barra de
   cobertura de programas de manejo que muestra logro y brecha a la vez.
 
-**Al validar:** la copia de trabajo se prueba con un doble de Leaflet y un CSV sintético de 66
-filas (el contenedor no alcanza `docs.google.com` ni `unpkg.com`). Eso verifica arranque,
-navegación, filtros y tabla; **no verifica los mapas**, que hay que revisar en el navegador real.
+- **Una sola búsqueda, siempre a la vista (11 sep).** El buscador flotante que vivía dentro de
+  cada mapa se retiró de los cinco (global, ficha, Zona Patrimonio, ARCAC y Traslapes) junto con
+  la función `attachMapSearch` y su `parseCoords` interno: duplicaba la barra «¿Dónde estoy?» y
+  multiplicaba por cinco el consumo de Google Places. Ahora:
+  - la barra «¿Dónde estoy?» aparece en **los tres destinos** —se eliminó la regla móvil
+    `.wrap:not(.dest-ubicar) .ubicar-bar{display:none}`—, porque es la única entrada de
+    direcciones y coordenadas del tablero y no puede desaparecer al cambiar de vista;
+  - es **`position:sticky; top:0`**, como la barra de Google Maps: acompaña el desplazamiento y
+    buscar nunca obliga a volver al principio de la página. El fondo lleva un color opaco debajo
+    del degradado, o el contenido se transparenta al quedar pegada. `z-index: var(--z-sticky)`
+    (900) gana a los controles de Leaflet (800) y a los flotantes del mapa (500);
+  - en «Ubicar» vuelve a `position:static`: ahí la barra **es** la página y anclarla solo
+    duplicaría su altura;
+  - fuera de «Ubicar», en celular se comprime a una fila de 66 px —rótulo en línea, sin
+    subtítulo, GPS reducido a su icono—, contra los 250 px de la versión grande;
+  - `parseCoordsSia()` sigue siendo el parser, ahora con un solo llamador.
+- **Controles del mapa en celular: una fila (11 sep).** Al desaparecer el buscador flotante ya
+  no hay nada que empuje la segunda fila, así que el zoom vuelve a la izquierda y la tarjeta de
+  vista a la derecha, ambos a `top:10px`. Antes se apilaban y entre el buscador de ancho completo
+  y la tarjeta se comían medio mapa —y en pantallas angostas se encimaban—.
+- **«Capas» desapareció (11 sep).** Sus dos módulos se repartieron donde se buscan:
+  **Zona Patrimonio** es un chip más del Inventario y **Traslapes** pasó a Análisis. Quedan tres
+  destinos. Ninguno de los dos módulos cambió por dentro: ZP conserva su página propia —la tabla
+  de once declaratorias, la subpestaña de embarcaderos, los toggles independientes de capa y su
+  ficha lateral—, contenido que la tabla compartida de cuatro columnas no puede sostener. Si más
+  adelante se prefiere uniformidad, el camino es el de ARCAC (`DATA_ZP` + `currentData()`), con
+  la pérdida de embarcaderos y del cuadro de concurrencia.
+  `TRASLAPES` se agregó además a `isSpecialTab()`: estaba fuera por descuido y hacía que
+  `render()` y `populateFilters()` trabajaran sobre una tabla oculta.
+
+**Al validar:** la copia de trabajo se prueba en Chromium (Playwright) interceptando la red.
+Hasta el 11 de septiembre se usaba un doble de Leaflet, que no pinta nada; **ahora se sirve
+Leaflet 1.9.4 real desde `npm` y tejas PNG sintéticas**, así que los mapas SÍ se verifican:
+número de polígonos, color de cada capa, encuadre y errores de JS. El CSV del inventario es el
+real, exportado del Sheet. Arnés en `/home/claude/verif` (`mapa2.mjs`, `todos.mjs`, `arcac.mjs`,
+`coords.mjs`, `ficha.mjs`). Lo que sigue sin verificarse es el basemap real de CARTO y Google
+Places, que el contenedor no alcanza.
 
 ## Pendientes / riesgos conocidos
 - **Migrar fuera de las IP de GitHub Pages** (ver hallazgo de arriba). Al hacerlo hay que actualizar
@@ -294,8 +346,6 @@ navegación, filtros y tabla; **no verifica los mapas**, que hay que revisar en 
 - **Rotar la `GOOGLE_MAPS_API_KEY`:** sigue viva en el historial de git (los `index.html.bak`
   borrados el 27-ago no la sacan de los commits anteriores). Ocultarla no es remediación.
 - **Continuidad institucional:** el Google Sheet del inventario y el proyecto de Google Cloud deberían colgar de cuentas institucionales de SEDEMA, no personales. Agregar un segundo propietario en IAM.
-- **Validar en navegador real los cuatro destinos con mapas** (Ubicar, Inventario, Capas): el
-  entorno de pruebas no puede pintar Leaflet.
 - **Confirmar el cambio de color de ANP Local** (guinda → naranja) con la identidad institucional.
 - **Colores de Zona Patrimonio confundibles:** AICA `#7F77DD` con ARCAC `#7048E8`, y SIPAM
   `#EF9F27` con ANP Local `#F08217`. Propuesta pendiente de validación: `#4C4F9E` y `#C77D0A`.

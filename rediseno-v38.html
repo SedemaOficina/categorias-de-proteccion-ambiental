@@ -164,9 +164,16 @@
   /* ═══ Barra «¿Dónde estoy?» · acción principal en campo ═══
      En escritorio es compacta (el uso ahí es consulta de tablas y estadística).
      En celular crece: es la primera acción de la pantalla y el uso dominante. */
-  .ubicar-bar{background:linear-gradient(100deg,rgba(157,33,72,.05),rgba(178,142,92,.05));
+  /* Siempre a la vista, como la barra de Google Maps: se ancla arriba y
+     acompaña el desplazamiento, así buscar una dirección o una coordenada
+     nunca obliga a volver al principio de la página. Es la única búsqueda del
+     tablero desde que los mapas perdieron la suya (11-sep-2026), de modo que
+     no puede quedar fuera de cuadro. El fondo lleva un color opaco debajo del
+     degradado: pegada, pasa por encima del contenido. */
+  .ubicar-bar{background:linear-gradient(100deg,rgba(157,33,72,.05),rgba(178,142,92,.05)),var(--card);
     border:1px solid var(--line);border-left:3px solid var(--guinda);border-radius:var(--radius);
-    padding:12px 16px;margin-bottom:14px}
+    padding:12px 16px;margin-bottom:14px;
+    position:sticky;top:0;z-index:var(--z-sticky);box-shadow:0 3px 12px rgba(42,42,42,.07)}
   .ubicar-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:9px}
   .ubicar-kicker{font-family:'Cabin',sans-serif;font-weight:700;font-size:var(--fs-base);color:var(--guinda);
     text-transform:uppercase;letter-spacing:.06em}
@@ -228,6 +235,9 @@
   @media (min-width:761px){
     .ubicar-bar{display:flex;align-items:center;gap:12px;background:var(--bg-2);
       border-left-width:3px;padding:8px 12px;margin-bottom:12px}
+    /* En «Ubicar» crece, pero deja de ser pegajosa: ahí la barra ES la página
+       y anclarla solo duplicaría su altura al desplazar. */
+    .dest-ubicar .ubicar-bar{position:static;box-shadow:none}
     .ubicar-head{margin:0;flex:0 0 auto;align-items:center;flex-wrap:nowrap;gap:8px}
     .ubicar-kicker{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.11em;
       color:var(--ink-2);font-weight:700}
@@ -436,9 +446,20 @@
     h1{font-size:var(--fs-md);font-weight:600}
     .sub{display:none}
     .meta{display:none}
-    /* «Ubicar» ya es un destino propio: la barra deja de repetirse en el resto
-       de las pantallas, donde solo robaba el primer tercio del celular. */
-    .wrap:not(.dest-ubicar) .ubicar-bar{display:none}
+    /* La barra está en las cuatro vistas: desde que los mapas perdieron su
+       buscador flotante, es la única entrada de direcciones y coordenadas del
+       tablero y no puede desaparecer al cambiar de destino. Fuera de «Ubicar»
+       se comprime a una fila —sin subtítulo y con el GPS reducido a su icono—
+       para no robarse el primer tercio de la pantalla. */
+    .wrap:not(.dest-ubicar) .ubicar-bar{display:flex;align-items:center;gap:9px;
+      padding:8px 10px;margin-bottom:10px}
+    .wrap:not(.dest-ubicar) .ubicar-head{margin:0;flex:0 0 auto}
+    .wrap:not(.dest-ubicar) .ubicar-kicker{font-size:var(--fs-xs)}
+    .wrap:not(.dest-ubicar) .ubicar-hint{display:none}
+    .wrap:not(.dest-ubicar) .ubicar-row{flex:1;min-width:0;flex-direction:row;gap:7px;align-items:stretch}
+    .wrap:not(.dest-ubicar) .ubicar-gps{width:auto;flex:0 0 auto;height:44px;padding:0 12px;font-size:var(--fs-sm)}
+    .wrap:not(.dest-ubicar) .ubicar-gps span{display:none}
+    .dest-ubicar .ubicar-bar{position:static;box-shadow:none}
 
     /* Navegacion fija al alcance del pulgar */
     .destbar{position:fixed;left:0;right:0;bottom:0;z-index:var(--z-sticky);
@@ -1097,13 +1118,6 @@
   /* Solo estructura. Posicion, fondo, borde, sombra y ancho maximo los fija
      el SISTEMA UNIFICADO DE CONTROLES DE MAPA v36, mas abajo: antes estaban
      declarados en los dos sitios y ganaba el segundo por orden de aparicion. */
-  .map-search-float{position:absolute;z-index:var(--z-flotante);display:flex;align-items:stretch;overflow:visible}
-  .map-search-input{border:none;outline:none;padding:8px 12px;font-family:'Roboto',sans-serif;font-size:var(--fs-sm);color:var(--ink);background:transparent;width:280px;min-width:0}
-  .map-search-input::placeholder{color:var(--muted);font-size:var(--fs-sm)}
-  .map-search-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;background:transparent;border:none;border-left:1px solid var(--line-soft);cursor:pointer;color:var(--ink-2);transition:color .15s;padding:0;flex-shrink:0}
-  .map-search-btn:hover{color:var(--guinda)}
-  .map-search-btn:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px}
-  .map-search-btn:disabled{opacity:.5;cursor:wait}
   .map-search-results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--sh-3);max-height:280px;overflow-y:auto;font-family:'Roboto',sans-serif}
   .map-search-result-item{padding:9px 12px;cursor:pointer;border-bottom:1px dotted var(--line-soft);font-size:var(--fs-sm);color:var(--ink-2);line-height:1.4;transition:background .12s}
   .map-search-result-item:last-child{border-bottom:none}
@@ -1154,8 +1168,6 @@
   /* Ficha: el panel mide 580px, así que el buscador (316px desde left:50) se encimaba
      con el toggle Mapa/Satélite + pantalla completa (262px desde la derecha).
      El buscador toma el ancho disponible y los controles bajan una fila. */
-  #mapCanvas .map-search-float{left:50px;right:10px;max-width:none}
-  #mapCanvas .map-search-input{width:100%}
   #mapCanvas .map-block-controls-floating{top:52px}
   .drawer-sc-floating{position:absolute;bottom:10px;left:10px;z-index:var(--z-flotante)}
   .drawer-sc-floating .map-filter-chip{box-shadow:var(--sh-2);font-size:var(--fs-xs);padding:5px 10px}
@@ -1214,17 +1226,6 @@
   .locate-ctrl a:hover, .resetview-ctrl a:hover{color:var(--guinda) !important}
   .locate-ctrl a svg, .resetview-ctrl a svg{width:16px; height:16px}
 
-  /* ── Buscador: misma altura y acabado que la columna, a su derecha ── */
-  .map-search-float{
-    top:10px; left:calc(10px + var(--mc-h) + 8px); height:var(--mc-h);
-    background:var(--mc-bg); border:1px solid var(--mc-line); border-radius:var(--radius);
-    box-shadow:var(--mc-shadow); max-width:calc(100% - 300px);
-  }
-  .map-search-input{height:calc(var(--mc-h) - 2px); padding:0 12px; width:250px; font-size:var(--fs-sm)}
-  .map-search-input::placeholder{font-size:var(--fs-sm)}
-  .map-search-btn{width:var(--mc-h); border-left:1px solid var(--mc-div)}
-  .map-search-btn:hover{background:var(--bg-2); color:var(--guinda)}
-
   /* ── Vista: capa base + pantalla completa en una sola tarjeta ── */
   .map-block-controls-floating{
     top:10px; right:10px; gap:0; align-items:center;
@@ -1256,14 +1257,14 @@
   .drawer-sc-floating .map-filter-chip.active{background:var(--bg-2); color:var(--ink)}
   .drawer-sc-floating .map-filter-chip:hover{border-color:var(--guinda); color:var(--guinda)}
 
-  /* ── Pantallas angostas: el buscador toma el ancho y la tarjeta de vista baja ── */
+  /* ── Pantallas angostas: los controles caben en UNA fila ──────────────
+     Con el buscador flotante retirado (11-sep-2026) no queda nada que
+     empuje la segunda fila: zoom a la izquierda, vista a la derecha, ambos
+     al ras superior. Antes se apilaban en dos filas y entre el buscador de
+     ancho completo y la tarjeta de vista se comían medio mapa. */
   @media (max-width:760px){
-    /* Fila 1 · buscador a todo lo ancho */
-    .map-search-float{top:10px; left:10px; right:10px; max-width:none}
-    .map-search-input{width:100%}
-    /* Fila 2 · navegación a la izquierda, vista a la derecha, debajo del buscador */
-    .leaflet-top.leaflet-left{top:calc(10px + var(--mc-h) + 8px)}
-    .map-block-controls-floating{top:calc(10px + var(--mc-h) + 8px)}
+    .leaflet-top.leaflet-left{top:10px}
+    .map-block-controls-floating{top:10px; right:10px}
     /* El popup no debe exceder el ancho del mapa */
     .lp{min-width:0}
     /* Mientras el globo está abierto, la columna de navegación se quita de en medio:
@@ -1331,14 +1332,9 @@
   @media (max-width:640px){
     #globalMapCanvas{height:420px}
     .map-filter-chip{padding:5px 10px;font-size:var(--fs-xs)}
-    /* === Controles en 2 filas · el posicionamiento vive en el bloque ≤760px === */
-    .map-search-float{width:auto}
-    .map-search-input{width:100%;font-size:var(--fs-sm);padding:7px 10px}
-    .map-search-input::placeholder{font-size:var(--fs-xs)}
-    .map-search-btn{width:30px}
-    /* Fila 2 · zoom (izq) + toggle Mapa/Satélite y expandir (der), debajo del buscador */
-    .leaflet-top{top:44px}
-    .map-block-controls-floating{top:52px;right:10px;gap:4px}
+    /* Una sola fila: zoom a la izquierda, vista a la derecha. */
+    .leaflet-top{top:10px}
+    .map-block-controls-floating{top:10px;right:10px;gap:4px}
     .map-fullscreen-btn{width:30px;height:30px}
   }
   .field{padding:12px 0;border-bottom:1px solid var(--line-soft);display:grid;grid-template-columns:140px 1fr;gap:16px;align-items:baseline}
@@ -1599,7 +1595,6 @@
   @media (pointer:coarse), (max-width:640px){
     .leaflet-touch .leaflet-bar a,
     .leaflet-bar a,
-    .map-search-btn,
     .map-fullscreen-btn,
     .ubi-mini,
     .ubi-cerrar,
@@ -1614,9 +1609,7 @@
     .ubi-ficha             { min-height:46px }
     /* La columna de controles crece con los botones */
     .map-block-controls-floating,
-    .map-search-float,
     .leaflet-top.leaflet-left { --mc-h:44px }
-    .map-search-input        { height:42px }
   }
 
 </style>
@@ -1690,7 +1683,7 @@
       <div class="filtros-av" id="filtrosAvanzados" hidden>
         <label><span class="lab">Tipo</span><select id="fTipo"><option value="">Todos</option><option value="AVA">AVA</option><option value="ANP">ANP</option></select></label>
         <label><span class="lab">Jurisdicción</span><select id="fJur"><option value="">Todas</option><option value="Local">Local</option><option value="Federal">Federal</option></select></label>
-        <label><span class="lab">Subcategoría</span><select id="fCat"><option value="">Todas</option></select></label>
+        <label><span class="lab" id="labCat">Subcategoría</span><select id="fCat"><option value="">Todas</option></select></label>
         <label><span class="lab" title="Suelo de Conservación">Suelo de Conservación</span><select id="fSC"><option value="">Todos</option><option value="Sí">Dentro</option><option value="No">Fuera</option></select></label>
         <label><span class="lab" title="Dirección General responsable">Dirección responsable</span><select id="fDG"><option value="">Todas</option><option value="DGSANPAVA">DGSANPAVA</option><option value="DGCORENADER">DGCORENADER</option><option value="__sin__">Sin asignar</option></select></label>
       </div>
@@ -2201,7 +2194,10 @@ let state = { tab:'ALL', dest:'INVENTARIO', sortKey:'nombre', sortDir:1, q:'', f
   mapFilters:{ 'AVA · Bosque Urbano':true, 'AVA · Barranca':true, 'ANP · Local':true, 'ANP · Federal':true },
   highlightCoadmin: false };
 const currentGroup = () => GROUPS.find(g=>g.id===state.tab);
-const isSpecialTab = (id) => id==='LEGAL' || id==='METAS' || id==='ANALISIS' || id==='ZP';
+/* Pestañas con página propia: no usan la tabla compartida ni sus filtros.
+   TRASLAPES entró aquí el 11-sep-2026; estaba fuera por descuido y hacía que
+   render() y populateFilters() trabajaran sobre una tabla oculta. */
+const isSpecialTab = (id) => id==='LEGAL' || id==='METAS' || id==='ANALISIS' || id==='ZP' || id==='TRASLAPES';
 /* ════════════════════════════════════════════════════════════════════
  * ARCAC en la tabla general · 11 sep 2026
  * Los 30 núcleos NO entran a DATA ni a GEOMETRIES: el inventario sigue
@@ -2271,14 +2267,16 @@ const SECONDARY_TABS = new Set(['TRASLAPES','ANALISIS','METAS','LEGAL']);
 const DEST_ICONS = {
   UBICAR:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/></svg>',
   INVENTARIO:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>',
-  CAPAS:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="m3 12.5 9 4.5 9-4.5"/><path d="m3 17 9 4.5 9-4.5"/></svg>',
   ANALITICA:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>'
 };
+/* Tres destinos (11-sep-2026). «Capas» desapareció: sus dos módulos se
+   repartieron donde el usuario los busca —Zona Patrimonio es un chip más del
+   inventario y Traslapes es análisis—, y un destino con dos entradas no
+   justificaba un cuarto del ancho de la barra. */
 const DESTINOS = [
   { id:'UBICAR',     label:'Ubicar',     sub:[] },
-  { id:'INVENTARIO', label:'Inventario', sub:['ALL','BU','BR','ANPL','ANPF','ARCAC'] },
-  { id:'CAPAS',      label:'Capas',      sub:['ZP','TRASLAPES'] },
-  { id:'ANALITICA',  label:'Análisis',   sub:['ANALISIS','METAS','LEGAL'] },
+  { id:'INVENTARIO', label:'Inventario', sub:['ALL','BU','BR','ANPL','ANPF','ARCAC','ZP'] },
+  { id:'ANALITICA',  label:'Análisis',   sub:['ANALISIS','TRASLAPES','METAS','LEGAL'] },
 ];
 const DEST_DE_TAB = {};
 DESTINOS.forEach(d => d.sub.forEach(t => { DEST_DE_TAB[t] = d.id; }));
@@ -2430,8 +2428,10 @@ function populateFilters(){
     if(util && ['fTipo','fJur','fCat','fSC','fDG'].includes(id)) avanzadosVisibles++;
   });
 
-  /* Con ARCAC la columna «Subcat.» contiene la tenencia de la tierra: el
-     encabezado se renombra para que no mienta. */
+  /* Con ARCAC tanto la columna «Subcat.» como su filtro contienen la tenencia
+     de la tierra: ambos se renombran para que no mientan. */
+  const labCat = document.getElementById('labCat');
+  if(labCat) labCat.textContent = (state.tab === 'ARCAC') ? 'Tenencia' : 'Subcategoría';
   const thSub = document.querySelector('thead.t-head th[data-k="categoria"]');
   if(thSub){
     const flecha = thSub.querySelector('.arrow');
@@ -3695,7 +3695,14 @@ function render(){
   } else {
     tb.innerHTML = rows.map(d=>`
       <tr ${d._arcacNo!=null ? `data-no="${d._arcacNo}"` : `data-i="${DATA.indexOf(d)}"`} data-g="${GRUPO_CLS[d.grupo]||'arcac'}">
-        <td class="name">${d.nombre}<span class="name-sub">${d.tipo} · ${subShort(d.categoria)} · ${d.alcaldia} · ${anioDecreto(d)}${d.dg_responsable ? ` · ${d.dg_responsable}` : ''}</span></td>
+        <td class="name">${d.nombre}<span class="name-sub">${
+          /* Segunda línea en celular: solo los campos que ese registro tiene.
+             Los núcleos agrarios no tienen decreto ni DG, y un «—» suelto
+             sobra. */
+          [d.tipo, subShort(d.categoria), d.alcaldia,
+           d._arcacNo!=null ? '' : anioDecreto(d), d.dg_responsable]
+            .filter(v=>v && v!=='—').join(' · ')
+        }</span></td>
         <td><span class="tag tag-${d.tipo}">${d.tipo}</span></td>
         <td><span class="tag tag-jur-${d.jurisdiccion}">${d.jurisdiccion}</span></td>
         <td><span class="tag-sub sub-${subCode(d.categoria)}" title="${d.categoria}">${subShort(d.categoria)}</span></td>
@@ -4038,14 +4045,6 @@ function renderMapaPage(g){
 
       <div class="global-map-block">
         <div id="globalMapCanvas" style="position:relative">
-          <!-- Buscador flotante (esquina superior izquierda, después del control zoom) -->
-          <div class="map-search-float" id="globalMapSearch">
-            <input type="text" class="map-search-input" placeholder="Buscar dirección o coordenadas (lat, lng)…" aria-label="Buscar en el mapa">
-            <button class="map-search-btn" type="button" aria-label="Buscar">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            </button>
-            <div class="map-search-results" hidden></div>
-          </div>
           <!-- Toggle Mapa/Satélite + botón fullscreen (esquina superior derecha) -->
           <div class="map-block-controls map-block-controls-floating">
             <div class="map-block-toggle" id="globalLayerToggle">
@@ -4833,7 +4832,6 @@ async function initZPMap(){
   }
 
   // Buscador de dirección / coordenadas (reutiliza el geocoder existente)
-  attachMapSearch('zpMapSearch', zpMap, getZPAllFeatures);
   addResetViewControl(zpMap, 'Vista general · Zona Patrimonio');
   addLocateControl(zpMap, ll=>featuresContaining(getZPAllFeatures(), ll), getZPAllFeatures);
 
@@ -4923,13 +4921,6 @@ function renderZonaPatrimonioPage(){
     <div class="map-filters" id="zpFilters" style="margin-top:14px"></div>
 
     <div class="map-canvas" id="zpMapCanvas" style="position:relative;height:560px;border-radius:12px;overflow:hidden;margin-top:6px">
-      <div class="map-search-float" id="zpMapSearch">
-        <input type="text" class="map-search-input" placeholder="Buscar dirección o coordenadas (lat, lng)…" aria-label="Buscar en el mapa">
-        <button class="map-search-btn" type="button" aria-label="Buscar">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        </button>
-        <div class="map-search-results" hidden></div>
-      </div>
       <!-- Toggle Mapa/Satélite + botón pantalla completa (esquina superior derecha) -->
       <div class="map-block-controls map-block-controls-floating">
         <div class="map-block-toggle" id="zpLayerToggle">
@@ -5035,7 +5026,11 @@ async function loadARCAC(){
     ARCAC_GEO = await r.json();
     // Color DISTINTO por ARCAC (ángulo áureo → máxima separación entre vecinos)
     const feats = (ARCAC_GEO.features||[]).slice().sort((a,b)=>a.properties.no-b.properties.no);
-    feats.forEach((f,i)=>{ f.properties._color = `hsl(${Math.round((i*137.508)%360)}, 62%, 47%)`; arcacByNo[f.properties.no]=f.properties; });
+    /* El color del polígono es el de la TENENCIA, no uno por núcleo: así el mapa,
+     el badge de la tabla y el filete de la fila dicen lo mismo. La rueda de 30
+     matices del módulo anterior competía con la paleta institucional y no
+     codificaba ningún dato. */
+  feats.forEach(f=>{ f.properties._color = ARCAC_COLORS[f.properties.tenencia] || 'var(--arcac-com)'; arcacByNo[f.properties.no]=f.properties; });
   }catch(err){ console.warn('[ARCAC] no disponible:', err.message); ARCAC_GEO = {type:'FeatureCollection',features:[]}; }
   return ARCAC_GEO;
 }
@@ -5193,7 +5188,6 @@ async function initARCACMap(){
   });
   renderArcacRows();
 
-  attachMapSearch('arcacMapSearch', arcacMap, ()=>(ARCAC_GEO&&ARCAC_GEO.features)||[]);
   addResetViewControl(arcacMap, 'Vista general · ARCAC');
   addLocateControl(arcacMap, ll=>featuresContaining((ARCAC_GEO&&ARCAC_GEO.features)||[], ll), ()=>(ARCAC_GEO&&ARCAC_GEO.features)||[]);
   setTimeout(()=>{ try{ arcacMap.invalidateSize(); }catch(e){} }, 120);
@@ -5250,11 +5244,6 @@ function renderTraslapesPage(){
 
     <div class="map-filters" id="trasFilters" style="margin-top:14px"></div>
     <div class="map-canvas" id="trasMapCanvas" style="position:relative;height:520px;border-radius:12px;overflow:hidden;margin-top:6px">
-      <div class="map-search-float" id="trasMapSearch">
-        <input type="text" class="map-search-input" placeholder="Buscar dirección o coordenadas (lat, lng)…" aria-label="Buscar en el mapa">
-        <button class="map-search-btn" type="button" aria-label="Buscar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></button>
-        <div class="map-search-results" hidden></div>
-      </div>
       <div class="map-block-controls map-block-controls-floating">
         <div class="map-block-toggle" id="trasLayerToggle">
           <button data-layer="positron" class="active">Mapa</button>
@@ -5335,7 +5324,6 @@ function initTraslapesMap(){
     });
   });
   attachFullscreenBtn(cont, traslapesMap);
-  attachMapSearch('trasMapSearch', traslapesMap);
   addLocateControl(traslapesMap, ll=>featuresContaining(trasFeats(), ll));
   addResetViewControl(traslapesMap, 'Vista general · traslapes');
 
@@ -5517,11 +5505,6 @@ function renderARCACPage(){
       de Conservación Ecológica» (Art. 152 a 158), consultable en la pestaña <b>Marco Jurídico</b>.</p>
     <div class="map-filters" id="arcacFilters" style="margin-top:14px"></div>
     <div class="map-canvas" id="arcacMapCanvas" style="position:relative;height:560px;border-radius:12px;overflow:hidden;margin-top:6px">
-      <div class="map-search-float" id="arcacMapSearch">
-        <input type="text" class="map-search-input" placeholder="Buscar dirección o coordenadas (lat, lng)…" aria-label="Buscar en el mapa">
-        <button class="map-search-btn" type="button" aria-label="Buscar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
-        <div class="map-search-results" hidden></div>
-      </div>
     </div>
     <style>
       #arcacTable{width:100%;border-collapse:collapse;font-family:'Roboto',sans-serif;font-size:var(--fs-sm)}
@@ -5577,7 +5560,15 @@ async function initGlobalMap(){
     return;
   }
   
-  globalMap = L.map(canvas, { zoomControl:true, scrollWheelZoom:false });
+  /* zoomSnap fraccionario: con pasos enteros, un encuadre que se pasa por unos
+     pocos píxeles cae un nivel completo y desperdicia media pantalla. Le pasaba
+     a ARCAC, cuya extensión queda justo por encima del nivel 11. */
+  globalMap = L.map(canvas, { zoomControl:true, scrollWheelZoom:false, zoomSnap:0.25 });
+  /* Vista provisional ANTES de agregar capas: Leaflet falla en _clipPoints si
+     dibuja vectores sin vista establecida. Pasaba en la pestaña ARCAC, donde
+     ningún grupo del inventario aporta bounds y el mapa quedaba en blanco.
+     El fitBounds de abajo (o el de ARCAC) la sustituye cuando hay geometría. */
+  globalMap.setView([19.36, -99.13], 10);
   setGlobalBaseLayer('positron');
   
   // Capa de alcaldías como contexto territorial
@@ -5635,7 +5626,6 @@ async function initGlobalMap(){
   attachFullscreenBtn(canvas, globalMap);
 
   // Buscador de direcciones / coordenadas
-  attachMapSearch('globalMapSearch', globalMap);
   addLocateControl(globalMap, ll=>featuresContaining(GEOMETRIES&&GEOMETRIES.features, ll), ()=>(GEOMETRIES&&GEOMETRIES.features)||[]);
   addResetViewControl(globalMap, 'Vista general · todas las áreas');
 
@@ -5951,225 +5941,11 @@ function _buscarLocal(q){
   return _indiceLocal().filter(x=>norm(x.nombre).includes(nq)).slice(0,5);
 }
 
-function attachMapSearch(containerId, mapInstance, getFeatures){
-  if(typeof getFeatures !== 'function') getFeatures = ()=>(GEOMETRIES&&GEOMETRIES.features)||[];
-  const container = document.getElementById(containerId);
-  if(!container || !mapInstance) return;
-  const input = container.querySelector('.map-search-input');
-  const btn = container.querySelector('.map-search-btn');
-  const results = container.querySelector('.map-search-results');
-  if(!input || !btn || !results) return;
-
-  /* El buscador vive dentro del contenedor de Leaflet, así que la rueda del mouse
-     y los clics llegaban al mapa: girar la rueda sobre la lista hacía zoom en vez
-     de desplazar los resultados. Leaflet trae utilidades para aislarlo. */
-  try{
-    L.DomEvent.disableScrollPropagation(container);
-    L.DomEvent.disableClickPropagation(container);
-  }catch(_){}
-
-  // Clone-and-replace para evitar duplicación de listeners
-  const freshInput = input.cloneNode(true);
-  const freshBtn = btn.cloneNode(true);
-  input.parentNode.replaceChild(freshInput, input);
-  btn.parentNode.replaceChild(freshBtn, btn);
-
-  let currentMarker = null;
-
-  // Detecta si la entrada son coordenadas (lat, lng).
-  // Acepta múltiples formatos:
-  //   19.4326, -99.1332
-  //   19.4326 -99.1332
-  //   (19.4326, -99.1332)        — con paréntesis (estilo Google Maps al copiar)
-  //   [19.4326, -99.1332]        — con corchetes (estilo GeoJSON)
-  //   19.4326;  -99.1332         — separadores variados y espacios extras
-  /* Una sola implementación del parser: parseCoordsSia es la fuente de verdad
-     (declaración de función, se hoistea). Aquí solo se adapta el formato de salida. */
-  function parseCoords(q){
-    const r = parseCoordsSia(q);
-    return r ? [r.lat, r.lng] : null;
-  }
-
-  function clearMarker(){
-    if(currentMarker){ mapInstance.removeLayer(currentMarker); currentMarker = null; }
-  }
-
-  function placeMarker(lat, lng, label){
-    clearMarker();
-    lastSearchLatLng = { lat, lng, label: label || null };   // recordar para replicar en fichas
-    currentMarker = L.marker([lat, lng], {
-      icon: L.divIcon({ className: 'search-result-marker', iconSize: [18, 18] })
-    }).addTo(mapInstance);
-    // Mismo diagnóstico que «Ubicarme»: da igual si llegaste por GPS o tecleando la coordenada
-    currentMarker.bindPopup('<div class="lp"><div class="loc-loading">Consultando capas…</div></div>',
-                            _popupOpts(mapInstance));
-    setTimeout(()=>{ try{ currentMarker.openPopup(); }catch(e){} }, 850);
-    _cargarCapasCobertura().then(()=>{
-      try{ currentMarker.setPopupContent(
-        _locatePopupHTML({lat, lng}, null, null, null, {titulo:'Coordenada consultada'})); }catch(e){}
-    });
-    mapInstance.flyTo([lat, lng], Math.max(mapInstance.getZoom(), 14), { duration: 0.8 });
-  }
-
-  /* Sugerencias mientras se escribe: primero el inventario, luego direcciones */
-  let _debounce = null;
-  let _seq = 0;
-
-  function pintarSugerencias(locales, direcciones){
-    let html = '';
-    if(locales.length){
-      html += '<div class="res-group">En el inventario</div>';
-      html += locales.map((x,i)=>`
-        <div class="map-search-result-item" tabindex="0" role="button" data-local="${i}">
-          <span class="res-swatch" style="background:${escapeHtml(x.color)}"></span>
-          <span class="res-title">${escapeHtml(x.nombre)}</span>
-          <span class="res-meta">${escapeHtml(x.sub||'')}</span>
-        </div>`).join('');
-    }
-    if(direcciones.length){
-      html += '<div class="res-group">Direcciones</div>';
-      html += direcciones.map((d,i)=>`
-        <div class="map-search-result-item" tabindex="0" role="button" data-dir="${i}">
-          <span class="res-title">${escapeHtml(d.principal)}</span>
-          <span class="res-meta">${escapeHtml(d.secundario||'')}</span>
-        </div>`).join('');
-    }
-    if(!html){ results.hidden = true; return; }
-    results.innerHTML = html;
-    results.hidden = false;
-
-    results.querySelectorAll('[data-local]').forEach(el=>{
-      el.addEventListener('click', ()=>{
-        const x = locales[+el.dataset.local];
-        results.hidden = true; freshInput.value = x.nombre;
-        try{
-          if(x.t==='inv'){
-            const g = GEOM_INDEX[slugify(x.ref)];
-            if(g){ const l=L.geoJSON(g); mapInstance.fitBounds(l.getBounds(),{padding:[30,30],maxZoom:16}); }
-            const a = DATA.find(d=>d.nombre===x.ref); if(a) openDrawer(a);
-          } else if(x.t==='arcac'){ openARCACFicha(Number(x.ref)); }
-          else if(x.t==='zp'){ openZPFicha(x.ref); }
-        }catch(err){ siaToast('No se pudo abrir esa área.'); }
-      });
-    });
-    results.querySelectorAll('[data-dir]').forEach(el=>{
-      el.addEventListener('click', async ()=>{
-        const d = direcciones[+el.dataset.dir];
-        results.hidden = true; freshInput.value = d.principal;
-        try{
-          if(d.place){
-            const place = d.place.toPlace();
-            await place.fetchFields({fields:['location','formattedAddress']});
-            const loc = place.location;
-            placeMarker(loc.lat(), loc.lng(), place.formattedAddress || d.principal);
-          } else if(d.lat != null){
-            placeMarker(d.lat, d.lng, d.principal);
-          }
-        }catch(err){ siaToast('No se pudo ubicar esa dirección.'); }
-        siaCerrarSesionPlaces();   // la sesión de facturación termina al elegir
-      });
-    });
-  }
-
-  const sugerirDirecciones = q => siaSugerirDirecciones(q);
-
-  freshInput.addEventListener('input', ()=>{
-    const q = freshInput.value.trim();
-    clearTimeout(_debounce);
-    if(q.length < 2){ results.hidden = true; return; }
-    if(parseCoords(q)){ results.hidden = true; return; }   // es una coordenada: no hay que sugerir
-    const mio = ++_seq;
-    const locales = _buscarLocal(q);
-    pintarSugerencias(locales, []);                        // el inventario aparece de inmediato
-    _debounce = setTimeout(async ()=>{                      // las direcciones, con freno
-      const dirs = await sugerirDirecciones(q);
-      if(mio === _seq) pintarSugerencias(locales, dirs);
-    }, 280);
-  });
-
-  function showResults(items){
-    if(!items || !items.length){
-      results.innerHTML = '<div class="map-search-empty">Sin resultados. Intenta con otra búsqueda.</div>';
-      results.hidden = false;
-      return;
-    }
-    results.innerHTML = '<div class="res-group">Direcciones</div>' + items.map((it, i) => `
-      <div class="map-search-result-item" tabindex="0" role="button" data-idx="${i}">
-        <span class="res-title">${escapeHtml(it.display_name.split(',').slice(0,2).join(','))}</span>
-        <span class="res-meta">${parseFloat(it.lat).toFixed(5)}, ${parseFloat(it.lon).toFixed(5)}</span>
-      </div>
-    `).join('');
-    results.hidden = false;
-    results.querySelectorAll('.map-search-result-item').forEach(el => {
-      el.addEventListener('click', () => {
-        const idx = parseInt(el.dataset.idx, 10);
-        const it = items[idx];
-        placeMarker(parseFloat(it.lat), parseFloat(it.lon), it.display_name.split(',').slice(0,2).join(','));
-        results.hidden = true;
-        freshInput.value = it.display_name.split(',').slice(0,2).join(',');
-      });
-    });
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-  }
-
-  async function doSearch(){
-    const q = freshInput.value.trim();
-    if(!q){ results.hidden = true; return; }
-
-    // 1) Si son coordenadas, ir directo
-    const coords = parseCoords(q);
-    if(coords){
-      placeMarker(coords[0], coords[1], null);   // la coordenada ya se muestra en el popup: la etiqueta sobraba
-      results.hidden = true;
-      return;
-    }
-
-    // 2) Con llave de Google, Enter toma la primera sugerencia de Places
-    if(GOOGLE_MAPS_API_KEY){
-      freshBtn.disabled = true;
-      try{
-        const dirs = await sugerirDirecciones(q);
-        if(dirs.length){ pintarSugerencias(_buscarLocal(q), dirs); return; }
-      } finally { freshBtn.disabled = false; }
-    }
-
-    // 3) Sin llave (o si Places falló): Nominatim, una sola consulta al presionar Enter
-    freshBtn.disabled = true;
-    try {
-      // Bounding box de CDMX para priorizar resultados locales
-      const bbox = '-99.366,19.045,-98.940,19.593';  // minLng, minLat, maxLng, maxLat
-      const url = `https://nominatim.openstreetmap.org/search?format=json&accept-language=es&limit=5&countrycodes=mx&viewbox=${bbox}&bounded=0&q=${encodeURIComponent(q)}`;
-      const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
-      if(!r.ok) throw new Error('HTTP ' + r.status);
-      const data = await r.json();
-      showResults(data);
-    } catch(err) {
-      console.error('[Buscador] Error en geocodificación:', err);
-      results.innerHTML = '<div class="map-search-empty">Error al consultar el servicio. Intenta más tarde.</div>';
-      results.hidden = false;
-    } finally {
-      freshBtn.disabled = false;
-    }
-  }
-
-  freshBtn.addEventListener('click', doSearch);
-  freshInput.addEventListener('keydown', e => {
-    if(e.key === 'Enter'){ e.preventDefault(); doSearch(); }
-    if(e.key === 'Escape'){ results.hidden = true; }
-  });
-  // Cerrar resultados al clickear fuera.
-  // initMapForArea llama a attachMapSearch en CADA apertura de ficha (hasta 66 por
-  // sesión); sin esta limpieza se acumulaba un handler de click por apertura.
-  if(attachMapSearch._fuera) document.removeEventListener('click', attachMapSearch._fuera);
-  const cerrarSiEsFuera = e => {
-    if(!container.contains(e.target)) results.hidden = true;
-  };
-  attachMapSearch._fuera = cerrarSiEsFuera;
-  document.addEventListener('click', cerrarSiEsFuera);
-}
+/* El buscador flotante de los mapas se retiró el 11-sep-2026: duplicaba la
+   barra «¿Dónde estoy?», que ahora está en las cuatro vistas y es la única
+   entrada de direcciones y coordenadas del tablero. Con `attachMapSearch`
+   se fueron su `parseCoords` y su consumo de Google Places por mapa;
+   `parseCoordsSia()` sigue siendo el parser, ya con un solo llamador. */
 
 /* Carga perezosa de la capa ARCAC del mapa global. Idempotente: si ya está
    construida no vuelve a pedir el GeoJSON. */
@@ -6181,7 +5957,21 @@ function asegurarCapaArcacGlobal(){
     _arcacGlobalPend = false;
     if(!globalMap) return null;
     globalArcacLayer = buildArcacGeoLayer(fc, globalMap);
-    if(state.showArcac) globalArcacLayer.addTo(globalMap);
+    if(state.showArcac){
+      globalArcacLayer.addTo(globalMap);
+      /* En la pestaña ARCAC los cuatro grupos están apagados: no hay encuadre
+         inicial, así que lo aporta esta capa. */
+      const hayGrupos = Object.keys(state.mapFilters).some(k=>state.mapFilters[k]);
+      if(!hayGrupos){
+        try{
+          /* La capa llega después del layout, así que el mapa aún puede tener
+             medidas viejas; sin esto el encuadre queda descentrado. */
+          globalMap.invalidateSize();
+          const b = globalArcacLayer.getBounds();
+          if(b && b.isValid()){ globalMap.fitBounds(b,{padding:[20,20]}); globalMap._siaHome = b; }
+        }catch(e){}
+      }
+    }
     return globalArcacLayer;
   }).catch(err=>{
     _arcacGlobalPend = false;
@@ -6373,7 +6163,6 @@ function initMapForArea(d){
 
   // Pantalla completa + buscador en mapa de ficha técnica
   attachFullscreenBtn(container, activeMap);
-  attachMapSearch('drawerMapSearch', activeMap);
   addLocateControl(activeMap, ll=>featuresContaining(GEOMETRIES&&GEOMETRIES.features, ll), ()=>(GEOMETRIES&&GEOMETRIES.features)||[]);
   addResetViewControl(activeMap, 'Volver al polígono del área');
   addSearchMarkerTo(activeMap);
@@ -6943,13 +6732,6 @@ function openDrawer(d){
     <div class="map-block">
       <div class="map-canvas" id="mapCanvas" style="position:relative">
         <div class="map-canvas-inner" id="mapCanvasMap"></div>
-        <div class="map-search-float" id="drawerMapSearch">
-          <input type="text" class="map-search-input" placeholder="Buscar dirección o coordenadas…" aria-label="Buscar en el mapa">
-          <button class="map-search-btn" type="button" aria-label="Buscar">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          </button>
-          <div class="map-search-results" hidden></div>
-        </div>
         <div class="map-block-controls map-block-controls-floating">
           <div class="map-block-toggle">
             <button data-layer="positron" class="active">Mapa</button>
@@ -7085,11 +6867,10 @@ _marcarNavegables();
 
 document.addEventListener('keydown', e=>{
   /* Flechas dentro de una lista de sugerencias abierta */
-  const lista = document.querySelector('.ubicar-sugerencias:not([hidden]), .map-search-results');
-  if(lista && (lista.contains(e.target) || e.target.id === 'ubicarInput'
-      || (e.target.classList && e.target.classList.contains('map-search-input')))
+  const lista = document.querySelector('.ubicar-sugerencias:not([hidden])');
+  if(lista && (lista.contains(e.target) || e.target.id === 'ubicarInput')
       && (e.key === 'ArrowDown' || e.key === 'ArrowUp')){
-    const items = [...lista.querySelectorAll('.item,.map-search-result-item')].filter(x=>x.offsetParent);
+    const items = [...lista.querySelectorAll('.item')].filter(x=>x.offsetParent);
     if(items.length){
       e.preventDefault();
       const i = items.indexOf(document.activeElement);
@@ -7299,6 +7080,6 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
 </style>
 <div class="cinta-borrador" role="note"><b>Versión en revisión · rediseño v38.</b>
   La página oficial es <a href="./">la portada del sitio</a>.
-  <span class="ver">sia-v35-2026-09-11k</span></div>
+  <span class="ver">sia-v35-2026-09-11n</span></div>
 </body>
 </html>
