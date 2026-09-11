@@ -498,6 +498,19 @@
   /* Etiqueta de grupo dentro de las tablas de Análisis: el color lo pone el JS
      con GROUP_COLORS; aquí solo el tamaño y la caja tipográfica. */
   .grp-mini{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);white-space:nowrap}
+  /* Encabezado ordenable de las tablas de brechas. La flecha está siempre, en
+     gris tenue, para que se vea que la columna se puede ordenar antes de
+     tocarla; se enciende en la columna activa. */
+  .comp th.th-ord{cursor:pointer;user-select:none;white-space:nowrap}
+  .comp th.th-ord:hover{color:var(--guinda)}
+  .comp th.th-ord:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px}
+  .comp th.th-ord .ord-flecha{margin-left:5px;font-size:var(--fs-micro);opacity:.28}
+  .comp th.th-ord.act{color:var(--guinda)}
+  .comp th.th-ord.act .ord-flecha{opacity:1}
+  /* Fila complementaria de las tablas de Análisis: cuenta en hectáreas pero no
+     en el total. El filete la separa de lo que sí suma. */
+  .comp tr.fila-complementaria td{border-top:1px dashed var(--line);
+    background:rgba(112,72,232,.045);color:var(--ink-2)}
   /* Nota de lectura al pie de un panel: dice cómo NO leer la cifra de arriba.
      Filete dorado, no rojo: advierte sobre la interpretación, no alarma. */
   .nota-analisis{margin-top:16px;padding:13px 16px;background:var(--bg-2);
@@ -548,7 +561,8 @@
   .cron-bar-col:has(.cron-bar[data-count="0"]) .cron-bar-count{visibility:hidden}
   .cron-bar:hover{background:var(--guinda-900);transform:translateY(-2px)}
   .cron-bar-tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--crema);padding:10px 12px;border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:var(--fs-sm);line-height:1.4;white-space:normal;width:220px;box-shadow:var(--sh-3);opacity:0;pointer-events:none;transition:opacity .15s;z-index:10}
-  .cron-bar:hover .cron-bar-tooltip{opacity:1}
+  .cron-bar:hover .cron-bar-tooltip, .cron-bar:focus .cron-bar-tooltip{opacity:1}
+  .cron-bar:focus{outline:2px solid var(--guinda);outline-offset:2px}
   /* El globo de la primera y la última barra se salía del panel y empujaba la
      página a scroll horizontal en tabletas —aunque esté invisible, ocupa caja—.
      En los extremos se alinea hacia dentro en vez de centrarse. La barra cuelga
@@ -570,7 +584,8 @@
   .cron-gob-bar[data-count="0"]{background:transparent !important;border:1px dashed var(--line);min-height:8px}
   .cron-gob-bar:hover{filter:brightness(1.08);transform:translateY(-2px)}
   .cron-gob-tooltip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--crema);padding:12px 14px;border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:var(--fs-sm);line-height:1.45;white-space:normal;width:260px;box-shadow:var(--sh-3);opacity:0;pointer-events:none;transition:opacity .15s;z-index:15}
-  .cron-gob-bar:hover .cron-gob-tooltip{opacity:1}
+  .cron-gob-bar:hover .cron-gob-tooltip, .cron-gob-bar:focus .cron-gob-tooltip{opacity:1}
+  .cron-gob-bar:focus{outline:2px solid var(--guinda);outline-offset:2px}
   /* Mismo caso que la cronología por década: los globos de los extremos se
      alinean hacia dentro para no desbordar el panel. */
   .cron-gob-col:first-child .cron-gob-tooltip{left:0;transform:none}
@@ -1383,11 +1398,25 @@
     /* Cronología en mobile: scroll horizontal */
     .cronologia-container{padding:18px 12px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
     .cronologia-chart{min-width:520px;height:200px}
-    .cron-bar-tooltip{width:170px;font-size:var(--fs-xs)}
+    /* En celular el globo flotante no cabe: la barra mide 20 px, el panel se
+       desplaza en horizontal y el globo salía cortado o fuera de cuadro. Aquí
+       deja de flotar sobre la barra y se ancla al pie de la pantalla, a todo lo
+       ancho y con desplazamiento propio si la lista es larga. Se abre al tocar
+       —la barra es enfocable— y se cierra al tocar fuera. */
+    .cron-bar-tooltip, .cron-gob-tooltip{
+      position:fixed; left:10px; right:10px; bottom:calc(var(--destbar-h) + 12px);
+      top:auto; width:auto; max-height:44vh; overflow-y:auto;
+      transform:none !important; font-size:var(--fs-sm); padding:14px 16px;
+      border-left:3px solid var(--dorado); z-index:var(--z-sticky);
+      -webkit-overflow-scrolling:touch}
+    .cron-bar:focus .cron-bar-tooltip, .cron-gob-bar:focus .cron-gob-tooltip{pointer-events:auto}
+    .cron-bar-col:first-child .cron-bar-tooltip,
+    .cron-bar-col:last-child  .cron-bar-tooltip,
+    .cron-gob-col:first-child .cron-gob-tooltip,
+    .cron-gob-col:last-child  .cron-gob-tooltip{left:10px;right:10px}
     .cron-gob-chart{min-width:580px;height:240px;gap:6px}
     .cron-gob-col-label{font-size:var(--fs-mini)}
     .cron-gob-col-period{font-size:var(--fs-micro)}
-    .cron-gob-tooltip{width:200px;font-size:var(--fs-xs);padding:10px 12px}
     .rank-pos{font-size:var(--fs-xl)}
     .constitucion-card{padding:14px 16px}
     .constitucion-card h4{font-size:var(--fs-md)}
@@ -2346,6 +2375,18 @@ function renderDashboard(){
     dash.innerHTML = renderAnalisisPage();
     tblSec.style.display = 'none';
     if(mapSec) mapSec.style.display = 'none';
+    /* Composición y el reparto por alcaldía traen una fila de ARCAC, y la capa
+       llega bajo demanda. Se pide una sola vez —el mismo cerrojo que usa la
+       pestaña ARCAC— y al resolver se repinta; si falla, la página se queda sin
+       esa fila en vez de reintentar en bucle. */
+    if(!DATA_ARCAC.length && _arcacTablaEstado === 'sin-cargar'){
+      _arcacTablaEstado = 'cargando';
+      loadARCAC().then(fc=>{
+        construirDatosArcac(fc);
+        _arcacTablaEstado = 'listo';
+        if(state.tab === 'ANALISIS') renderDashboard();
+      }).catch(()=>{ _arcacTablaEstado = 'listo'; });
+    }
   } else if(g.id==='ZP'){
     dash.innerHTML = renderZonaPatrimonioPage();
     tblSec.style.display = 'none';
@@ -2494,6 +2535,12 @@ function renderMetasPage(){
   return renderMetaComparable();
 }
 
+/* Orden de las dos tablas de brechas. Vive fuera de renderAnalisisPage porque
+   la página se vuelve a pintar completa en cada clic y el estado tiene que
+   sobrevivir. Arranca por fecha ascendente: lo más viejo primero, que es la
+   razón de ser de ambas tablas. */
+const ORD_ANALISIS = { b2:{k:'fecha', dir:1}, b3:{k:'fecha', dir:1} };
+
 /* ═══ Análisis · Brechas y distribución ═══════════════════════════════
    Reescrito el 11-sep-2026. Lo que había mezclaba dos cosas: el chip decía
    «Brechas y distribución» pero la página entregaba composición y cronología,
@@ -2507,6 +2554,33 @@ function renderAnalisisPage(){
   const totArea = sum(DATA,'superficie');
   const pct     = (n, d) => d ? (n/d*100) : 0;
   const anio    = iso => (String(iso||'').match(/^(\d{4})/)||[])[1] || null;
+  /* «AVA · Barranca» se lee mejor en dos columnas que en una cadena: el tipo
+     ordena y el subtipo precisa. Para ANP el subtipo es la jurisdicción
+     (Local / Federal); para AVA, la clase de área (Bosque Urbano / Barranca). */
+  const subtipo = d => String(d.grupo||'').split(' · ')[1] || d.jurisdiccion || '—';
+  const celdasTipo = d => `<td><span class="tag tag-${d.tipo}">${d.tipo}</span></td>
+          <td><span class="grp-mini" style="color:${GROUP_COLORS[d.grupo]||'var(--ink-2)'}">${subtipo(d)}</span></td>`;
+
+  /* Orden por columna. «Antigüedad» es la fecha del revés —más viejo, más
+     años—, así que comparte clave y gira el sentido: sin eso, las dos columnas
+     de la misma tabla se contradirían. */
+  const ordenar = (arr, est, campoFecha) => {
+    const acc = ({ nombre:d=>d.nombre, tipo:d=>d.tipo, subtipo:d=>subtipo(d),
+                   fecha:d=>d[campoFecha]||'', antig:d=>d[campoFecha]||'',
+                   sup:d=>+d.superficie||0 })[est.k] || (d=>d.nombre);
+    const giro = est.k==='antig' ? -1 : 1;
+    return [...arr].sort((a,b)=>{
+      const A=acc(a), B=acc(b);
+      const c = est.k==='sup' ? A-B : String(A).localeCompare(String(B),'es');
+      return c * est.dir * giro;
+    });
+  };
+  /* Encabezado ordenable: clicable, alcanzable con teclado y con aria-sort para
+     que un lector de pantalla anuncie por dónde va el orden. */
+  const thOrd = (est, k, txt, der) =>
+    `<th scope="col" data-ord="${k}" tabindex="0" class="th-ord${est.k===k?' act':''}"` +
+    `${der?' style="text-align:right"':''} aria-sort="${est.k===k?(est.dir===1?'ascending':'descending'):'none'}">` +
+    `${txt}<span class="ord-flecha">${est.k===k ? (est.dir===1?'▲':'▼') : '▲'}</span></th>`;
   const ANIO_HOY = new Date().getFullYear();
 
   const GRUPOS_INV = GROUPS.filter(g=>['BU','BR','ANPL','ANPF'].includes(g.id));
@@ -2546,18 +2620,35 @@ function renderAnalisisPage(){
   const ALC16 = ['Álvaro Obregón','Azcapotzalco','Benito Juárez','Coyoacán','Cuajimalpa de Morelos',
     'Cuauhtémoc','Gustavo A. Madero','Iztacalco','Iztapalapa','La Magdalena Contreras','Miguel Hidalgo',
     'Milpa Alta','Tláhuac','Tlalpan','Venustiano Carranza','Xochimilco'];
+  const alcVacia = () => ({'AVA · Bosque Urbano':0,'AVA · Barranca':0,'ANP · Local':0,
+                           'ANP · Federal':0,'ARCAC':0,total:0,sup:0,supInv:0});
   const alcStats = {};
   DATA.forEach(d => explode([d],'alcaldia').forEach(a=>{
     const k = a.split(' (')[0].trim(); if(!k) return;
-    if(!alcStats[k]) alcStats[k] = {'AVA · Bosque Urbano':0,'AVA · Barranca':0,'ANP · Local':0,'ANP · Federal':0,total:0,sup:0};
-    if(alcStats[k][d.grupo] !== undefined){ alcStats[k][d.grupo]++; alcStats[k].total++; alcStats[k].sup += +d.superficie||0; }
+    if(!alcStats[k]) alcStats[k] = alcVacia();
+    if(alcStats[k][d.grupo] !== undefined){
+      alcStats[k][d.grupo]++; alcStats[k].total++;
+      alcStats[k].sup += +d.superficie||0; alcStats[k].supInv += +d.superficie||0;
+    }
   }));
+  /* ARCAC entra al reparto territorial pero en su propio segmento y con su
+     propia cuenta: suma hectáreas a la demarcación sin sumarse al inventario.
+     `supInv` conserva la superficie de las 66 para lo que sí debe excluirla. */
+  DATA_ARCAC.forEach(d=>{
+    const k = String(d.alcaldia||'').split(' (')[0].trim(); if(!k) return;
+    if(!alcStats[k]) alcStats[k] = alcVacia();
+    alcStats[k]['ARCAC']++; alcStats[k].total++; alcStats[k].sup += +d.superficie||0;
+  });
   const alcSorted = Object.entries(alcStats).sort((a,b)=>b[1].sup - a[1].sup);
   const maxAlcSup = Math.max(...alcSorted.map(([,s])=>s.sup));
   const sinAreas  = ALC16.filter(a=>!alcStats[a]);
 
   /* ── Composición por grupo ─────────────────────────────────────────── */
-  const maxSupGrupo = Math.max(...GRUPOS_INV.map(g=>sum(DATA.filter(d=>d.grupo===g.key),'superficie')));
+  const supArcac = sum(DATA_ARCAC,'superficie');
+  /* La barra compara hectáreas, así que ARCAC entra en la escala: es la capa
+     más extensa y esconderlo daría una idea falsa del territorio. Lo que NO
+     entra es el porcentaje, porque el 100% son las 66 áreas del inventario. */
+  const maxSupGrupo = Math.max(supArcac, ...GRUPOS_INV.map(g=>sum(DATA.filter(d=>d.grupo===g.key),'superficie')));
   const compRows = GRUPOS_INV.map(g=>{
     const arr = DATA.filter(d=>d.grupo===g.key);
     const s = sum(arr,'superficie');
@@ -2566,12 +2657,20 @@ function renderAnalisisPage(){
       <td class="grp"><span class="chip ${g.cls}"></span>${g.label}</td>
       <td class="num">${fmtInt(arr.length)}</td>
       <td class="num">${fmt(s)}</td>
-      <td class="num">${fmt(s/arr.length)}</td>
       <td class="num">${pm} / ${arr.length}</td>
       <td style="min-width:120px"><div class="share"><div class="share-fill ${g.cls}" style="width:${pct(s,maxSupGrupo)}%"></div></div></td>
       <td class="num">${pct(s,totArea).toFixed(1)}%</td>
     </tr>`;
   }).join('');
+  const filaArcac = DATA_ARCAC.length ? `<tr class="fila-complementaria">
+      <td class="grp"><span class="chip" style="background:var(--arcac-com)"></span>ARCAC
+        <span style="color:var(--muted);font-size:var(--fs-xs)"> · capa complementaria</span></td>
+      <td class="num">${fmtInt(DATA_ARCAC.length)}</td>
+      <td class="num">${fmt(supArcac)}</td>
+      <td class="num" title="Los núcleos agrarios no tienen programa de manejo">n/a</td>
+      <td style="min-width:120px"><div class="share"><div class="share-fill" style="width:${pct(supArcac,maxSupGrupo)}%;background:var(--arcac-com)"></div></div></td>
+      <td class="num" title="No forma parte de las 66 áreas: no entra en el porcentaje">—</td>
+    </tr>` : '';
 
   return `
     <div class="panel" style="border-left:3px solid var(--guinda)">
@@ -2642,15 +2741,19 @@ function renderAnalisisPage(){
         programas con fecha registrada, ${pmViejos.length} se publicaron hace una década o más y operan
         sobre diagnósticos anteriores a la ciudad actual. El dato no implica caducidad jurídica: señala
         a qué áreas conviene mirar primero en una revisión.</p>
-      ${pmViejos.length ? `<div class="comp-scroll"><table class="comp">
-        <thead><tr><th scope="col">Área</th><th scope="col">Grupo</th>
-          <th scope="col" style="text-align:right">Publicado</th>
-          <th scope="col" style="text-align:right">Antigüedad</th>
-          <th scope="col" style="text-align:right">Superficie</th></tr></thead>
-        <tbody>${pmViejos.map(d=>`<tr>
+      ${pmViejos.length ? `<div class="comp-scroll"><table class="comp" data-tabla="b2">
+        <thead><tr>
+          ${thOrd(ORD_ANALISIS.b2,'nombre','Área')}
+          ${thOrd(ORD_ANALISIS.b2,'tipo','Tipo')}
+          ${thOrd(ORD_ANALISIS.b2,'subtipo','Subtipo')}
+          ${thOrd(ORD_ANALISIS.b2,'fecha','Publicado',1)}
+          ${thOrd(ORD_ANALISIS.b2,'antig','Antigüedad',1)}
+          ${thOrd(ORD_ANALISIS.b2,'sup','Superficie',1)}
+        </tr></thead>
+        <tbody>${ordenar(pmViejos, ORD_ANALISIS.b2, 'fecha_pm_iso').map(d=>`<tr>
           <td><b>${d.nombre}</b></td>
-          <td><span class="grp-mini" style="color:${GROUP_COLORS[d.grupo]||'var(--ink-2)'}">${d.grupo}</span></td>
-          <td class="num">${anio(d.fecha_pm_iso)}</td>
+          ${celdasTipo(d)}
+          <td class="num" title="${d.fecha_pm ? 'Publicado el '+d.fecha_pm : ''}">${anio(d.fecha_pm_iso)}</td>
           <td class="num">${ANIO_HOY - +anio(d.fecha_pm_iso)} años</td>
           <td class="num">${fmt(d.superficie)} ha</td></tr>`).join('')}</tbody>
       </table></div>` : '<p class="panel-intro">Todos los programas vigentes se publicaron en la última década.</p>'}
@@ -2663,19 +2766,23 @@ function renderAnalisisPage(){
         ? `Son ${viejoSinPM.length}${viejoSinPM.every(d=>d.jurisdiccion==='Federal')
             ? ', todas de jurisdicción federal, lo que sitúa la gestión del rezago en la coadministración con SEMARNAT y CONANP más que en una decisión local' : ''}.`
         : 'No hay ninguna: todas las áreas con decreto anterior a ' + (ANIO_HOY-30) + ' cuentan con programa.'}</p>
-      ${viejoSinPM.length ? `<div class="comp-scroll"><table class="comp">
-        <thead><tr><th scope="col">Área</th><th scope="col">Grupo</th>
-          <th scope="col" style="text-align:right">Decreto</th>
-          <th scope="col" style="text-align:right">Antigüedad</th>
-          <th scope="col" style="text-align:right">Superficie</th></tr></thead>
-        <tbody>${viejoSinPM.map(d=>`<tr>
+      ${viejoSinPM.length ? `<div class="comp-scroll"><table class="comp" data-tabla="b3">
+        <thead><tr>
+          ${thOrd(ORD_ANALISIS.b3,'nombre','Área')}
+          ${thOrd(ORD_ANALISIS.b3,'tipo','Tipo')}
+          ${thOrd(ORD_ANALISIS.b3,'subtipo','Subtipo')}
+          ${thOrd(ORD_ANALISIS.b3,'fecha','Decreto',1)}
+          ${thOrd(ORD_ANALISIS.b3,'antig','Antigüedad',1)}
+          ${thOrd(ORD_ANALISIS.b3,'sup','Superficie',1)}
+        </tr></thead>
+        <tbody>${ordenar(viejoSinPM, ORD_ANALISIS.b3, 'fecha_decreto_iso').map(d=>`<tr>
           <td><b>${d.nombre}</b></td>
-          <td><span class="grp-mini" style="color:${GROUP_COLORS[d.grupo]||'var(--ink-2)'}">${d.grupo}</span></td>
-          <td class="num" title="${d.fecha_decreto||''}">${anio(d.fecha_decreto_iso)}</td>
+          ${celdasTipo(d)}
+          <td class="num" title="${d.fecha_decreto ? 'Decretada el '+d.fecha_decreto : ''}">${anio(d.fecha_decreto_iso)}</td>
           <td class="num">${ANIO_HOY - +anio(d.fecha_decreto_iso)} años</td>
           <td class="num">${fmt(d.superficie)} ha</td></tr>`).join('')}</tbody>
         <tfoot><tr style="border-top:2px solid var(--guinda)">
-          <td colspan="4" style="font-weight:600">Superficie sin instrumento rector</td>
+          <td colspan="5" style="font-weight:600">Superficie sin instrumento rector</td>
           <td class="num" style="font-weight:600">${fmt(sum(viejoSinPM,'superficie'))} ha</td>
         </tr></tfoot>
       </table></div>` : ''}
@@ -2706,27 +2813,27 @@ function renderAnalisisPage(){
     <div class="panel">
       <div class="panel-title">Composición</div>
       <h3>Los cuatro grupos del <em>inventario</em></h3>
-      <p class="panel-intro">Número de áreas, superficie acumulada, tamaño medio, cobertura de programa y
-        peso en el total. Las superficies son las decretadas; la suma de las cuatro excede la superficie
-        realmente protegida, porque hay predios cubiertos por dos instrumentos a la vez.</p>
+      <p class="panel-intro">Las superficies son las decretadas; la suma de las cuatro excede la
+        superficie realmente protegida, porque hay predios cubiertos por dos instrumentos a la vez.
+        <b>ARCAC aparece bajo el total, no dentro</b>: son núcleos agrarios, no áreas del inventario,
+        así que suman hectáreas comparables pero no entran en el 100% ni en los porcentajes.</p>
       <div class="comp-scroll" style="margin-top:16px"><table class="comp">
         <thead><tr><th scope="col">Grupo</th>
           <th scope="col" style="text-align:right">Áreas</th>
           <th scope="col" style="text-align:right">Superficie</th>
-          <th scope="col" style="text-align:right">Tamaño medio</th>
           <th scope="col" style="text-align:right">Con programa</th>
           <th scope="col">Proporción</th>
           <th scope="col" style="text-align:right">% total</th></tr></thead>
-        <tbody>${compRows}</tbody>
-        <tfoot><tr style="border-top:2px solid var(--guinda)">
-          <td class="grp" style="font-weight:600">Total</td>
-          <td class="num" style="font-weight:600">${fmtInt(total)}</td>
-          <td class="num" style="font-weight:600">${fmt(totArea)}</td>
-          <td class="num" style="font-weight:600">${fmt(totArea/total)}</td>
-          <td class="num" style="font-weight:600">${conPM.length} / ${total}</td>
-          <td></td>
-          <td class="num" style="font-weight:600">100%</td>
-        </tr></tfoot>
+        <tbody>${compRows}
+          <tr style="border-top:2px solid var(--guinda)">
+            <td class="grp" style="font-weight:600">Total del inventario</td>
+            <td class="num" style="font-weight:600">${fmtInt(total)}</td>
+            <td class="num" style="font-weight:600">${fmt(totArea)}</td>
+            <td class="num" style="font-weight:600">${conPM.length} / ${total}</td>
+            <td></td>
+            <td class="num" style="font-weight:600">100%</td>
+          </tr>
+          ${filaArcac}</tbody>
       </table></div>
     </div>
 
@@ -2739,11 +2846,13 @@ function renderAnalisisPage(){
 
       <div class="alc-legend">
         ${GRUPOS_INV.map(g=>`<span class="alc-leg-item"><span class="alc-leg-swatch" style="background:${GROUP_COLORS[g.key]}"></span>${g.label}</span>`).join('')}
+        ${DATA_ARCAC.length ? `<span class="alc-leg-item"><span class="alc-leg-swatch" style="background:var(--arcac-com)"></span>ARCAC <span style="color:var(--muted)">· no suma al inventario</span></span>` : ''}
       </div>
 
       <div class="alc-stacked">
         ${alcSorted.map(([k,s])=>{
-          const segs = GRUPOS_INV.map(g=>({n:s[g.key], color:GROUP_COLORS[g.key], label:g.label}))
+          const segs = GRUPOS_INV.map(g=>({n:s[g.key], color:GROUP_COLORS[g.key], label:g.label})
+                       ).concat([{n:s['ARCAC']||0, color:'var(--arcac-com)', label:'ARCAC'}])
                                  .filter(x=>x.n>0);
           return `<div class="alc-row">
             <span class="alc-name">${k}</span>
@@ -2832,17 +2941,22 @@ function renderCronologiaSection(){
   // Periodos de gobierno electo de la Ciudad de México (desde 1997)
   // Fechas como decimal (año + fracción) para posicionamiento en el eje continuo
   const toDec = (y,m,d) => y + (m-1)/12 + (d-1)/365;
+  /* CINCO ADMINISTRACIONES, NO DIEZ (11 sep 2026).
+     Antes se listaban las diez jefaturas desde 1997, interinatos incluidos. Dos
+     problemas: los tres interinatos —Encinas, Amieva, Batres— partían en dos la
+     administración a la que pertenecen y repartían sus decretos entre dos
+     barras, de modo que ninguna de las dos decía cuánto se decretó en ese
+     sexenio; y Cárdenas y Robles ocupaban la mitad izquierda del gráfico sin un
+     solo decreto que mostrar.
+     Ahora cada barra es un PERIODO COMPLETO a nombre de quien lo encabezó: el
+     interinato se cuenta dentro del periodo que termina, que es como se lee un
+     sexenio. 1997–2000 sale porque no tiene decretos que reportar. */
   const gobiernos = [
-    {nombre:'C. Cárdenas',     start:toDec(1997,12,5),  end:toDec(1999,9,28),  full:'Cuauhtémoc Cárdenas',      color:'#7d6e8f'},
-    {nombre:'R. Robles',       start:toDec(1999,9,29),  end:toDec(2000,12,4),  full:'Rosario Robles',           color:'#a08bb5'},
-    {nombre:'AMLO',            start:toDec(2000,12,5),  end:toDec(2005,7,29),  full:'Andrés Manuel López Obrador', color:'#7d6e8f'},
-    {nombre:'A. Encinas',      start:toDec(2005,8,2),   end:toDec(2006,12,4),  full:'Alejandro Encinas',        color:'#a08bb5'},
-    {nombre:'M. Ebrard',       start:toDec(2006,12,5),  end:toDec(2012,12,4),  full:'Marcelo Ebrard',           color:'#7d6e8f'},
-    {nombre:'M.Á. Mancera',    start:toDec(2012,12,5),  end:toDec(2018,3,29),  full:'Miguel Ángel Mancera',     color:'#a08bb5'},
-    {nombre:'J.R. Amieva',     start:toDec(2018,3,29),  end:toDec(2018,12,4),  full:'José Ramón Amieva',        color:'#7d6e8f'},
-    {nombre:'C. Sheinbaum',    start:toDec(2018,12,5),  end:toDec(2023,6,16),  full:'Claudia Sheinbaum',        color:'var(--guinda)'},
-    {nombre:'M. Batres',       start:toDec(2023,6,16),  end:toDec(2024,10,4),  full:'Martí Batres',             color:'var(--guinda-900)'},
-    {nombre:'C. Brugada',      start:toDec(2024,10,5),  end:toDec(2030,10,5),  full:'Clara Brugada',            color:'var(--guinda)'}
+    {nombre:'AMLO',         start:toDec(2000,12,5), end:toDec(2006,12,4),  full:'Andrés Manuel López Obrador', color:'#7d6e8f'},
+    {nombre:'M. Ebrard',    start:toDec(2006,12,5), end:toDec(2012,12,4),  full:'Marcelo Ebrard',              color:'#a08bb5'},
+    {nombre:'M.Á. Mancera', start:toDec(2012,12,5), end:toDec(2018,12,4),  full:'Miguel Ángel Mancera',        color:'#7d6e8f'},
+    {nombre:'C. Sheinbaum', start:toDec(2018,12,5), end:toDec(2024,10,4),  full:'Claudia Sheinbaum',           color:'var(--guinda-900)'},
+    {nombre:'C. Brugada',   start:toDec(2024,10,5), end:toDec(2030,10,5),  full:'Clara Brugada',               color:'var(--guinda)'}
   ];
 
   // Rango total del eje (en años decimales)
@@ -2853,7 +2967,7 @@ function renderCronologiaSection(){
     <div class="panel" style="margin-top:18px">
       <div class="panel-title">Cronología · Línea de tiempo de decretos</div>
       <h3>Evolución <em>histórica</em> del sistema de áreas protegidas</h3>
-      <p class="panel-intro">Distribución temporal de los <b>${conFecha.length} decretos</b> de creación de áreas protegidas, en un periodo de <b>${maxDec - minDec + 10} años</b> de política ambiental local. Pico histórico: <b>${picos[0]?.decada || '—'}s</b> (${picos[0]?.count || 0} decretos) · Promedio en décadas activas: <b>${promedioActivas} decretos</b> · ${decadasActivas.length} de ${todasDecadas.length} décadas con actividad${decadasVacias > 0 ? ` (${decadasVacias} sin decretos)` : ''}. Pase el cursor sobre cada barra para ver el detalle.</p>
+      <p class="panel-intro">Distribución temporal de los <b>${conFecha.length} decretos</b> de creación de áreas protegidas, en un periodo de <b>${maxDec - minDec + 10} años</b> de política ambiental local. Pico histórico: <b>${picos[0]?.decada || '—'}s</b> (${picos[0]?.count || 0} decretos) · Promedio en décadas activas: <b>${promedioActivas} decretos</b> · ${decadasActivas.length} de ${todasDecadas.length} décadas con actividad${decadasVacias > 0 ? ` (${decadasVacias} sin decretos)` : ''}. Toque una barra —o pase el cursor— para ver qué áreas se decretaron.</p>
 
       <div class="cronologia-container">
         <div class="cronologia-chart" id="cronologiaChart">
@@ -2864,7 +2978,8 @@ function renderCronologiaSection(){
             return `
               <div class="cron-bar-col" data-decada="${dec}">
                 <div class="cron-bar-count">${arr.length || ''}</div>
-                <div class="cron-bar" style="height:${heightPct}%" data-count="${arr.length}">
+                <div class="cron-bar" style="height:${heightPct}%" data-count="${arr.length}"
+                     ${arr.length ? `tabindex="0" role="button" aria-label="Década ${dec}–${dec+9}: ${arr.length} ${arr.length===1?'decreto':'decretos'}"` : ''}>
                   ${arr.length > 0 ? `<div class="cron-bar-tooltip">
                     <div class="cron-tt-decada">Década ${dec}–${dec+9}</div>
                     <div class="cron-tt-count">${arr.length} ${arr.length===1?'decreto':'decretos'}</div>
@@ -2915,7 +3030,8 @@ function renderCronologiaSection(){
               return `
                 <div class="cron-gob-col" data-gob="${g.nombre}">
                   <div class="cron-gob-count">${g.count || ''}</div>
-                  <div class="cron-gob-bar" style="height:${heightPct}%;background:${g.color}" data-count="${g.count}">
+                  <div class="cron-gob-bar" style="height:${heightPct}%;background:${g.color}" data-count="${g.count}"
+                       tabindex="0" role="button">
                     ${g.count > 0 ? `<div class="cron-gob-tooltip">
                       <div class="cron-gob-tt-title">${g.full}</div>
                       <div class="cron-gob-tt-period">${fechaInicio} → ${fechaFin}</div>
@@ -6467,6 +6583,30 @@ new MutationObserver(muts=>{
   if(!hayFilas) return;
   _navPend = true;
   requestAnimationFrame(()=>{ _navPend = false; _marcarNavegables(); });
+/* Orden de las tablas de brechas. Delegado en document porque
+   renderAnalisisPage() rehace su propio HTML en cada clic: un listener puesto
+   sobre los <th> moriría con el primer reordenamiento. */
+function _ordenarBrecha(th){
+  const tabla = th.closest('table[data-tabla]');
+  const est = tabla && ORD_ANALISIS[tabla.dataset.tabla];
+  if(!est) return;
+  if(est.k === th.dataset.ord) est.dir *= -1; else { est.k = th.dataset.ord; est.dir = 1; }
+  const cual = tabla.dataset.tabla;
+  renderDashboard();
+  /* Devolver el foco al mismo encabezado: sin esto, quien navega con teclado
+     vuelve al principio del documento en cada reordenamiento. */
+  const nuevo = document.querySelector('table[data-tabla="'+cual+'"] th[data-ord="'+est.k+'"]');
+  if(nuevo) nuevo.focus();
+}
+document.addEventListener('click', e=>{
+  const th = e.target.closest && e.target.closest('#dashboard th[data-ord]');
+  if(th) _ordenarBrecha(th);
+});
+document.addEventListener('keydown', e=>{
+  if(e.key !== 'Enter' && e.key !== ' ') return;
+  const th = e.target.closest && e.target.closest('#dashboard th[data-ord]');
+  if(th){ e.preventDefault(); _ordenarBrecha(th); }
+});
 }).observe(document.body, {childList:true, subtree:true});
 _marcarNavegables();
 
@@ -6684,6 +6824,6 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
 </style>
 <div class="cinta-borrador" role="note"><b>Versión en revisión · rediseño v38.</b>
   La página oficial es <a href="./">la portada del sitio</a>.
-  <span class="ver">sia-v35-2026-09-11p</span></div>
+  <span class="ver">sia-v35-2026-09-11q</span></div>
 </body>
 </html>

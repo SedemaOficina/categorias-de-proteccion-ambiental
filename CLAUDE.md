@@ -422,6 +422,37 @@ Lo que el rehacer sacó a la luz, con el inventario de hoy:
 - **Sin semáforo.** Las tarjetas de encabezado usaban rojo y azul; el azul es «ANP Federal» en todo
   el tablero. Ahora guinda para lo que exige decisión y dorado para lo que contextualiza.
 
+**Ajustes del 11 sep, tarde:**
+- **Brechas 2 y 3 · tablas ordenables.** «Grupo» se partió en **Tipo** (AVA / ANP) y **Subtipo**
+  (Bosque Urbano · Barranca · Local · Federal): el tipo ordena y el subtipo precisa. Todas las
+  columnas ordenan al clic, con `aria-sort`, foco de teclado y el foco devuelto al mismo
+  encabezado tras reordenar. «Antigüedad» comparte clave con la fecha y **gira el sentido** —más
+  viejo, más años—; sin eso, dos columnas de la misma tabla se contradirían. El estado
+  (`ORD_ANALISIS`) vive fuera de `renderAnalisisPage` porque la página se repinta entera en cada
+  clic, y el manejador va delegado en `document` por la misma razón. El año lleva la fecha
+  completa en el `title`.
+- **Composición.** Fuera «Tamaño medio». **ARCAC entra como fila, bajo el total y no dentro**: 30
+  núcleos y 22,567.70 ha, `n/a` en programa de manejo y `—` en el porcentaje, porque el 100% son
+  las 66 áreas del inventario. La barra de proporción **sí** lo incluye en su escala: compara
+  hectáreas, y ARCAC es la capa más extensa —esconderlo daría una idea falsa del territorio—.
+- **Reparto por alcaldía.** ARCAC aparece como un segmento más, con su color de capa y la leyenda
+  «no suma al inventario». `supInv` conserva aparte la superficie de las 66 para lo que deba
+  excluirlo. La capa se pide una sola vez al abrir Análisis, con el mismo cerrojo
+  `_arcacTablaEstado` de la pestaña ARCAC.
+- **Cronología por administración: cinco periodos, no diez.** Los tres interinatos —Encinas,
+  Amieva, Batres— partían en dos la administración a la que pertenecen y repartían sus decretos
+  entre dos barras, de modo que ninguna decía cuánto se decretó en ese sexenio; y Cárdenas y
+  Robles ocupaban media gráfica sin un solo decreto. Ahora cada barra es un **periodo completo** a
+  nombre de quien lo encabezó (AMLO, Ebrard, Mancera, Sheinbaum, Brugada), con el interinato
+  contado dentro del periodo que cierra. 1997–2000 sale por no tener decretos que reportar.
+- **Tooltips de las cronologías en celular.** En un teléfono no hay «pasar el cursor» y el globo
+  flotante —170 px sobre una barra de 20 px, dentro de un panel que se desplaza en horizontal—
+  salía cortado. Las barras son ahora `tabindex="0"` con `role="button"` y el globo se muestra
+  también en `:focus`; en ≤760 px deja de flotar y se ancla al pie de la pantalla
+  (`position:fixed`, ancho completo, `max-height:44vh` con desplazamiento propio, por encima de la
+  barra de destinos). Se abre al tocar y se cierra al tocar fuera. El texto del panel dejó de
+  decir «pase el cursor».
+
 **Al validar:** la copia de trabajo se prueba en Chromium (Playwright) interceptando la red.
 Hasta el 11 de septiembre se usaba un doble de Leaflet, que no pinta nada; **ahora se sirve
 Leaflet 1.9.4 real desde `npm` y tejas PNG sintéticas**, así que los mapas SÍ se verifican:
