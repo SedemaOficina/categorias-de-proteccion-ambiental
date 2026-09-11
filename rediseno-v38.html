@@ -223,7 +223,6 @@
      y abrir una ficha —el flujo central— es imposible sin raton. */
   tr[tabindex]:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px}
   .ubicar-sugerencias .item:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px;background:var(--bg-2)}
-  .ubicar-kbd{display:none}
   /* Escritorio: el modulo se colapsa a una franja de una linea.
      El boton de GPS se oculta porque en escritorio navigator.geolocation
      resuelve por IP y WiFi (cientos de metros a kilometros): con poligonos
@@ -243,8 +242,6 @@
     .ubicar-row{flex:1;min-width:0}
     .ubicar-input-wrap input{height:30px;font-size:var(--fs-sm);border-radius:4px 0 0 4px}
     .ubicar-go{width:34px;border-radius:0 4px 4px 0}
-    .ubicar-kbd{display:inline-block;flex:0 0 auto;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);
-      color:var(--muted);border:1px solid var(--line);border-radius:var(--r-ui);padding:2px 6px;white-space:nowrap}
   }
 
   @media (max-width:760px){
@@ -359,7 +356,6 @@
   }
   .dest-ubicar .ubicar-input-wrap input{height:48px;font-size:var(--fs-md)}
   .dest-ubicar .ubicar-go{height:48px}
-  .dest-ubicar .ubicar-kbd{display:none}
 
   @media (max-width:760px){
     .destbar{padding:3px;gap:2px}
@@ -1070,6 +1066,12 @@
   /* Mapa Leaflet dentro del drawer */
   .map-block{margin-top:8px;margin-bottom:22px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-soft);position:relative;background:var(--bg-2)}
   /* Contenedor de controles flotantes (toggle + fullscreen) */
+  /* Leaflet pone sus cuatro esquinas en z-index 1000 —por encima de nuestra
+     barra de destinos fija (900)—, así que la atribución y los controles se
+     quedaban los toques destinados a la navegación cuando el mapa llegaba al
+     pie de la pantalla. Se bajan a 800: siguen por encima de los globos de
+     Leaflet (700) y ya no compiten con la interfaz de la página. */
+  .leaflet-top, .leaflet-bottom{z-index:800}
   .map-block-controls-floating{position:absolute;top:10px;right:10px;z-index:var(--z-flotante);display:flex;gap:6px;align-items:stretch}
   .map-block-controls-floating .map-block-toggle{position:static;box-shadow:var(--sh-2);background:var(--card)}
   /* Botón de pantalla completa */
@@ -1262,6 +1264,11 @@
     }
   }
   .map-filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;margin-bottom:10px}
+  /* «Ubicar» esconde los chips pero conserva el contenedor: de él cuelga el
+     interruptor de Suelo de Conservación, que es quien monta esa capa en el
+     mapa. Quitarlo del DOM dejaría la vista de campo sin SC dibujado.
+     [hidden] no bastaba: .map-filters declara display:flex y le gana. */
+  .map-filters--oculto{display:none !important}
   .map-filter-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 13px;background:#fff;border:1.5px solid var(--line);border-radius:var(--r-ui);font-size:var(--fs-sm);color:var(--ink-2);cursor:pointer;font-weight:500;font-family:'Roboto',sans-serif;transition:all .15s}
   .map-filter-chip:hover{border-color:var(--ink-2)}
   .map-filter-chip .chip-dot{width:10px;height:10px;border-radius:50%;background:var(--chip-color);display:inline-block;flex-shrink:0;border:1.5px solid var(--chip-color)}
@@ -1585,7 +1592,6 @@
         <div class="ubicar-sugerencias" id="ubicarSug" role="listbox" aria-label="Sugerencias" hidden></div>
       </div>
     </div>
-    <span class="ubicar-kbd" aria-hidden="true">Ctrl K</span>
   </section>
 
   <section id="ubicarResultado" hidden></section>
@@ -1871,6 +1877,10 @@ const GROUPS = [
   {id:'BR',      label:'Barrancas',       cls:'br',     key:'AVA · Barranca'},
   {id:'ANPL',    label:'ANP Locales',     cls:'anpl',   key:'ANP · Local'},
   {id:'ANPF',    label:'ANP Federales',   cls:'anpf',   key:'ANP · Federal'},
+  /* Corte transversal, no una categoría más: son ANP que ya están contadas en
+     su grupo. `key:null` lo deja fuera de cualquier filtro por grupo; quien
+     decide qué filas entran es currentData(). */
+  {id:'COADMIN', label:'En coadministración', cls:'coadmin', key:null},
   {id:'ZP',      label:'Zona Patrimonio', cls:'zp',     key:'ZONA_PATRIMONIO'},
   {id:'ARCAC',   label:'ARCAC',           cls:'arcac',  key:'ARCAC'},
   {id:'TRASLAPES',label:'Traslapes',      cls:'traslapes',key:'TRASLAPES'},
@@ -2162,6 +2172,10 @@ function construirDatosArcac(fc){
 
 const currentData = () => {
   if(state.tab==='ARCAC') return DATA_ARCAC;
+  /* La coadministración no es un grupo: es un subconjunto de las 66 marcado por
+     el convenio SEMARNAT–CONANP–CDMX 2025. Sigue contando en su categoría; aquí
+     solo se aísla para verlo junto. */
+  if(state.tab==='COADMIN') return DATA.filter(d=>isCoadmin(d.nombre));
   if(state.tab==='ALL' || isSpecialTab(state.tab)) return DATA;
   return DATA.filter(d=>d.grupo===currentGroup().key);
 };
@@ -2184,20 +2198,22 @@ const DEST_ICONS = {
    justificaba un cuarto del ancho de la barra. */
 const DESTINOS = [
   { id:'UBICAR',     label:'Ubicar',     sub:[] },
-  { id:'INVENTARIO', label:'Inventario', sub:['ALL','BU','BR','ANPL','ANPF','ARCAC','ZP'] },
+  { id:'INVENTARIO', label:'Inventario', sub:['ALL','BU','BR','ANPL','ANPF','COADMIN','ARCAC','ZP'] },
   { id:'ANALITICA',  label:'Análisis',   sub:['ANALISIS','TRASLAPES','METAS','LEGAL'] },
 ];
 
 /* Punto de color del subfiltro: solo donde el color significa territorio. */
 const SUB_SW = {
   BU:'var(--bu)', BR:'var(--br)', ANPL:'var(--anpl)', ANPF:'var(--anpf)',
-  ZP:'#444441', ARCAC:'var(--arcac-com)', TRASLAPES:'var(--magenta)'
+  ZP:'#444441', ARCAC:'var(--arcac-com)', TRASLAPES:'var(--magenta)',
+  COADMIN:'var(--azul)'
 };
 
 /* Etiqueta corta del subfiltro; el número va aparte para poder atenuarlo. */
 function subLabel(id){
   return ({ ALL:'Todas', BU:'Bosques Urbanos', BR:'Barrancas', ANPL:'ANP Locales',
-            ANPF:'ANP Federales', ZP:'Zona Patrimonio', ARCAC:'ARCAC',
+            ANPF:'ANP Federales', COADMIN:'En coadministración',
+            ZP:'Zona Patrimonio', ARCAC:'ARCAC',
             TRASLAPES:'Traslapes', ANALISIS:'Brechas y distribución',
             METAS:'Metas', LEGAL:'Marco jurídico' })[id] || id;
 }
@@ -2206,6 +2222,7 @@ function subCount(id){
   if(id==='ZP') return '4 designaciones';
   if(id==='ARCAC') return '30';
   if(id==='TRASLAPES') return '35 pares';
+  if(id==='COADMIN') return fmtInt(DATA.filter(d=>isCoadmin(d.nombre)).length);
   if(id==='ANALISIS' || id==='METAS' || id==='LEGAL') return '';
   const g = GROUPS.find(x=>x.id===id);
   return g ? fmtInt(DATA.filter(d=>d.grupo===g.key).length) : '';
@@ -2270,10 +2287,39 @@ function limpiarFiltros(){
 function populateFilters(){
   if(isSpecialTab(state.tab)) return;
   const subset = currentData();
-  const cats = [...new Set(subset.map(d=>d.categoria))].sort((a,b)=>a.localeCompare(b,'es'));
-  const alcs = [...new Set(explode(subset,'alcaldia'))].sort((a,b)=>a.localeCompare(b,'es'));
-  document.getElementById('fCat').innerHTML = '<option value="">Todas</option>'+cats.map(c=>`<option>${c}</option>`).join('');
-  document.getElementById('fAlc').innerHTML = '<option value="">Todas</option>'+alcs.map(a=>`<option>${a}</option>`).join('');
+
+  /* ── Desplegables dependientes ────────────────────────────────────────
+     Cada desplegable ofrece los valores que siguen existiendo DESPUÉS de
+     aplicar los demás filtros: con Tipo = ANP, «Subcategoría» ya no ofrece
+     Barranca ni Bosque Urbano, que no devolverían ninguna fila. Se excluye el
+     propio filtro del cálculo —si no, cada uno se quedaría con su único valor
+     elegido y no habría cómo cambiarlo—.
+     Y si la selección vigente deja de existir porque otro filtro la dejó fuera,
+     se limpia: un filtro activo que no puede coincidir con nada deja la tabla
+     vacía sin explicar por qué. */
+  const opcionesDe = (id, campo) => {
+    const vivas = filasSalvo(id);
+    const vals = campo === 'alcaldia'
+      ? [...new Set(explode(vivas,'alcaldia'))]
+      : [...new Set(vivas.map(d=>d[campo]).filter(Boolean))];
+    vals.sort((a,b)=>a.localeCompare(b,'es'));
+    if(state[id] && !vals.includes(state[id])){
+      state[id] = '';
+      const e = document.getElementById(id); if(e) e.value = '';
+    }
+    return vals;
+  };
+  const cats = opcionesDe('fCat','categoria');
+  const alcs = opcionesDe('fAlc','alcaldia');
+  const pinta = (id, vals, todas) => {
+    const e = document.getElementById(id); if(!e) return;
+    e.innerHTML = `<option value="">${todas}</option>` + vals.map(v=>`<option>${v}</option>`).join('');
+    e.value = state[id] || '';
+  };
+  pinta('fCat', cats, 'Todas');
+  pinta('fAlc', alcs, 'Todas');
+  pinta('fTipo', opcionesDe('fTipo','tipo'), 'Todos');
+  pinta('fJur',  opcionesDe('fJur','jurisdiccion'), 'Todas');
 
   /* ── Filtros redundantes ──────────────────────────────────────────────
      Un filtro cuyo subconjunto tiene un solo valor posible no filtra nada:
@@ -2361,7 +2407,7 @@ function renderDashboard(){
        queda vacía, y en campo el polígono es la mitad de la respuesta. */
     if(mapSec){
       mapSec.style.display = '';
-      mapSec.innerHTML = renderMapaPage(GROUPS[0]);
+      mapSec.innerHTML = renderMapaPage(GROUPS[0], true);   // limpio: solo el mapa
       ['AVA · Bosque Urbano','AVA · Barranca','ANP · Local','ANP · Federal']
         .forEach(k => state.mapFilters[k] = true);
       setTimeout(() => initGlobalMap(), 100);
@@ -2452,8 +2498,14 @@ function renderDashboard(){
       const allKeys = ['AVA · Bosque Urbano','AVA · Barranca','ANP · Local','ANP · Federal'];
       if(g.id === 'ALL'){
         allKeys.forEach(k => state.mapFilters[k] = true);
+      } else if(g.id === 'COADMIN'){
+        /* Las ocho áreas del convenio son ANP federales: se enciende esa capa y
+           el resaltado, que es lo que las distingue del resto de las nueve. */
+        allKeys.forEach(k => state.mapFilters[k] = (k === 'ANP · Federal'));
+        state.highlightCoadmin = true;
       } else {
         allKeys.forEach(k => state.mapFilters[k] = (k === g.key));
+        state.highlightCoadmin = false;
       }
 
       setTimeout(() => {
@@ -2903,9 +2955,97 @@ function computeAdminStats(desde, hasta){
 /* ============================================================
  * CRONOLOGÍA · sección integrada dentro del tab Análisis
  * ============================================================ */
+/* Gráfica de barras por administración de gobierno. Una sola implementación
+   para dos preguntas —cuántas áreas se decretaron y cuántos programas de manejo
+   se publicaron en cada sexenio—: cambian el campo de fecha y las palabras, no
+   la mecánica. Duplicar el bloque habría dejado dos copias de la misma lógica
+   de rangos que divergirían al primer ajuste. */
+function graficaPorAdministracion(o){
+  const { gobiernos, toDec, registros, campo, eyebrow, titulo, intro,
+          singular, plural, verbo } = o;
+  /* El último día del periodo SÍ pertenece al periodo: la entrega ocurre el 5 de
+     diciembre, así que el 4 todavía es de quien sale. Con el corte abierto
+     (`t < end`) tres registros caían en ningún sexenio —los programas de Vista
+     Hermosa (2012-12-04) y Ecoguardas (2018-12-04) y el decreto de Ejidos de
+     Xochimilco (2006-12-04)— y el pie los reportaba como si fueran anteriores a
+     1997. Los periodos no se traslapan porque cada `end` es la víspera del
+     `start` siguiente. */
+  const dentro = (iso, g) => {
+    if(!iso) return false;
+    const [y,m,d] = iso.split('-').map(Number);
+    const t = toDec(y, m, d);
+    return t >= g.start && t <= g.end;
+  };
+  const filas = gobiernos.map(g=>{
+    const items = registros.filter(r => dentro(r[campo], g));
+    return { ...g, items, count: items.length };
+  });
+  const maxCount = Math.max(...filas.map(g=>g.count), 1);
+  const totalUbicado = filas.reduce((n,g)=>n+g.count, 0);
+  /* Lo que queda fuera se cuenta, no se supone: si un registro no cae en ningún
+     periodo es porque es anterior al primero, y el pie lo dice con su número
+     real en vez de restar y atribuirlo a ciegas. */
+  const iniPrimero = gobiernos[0].start;
+  const previos = registros.filter(r=>{
+    const iso = r[campo]; if(!iso) return false;
+    const [y,m,d] = iso.split('-').map(Number);
+    return toDec(y,m,d) < iniPrimero;
+  }).length;
+  const fechaTxt = dec => {
+    const y = Math.floor(dec);
+    const m = Math.floor((dec - y) * 12) + 1;
+    const d = Math.floor(((dec - y) * 12 - (m-1)) * 30) + 1;
+    return `${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
+  };
+  return `
+    <div class="panel">
+      <div class="panel-title">${eyebrow}</div>
+      <h3>${titulo}</h3>
+      <p class="panel-intro">${intro}</p>
+      <div class="cronologia-container">
+        <div class="cron-gob-chart">
+          ${filas.map(g=>{
+            const alto = g.count > 0 ? (g.count / maxCount * 100) : 0;
+            const anios = (g.end - g.start).toFixed(1);
+            const enCurso = g.end > (new Date().getFullYear() + 0.99);
+            const fin = enCurso ? 'En funciones' : fechaTxt(g.end);
+            const cuenta = `${g.count} ${g.count===1?singular:plural}`;
+            return `
+              <div class="cron-gob-col" data-gob="${g.nombre}">
+                <div class="cron-gob-count">${g.count || ''}</div>
+                <div class="cron-gob-bar" style="height:${alto}%;background:${g.color}"
+                     data-count="${g.count}" tabindex="0" role="button"
+                     aria-label="${g.full}: ${g.count ? cuenta : verbo}">
+                  <div class="cron-gob-tooltip">
+                    <div class="cron-gob-tt-title">${g.full}</div>
+                    <div class="cron-gob-tt-period">${fechaTxt(g.start)} → ${fin}</div>
+                    <div class="cron-gob-tt-meta">${g.count ? cuenta : verbo} · ${anios} años de gestión</div>
+                    ${g.count ? `<ul class="cron-gob-tt-list">${
+                      [...g.items].sort((a,b)=>String(a[campo]).localeCompare(String(b[campo])))
+                        .slice(0,8).map(r=>`<li>${String(r[campo]).slice(0,4)} · ${r.nombre}</li>`).join('')
+                    }${g.items.length > 8 ? `<li style="opacity:.7">+ ${g.items.length - 8} más…</li>` : ''}</ul>` : ''}
+                  </div>
+                </div>
+                <div class="cron-gob-col-label">${g.nombre}</div>
+                <div class="cron-gob-col-period">${Math.floor(g.start)}–${enCurso ? 'hoy' : Math.floor(g.end)}</div>
+              </div>`;
+          }).join('')}
+        </div>
+        <div class="cron-gob-caption" style="margin-top:14px">
+          ${gobiernos.length} administraciones · ${totalUbicado} de ${registros.length}
+          ${registros.length===1?singular:plural} caen dentro de estos periodos${
+            previos ? ` · ${previos} ${previos===1?'es anterior':'son anteriores'} a ${Math.floor(gobiernos[0].start)}` : ''}
+          · toque una barra —o pase el cursor— para ver el detalle
+        </div>
+      </div>
+    </div>`;
+}
+
 function renderCronologiaSection(){
   // Áreas con fecha de decreto válida
   const conFecha = DATA.filter(d => d.fecha_decreto_iso && d.fecha_decreto_iso.match(/^\d{4}/));
+  // Áreas con programa de manejo publicado y fecha registrada
+  const conPM = DATA.filter(d => d.fecha_pm_iso && d.fecha_pm_iso.match(/^\d{4}/));
   const sinFecha = DATA.length - conFecha.length;
 
   // Agrupar por década
@@ -3001,63 +3141,32 @@ function renderCronologiaSection(){
     </div>
 
     <!-- Panel independiente: decretos por administración electa CDMX -->
-    <div class="panel">
-      <div class="panel-title">Cronología · Decretos por administración electa</div>
-      <h3>Rendimiento institucional <em>comparativo</em> · Jefatura de Gobierno CDMX</h3>
-      <p class="panel-intro">Número de decretos emitidos durante cada periodo de gobierno electo desde 1997. Cada barra representa una administración con su duración (en años) y el conteo de decretos publicados durante su mandato. Las administraciones de transición o interinato se muestran en color más claro.</p>
+    ${''/* la gráfica se arma con graficaPorAdministracion, definida abajo */}
+    ${graficaPorAdministracion({
+      gobiernos, toDec,
+      registros: conFecha,
+      campo: 'fecha_decreto_iso',
+      eyebrow: 'Cronología · Decretos por administración',
+      titulo: 'Cuántas áreas se <em>decretaron</em> en cada sexenio',
+      intro: `Número de decretos de creación publicados durante cada administración. La barra es el
+        conteo; abajo, quién encabezó el periodo y sus años. <b>Cuenta las 66 áreas, federales
+        incluidas</b>; el panel de Metas cuenta solo los instrumentos locales, por eso sus cifras
+        son menores para el mismo sexenio.`,
+      singular: 'decreto', plural: 'decretos', verbo: 'Sin decretos en este periodo'
+    })}
 
-      <div class="cronologia-container">
-        <div class="cron-gob-chart" id="cronGobChart">
-          ${(() => {
-            // Calcular decretos por gobierno
-            const gobiernosConDecretos = gobiernos.map(g => {
-              const decretos = conFecha.filter(d => {
-                const iso = d.fecha_decreto_iso;
-                if(!iso) return false;
-                const [y,m,day] = iso.split('-').map(Number);
-                const decFecha = toDec(y, m, day);
-                return decFecha >= g.start && decFecha < g.end;
-              });
-              return { ...g, decretos, count: decretos.length };
-            });
-            const maxGobCount = Math.max(...gobiernosConDecretos.map(g => g.count), 1);
-
-            return gobiernosConDecretos.map(g => {
-              const heightPct = g.count > 0 ? (g.count / maxGobCount * 100) : 0;
-              const duracionAnios = (g.end - g.start).toFixed(1);
-              const formatFecha = dec => {
-                const y = Math.floor(dec);
-                const m = Math.floor((dec - y) * 12) + 1;
-                const day = Math.floor(((dec - y) * 12 - (m-1)) * 30) + 1;
-                return `${String(day).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
-              };
-              const fechaInicio = formatFecha(g.start);
-              const fechaFin = g.full === 'Clara Brugada' ? 'En funciones' : formatFecha(g.end);
-              return `
-                <div class="cron-gob-col" data-gob="${g.nombre}">
-                  <div class="cron-gob-count">${g.count || ''}</div>
-                  <div class="cron-gob-bar" style="height:${heightPct}%;background:${g.color}" data-count="${g.count}"
-                       tabindex="0" role="button">
-                    ${g.count > 0 ? `<div class="cron-gob-tooltip">
-                      <div class="cron-gob-tt-title">${g.full}</div>
-                      <div class="cron-gob-tt-period">${fechaInicio} → ${fechaFin}</div>
-                      <div class="cron-gob-tt-meta">${g.count} ${g.count===1?'decreto':'decretos'} · ${duracionAnios} años de gestión</div>
-                      ${g.decretos.length > 0 ? `<ul class="cron-gob-tt-list">${g.decretos.slice(0,8).map(d => `<li>${d.fecha_decreto_iso.slice(0,4)} · ${d.nombre}</li>`).join('')}${g.decretos.length > 8 ? `<li style="opacity:.7">+ ${g.decretos.length - 8} más…</li>` : ''}</ul>` : ''}
-                    </div>` : `<div class="cron-gob-tooltip">
-                      <div class="cron-gob-tt-title">${g.full}</div>
-                      <div class="cron-gob-tt-period">${fechaInicio} → ${fechaFin}</div>
-                      <div class="cron-gob-tt-meta">Sin decretos en este periodo · ${duracionAnios} años de gestión</div>
-                    </div>`}
-                  </div>
-                  <div class="cron-gob-col-label">${g.nombre}</div>
-                  <div class="cron-gob-col-period">${Math.floor(g.start)}–${g.full === 'Clara Brugada' ? 'hoy' : Math.floor(g.end)}</div>
-                </div>
-              `;
-            }).join('');
-          })()}
-        </div>
-        <div class="cron-gob-caption" style="margin-top:14px">Jefatura de Gobierno de la Ciudad de México · 10 periodos electos desde 1997 · pase el cursor sobre cada barra para ver el detalle</div>
-      </div>
+    ${graficaPorAdministracion({
+      gobiernos, toDec,
+      registros: conPM,
+      campo: 'fecha_pm_iso',
+      eyebrow: 'Cronología · Programas de manejo por administración',
+      titulo: 'Cuántos programas de manejo se <em>publicaron</em> en cada sexenio',
+      intro: `El decreto crea el área; el programa de manejo la hace operable. Esta gráfica cuenta
+        lo segundo, que es el cuello de botella del sistema: hay ${conPM.length} programas
+        publicados para ${DATA.length} áreas. <b>Cuenta las 66 áreas, federales incluidas</b>;
+        el panel de Metas cuenta solo los locales.`,
+      singular: 'programa', plural: 'programas', verbo: 'Sin programas publicados en este periodo'
+    })}
     </div>
 
     <div class="panel">
@@ -3222,6 +3331,11 @@ function renderMetaComparable(){
 }
 
 function renderGroupDashboard(g){
+  /* La coadministración no filtra por grupo: es un corte por convenio. */
+  if(g.id === 'COADMIN'){
+    const arr = DATA.filter(d=>isCoadmin(d.nombre));
+    return resumenHTML(arr, 'ANP en coadministración · SEMARNAT–CONANP–CDMX 2025');
+  }
   const arr = DATA.filter(d=>d.grupo===g.key);
   if(!arr.length) return resumenHTML(arr, g.label);
   const tipo = arr[0].tipo, jur = arr[0].jurisdiccion;
@@ -3548,25 +3662,36 @@ function renderLegalDashboard(){
 }
 
 /* ===== Table ===== */
-function filter(){
+/* Una regla por filtro, en un solo lugar. filter() las aplica todas;
+   populateFilters() aplica todas MENOS una para saber qué opciones siguen
+   teniendo sentido en ese desplegable. Tenerlas escritas dos veces era la
+   manera seguro de que se separaran. */
+const PRUEBA_FILTRO = {
+  fTipo: d => !state.fTipo || d.tipo === state.fTipo,
+  fJur:  d => !state.fJur  || d.jurisdiccion === state.fJur,
+  fCat:  d => !state.fCat  || d.categoria === state.fCat,
+  fAlc:  d => !state.fAlc  || normText(d.alcaldia).includes(normText(state.fAlc)),
+  fPM:   d => !state.fPM   || d.programa_manejo === state.fPM,
+  fSC:   d => !state.fSC   || (d.suelo_conservacion || 'No') === state.fSC,
+  fDG:   d => !state.fDG   || (state.fDG === '__sin__'
+                                 ? !(d.dg_responsable || '')
+                                 : (d.dg_responsable || '') === state.fDG)
+};
+const CLAVES_FILTRO = Object.keys(PRUEBA_FILTRO);
+/* Filas que pasan todos los filtros menos el que se indique. Es la base de los
+   desplegables dependientes: con Tipo = ANP, «Subcategoría» solo debe ofrecer
+   subcategorías de ANP. */
+const filasSalvo = (excluir) => {
   const base = currentData();
+  return base.filter(d => CLAVES_FILTRO.every(k => k === excluir || PRUEBA_FILTRO[k](d)));
+};
+
+function filter(){
   const q = normText(state.q);
-  return base.filter(d=>{
-    if(state.fTipo && d.tipo!==state.fTipo) return false;
-    if(state.fJur && d.jurisdiccion!==state.fJur) return false;
-    if(state.fCat && d.categoria!==state.fCat) return false;
-    if(state.fAlc && !normText(d.alcaldia).includes(normText(state.fAlc))) return false;
-    if(state.fPM && d.programa_manejo!==state.fPM) return false;
-    if(state.fSC){ const sc = d.suelo_conservacion || 'No'; if(sc!==state.fSC) return false; }
-    if(state.fDG){
-      const dg = d.dg_responsable || '';
-      if(state.fDG==='__sin__'){ if(dg!=='') return false; }
-      else { if(dg!==state.fDG) return false; }
-    }
-    if(q){
-      // Búsqueda exclusivamente por nombre (insensible a acentos)
-      if(!normText(d.nombre).includes(q)) return false;
-    }
+  return currentData().filter(d=>{
+    if(!CLAVES_FILTRO.every(k => PRUEBA_FILTRO[k](d))) return false;
+    // Búsqueda exclusivamente por nombre (insensible a acentos)
+    if(q && !normText(d.nombre).includes(q)) return false;
     return true;
   });
 }
@@ -3633,13 +3758,14 @@ document.querySelectorAll('thead.t-head th').forEach(th=>{
   });
 });
 document.getElementById('q').addEventListener('input',e=>{ state.q=e.target.value; render(); });
-document.getElementById('fJur').addEventListener('change',e=>{ state.fJur=e.target.value; render(); });
-document.getElementById('fCat').addEventListener('change',e=>{ state.fCat=e.target.value; render(); });
-document.getElementById('fAlc').addEventListener('change',e=>{ state.fAlc=e.target.value; render(); });
-document.getElementById('fPM').addEventListener('change',e=>{ state.fPM=e.target.value; render(); });
-document.getElementById('fTipo').addEventListener('change',e=>{ state.fTipo=e.target.value; render(); });
-document.getElementById('fSC').addEventListener('change',e=>{ state.fSC=e.target.value; render(); });
-document.getElementById('fDG').addEventListener('change',e=>{ state.fDG=e.target.value; render(); });
+/* Cada cambio repuebla los desplegables antes de repintar: son dependientes
+   entre sí —elegir Tipo = ANP deja «Subcategoría» solo con subcategorías de
+   ANP— y eso se recalcula en populateFilters(). Sin esta llamada, las opciones
+   se quedaban congeladas en las del grupo. */
+['fJur','fCat','fAlc','fPM','fTipo','fSC','fDG'].forEach(id=>{
+  const e = document.getElementById(id); if(!e) return;
+  e.addEventListener('change', ev=>{ state[id] = ev.target.value; populateFilters(); render(); });
+});
 /* «Mas filtros»: los cinco filtros de uso ocasional viven plegados y el boton
    lleva el conteo de cuantos estan activos, para que nadie los pierda de vista. */
 function sincronizarMasFiltros(){
@@ -3903,7 +4029,11 @@ function destroyGlobalMap(){
   if(globalMap){ globalMap.remove(); globalMap=null; globalGroupLayers={}; globalAlcaldiasLayer=null; }
 }
 
-function renderMapaPage(g){
+/* `limpio` deja el mapa a solas: sin título y sin la fila de chips de capa.
+   Es para «Ubicar», donde la pregunta es «¿qué me cubre aquí?» y no «¿qué capas
+   quiero ver?»: las cuatro categorías van encendidas y no hay nada que elegir,
+   así que los chips solo ocupaban el primer tercio de la pantalla en celular. */
+function renderMapaPage(g, limpio){
   const isGlobal = !g || g.id === 'ALL';
   const labels = {
     'BU':'Bosques Urbanos','BR':'Barrancas',
@@ -3919,6 +4049,10 @@ function renderMapaPage(g){
     eyebrow = '';
     title = `Mapa · <em>${polyCount}</em> polígonos`;
     intro = '';
+  } else if(g.id === 'COADMIN'){
+    eyebrow = '';
+    title = `Mapa · <em>En coadministración</em> · ${DATA.filter(d=>isCoadmin(d.nombre)).length} áreas`;
+    intro = '';
   } else if(g.id === 'ARCAC'){
     eyebrow = '';
     title = `Mapa · <em>ARCAC</em> · ${DATA_ARCAC.length} núcleos agrarios`;
@@ -3931,11 +4065,13 @@ function renderMapaPage(g){
 
   return `
     <div class="panel panel-compact panel-mapa" style="border-left:3px solid var(--guinda)">
+      ${limpio ? '' : `
       ${eyebrow ? `<div class="panel-title" style="color:var(--guinda)">${eyebrow}</div>` : ''}
       <h3 class="mapa-h">${title}</h3>
-      ${intro ? `<p class="panel-intro" style="margin-bottom:10px">${intro}</p>` : ''}
+      ${intro ? `<p class="panel-intro" style="margin-bottom:10px">${intro}</p>` : ''}`}
 
-      <div class="map-filters" id="mapFilters" data-mode="${isGlobal ? 'global' : 'group'}"></div>
+      <div class="map-filters${limpio ? ' map-filters--oculto' : ''}" id="mapFilters"
+           data-mode="${isGlobal ? 'global' : 'group'}"></div>
 
       <div class="global-map-block">
         <div id="globalMapCanvas" style="position:relative">
@@ -6835,6 +6971,6 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
 </style>
 <div class="cinta-borrador" role="note"><b>Versión en revisión · rediseño v38.</b>
   La página oficial es <a href="./">la portada del sitio</a>.
-  <span class="ver">sia-v35-2026-09-11r</span></div>
+  <span class="ver">sia-v35-2026-09-11s</span></div>
 </body>
 </html>

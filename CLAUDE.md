@@ -458,6 +458,44 @@ Lo que el rehacer sacó a la luz, con el inventario de hoy:
   barra de destinos). Se abre al tocar y se cierra al tocar fuera. El texto del panel dejó de
   decir «pase el cursor».
 
+### Ajustes del 11 sep, noche
+
+- **Programas de manejo por administración.** Gráfica nueva, hermana de la de decretos. Las dos
+  salen de `graficaPorAdministracion()`, una sola implementación parametrizada por campo de fecha
+  y palabras: duplicar el bloque habría dejado dos copias de la misma lógica de rangos.
+  - **Error de un día, corregido.** El rango era `t >= start && t < end`, y el último día del
+    periodo pertenece al periodo —la entrega es el 5 de diciembre, el 4 todavía es de quien sale—.
+    Tres registros caían en ningún sexenio y el pie los reportaba como anteriores a 1997: los
+    programas de Vista Hermosa (2012-12-04) y Ecoguardas (2018-12-04) y el decreto de Ejidos de
+    Xochimilco (2006-12-04). Con el corte cerrado, los 38 programas quedan ubicados.
+  - El pie **cuenta** los que quedan antes del primer periodo en vez de restar y suponer.
+  - Ambas gráficas advierten que cuentan las 66 áreas, federales incluidas, mientras que **Metas**
+    cuenta solo instrumentos locales: por eso Sheinbaum sale con 13 decretos aquí y 12 allá.
+- **«Ubicar», solo ubicar.** El mapa de ese destino va sin título y sin chips de capa: ahí la
+  pregunta es «¿qué me cubre aquí?», no «¿qué capas quiero ver?». El contenedor `#mapFilters` se
+  conserva oculto por CSS (`.map-filters--oculto`) porque de él cuelga el interruptor de Suelo de
+  Conservación, que es quien monta esa capa; quitarlo del DOM dejaba la vista de campo sin SC.
+  `[hidden]` no bastaba: `.map-filters` declara `display:flex` y le gana.
+- **Los controles de Leaflet ya no se comen la barra inferior.** Leaflet pone sus cuatro esquinas
+  en `z-index:1000`, por encima de la barra de destinos fija (900): con el mapa llegando al pie de
+  la pantalla, la atribución interceptaba los toques de la navegación. Bajadas a 800 —siguen por
+  encima de los globos de Leaflet (700)—. Lo detectó el arnés de traslapes al no poder pulsar un
+  destino en celular.
+- **Retirado el «Ctrl K»** de la barra de búsqueda.
+- **Chip «En coadministración» en el inventario.** Las 8 ANP del convenio SEMARNAT–CONANP–CDMX
+  2025, con su tabla, sus filtros y su resumen. **No es una categoría**: es un corte transversal de
+  las 66 —`key:null`, y quien decide las filas es `currentData()`—, así que cada área sigue
+  contando en su grupo y el contador institucional sigue diciendo 66. En el mapa enciende la capa
+  de ANP Federales y el resaltado del convenio.
+- **Filtros dependientes entre sí.** Cada desplegable ofrece ahora los valores que siguen
+  existiendo tras aplicar los **demás** filtros: con Tipo = ANP, «Subcategoría» ya no ofrece
+  Barranca ni Bosque Urbano, que no devolverían ninguna fila; al añadir Jurisdicción = Federal,
+  queda en las dos federales y «Tipo» pierde AVA. Se excluye el propio filtro del cálculo —si no,
+  cada uno se quedaría con su único valor elegido y no habría cómo cambiarlo— y si la selección
+  vigente deja de existir se limpia sola, para que no quede un filtro activo que vacía la tabla sin
+  explicar por qué. Las reglas viven una sola vez en `PRUEBA_FILTRO`, que usan tanto `filter()`
+  como `filasSalvo()`: antes estaban escritas dos veces y era cuestión de tiempo que divergieran.
+
 **Al validar:** la copia de trabajo se prueba en Chromium (Playwright) interceptando la red.
 Hasta el 11 de septiembre se usaba un doble de Leaflet, que no pinta nada; **ahora se sirve
 Leaflet 1.9.4 real desde `npm` y tejas PNG sintéticas**, así que los mapas SÍ se verifican:
