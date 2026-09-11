@@ -201,6 +201,10 @@ destinos y los subfiltros. `SECONDARY_TABS`, `.tabs`, `.tab` y el menú «Más �
 - **Tabla en vista partida (11 sep):** además de Nombre, Subcategoría, Alcaldía, Superficie, PM y
   SC se muestran **Tipo** y **DG responsable**; solo se ocultan Jurisdicción, Decreto y Fecha PM.
   La columna Nombre baja a 28% y el grid del `main` pasa a `0.88fr / 1fr` para darle ancho a la tabla.
+- **Descarga CSV retirada (11 sep):** el botón `↓ CSV` del inventario y su listener `btnExport`
+  se eliminaron a petición del usuario. El módulo Traslapes conserva el suyo (`trasCsv` →
+  `exportTraslapesCSV()`), que es independiente. Las columnas que la tabla oculta en vista
+  partida siguen disponibles **en la ficha del área**, ya no en una descarga.
 - **Filtros redundantes (11 sep):** `populateFilters()` oculta todo filtro cuyo subconjunto activo
   tenga **un solo valor posible**, porque ahí no filtra nada. Regla general, no lista fija: dentro
   de Bosques Urbanos desaparecen Tipo, Jurisdicción, Subcategoría, SC y DG (todas son AVA · Local ·

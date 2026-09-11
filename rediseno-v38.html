@@ -637,7 +637,7 @@
     /* En vista partida se retiran solo las tres columnas de menor consulta:
        Jurisdicción (redundante con el Tipo y con el filete), Decreto y Fecha PM.
        Tipo y DG responsable permanecen: identifican competencia y responsable,
-       que es lo que se consulta al repartir trabajo. Siguen todas en el CSV. */
+       que es lo que se consulta al repartir trabajo. Las ocultas siguen en la ficha. */
     #tableSection table.t th:nth-child(3),#tableSection table.t td:nth-child(3),
     #tableSection table.t th:nth-child(6),#tableSection table.t td:nth-child(6),
     #tableSection table.t th:nth-child(9),#tableSection table.t td:nth-child(9){display:none}
@@ -1644,7 +1644,7 @@
       <button type="button" class="btn ghost btn-masf" id="btnMasFiltros" aria-expanded="false" aria-controls="filtrosAvanzados">
         <span>Más filtros</span><span class="masf-n" id="masFiltrosN" hidden>0</span><span class="masf-caret" aria-hidden="true">▾</span>
       </button>
-      <div class="btn-group"><button class="btn ghost" id="btnReset">Limpiar</button><button class="btn" id="btnExport">↓ CSV</button></div>
+      <div class="btn-group"><button class="btn ghost" id="btnReset">Limpiar</button></div>
       <div class="filtros-av" id="filtrosAvanzados" hidden>
         <label><span class="lab">Tipo</span><select id="fTipo"><option value="">Todos</option><option value="AVA">AVA</option><option value="ANP">ANP</option></select></label>
         <label><span class="lab">Jurisdicción</span><select id="fJur"><option value="">Todas</option><option value="Local">Local</option><option value="Federal">Federal</option></select></label>
@@ -6924,19 +6924,6 @@ document.getElementById('tb').addEventListener('click',e=>{
 document.getElementById('drClose').addEventListener('click',closeDrawer);
 bd.addEventListener('click',closeDrawer);
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDrawer(); });
-
-document.getElementById('btnExport').addEventListener('click',()=>{
-  const rows=sortRows(filter());
-  const header=['Nombre','Tipo','Jurisdicción','Subcategoría','Alcaldía','Fecha decreto','Superficie (ha)','Programa manejo','En Suelo de Conservación','Fecha PM'];
-  const esc=s=>`"${String(s).replace(/"/g,'""')}"`;
-  const csv=[header.join(',')].concat(rows.map(d=>[d.nombre,d.tipo,d.jurisdiccion,d.categoria,d.alcaldia,d.fecha_decreto,d.superficie,d.programa_manejo,d.suelo_conservacion||'No',d.fecha_pm||''].map(esc).join(','))).join('\n');
-  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download=`proteccion_ambiental_cdmx_${state.tab.toLowerCase()}_${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-});
 
 document.getElementById('metaCount').textContent = fmtInt(DATA.length);
 
