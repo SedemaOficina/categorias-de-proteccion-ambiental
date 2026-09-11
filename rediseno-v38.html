@@ -101,20 +101,23 @@
     --legal:var(--violeta);
 
     --shadow:0 1px 2px rgba(42,42,42,.04),0 4px 12px -6px rgba(42,42,42,.08);
-    --radius:4px;
+    --radius:7px;
 
     /* ─── Sistema de diseno · consolidacion 2026-08-22 ────────────────────
        Antes: 36 tamanos de letra, 14 radios, 20 sombras, 11 z-index y 32
        colores hex sueltos fuera de este bloque. Cada token conserva el valor
        que ya tenia el caso dominante: es consolidacion, no rediseno.
        Movimiento maximo: 1 px. */
-    --fs-micro:9.5px;   --fs-mini:10.5px;  --fs-xs:11px;
-    --fs-sm:12.5px;     --fs-base:13px;    --fs-md:14px;
-    --fs-lg:18px;       --fs-xl:22px;      --fs-2xl:28px;
-    --fs-hero:30px;     --fs-mega:44px;
+    /* Rediseno 2026-09-10 · piso tipografico de 11 px (antes 9.5) y escala
+       reducida: el cuerpo sube y las cifras gigantes bajan, porque el dato
+       util es la comparacion, no el tamano. */
+    --fs-micro:11px;    --fs-mini:11px;    --fs-xs:11.5px;
+    --fs-sm:12.5px;     --fs-base:13.5px;  --fs-md:14.5px;
+    --fs-lg:18px;       --fs-xl:22px;      --fs-2xl:26px;
+    --fs-hero:27px;     --fs-mega:36px;
 
     --r-chip:2px;       /* insignias y puntos de color */
-    --r-ui:3px;         /* botones, campos, celdas */
+    --r-ui:5px;         /* botones, campos, celdas */
     --r-card:var(--radius);
 
     --sh-1:0 1px 3px rgba(42,42,42,.08);      /* tarjeta en reposo */
@@ -131,24 +134,29 @@
     --warn-bg:#fff8e1;  --alert-bg:#fdf0f3;  --alert-text:#8a2242;
     --map-bg:#e8e3d4;       /* lienzo del mapa sin tiles */
   }
+  /* Celular: el tablero se lee de pie, al sol y a un brazo de distancia.
+     La escala sube un escalon completo. */
+  @media (max-width:760px){
+    :root{ --fs-sm:13px; --fs-base:14.5px; --fs-md:15px; --fs-xs:12px; }
+  }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{background:var(--bg);color:var(--ink);font-family:'Roboto',sans-serif;font-size:var(--fs-md);line-height:1.55;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1440px;margin:0 auto;padding:32px 28px 80px}
+  .wrap{max-width:1560px;margin:0 auto;padding:18px 24px 80px}
 
   /* Banda institucional — v36: el logo vive dentro del header (una sola banda) */
-  .logo-inst{display:block;height:46px;width:auto;max-width:100%;object-fit:contain;object-position:left center;flex-shrink:0}
+  .logo-inst{display:block;height:38px;width:auto;max-width:100%;object-fit:contain;object-position:left center;flex-shrink:0}
   .brand-divider{width:1px;align-self:stretch;background:var(--line);margin:3px 0;flex-shrink:0}
   @media (max-width:1024px){ .logo-inst{height:44px} }
   @media (max-width:900px){ .brand-divider{display:none} }
   @media (max-width:640px){ .logo-inst{height:42px} }
   @media (max-width:420px){ .logo-inst{height:36px} }
 
-  header.top{display:flex;align-items:center;justify-content:space-between;gap:26px;padding:6px 0 14px;border-bottom:2px solid var(--guinda);margin-bottom:16px}
-  .brand{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0;max-width:780px}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:0 0 10px;border-bottom:2px solid var(--guinda);margin-bottom:12px}
+  .brand{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;max-width:780px}
   /* .eyebrow eliminada en v34 — el span se removió del header en v33 */
-  h1{font-family:var(--font-titulo);font-weight:700;font-size:var(--fs-hero);line-height:1.1;letter-spacing:-.02em;color:var(--ink);max-width:900px}
+  h1{font-family:var(--font-titulo);font-weight:700;font-size:var(--fs-xl);line-height:1.12;letter-spacing:-.015em;color:var(--ink);max-width:900px}
   h1 em{font-style:normal;color:var(--guinda);font-weight:900}
-  .sub{color:var(--ink-2);margin-top:6px;margin-bottom:0;font-size:var(--fs-md);font-weight:400;text-wrap:balance}
+  .sub{color:var(--ink-2);margin-top:2px;margin-bottom:0;font-size:var(--fs-sm);font-weight:400;text-wrap:balance}
   @media (min-width:1100px){ .sub{white-space:nowrap} }
   .meta{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:right;letter-spacing:.05em;line-height:1.8}
   .meta b{color:var(--guinda);font-weight:500}
@@ -296,6 +304,65 @@
     .ubi-ficha{width:100%;justify-content:center;padding:13px}
   }
 
+  /* ═══════════════════════════════════════════════════════════════
+     Navegación de dos niveles · rediseño 2026-09-10
+     Once destinos planos mezclaban filtros del inventario, inventarios
+     independientes y herramientas. Ahora: cuatro destinos arriba y, dentro
+     de cada uno, sus subconjuntos como filtros. Los ids de GROUPS no cambian.
+     ═══════════════════════════════════════════════════════════════ */
+  .destbar{display:flex;gap:4px;background:var(--card);border:1px solid var(--line-soft);
+    border-radius:var(--radius);padding:4px;box-shadow:var(--shadow);margin-bottom:10px}
+  .dest{flex:1 1 0;min-width:0;height:46px;display:flex;align-items:center;justify-content:center;gap:9px;
+    background:transparent;border:none;border-radius:var(--r-ui);cursor:pointer;
+    font-family:'Roboto',sans-serif;font-size:var(--fs-md);font-weight:500;color:var(--ink-2);
+    transition:background .15s,color .15s;padding:0 10px;white-space:nowrap}
+  .dest:hover{background:var(--bg-2);color:var(--ink)}
+  .dest:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+  .dest .dest-ico{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .dest .dest-ico svg{width:100%;height:100%}
+  .dest .dest-lbl{overflow:hidden;text-overflow:ellipsis}
+  .dest.active{background:var(--guinda);color:var(--crema);font-weight:700;
+    box-shadow:0 2px 8px rgba(157,33,72,.22)}
+
+  .subnav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center}
+  .subnav:empty{display:none}
+  .subnav-lbl{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);margin-right:4px}
+  .subchip{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 13px;
+    background:var(--card);border:1px solid var(--line);border-radius:17px;cursor:pointer;
+    font-family:'Roboto',sans-serif;font-size:var(--fs-sm);color:var(--ink);
+    transition:border-color .15s,background .15s,color .15s;white-space:nowrap}
+  .subchip:hover{border-color:var(--guinda);color:var(--guinda)}
+  .subchip:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+  .subchip .sw{width:9px;height:9px;border-radius:var(--r-chip);flex-shrink:0}
+  .subchip .n{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);color:var(--muted)}
+  .subchip.active{background:var(--guinda);border-color:var(--guinda);color:var(--crema);font-weight:700}
+  .subchip.active .n{color:var(--crema);opacity:.85}
+  .subchip.active .sw{box-shadow:0 0 0 1.5px rgba(255,253,240,.9)}
+
+  /* Destino «Ubicar»: la barra deja de ser una franja y ocupa el escenario */
+  .dest-ubicar .ubicar-bar{background:linear-gradient(100deg,rgba(157,33,72,.06),rgba(178,142,92,.06));
+    display:block;padding:20px 22px;border-left-width:4px}
+  .dest-ubicar .ubicar-head{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin-bottom:14px}
+  .dest-ubicar .ubicar-kicker{font-family:var(--font-titulo);font-size:var(--fs-xl);color:var(--ink);
+    text-transform:none;letter-spacing:-.01em}
+  .dest-ubicar .ubicar-kicker::before{content:''}
+  .dest-ubicar .ubicar-hint{display:block;font-size:var(--fs-md)}
+  @media (max-width:760px){
+    .dest-ubicar .ubicar-gps{display:inline-flex;height:52px;font-size:var(--fs-md)}
+  }
+  .dest-ubicar .ubicar-input-wrap input{height:48px;font-size:var(--fs-md)}
+  .dest-ubicar .ubicar-go{height:48px}
+  .dest-ubicar .ubicar-kbd{display:none}
+
+  @media (max-width:760px){
+    .destbar{padding:3px;gap:2px}
+    .dest{height:48px;flex-direction:column;gap:2px;font-size:var(--fs-xs);padding:0 4px}
+    .dest .dest-ico{width:19px;height:19px}
+    .subchip{height:40px;padding:0 14px;border-radius:20px;font-size:var(--fs-sm)}
+    .subnav-lbl{display:none}
+  }
+
   .tabs{display:flex;align-items:stretch;gap:2px;background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:4px;margin-bottom:18px;box-shadow:var(--shadow)}
   .tab{flex:1 1 0;min-width:0;padding:9px 10px;background:transparent;border:none;cursor:pointer;font-family:'Roboto',sans-serif;font-size:var(--fs-sm);color:var(--ink-2);border-radius:var(--r-ui);transition:transform .18s,background .18s,box-shadow .18s,color .18s;display:flex;flex-direction:row;align-items:center;gap:9px;text-align:left;font-weight:500;position:relative}
   .tab:hover{background:var(--bg-2);transform:translateY(-1px)}
@@ -357,6 +424,78 @@
   .panel h3{font-family:'Roboto',sans-serif;font-size:var(--fs-2xl);font-weight:700;line-height:1.2;margin-bottom:6px;letter-spacing:-.01em}
   .panel h3 em{font-style:normal;color:var(--guinda);font-weight:900}
   .panel-intro{color:var(--ink-2);font-size:var(--fs-md);margin-top:8px;margin-bottom:20px;max-width:760px;line-height:1.6}
+
+  /* ═══════════════════════════════════════════════════════════════
+     Campo primero · celular · rediseño 2026-09-10
+     La navegacion baja al pulgar, la cabecera se reduce a lo que identifica
+     a la institucion y la tabla se lee como lista.
+     ═══════════════════════════════════════════════════════════════ */
+  @media (max-width:760px){
+    .wrap{padding-bottom:96px}
+    header.top{padding:0 0 8px;margin-bottom:10px;gap:8px}
+    h1{font-size:var(--fs-md);font-weight:600}
+    .sub{display:none}
+    .meta{display:none}
+    /* «Ubicar» ya es un destino propio: la barra deja de repetirse en el resto
+       de las pantallas, donde solo robaba el primer tercio del celular. */
+    .wrap:not(.dest-ubicar) .ubicar-bar{display:none}
+
+    /* Navegacion fija al alcance del pulgar */
+    .destbar{position:fixed;left:0;right:0;bottom:0;z-index:var(--z-sticky);
+      margin:0;border-radius:0;border:none;border-top:1px solid var(--line);
+      padding:2px 4px calc(4px + env(safe-area-inset-bottom, 0px));
+      box-shadow:0 -2px 14px rgba(42,42,42,.12)}
+    .subnav{margin-bottom:12px;overflow-x:auto;flex-wrap:nowrap;
+      -webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+    .subnav::-webkit-scrollbar{display:none}
+    .subchip{flex-shrink:0}
+
+    /* La tabla de once columnas se lee como lista */
+    .table-scroll{overflow-x:visible}
+    table.t{min-width:0 !important;table-layout:fixed !important}
+    table.t th:nth-child(2), table.t td:nth-child(2),
+    table.t th:nth-child(3), table.t td:nth-child(3),
+    table.t th:nth-child(4), table.t td:nth-child(4),
+    table.t th:nth-child(5), table.t td:nth-child(5),
+    table.t th:nth-child(6), table.t td:nth-child(6),
+    table.t th:nth-child(9), table.t td:nth-child(9),
+    table.t th:nth-child(11),table.t td:nth-child(11){display:none}
+    table.t th:nth-child(1), table.t td:nth-child(1){width:54%}
+    table.t th:nth-child(7), table.t td:nth-child(7){width:26%}
+    table.t th:nth-child(8), table.t td:nth-child(8){width:10%}
+    table.t th:nth-child(10),table.t td:nth-child(10){width:10%}
+    tbody.t-body td{padding:12px 6px;white-space:normal}
+    tbody.t-body td.name{white-space:normal;line-height:1.3;font-size:var(--fs-md)}
+    .name-sub{display:block;font-size:var(--fs-xs);color:var(--muted);font-weight:400;margin-top:3px}
+    thead.t-head th{padding:9px 6px}
+    /* Objetivo tactil de 44 px en toda accion de la barra de ubicacion */
+    .ubicar-gps{height:52px}
+    .ubicar-input-wrap input,.ubicar-go{height:48px}
+  }
+
+  /* ═══ Resumen del inventario · sustituye a las 4 tarjetas KPI ═══ */
+  .panel-mapa{padding-top:14px !important;padding-bottom:14px !important}
+  .panel-mapa .mapa-h{font-size:var(--fs-lg) !important;margin-bottom:10px !important}
+  .resumen{display:grid;grid-template-columns:auto auto minmax(260px,1fr);gap:0 34px;align-items:center;
+    background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);
+    padding:16px 22px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .res-blk{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .res-k{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);font-weight:500}
+  .res-v{font-family:var(--font-titulo);font-size:var(--fs-2xl);font-weight:700;line-height:1.05;
+    color:var(--ink);letter-spacing:-.02em}
+  .res-v .u{font-size:var(--fs-sm);color:var(--muted);margin-left:5px;font-weight:500;letter-spacing:0}
+  .res-s{font-size:var(--fs-xs);color:var(--muted)}
+  .res-alerta{color:var(--alert-text);font-weight:500}
+  .res-pm{gap:6px}
+  .res-pm-top{display:flex;align-items:baseline;justify-content:space-between;gap:14px}
+  .res-pm-n{font-family:'Roboto Mono',monospace;font-size:var(--fs-sm);font-weight:500;color:var(--ink)}
+  .res-bar{height:7px;background:var(--bg-3);border-radius:4px;overflow:hidden;display:flex}
+  .res-bar-si{background:var(--verde);border-radius:4px 0 0 4px}
+  @media (max-width:900px){
+    .resumen{grid-template-columns:1fr 1fr;gap:14px 20px;padding:14px 16px}
+    .res-pm{grid-column:span 2}
+  }
 
   .hero{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
   .hero-card{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:20px 22px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
@@ -470,8 +609,49 @@
   .panel-compact .panel-title{margin-bottom:8px}
 
   /* Separación entre tabla y mapa cartográfico */
-  #globalMapSection{display:block;margin-top:28px}
+  #globalMapSection{display:block;margin-top:0;margin-bottom:14px}
   #globalMapSection > .panel{margin-bottom:0}
+
+  /* ═══ Vista partida · rediseño 2026-09-10 ═══
+     El mapa vivia debajo de la tabla, en un producto cuyo uso dominante es de
+     campo: obligaba a recorrer toda la pagina y nunca se veian juntos. A partir
+     de 1200 px comparten pantalla; el mapa queda fijo mientras la tabla corre. */
+  @media (min-width:1200px){
+    main#main-content{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);
+      gap:16px;align-items:start}
+    main#main-content > .ubicar-bar,
+    main#main-content > #ubicarResultado,
+    main#main-content > nav.nav2,
+    main#main-content > #dashboard{grid-column:1 / -1}
+    #globalMapSection{grid-column:1;position:sticky;top:12px;margin-bottom:0}
+    #tableSection{grid-column:2}
+    /* Sin tabla (destinos Capas, Análisis o Ubicar) el mapa toma todo el ancho */
+    main#main-content:has(#tableSection[style*="display: none"]) #globalMapSection{grid-column:1 / -1}
+    #tableSection > .toolbar{grid-template-columns:1fr 1fr;padding:12px}
+    #tableSection > .toolbar > label.f-buscar{grid-column:span 2}
+    #tableSection > .toolbar .btn-masf{grid-column:1}
+    #tableSection > .toolbar .btn-group{grid-column:2;justify-content:flex-end}
+    #tableSection > .toolbar .filtros-av{grid-template-columns:1fr 1fr}
+    #tableSection > .table-wrap{max-height:calc(100vh - 40px);overflow:auto}
+    #globalMapCanvas{height:calc(100vh - 250px);min-height:460px}
+    /* En vista partida la tabla es estrecha: se retiran las columnas de menor
+       consulta. Siguen disponibles en la ficha y en la descarga CSV. */
+    #tableSection table.t th:nth-child(2),#tableSection table.t td:nth-child(2),
+    #tableSection table.t th:nth-child(3),#tableSection table.t td:nth-child(3),
+    #tableSection table.t th:nth-child(6),#tableSection table.t td:nth-child(6),
+    #tableSection table.t th:nth-child(9),#tableSection table.t td:nth-child(9),
+    #tableSection table.t th:nth-child(11),#tableSection table.t td:nth-child(11){display:none}
+    #tableSection table.t th:nth-child(1),#tableSection table.t td:nth-child(1){width:33%}
+    #tableSection table.t th:nth-child(4),#tableSection table.t td:nth-child(4){width:20%}
+    #tableSection table.t th:nth-child(5),#tableSection table.t td:nth-child(5){width:21%}
+    #tableSection table.t th:nth-child(7),#tableSection table.t td:nth-child(7){width:14%}
+    #tableSection table.t th:nth-child(8),#tableSection table.t td:nth-child(8){width:6%}
+    #tableSection table.t th:nth-child(10),#tableSection table.t td:nth-child(10){width:6%}
+    #tableSection thead.t-head th{padding:9px 6px}
+    #tableSection thead.t-head th:nth-child(8) .arrow,
+    #tableSection thead.t-head th:nth-child(10) .arrow{display:none}
+    #tableSection tbody.t-body td{padding:9px 6px}
+  }
   .panel-compact h3{font-size:var(--fs-xl);margin-bottom:10px}
 
   /* Tabla compacta de hitos — reemplaza grid de tarjetas */
@@ -648,7 +828,18 @@
   .legal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
   .legal-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
 
-  .toolbar{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:14px;display:grid;grid-template-columns:1.4fr .7fr .8fr 1fr 1fr .9fr .7fr 1fr auto;gap:8px;align-items:end;margin-bottom:14px;box-shadow:var(--shadow)}
+  .toolbar{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:14px;display:grid;grid-template-columns:2fr 1fr 1fr auto auto;gap:10px;align-items:end;margin-bottom:14px;box-shadow:var(--shadow)}
+  .btn-masf{gap:7px}
+  .btn-masf .masf-caret{font-size:var(--fs-micro);opacity:.6;transition:transform .18s;display:inline-block}
+  .btn-masf[aria-expanded="true"] .masf-caret{transform:rotate(180deg)}
+  .btn-masf .masf-n{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);background:var(--guinda);
+    color:var(--crema);border-radius:9px;padding:1px 7px;font-weight:700}
+  .filtros-av{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;
+    padding-top:12px;margin-top:2px;border-top:1px dashed var(--line)}
+  .filtros-av[hidden]{display:none}
+  @media (max-width:900px){
+    .filtros-av{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
   .toolbar .lab{font-size:var(--fs-micro);letter-spacing:.06em}
   .toolbar select,.toolbar input{font-size:var(--fs-sm);padding:7px 8px}
   /* Visible solo para lectores de pantalla (captions de tabla, etiquetas de contexto) */
@@ -668,10 +859,12 @@
   .btn.ghost:hover{background:var(--bg-2);border-color:var(--guinda);color:var(--guinda)}
   .btn-group{display:flex;gap:8px}
 
-  .counter-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:400}
-  .counter-row b{color:var(--guinda);font-weight:500}
+  .counter-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+    font-size:var(--fs-sm);color:var(--ink-2);font-weight:400}
+  .counter-row b{color:var(--ink);font-weight:500;font-family:'Roboto Mono',monospace}
 
   /* Indicadores de interactividad — ayuda contextual para nuevos usuarios */
+  .tabla-hint{font-size:var(--fs-xs);color:var(--muted);margin-bottom:8px;line-height:1.4}
   .tip-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
   .tip-chip{display:inline-flex;align-items:center;gap:8px;padding:5px 11px;background:var(--bg-2);border:1px dashed var(--line);border-radius:var(--r-ui);font-size:var(--fs-xs);color:var(--muted);font-weight:400;line-height:1.3}
   .tip-chip .tip-ico{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:var(--card);border:1px solid var(--line-soft);border-radius:50%;font-weight:700;color:var(--guinda);font-size:var(--fs-xs)}
@@ -700,9 +893,19 @@
   thead.t-head th:hover .arrow{opacity:.8}
   thead.t-head th.sort-asc .arrow,thead.t-head th.sort-desc .arrow{opacity:1;color:var(--guinda)}
   tbody.t-body tr{border-bottom:1px solid var(--line-soft);cursor:pointer;transition:background .15s,box-shadow .15s}
-  tbody.t-body tr:hover{background:var(--bg-2);box-shadow:inset 3px 0 0 var(--guinda)}
+  tbody.t-body tr:hover{background:var(--bg-2)}
+  /* Filete de categoria: el color identifica territorio de un vistazo y libera
+     a la columna Subcat. de tener que hacerlo con relleno saturado. */
+  tbody.t-body tr[data-g]{box-shadow:inset 3px 0 0 var(--line)}
+  tbody.t-body tr[data-g="bu"]  {box-shadow:inset 3px 0 0 var(--bu)}
+  tbody.t-body tr[data-g="br"]  {box-shadow:inset 3px 0 0 var(--br)}
+  tbody.t-body tr[data-g="anpl"]{box-shadow:inset 3px 0 0 var(--anpl)}
+  tbody.t-body tr[data-g="anpf"]{box-shadow:inset 3px 0 0 var(--anpf)}
   tbody.t-body td{padding:10px 8px;font-size:var(--fs-base);color:var(--ink-2);vertical-align:top;font-weight:400;position:relative;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   tbody.t-body td.name{color:var(--ink);font-weight:500;padding-left:18px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+  /* En celular la fila se lee como ficha: la categoria y la alcaldia bajan
+     a una segunda linea y las columnas sobrantes se retiran. */
+  .name-sub{display:none}
   tbody.t-body td.name::before{content:"›";position:absolute;left:4px;top:10px;color:var(--line);font-weight:700;font-size:var(--fs-lg);transition:color .15s,transform .15s}
   tbody.t-body tr:hover td.name::before{color:var(--guinda);transform:translateX(2px)}
   tbody.t-body td.num{font-family:'Roboto Mono',monospace;font-size:var(--fs-sm);text-align:right;white-space:nowrap;font-weight:500}
@@ -725,22 +928,22 @@
   .tag-ANP.tag-full{background:rgba(157,33,72,.08)}
 
   /* SUBCATEGORÍA — todas con color único basado en paleta GCDMX */
-  .tag-sub{display:inline-block;padding:3px 9px;border-radius:var(--r-chip);font-size:var(--fs-mini);font-family:'Roboto Mono',monospace;letter-spacing:.03em;white-space:nowrap;font-weight:500;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .tag-sub{display:inline-block;padding:2px 8px;border-radius:var(--r-chip);font-size:var(--fs-mini);font-family:'Roboto Mono',monospace;letter-spacing:.03em;white-space:nowrap;font-weight:500;max-width:100%;overflow:hidden;text-overflow:ellipsis}
   /* Variante full: nombre completo dentro del recuadro con su color característico */
   .tag-sub.tag-sub-full{padding:4px 12px;font-size:var(--fs-xs);letter-spacing:.02em;white-space:normal}
   /* AVA */
-  .sub-BU   {background:var(--naranja);    color:var(--ink)}        /* Naranja 151C */
-  .sub-BR   {background:var(--marron-900); color:var(--crema)}      /* Marrón 146C oscurecido · AA */
+  .sub-BU   {background:transparent; color:#8a5a12; border:1px solid rgba(240,130,23,.55)}
+  .sub-BR   {background:transparent; color:var(--marron-900); border:1px solid rgba(143,86,16,.45)}
   /* ANP Local */
-  .sub-ZCE  {background:var(--gris);       color:var(--crema)}      /* Gris 425C    */
-  .sub-ZSCE {background:var(--azul-claro); color:var(--ink)}        /* Azul cl 0821C */
-  .sub-ZPE  {background:var(--amarillo);   color:var(--ink)}        /* Amarillo 7548C */
-  .sub-ZEC  {background:var(--rosa-claro); color:var(--ink)}        /* Rosa 176C    */
-  .sub-ZPHE {background:var(--magenta-900);color:var(--crema)}      /* Magenta 225C oscurecido · AA */
-  .sub-REC  {background:var(--dorado);     color:var(--ink)}        /* Dorado 465C · texto oscuro por contraste */
+  .sub-ZCE{background:transparent; color:var(--gris); border:1px solid rgba(85,88,90,.45)}      /* Gris 425C    */
+  .sub-ZSCE{background:transparent; color:#1c6b85; border:1px solid rgba(28,107,133,.45)}        /* Azul cl 0821C */
+  .sub-ZPE{background:transparent; color:#8a6a00; border:1px solid rgba(138,106,0,.45)}        /* Amarillo 7548C */
+  .sub-ZEC{background:transparent; color:#a63a52; border:1px solid rgba(166,58,82,.45)}        /* Rosa 176C    */
+  .sub-ZPHE{background:transparent; color:var(--magenta-900); border:1px solid rgba(194,39,122,.45)}      /* Magenta 225C oscurecido · AA */
+  .sub-REC{background:transparent; color:var(--dorado-text); border:1px solid rgba(122,93,53,.5)}        /* Dorado 465C · texto oscuro por contraste */
   /* ANP Federal */
-  .sub-PN   {background:var(--rojo);       color:var(--crema)}      /* Rojo 1925C   */
-  .sub-APRN {background:var(--violeta);    color:var(--crema)}      /* Violeta 258C */
+  .sub-PN{background:transparent; color:#b5133f; border:1px solid rgba(181,19,63,.45)}      /* Rojo 1925C   */
+  .sub-APRN{background:transparent; color:var(--violeta); border:1px solid rgba(143,72,137,.45)}      /* Violeta 258C */
   /* Fallbacks · subcategorías no presentes en inventario actual */
   .sub-RVS  {background:#5d8a5e;           color:var(--crema)}      /* Verde oliva  */
   .sub-RB   {background:#8b4513;           color:var(--crema)}      /* Sienna       */
@@ -1181,9 +1384,8 @@
 
   /* ===== BREAKPOINT 4 — Móvil grande (≤640px) ===== */
   @media (max-width:640px){
-    .wrap{padding:20px 14px 50px}
-    h1{font-size:var(--fs-2xl)}
-    .sub{font-size:var(--fs-md)}
+    .wrap{padding:14px 14px 96px}
+    h1{font-size:var(--fs-md);font-weight:600}
     .hero{grid-template-columns:1fr}
     .legal-grid-3{grid-template-columns:1fr}
     /* Convenio en mobile: una sola columna */
@@ -1194,7 +1396,9 @@
     .norma-header-right .btn-pdf{justify-content:center}
     .toolbar{grid-template-columns:1fr 1fr;padding:12px}
     .btn-group{grid-column:span 2}
-    .toolbar > label:first-child{grid-column:span 2}  /* Búsqueda completa en mobile */
+    .toolbar > label.f-buscar{grid-column:span 2}  /* Búsqueda completa en mobile */
+    .btn-masf{grid-column:span 2;justify-content:center}
+    .filtros-av{grid-template-columns:1fr}
     .field{grid-template-columns:100px 1fr;gap:10px}
     .field .k{font-size:var(--fs-micro)}
     .field .v{font-size:var(--fs-base)}
@@ -1279,13 +1483,25 @@
   .sc-toggle-btn.active{background:var(--sc);border-color:var(--sc-900);color:#fff}
   .sc-toggle-btn .sc-swatch{width:10px;height:10px;border:1.5px solid var(--sc-900);background:rgba(0,131,143,.25);display:inline-block;border-radius:var(--r-chip)}
   .sc-toggle-btn.active .sc-swatch{background:rgba(255,255,255,.4);border-color:#fff}
-  .status-tag{display:inline-block;padding:2px 9px;border-radius:var(--r-ui);font-size:var(--fs-xs);font-weight:600;font-family:'Roboto Mono',monospace;letter-spacing:.04em;text-transform:none}
-  .status-tag-si{background:#3a7d44;color:#fff}
-  .status-tag-no{background:var(--rojo);color:#fff}
+  /* Estado (PM · SC): se lee por RELLENO, no por matiz. El verde ya significa
+     «Bosque Urbano» y el rojo leia como alarma en un dato que solo describe
+     una condicion territorial. Punto lleno = si · punto hueco = no. */
+  .status-tag{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-xs);
+    font-family:'Roboto',sans-serif;font-weight:400;color:var(--ink-2);white-space:nowrap}
+  .status-tag::before{content:'';width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .status-tag-si::before{background:var(--ink-2)}
+  .status-tag-no::before{background:transparent;border:1.6px solid #c0bbaa}
+  .status-tag-no{color:var(--muted)}
+  .status-sc.status-tag-si::before{background:var(--sc)}
+  /* En la tabla el punto basta; el texto queda solo para lectores de pantalla. */
+  td .status-tag{font-size:0;gap:0}
+  td .status-tag::before{width:10px;height:10px}
   /* Tag de DG responsable — compacto, monoespaciado, color institucional según DG */
-  .tag-dg{display:inline-block;padding:2px 7px;border-radius:var(--r-ui);font-size:var(--fs-mini);font-weight:600;font-family:'Roboto Mono',monospace;letter-spacing:.04em;white-space:nowrap;border:1px solid;cursor:help}
-  .tag-dg-dgsanpava{color:var(--guinda);border-color:var(--guinda);background:rgba(157,33,72,.06)}
-  .tag-dg-dgcorenader,.tag-dg-dgcorenadr{color:#1f5a99;border-color:var(--azul);background:rgba(38,108,180,.06)}
+  .tag-dg{display:inline-block;font-size:var(--fs-mini);font-weight:500;font-family:'Roboto Mono',monospace;letter-spacing:.03em;white-space:nowrap;cursor:help;color:var(--ink-2)}
+  /* En la ficha el dato es protagonista y conserva recuadro; en la tabla no. */
+  .field .tag-dg{padding:2px 8px;border-radius:var(--r-ui);border:1px solid var(--line);background:var(--bg-2)}
+  .tag-dg-dgsanpava{color:var(--guinda)}
+  .tag-dg-dgcorenader,.tag-dg-dgcorenadr{color:#1f5a99}
   .dg-empty{color:var(--muted);font-family:'Roboto Mono',monospace;font-size:var(--fs-xs)}
   @media (max-width: 480px){
     .sc-toggle-btn{padding:9px 12px;font-size:var(--fs-mini)}
@@ -1400,29 +1616,40 @@
 
   <section id="ubicarResultado" hidden></section>
 
-  <nav class="tabs" id="tabs"></nav>
+  <nav class="nav2" id="tabs" aria-label="Navegación principal"></nav>
   <section id="dashboard"></section>
 
+  <!-- Mapa global · va ANTES de la tabla: el uso dominante es de campo y
+       obligaba a recorrer toda la pagina para llegar al territorio.
+       Vive fuera de #tableSection porque el destino «Ubicar» lo muestra
+       con la tabla oculta. -->
+  <section id="globalMapSection" style="display:none"></section>
+
   <div id="tableSection">
+    <!-- Filtros jerarquizados · rediseno 2026-09-10
+         Ocho filtros con el mismo peso visual obligaban a leerlos todos. Los tres
+         de uso dominante quedan a la vista; los cinco restantes, tras un boton. -->
     <div class="toolbar">
-      <label><span class="lab">Búsqueda</span><input id="q" type="search" placeholder="Buscar por nombre del área…" /></label>
-      <label><span class="lab">Tipo</span><select id="fTipo"><option value="">Todos</option><option value="AVA">AVA</option><option value="ANP">ANP</option></select></label>
-      <label><span class="lab">Jurisdicción</span><select id="fJur"><option value="">Todas</option><option value="Local">Local</option><option value="Federal">Federal</option></select></label>
-      <label><span class="lab">Subcategoría</span><select id="fCat"><option value="">Todas</option></select></label>
+      <label class="f-buscar"><span class="lab">Búsqueda</span><input id="q" type="search" placeholder="Buscar por nombre del área…" /></label>
       <label><span class="lab">Alcaldía</span><select id="fAlc"><option value="">Todas</option></select></label>
       <label><span class="lab">Programa de manejo</span><select id="fPM"><option value="">Todos</option><option value="Sí">Con PM</option><option value="No">Sin PM</option></select></label>
-      <label><span class="lab" title="Suelo de Conservación">SC</span><select id="fSC"><option value="">Todos</option><option value="Sí">En SC</option><option value="No">Fuera de SC</option></select></label>
-      <label><span class="lab" title="Dirección General responsable">DG resp.</span><select id="fDG"><option value="">Todas</option><option value="DGSANPAVA">DGSANPAVA</option><option value="DGCORENADER">DGCORENADER</option><option value="__sin__">Sin asignar</option></select></label>
+      <button type="button" class="btn ghost btn-masf" id="btnMasFiltros" aria-expanded="false" aria-controls="filtrosAvanzados">
+        <span>Más filtros</span><span class="masf-n" id="masFiltrosN" hidden>0</span><span class="masf-caret" aria-hidden="true">▾</span>
+      </button>
       <div class="btn-group"><button class="btn ghost" id="btnReset">Limpiar</button><button class="btn" id="btnExport">↓ CSV</button></div>
+      <div class="filtros-av" id="filtrosAvanzados" hidden>
+        <label><span class="lab">Tipo</span><select id="fTipo"><option value="">Todos</option><option value="AVA">AVA</option><option value="ANP">ANP</option></select></label>
+        <label><span class="lab">Jurisdicción</span><select id="fJur"><option value="">Todas</option><option value="Local">Local</option><option value="Federal">Federal</option></select></label>
+        <label><span class="lab">Subcategoría</span><select id="fCat"><option value="">Todas</option></select></label>
+        <label><span class="lab" title="Suelo de Conservación">Suelo de Conservación</span><select id="fSC"><option value="">Todos</option><option value="Sí">Dentro</option><option value="No">Fuera</option></select></label>
+        <label><span class="lab" title="Dirección General responsable">Dirección responsable</span><select id="fDG"><option value="">Todas</option><option value="DGSANPAVA">DGSANPAVA</option><option value="DGCORENADER">DGCORENADER</option><option value="__sin__">Sin asignar</option></select></label>
+      </div>
     </div>
     <div class="counter-row">
       <span id="counterLive" aria-live="polite" aria-atomic="true">Mostrando <b id="showCount">0</b> de <b id="totalCount">0</b> registros · Suma filtrada: <b id="sumFiltered">0</b> ha</span>
       <span id="sortInfo">Orden · Nombre ↑</span>
     </div>
-    <div class="tip-row">
-      <span class="tip-chip"><span class="tip-ico">↔</span> Clic en encabezados para ordenar</span>
-      <span class="tip-chip"><span class="tip-ico">›</span> Clic en una fila para ver el detalle</span>
-    </div>
+    <p class="tabla-hint">El filete de color indica la categoría · clic en un encabezado para ordenar · clic en una fila para abrir la ficha</p>
     <div class="table-wrap"><div class="table-scroll">
       <table class="t">
         <caption class="sr-only">Inventario de áreas protegidas de la Ciudad de México · filtrable por tipo, jurisdicción, subcategoría, alcaldía, programa de manejo, suelo de conservación y dirección general responsable</caption>
@@ -1443,8 +1670,6 @@
       </table>
     </div></div>
 
-    <!-- Mapa global · solo visible en pestaña Global, después de la tabla -->
-    <section id="globalMapSection" style="display:none"></section>
   </div>
 
   </main>
@@ -1913,7 +2138,7 @@ function normText(s){
   return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
 }
 
-let state = { tab:'ALL', sortKey:'nombre', sortDir:1, q:'', fJur:'', fCat:'', fAlc:'', fPM:'', fTipo:'', fSC:'', fDG:'',
+let state = { tab:'ALL', dest:'INVENTARIO', sortKey:'nombre', sortDir:1, q:'', fJur:'', fCat:'', fAlc:'', fPM:'', fTipo:'', fSC:'', fDG:'',
   mapFilters:{ 'AVA · Bosque Urbano':true, 'AVA · Barranca':true, 'ANP · Local':true, 'ANP · Federal':true },
   highlightCoadmin: false };
 const currentGroup = () => GROUPS.find(g=>g.id===state.tab);
@@ -1942,6 +2167,51 @@ const TAB_ICONS = {
    de forma ocasional → viven en el menú «Más ▾» para dejar la nav en una sola fila.
    NO altera DATA, GEOMETRIES, contadores ni filtros. */
 const SECONDARY_TABS = new Set(['TRASLAPES','ANALISIS','METAS','LEGAL']);
+
+/* ════════════════════════════════════════════════════════════════════
+ * Navegación de dos niveles · rediseño 2026-09-10
+ * Cuatro destinos. Cada uno agrupa ids de GROUPS que ya existían, así que
+ * ninguna función de render cambia de contrato: `state.tab` sigue siendo
+ * el id de grupo y `currentGroup()`/`currentData()` no se tocan.
+ * «Ubicar» no tiene grupo: es una acción, y vive en `state.dest`.
+ * ════════════════════════════════════════════════════════════════════ */
+const DEST_ICONS = {
+  UBICAR:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/></svg>',
+  INVENTARIO:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>',
+  CAPAS:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="m3 12.5 9 4.5 9-4.5"/><path d="m3 17 9 4.5 9-4.5"/></svg>',
+  ANALITICA:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>'
+};
+const DESTINOS = [
+  { id:'UBICAR',     label:'Ubicar',     sub:[] },
+  { id:'INVENTARIO', label:'Inventario', sub:['ALL','BU','BR','ANPL','ANPF'] },
+  { id:'CAPAS',      label:'Capas',      sub:['ZP','ARCAC','TRASLAPES'] },
+  { id:'ANALITICA',  label:'Análisis',   sub:['ANALISIS','METAS','LEGAL'] },
+];
+const DEST_DE_TAB = {};
+DESTINOS.forEach(d => d.sub.forEach(t => { DEST_DE_TAB[t] = d.id; }));
+
+/* Punto de color del subfiltro: solo donde el color significa territorio. */
+const SUB_SW = {
+  BU:'var(--bu)', BR:'var(--br)', ANPL:'var(--anpl)', ANPF:'var(--anpf)',
+  ZP:'#444441', ARCAC:'var(--arcac-com)', TRASLAPES:'var(--magenta)'
+};
+
+/* Etiqueta corta del subfiltro; el número va aparte para poder atenuarlo. */
+function subLabel(id){
+  return ({ ALL:'Todas', BU:'Bosques Urbanos', BR:'Barrancas', ANPL:'ANP Locales',
+            ANPF:'ANP Federales', ZP:'Zona Patrimonio', ARCAC:'ARCAC',
+            TRASLAPES:'Traslapes', ANALISIS:'Brechas y distribución',
+            METAS:'Metas', LEGAL:'Marco jurídico' })[id] || id;
+}
+function subCount(id){
+  if(id==='ALL') return fmtInt(DATA.length);
+  if(id==='ZP') return '4 designaciones';
+  if(id==='ARCAC') return '30';
+  if(id==='TRASLAPES') return '35 pares';
+  if(id==='ANALISIS' || id==='METAS' || id==='LEGAL') return '';
+  const g = GROUPS.find(x=>x.id===id);
+  return g ? fmtInt(DATA.filter(d=>d.grupo===g.key).length) : '';
+}
 
 const MORE_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>';
 
@@ -1972,56 +2242,61 @@ function tabHTML(g, compact, comoItemDeMenu){
     </button>`;
 }
 
-function closeMoreMenu(){
-  const mw = document.getElementById('moreWrap');
-  if(!mw || !mw.classList.contains('open')) return;
-  /* Si el foco estaba dentro del menú, hay que devolverlo al botón que lo abrió:
-     de lo contrario queda huérfano en el documento y el usuario pierde su lugar. */
-  const teniaFoco = mw.contains(document.activeElement);
-  mw.classList.remove('open');
-  const mb = document.getElementById('moreBtn');
-  if(mb){
-    mb.setAttribute('aria-expanded','false');
-    if(teniaFoco){ try{ mb.focus(); }catch(_){} }
-  }
-}
-
 function buildTabs(){
   const el = document.getElementById('tabs');
-  const primary   = GROUPS.filter(g=>!SECONDARY_TABS.has(g.id));
-  const secondary = GROUPS.filter(g=> SECONDARY_TABS.has(g.id));
-  const activeSec = secondary.find(g=>g.id===state.tab);
-  el.innerHTML = primary.map(g=>tabHTML(g,true)).join('') +
-    `<div class="more-wrap" id="moreWrap">
-      <button type="button" class="tab more-btn ${activeSec?'active':''}" id="moreBtn"
-              aria-haspopup="true" aria-expanded="false" aria-controls="moreMenu"
-              title="Análisis · Metas · Marco Jurídico">
-        <span class="tab-icon" aria-hidden="true">${activeSec ? (TAB_ICONS[activeSec.id]||MORE_ICON) : MORE_ICON}</span>
-        <span class="tab-content">
-          <span class="tab-name">${activeSec ? activeSec.label : 'Más'}<span class="more-caret" aria-hidden="true">▾</span></span>
-          <span class="tab-num">${activeSec ? tabSubtitle(activeSec,true) : '3 MÓDULOS'}</span>
-        </span>
-      </button>
-      <div class="more-menu" id="moreMenu" role="menu">${secondary.map(g=>tabHTML(g,false,true)).join('')}</div>
-    </div>`;
-  const mb = document.getElementById('moreBtn');
-  if(mb) mb.addEventListener('click', ev=>{
-    ev.stopPropagation();
-    const mw = document.getElementById('moreWrap');
-    const open = mw.classList.toggle('open');
-    mb.setAttribute('aria-expanded', open ? 'true' : 'false');
+  const dest = DESTINOS.find(d=>d.id===state.dest) || DESTINOS[1];
+
+  const barra = DESTINOS.map(d=>`
+      <button type="button" class="dest ${d.id===dest.id?'active':''}" data-dest="${d.id}"
+              aria-current="${d.id===dest.id?'true':'false'}" title="${d.label}">
+        <span class="dest-ico" aria-hidden="true">${DEST_ICONS[d.id]||''}</span>
+        <span class="dest-lbl">${d.label}</span>
+      </button>`).join('');
+
+  const chips = dest.sub.map(id=>{
+    const sw = SUB_SW[id] ? `<span class="sw" style="background:${SUB_SW[id]}"></span>` : '';
+    const n  = subCount(id);
+    return `<button type="button" class="subchip ${state.tab===id?'active':''}" data-id="${id}"
+              aria-current="${state.tab===id?'true':'false'}">${sw}${subLabel(id)}${n?`<span class="n">${n}</span>`:''}</button>`;
+  }).join('');
+
+  el.innerHTML = `<div class="destbar" role="tablist">${barra}</div>` +
+                 `<div class="subnav">${chips ? `<span class="subnav-lbl">Filtrar</span>${chips}` : ''}</div>`;
+
+  el.querySelectorAll('.dest[data-dest]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const id = b.dataset.dest;
+      if(id === state.dest) return;
+      state.dest = id;
+      const d = DESTINOS.find(x=>x.id===id);
+      if(d && d.sub.length && !d.sub.includes(state.tab)) state.tab = d.sub[0];
+      limpiarFiltros();
+      buildTabs(); populateFilters(); renderDashboard(); render();
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
   });
-  el.querySelectorAll('.tab[data-id]').forEach(b=>{
+
+  el.querySelectorAll('.subchip[data-id]').forEach(b=>{
     b.addEventListener('click',()=>{
       state.tab = b.dataset.id;
-      state.q=''; state.fJur=''; state.fCat=''; state.fAlc=''; state.fPM=''; state.fTipo=''; state.fSC=''; state.fDG='';
-      ['q','fJur','fCat','fAlc','fPM','fTipo','fSC','fDG'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
-      closeMoreMenu();
+      limpiarFiltros();
       buildTabs(); populateFilters(); renderDashboard(); render();
       window.scrollTo({top:0,behavior:'smooth'});
     });
   });
 }
+
+/* Cambiar de destino o de subconjunto reinicia los filtros de la tabla:
+   arrastrarlos entre vistas producia resultados vacios sin explicacion. */
+function limpiarFiltros(){
+  state.q=''; state.fJur=''; state.fCat=''; state.fAlc=''; state.fPM=''; state.fTipo=''; state.fSC=''; state.fDG='';
+  ['q','fJur','fCat','fAlc','fPM','fTipo','fSC','fDG'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  if(typeof sincronizarMasFiltros === 'function') sincronizarMasFiltros();
+}
+
+/* El menu «Mas» desaparecio con la navegacion de dos niveles; la funcion se
+   conserva como no-op porque otros listeners la invocan. */
+function closeMoreMenu(){}
 
 /* Listeners globales del menú: se registran una sola vez (buildTabs se re-ejecuta
    en cada cambio de módulo y no debe acumular handlers). */
@@ -2054,6 +2329,26 @@ function renderDashboard(){
   const dash = document.getElementById('dashboard');
   const tblSec = document.getElementById('tableSection');
   const mapSec = document.getElementById('globalMapSection');
+
+  /* Destino «Ubicar»: la barra de ubicación toma toda la pantalla y el resto
+     del tablero se retira. No es una categoría del inventario, es una acción. */
+  const wrap = document.querySelector('.wrap');
+  if(wrap) wrap.classList.toggle('dest-ubicar', state.dest==='UBICAR');
+  if(state.dest==='UBICAR'){
+    dash.innerHTML = '';
+    tblSec.style.display = 'none';
+    /* El mapa global acompaña a la barra: sin territorio a la vista la pantalla
+       queda vacía, y en campo el polígono es la mitad de la respuesta. */
+    if(mapSec){
+      mapSec.style.display = '';
+      mapSec.innerHTML = renderMapaPage(GROUPS[0]);
+      ['AVA · Bosque Urbano','AVA · Barranca','ANP · Local','ANP · Federal']
+        .forEach(k => state.mapFilters[k] = true);
+      setTimeout(() => initGlobalMap(), 100);
+    }
+    return;
+  }
+
   if(g.id==='LEGAL'){
     dash.innerHTML = renderLegalDashboard();
     tblSec.style.display = 'none';
@@ -2105,22 +2400,46 @@ function renderDashboard(){
   }
 }
 
+/* Resumen del inventario · rediseño 2026-09-10
+   Antes: cuatro tarjetas, y la cuarta («sin programa de manejo») era el inverso
+   aritmetico de la tercera: un cuarto del ancho util sin informacion nueva.
+   Ahora: tres cifras y una barra que muestra la cobertura y la brecha a la vez. */
+function resumenHTML(arr, titulo){
+  const total   = arr.length;
+  const totArea = sum(arr,'superficie');
+  const conPM   = arr.filter(d=>d.programa_manejo==='Sí').length;
+  const sinPM   = total - conPM;
+  const p       = total ? (conPM/total)*100 : 0;
+  return `
+    <div class="resumen">
+      <div class="res-blk">
+        <span class="res-k">${titulo}</span>
+        <span class="res-v">${fmtInt(total)}</span>
+      </div>
+      <div class="res-blk">
+        <span class="res-k">Superficie</span>
+        <span class="res-v">${fmt(totArea)}<span class="u">ha</span></span>
+        <span class="res-s">${fmt(totArea/100)} km²</span>
+      </div>
+      <div class="res-blk res-pm">
+        <div class="res-pm-top">
+          <span class="res-k">Cobertura de programas de manejo</span>
+          <span class="res-pm-n">${conPM} / ${total}</span>
+        </div>
+        <div class="res-bar" role="img" aria-label="${conPM} de ${total} áreas con programa de manejo">
+          <span class="res-bar-si" style="width:${p.toFixed(1)}%"></span>
+        </div>
+        <span class="res-s${sinPM?' res-alerta':''}">${sinPM
+          ? `${sinPM} ${sinPM===1?'área':'áreas'} sin programa de manejo vigente`
+          : 'Todas las áreas cuentan con programa de manejo'}</span>
+      </div>
+    </div>`;
+}
+
 function renderGlobalDashboard(){
-  const total = DATA.length;
-  const totArea = sum(DATA,'superficie');
-  const withPM = DATA.filter(d=>d.programa_manejo==='Sí').length;
-  const withoutPM = total - withPM;
   const ava = DATA.filter(d=>d.tipo==='AVA').length;
   const anp = DATA.filter(d=>d.tipo==='ANP').length;
-
-  return `
-    <div class="hero">
-      <div class="hero-card"><div class="hero-label">Total de áreas</div><div class="hero-value">${fmtInt(total)}</div><div class="hero-sub">${ava} AVA · ${anp} ANP</div></div>
-      <div class="hero-card"><div class="hero-label">Superficie total</div><div class="hero-value">${fmt(totArea)}<span class="u">ha</span></div><div class="hero-sub">${fmt(totArea/100)} km²</div></div>
-      <div class="hero-card"><div class="hero-label">Con programa de manejo</div><div class="hero-value">${withPM}<span class="u">/${total}</span></div><div class="hero-sub">${pct(withPM,total)}% del total</div></div>
-      <div class="hero-card"><div class="hero-label">Sin programa de manejo</div><div class="hero-value" style="color:var(--rojo)">${withoutPM}<span class="u">/${total}</span></div><div class="hero-sub">${pct(withoutPM,total)}% requiere atención</div></div>
-    </div>
-  `;
+  return resumenHTML(DATA, `Áreas protegidas · ${ava} AVA + ${anp} ANP`);
 }
 
 /* ===== Página Metas: comparativo de administraciones + sección Brechas ===== */
@@ -2802,20 +3121,9 @@ function renderMetaComparable(){
 
 function renderGroupDashboard(g){
   const arr = DATA.filter(d=>d.grupo===g.key);
-  const total = arr.length;
-  const totArea = sum(arr,'superficie');
-  const pmSi = arr.filter(d=>d.programa_manejo==='Sí').length;
-  const pmNo = total - pmSi;
+  if(!arr.length) return resumenHTML(arr, g.label);
   const tipo = arr[0].tipo, jur = arr[0].jurisdiccion;
-
-  return `
-    <div class="hero">
-      <div class="hero-card ${g.cls}"><div class="hero-label">${g.label} · ${tipo} ${jur}</div><div class="hero-value">${fmtInt(total)}</div><div class="hero-sub">áreas decretadas</div></div>
-      <div class="hero-card ${g.cls}"><div class="hero-label">Superficie total</div><div class="hero-value">${fmt(totArea)}<span class="u">ha</span></div><div class="hero-sub">${fmt(totArea/100)} km²</div></div>
-      <div class="hero-card ${g.cls}"><div class="hero-label">Con programa de manejo</div><div class="hero-value">${pmSi}<span class="u">/${total}</span></div><div class="hero-sub">${pct(pmSi,total)}% cuenta con PM</div></div>
-      <div class="hero-card ${g.cls}"><div class="hero-label">Sin programa de manejo</div><div class="hero-value" style="color:var(--rojo)">${pmNo}<span class="u">/${total}</span></div><div class="hero-sub">${pct(pmNo,total)}% requiere atención</div></div>
-    </div>
-  `;
+  return resumenHTML(arr, `${g.label} · ${tipo} ${jur}`);
 }
 
 function legalList(items, variant=''){
@@ -3179,8 +3487,8 @@ function render(){
     tb.innerHTML = `<tr><td colspan="11" class="empty">Sin resultados para los filtros actuales.</td></tr>`;
   } else {
     tb.innerHTML = rows.map(d=>`
-      <tr data-i="${DATA.indexOf(d)}">
-        <td class="name">${d.nombre}</td>
+      <tr data-i="${DATA.indexOf(d)}" data-g="${GRUPO_CLS[d.grupo]||''}">
+        <td class="name">${d.nombre}<span class="name-sub">${subShort(d.categoria)} · ${d.alcaldia}</span></td>
         <td><span class="tag tag-${d.tipo}">${d.tipo}</span></td>
         <td><span class="tag tag-jur-${d.jurisdiccion}">${d.jurisdiccion}</span></td>
         <td><span class="tag-sub sub-${subCode(d.categoria)}" title="${d.categoria}">${subShort(d.categoria)}</span></td>
@@ -3189,7 +3497,7 @@ function render(){
         <td class="num">${fmt(d.superficie)}</td>
         <td><span class="status-tag ${d.programa_manejo==='Sí'?'status-tag-si':'status-tag-no'}">${d.programa_manejo}</span></td>
         <td class="date" style="text-align:right;${d.fecha_pm?'':'color:var(--muted);font-style:italic'}">${d.fecha_pm || '—'}</td>
-        <td><span class="status-tag ${d.suelo_conservacion==='Sí'?'status-tag-si':'status-tag-no'}">${d.suelo_conservacion==='Sí'?'Sí':'No'}</span></td>
+        <td><span class="status-tag status-sc ${d.suelo_conservacion==='Sí'?'status-tag-si':'status-tag-no'}">${d.suelo_conservacion==='Sí'?'Sí':'No'}</span></td>
         <td>${d.dg_responsable ? `<span class="tag-dg tag-dg-${d.dg_responsable.toLowerCase()}" title="${d.dg_responsable === 'DGSANPAVA' ? 'Dirección General del Sistema de Áreas Naturales Protegidas y Áreas de Valor Ambiental' : 'Dirección General de la Comisión de Recursos Naturales y Desarrollo Rural'}">${d.dg_responsable}</span>` : '<span class="dg-empty">—</span>'}</td>
       </tr>`).join('');
   }
@@ -3223,9 +3531,37 @@ document.getElementById('fPM').addEventListener('change',e=>{ state.fPM=e.target
 document.getElementById('fTipo').addEventListener('change',e=>{ state.fTipo=e.target.value; render(); });
 document.getElementById('fSC').addEventListener('change',e=>{ state.fSC=e.target.value; render(); });
 document.getElementById('fDG').addEventListener('change',e=>{ state.fDG=e.target.value; render(); });
+/* «Mas filtros»: los cinco filtros de uso ocasional viven plegados y el boton
+   lleva el conteo de cuantos estan activos, para que nadie los pierda de vista. */
+function sincronizarMasFiltros(){
+  const cont = document.getElementById('filtrosAvanzados');
+  const btn  = document.getElementById('btnMasFiltros');
+  const num  = document.getElementById('masFiltrosN');
+  if(!cont || !btn || !num) return;
+  const activos = ['fTipo','fJur','fCat','fSC','fDG']
+    .filter(id=>{ const e=document.getElementById(id); return e && e.value; }).length;
+  num.textContent = activos;
+  num.hidden = activos === 0;
+  /* Un filtro activo escondido es una trampa: si lo hay, el panel se abre solo. */
+  if(activos && cont.hidden){ cont.hidden = false; btn.setAttribute('aria-expanded','true'); }
+}
+(function(){
+  const btn = document.getElementById('btnMasFiltros');
+  const cont = document.getElementById('filtrosAvanzados');
+  if(btn && cont) btn.addEventListener('click',()=>{
+    cont.hidden = !cont.hidden;
+    btn.setAttribute('aria-expanded', cont.hidden ? 'false' : 'true');
+  });
+  ['fTipo','fJur','fCat','fSC','fDG'].forEach(id=>{
+    const e = document.getElementById(id);
+    if(e) e.addEventListener('change', sincronizarMasFiltros);
+  });
+})();
+
 document.getElementById('btnReset').addEventListener('click',()=>{
   state.q=''; state.fJur=''; state.fCat=''; state.fAlc=''; state.fPM=''; state.fTipo=''; state.fSC=''; state.fDG='';
   ['q','fJur','fCat','fAlc','fPM','fTipo','fSC','fDG'].forEach(id=>document.getElementById(id).value='');
+  sincronizarMasFiltros();
   render();
 });
 
@@ -3397,10 +3733,16 @@ const COL_GRIS_REF    = '#888888';  /* geometría de referencia (alcaldías) */
 const COL_AZUL_UBIC   = '#1971c2';  /* ubicación del usuario · GPS */
 const COL_AZUL_EMB    = '#1864ab';  /* embarcaderos */
 
+/* Clase corta del grupo · alimenta el filete lateral de cada fila. */
+const GRUPO_CLS = {
+  'AVA · Bosque Urbano':'bu', 'AVA · Barranca':'br',
+  'ANP · Local':'anpl',       'ANP · Federal':'anpf'
+};
+
 const GROUP_COLORS = {
   'AVA · Bosque Urbano': 'var(--verde)',
   'AVA · Barranca':       'var(--marron)',
-  'ANP · Local':          'var(--guinda)',
+  'ANP · Local':          'var(--anpl)',
   'ANP · Federal':        'var(--azul)'
 };
 
@@ -3461,19 +3803,19 @@ function renderMapaPage(g){
   if(isGlobal){
     // Conteo dinámico: número real de polígonos en GEOMETRIES (fallback al total del CSV mientras se carga)
     const polyCount = (GEOMETRIES && GEOMETRIES.features) ? GEOMETRIES.features.length : DATA.length;
-    eyebrow = 'Cartografía global · Sistema de áreas protegidas CDMX';
-    title = `Mapa <em>institucional</em> · ${polyCount} polígonos georreferenciados`;
-    intro = 'Active o desactive las capas para filtrar grupos y la cobertura del Suelo de Conservación.';
+    eyebrow = '';
+    title = `Mapa · <em>${polyCount}</em> polígonos`;
+    intro = '';
   } else {
-    eyebrow = `Cartografía · ${groupLabel}`;
-    title = `Mapa de <em>${groupLabel}</em> · ${total} ${total===1?'área registrada':'áreas registradas'}`;
+    eyebrow = '';
+    title = `Mapa · <em>${groupLabel}</em> · ${total} ${total===1?'área':'áreas'}`;
     intro = '';
   }
 
   return `
-    <div class="panel panel-compact" style="border-left:3px solid var(--guinda)">
-      <div class="panel-title" style="color:var(--guinda)">${eyebrow}</div>
-      <h3>${title}</h3>
+    <div class="panel panel-compact panel-mapa" style="border-left:3px solid var(--guinda)">
+      ${eyebrow ? `<div class="panel-title" style="color:var(--guinda)">${eyebrow}</div>` : ''}
+      <h3 class="mapa-h">${title}</h3>
       ${intro ? `<p class="panel-intro" style="margin-bottom:10px">${intro}</p>` : ''}
 
       <div class="map-filters" id="mapFilters" data-mode="${isGlobal ? 'global' : 'group'}"></div>
@@ -6579,6 +6921,9 @@ document.getElementById('metaCount').textContent = fmtInt(DATA.length);
    ASISTENTE · Motor de consultas semánticas en lenguaje natural
    ===================================================================== */
 
+/* Campo primero: en celular el uso dominante es ubicarse, no consultar tablas.
+   En escritorio el uso dominante es lo contrario, y la entrada es el inventario. */
+try{ if(window.matchMedia('(max-width:760px)').matches) state.dest = 'UBICAR'; }catch(_){}
 buildTabs(); populateFilters(); renderDashboard(); render();
 initUbicarBar();
 
@@ -6681,5 +7026,17 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
 }
 })();
 </script>
+<style>
+  /* Distintivo de la versión en revisión · se retira al promoverla a index.html */
+  .cinta-borrador{position:fixed;left:0;right:0;bottom:0;z-index:3000;background:#2a2a2a;color:#fffdf0;
+    font-family:'Roboto',sans-serif;font-size:12.5px;letter-spacing:.02em;text-align:center;padding:7px 14px;
+    box-shadow:0 -2px 10px rgba(42,42,42,.25)}
+  .cinta-borrador b{color:#f5aeb8}
+  .cinta-borrador a{color:#fffdf0;text-decoration:underline}
+  body{padding-bottom:34px}
+  @media (max-width:760px){ .cinta-borrador{bottom:64px} body{padding-bottom:106px} }
+</style>
+<div class="cinta-borrador" role="note"><b>Versión en revisión · rediseño v38.</b>
+  La página oficial es <a href="./">la portada del sitio</a>.</div>
 </body>
 </html>
