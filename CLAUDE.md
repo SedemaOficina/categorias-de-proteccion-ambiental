@@ -210,10 +210,16 @@ destinos y los subfiltros. `SECONDARY_TABS`, `.tabs`, `.tab` y el menú «Más �
   | Subconjunto | Columnas visibles |
   |---|---|
   | Todas | Nombre · Tipo · Subcat. · Alcaldía · Sup. · PM · SC · DG resp. |
-  | Bosques Urbanos | Nombre · Alcaldía · Sup. · PM |
-  | Barrancas | Nombre · Alcaldía · Sup. · PM · SC |
+  | Bosques Urbanos | Nombre · Alcaldía · Decreto · Sup. · PM |
+  | Barrancas | Nombre · Alcaldía · Decreto · Sup. · PM · SC |
   | ANP Locales y Federales | Nombre · Subcat. · Alcaldía · Sup. · PM · SC · DG resp. |
 
+- **Año del decreto (11 sep):** la columna Decreto muestra solo el año a cuatro dígitos
+  (`anioDecreto()`, que lee `fecha_decreto_iso` y cae al texto DD/MM/AAAA); la fecha completa
+  queda en el `title` de la celda y en la ficha. En vista partida la columna no se oculta siempre:
+  la clase `con-decreto` la habilita cuando la regla de redundancia dejó **seis columnas o menos**,
+  que hoy son Bosques Urbanos y Barrancas. El orden sigue siendo por fecha ISO, así que dentro de
+  un mismo año ordena bien aunque solo se vea el año.
 - **Sello de versión (11 sep):** la cinta de `rediseno-v38.html` muestra el `CACHE_VERSION` con el
   que se compiló. Sirve para saber de un vistazo si el navegador está sirviendo una copia vieja
   desde el Service Worker. El archivo se arma con `python armar-revision.py`, que lee la versión
