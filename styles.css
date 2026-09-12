@@ -2416,3 +2416,32 @@ html.arranque-campo body > .wrap{visibility:hidden}
   .zonif-flotante{left:8px;bottom:24px}
   .zonif-flotante .map-filter-chip{min-height:40px;padding:0 12px;border-radius:20px}
 }
+
+/* ═══ SIMBOLOGIA · CASCO SOBRE ORTOFOTO ══════════════════════════════
+   Con la base satelital, los contornos de color se pierden contra la
+   vegetacion y el terreno. El halo blanco se aplica al SVG de
+   superposiciones completo —una operacion de composicion, no una por
+   poligono— y se retira al volver al mapa de calles. */
+.leaflet-container.base-satelite .leaflet-overlay-pane svg{
+  filter:drop-shadow(0 0 1.2px rgba(255,255,255,.95)) drop-shadow(0 0 1px rgba(255,255,255,.7))}
+
+/* ═══ RESULTADO DE UBICACION · REGIMEN Y ZONA DEL PM ═════════════════ */
+.ubi-regimen{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
+.ubi-chip{display:inline-flex;align-items:center;font-family:'Roboto Mono',monospace;
+  font-size:var(--fs-micro);letter-spacing:.04em;padding:3px 9px;border-radius:var(--r-chip);
+  border:1px solid var(--line);color:var(--ink-2);background:var(--card);white-space:nowrap}
+.ubi-chip-coadmin{border-color:var(--azul);color:var(--azul)}
+.ubi-chip-pm{border-color:#1f6b4a;color:#1f6b4a}
+.ubi-chip-nopm{border-color:var(--guinda);color:var(--guinda)}
+.ubi-chip-urbano{border-color:var(--line);color:var(--muted)}
+.ubi-zona-pm{margin:8px 0 4px;font-size:var(--fs-sm);line-height:1.4}
+.ubi-zona-k{display:block;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.ubi-zona-v{display:inline-flex;align-items:center;gap:8px;font-weight:600;color:var(--ink)}
+.ubi-zona-sw{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.ubi-zona-nd{color:var(--muted);font-size:var(--fs-xs);font-style:italic}
+.ubi-jerarquia{font-size:var(--fs-mini);color:var(--muted);line-height:1.45;margin:10px 0 4px;
+  padding-left:10px;border-left:2px solid var(--line-soft)}
+@media (max-width:760px){
+  .ubi-chip{white-space:normal;line-height:1.3}
+}

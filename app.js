@@ -324,6 +324,22 @@ async function _alertasContraRespaldo(){
   return out;
 }
 
+/* Regla del dato: puede haber programa de manejo sin archivo de zonificación,
+   nunca archivo de zonificación sin programa. Y el índice cruza por nombre
+   EXACTO, así que un nombre que no esté en el inventario deja la zonificación
+   huérfana sin que nadie lo note. */
+async function _alertasZonificacion(){
+  if(typeof zonifIndice !== 'function') return [];
+  let ix; try{ ix = await zonifIndice(); }catch(_){ return []; }
+  const out = [];
+  Object.keys(ix || {}).forEach(nombre => {
+    const d = DATA.find(x => x.nombre === nombre);
+    if(!d){ out.push('zonificación publicada para un nombre que no está en el inventario: ' + nombre); return; }
+    if(d.programa_manejo !== 'Sí') out.push('zonificación publicada para un área SIN programa de manejo: ' + nombre);
+  });
+  return out;
+}
+
 function _alertasContraGeometrias(){
   if(!GEOMETRIES || !GEOMETRIES.features || !GEOMETRIES.features.length) return [];
   const sinPoligono = DATA.filter(d => !findGeometry(d)).map(d => d.nombre);
@@ -353,9 +369,11 @@ async function verificarInventario(fase){
   const lista = _alertasInvariante();
   if(fase !== 'geometrias'){
     (await _alertasContraRespaldo()).forEach(x => lista.push(x));
+    (await _alertasZonificacion()).forEach(x => lista.push(x));
   } else {
-    /* En la segunda pasada se conservan las de respaldo ya calculadas. */
-    previas.filter(x => x.startsWith('respecto al respaldo')).forEach(x => lista.push(x));
+    /* En la segunda pasada se conservan las asíncronas ya calculadas. */
+    previas.filter(x => x.startsWith('respecto al respaldo') || x.startsWith('zonificación publicada'))
+           .forEach(x => lista.push(x));
   }
   _alertasContraGeometrias().forEach(x => lista.push(x));
   INVENTARIO_ALERTAS = lista;
@@ -2747,7 +2765,7 @@ const ZP_DATA = [
   {key:'INV::Lago Tláhuac-Xico', nombre:'Lago Tláhuac-Xico', grupo:'ANP · Federal', categoria:'Área de Protección de Recursos Naturales', alcaldia:'Tláhuac', fecha_decreto:'08/01/2024', superficie:3545.41, fecha_pm:'—', color:'var(--azul)', es_designacion:false},
   {key:'ZPM_POLIGONO', nombre:'Zona Patrimonio Mundial (UNESCO)', grupo:'Internacional', ambito:'Internacional', categoria:'Patrimonio Mundial Cultural y Natural · Sitio mixto', alcaldia:'Xochimilco, Tláhuac, Milpa Alta', fecha_decreto:'11/12/1987', superficie:7534.17, sup_nota:'oficial · ampliación 2014', fecha_pm:'Ampliación del polígono 2014', notas:'Inscripción UNESCO 1987; el Comité de Patrimonio Mundial amplió el polígono a 75.34 km² (7,534.17 ha) en 2014.', color:'#444441', es_designacion:true},
   {key:'RAMSAR_1363', nombre:'Sitio Ramsar No. 1363 · Sistema Lacustre EXSGA', grupo:'Internacional', ambito:'Internacional', categoria:'Humedal de Importancia Internacional (Convención Ramsar)', alcaldia:'Xochimilco, Tláhuac', fecha_decreto:'02/02/2004', superficie:2657.00, sup_nota:'oficial Ramsar', fecha_pm:'Actualización FIR 2023', notas:'Denominación oficial: “Sistema Lacustre Ejidos de Xochimilco y San Gregorio Atlapulco”. Sitio Ramsar no. 1363.', color:'#1D9E75', es_designacion:true},
-  {key:'AICA_37', nombre:'AICA No. 37 · Ciénega de Tláhuac', grupo:'Internacional', ambito:'Internacional', categoria:'Área de Importancia para la Conservación de las Aves (CONABIO–CIPAMEX)', alcaldia:'Tláhuac', fecha_decreto:'1999', superficie:2860.32, sup_nota:'oficial CONABIO', fecha_pm:'—', notas:'Clave AICA-037. Superficie oficial 2,860.32 ha (CONABIO). Sitio reconocido por diversidad ornitológica del humedal de la Ciénega de Tláhuac.', color:'#7F77DD', es_designacion:true},
+  {key:'AICA_37', nombre:'AICA No. 37 · Ciénega de Tláhuac', grupo:'Internacional', ambito:'Internacional', categoria:'Área de Importancia para la Conservación de las Aves (CONABIO–CIPAMEX)', alcaldia:'Tláhuac', fecha_decreto:'1999', superficie:2860.32, sup_nota:'oficial CONABIO', fecha_pm:'—', notas:'Clave AICA-037. Superficie oficial 2,860.32 ha (CONABIO). Sitio reconocido por diversidad ornitológica del humedal de la Ciénega de Tláhuac.', color:'#d9a400', es_designacion:true},
   {key:'SIPAM_FAO', nombre:'SIPAM FAO · Sistema Agrícola Chinampero', grupo:'Internacional', ambito:'Internacional', categoria:'Sistema Importante del Patrimonio Agrícola Mundial (FAO–GIAHS)', alcaldia:'Xochimilco, Tláhuac, Milpa Alta', fecha_decreto:'07/2017', superficie:1875.65, sup_nota:'6 zonas chinamperas · SIG', fecha_pm:'—', notas:'Designación FAO (julio 2017). 6 zonas chinamperas, incluida Tetelco recuperada: Xochimilco 931.2 · Mixquic 316.4 · San Gregorio 241.4 · Tetelco 151.3 · San Pedro Tláhuac 147.1 · San Luis Tlaxialtemalco 88.2 ha.', color:'#6B7A2F', es_designacion:true}
 ];
 
@@ -3424,6 +3442,7 @@ function setZPFichaBase(key){
   if(activeBaseLayer) activeMap.removeLayer(activeBaseLayer);
   const cfg = TILE_LAYERS[key] || TILE_LAYERS.positron;
   activeBaseLayer = L.tileLayer(cfg.url, {attribution:cfg.attribution, maxZoom:cfg.maxZoom}).addTo(activeMap);
+  _marcarBase(activeMap, key);
   if(activeGeoLayer) activeGeoLayer.bringToFront();
 }
 
@@ -3446,9 +3465,14 @@ function initZPFichaMap(row){
   const isCont = !!feat.properties.es_contenedor;
   const col = row.color || feat.properties.color || 'var(--guinda)';
   activeGeoLayer = L.geoJSON(feat, {
+    /* Tres niveles: contenedor (línea discontinua gruesa, casi sin relleno),
+       designación internacional (punteada, relleno ligero: reconoce, no
+       delimita competencia) y área del inventario (trazo firme). */
     style: isCont
       ? { color:col, weight:2.5, fillColor:col, fillOpacity:0.06, dashArray:'6 5' }
-      : { color:col, weight:1.8, fillColor:col, fillOpacity:0.22 }
+      : (feat.properties.tipo === 'designacion'
+          ? { color:col, weight:2, fillColor:col, fillOpacity:0.10, dashArray:'1 5', lineCap:'round' }
+          : { color:col, weight:1.8, fillColor:col, fillOpacity:0.22 })
   }).addTo(activeMap);
   activeGeoLayer.bindTooltip(row.nombre, {sticky:true, direction:'top'});
   activeGeoLayer.bringToFront();
@@ -3533,7 +3557,9 @@ async function initZPMap(){
       const key = p.capa;
       const style = p.es_contenedor
         ? { color:p.color, weight:2.5, fillColor:p.color, fillOpacity:0.06, dashArray:'6 5' }
-        : { color:p.color, weight:1.5, fillColor:p.color, fillOpacity:0.25 };
+        : (p.tipo === 'designacion'
+            ? { color:p.color, weight:2, fillColor:p.color, fillOpacity:0.10, dashArray:'1 5', lineCap:'round' }
+            : { color:p.color, weight:1.5, fillColor:p.color, fillOpacity:0.25 });
       const lyr = L.geoJSON(feat, { style }).bindTooltip(p.nombre, {sticky:true, direction:'top'});
       const baseFill = style.fillOpacity;
       lyr.on('click', ()=> openZPFicha(key));
@@ -3676,6 +3702,7 @@ function setZPBaseLayer(key){
   if(zpMap._activeBase) zpMap.removeLayer(zpMap._activeBase);
   const cfg = TILE_LAYERS[key] || TILE_LAYERS.positron;
   zpMap._activeBase = L.tileLayer(cfg.url, {attribution:cfg.attribution, maxZoom:cfg.maxZoom}).addTo(zpMap);
+  _marcarBase(zpMap, key);
   // Mantener polígonos y puntos (LayerGroup) por encima de la capa base
   Object.values(zpLayers).forEach(it=>{ try{
     if(!zpMap.hasLayer(it.layer)) return;
@@ -3869,13 +3896,13 @@ function initARCACFichaMap(no){
 /* Capa L.geoJSON de ARCAC con color DISTINTO por feature, clic→ficha (+zoom opcional) */
 function buildArcacGeoLayer(fc, zoomMap){
   return L.geoJSON(fc, {
-    style: f => { const c = f.properties._color || 'var(--arcac-com)'; return {color:c, weight:1.3, fillColor:c, fillOpacity:0.35}; },
+    style: f => { const c = f.properties._color || 'var(--arcac-com)'; return {color:c, weight:1.25, fillColor:c, fillOpacity:0.30}; },
     onEachFeature: (feat,lyr)=>{
       const p=feat.properties;
       lyr.bindTooltip(`${p.nombre} · ${p.tenencia} · ${p.alcaldia}`, {sticky:true, direction:'top'});
       lyr.on('click', ()=>{ openARCACFicha(p.no); if(zoomMap){ try{ zoomMap.fitBounds(lyr.getBounds(), {padding:[30,30], maxZoom:15}); }catch(e){} } });
       lyr.on('mouseover', ()=>lyr.setStyle({weight:3, fillOpacity:0.55}));
-      lyr.on('mouseout',  ()=>lyr.setStyle({weight:1.3, fillOpacity:0.35}));
+      lyr.on('mouseout',  ()=>lyr.setStyle({weight:1.25, fillOpacity:0.30}));
     }
   });
 }
@@ -4009,6 +4036,7 @@ function initTraslapesMap(){
       if(traslapesMap._activeBase) traslapesMap.removeLayer(traslapesMap._activeBase);
       const cfg = TILE_LAYERS[key] || TILE_LAYERS.positron;
       traslapesMap._activeBase = L.tileLayer(cfg.url,{attribution:cfg.attribution,maxZoom:cfg.maxZoom}).addTo(traslapesMap);
+      _marcarBase(traslapesMap, key);
       Object.values(traslapesLayers).forEach(o=>{ try{ o.layer.bringToFront(); }catch(e){} });
       document.querySelectorAll('#trasLayerToggle button').forEach(b=>b.classList.toggle('active', b.dataset.layer===key));
     });
@@ -4220,15 +4248,17 @@ async function initGlobalMap(){
     const color = GROUP_COLORS[grupo];
     const features = (GEOMETRIES.features||[]).filter(f=>f.properties.grupo===grupo);
     const layer = L.geoJSON({type:'FeatureCollection',features}, {
-      style: { color, weight: 1.5, fillColor: color, fillOpacity: 0.22 },
+      /* Categoría = nivel principal de la jerarquía: trazo más grueso que el
+         régimen y que las superposiciones (1.25), relleno moderado. */
+      style: { color, weight: 1.75, fillColor: color, fillOpacity: 0.20 },
       onEachFeature: (feat, lyr) => {
         lyr.bindTooltip(feat.properties.nombre, {sticky:true, direction:'top'});
         lyr.on('click', () => {
           const area = DATA.find(d => d.nombre === feat.properties.nombre);
           if(area) openDrawer(area);
         });
-        lyr.on('mouseover', () => lyr.setStyle({weight:3, fillOpacity:0.4}));
-        lyr.on('mouseout', () => lyr.setStyle({weight:1.5, fillOpacity:0.22}));
+        lyr.on('mouseover', () => lyr.setStyle({weight:3, fillOpacity:0.38}));
+        lyr.on('mouseout', () => lyr.setStyle({weight:1.75, fillOpacity:0.20}));
       }
     });
     layer.addTo(globalMap);
@@ -4311,9 +4341,9 @@ function applyCoadminHighlight(){
         // Modo normal: estilo original
         lyr.setStyle({
           color: baseColor,
-          weight: 1.5,
+          weight: 1.75,
           fillColor: baseColor,
-          fillOpacity: 0.22,
+          fillOpacity: 0.20,
           opacity: 1,
           dashArray: null
         });
@@ -4344,7 +4374,9 @@ function attachSCToggle(btnId, mapInstance, groupLayers, alcaldiasLayer){
       return false;
     }
     mapInstance._scLayer = L.geoJSON(sc, {
-      style: { color:'var(--sc-900)', weight:1.5, fillColor:'var(--sc)', fillOpacity:0.20, dashArray:'4,3' },
+      /* Régimen territorial, no categoría: tinte ligero y trazo discontinuo
+         más fino que el de las áreas, para que nunca compita con ellas. */
+      style: { color:'var(--sc-900)', weight:1.25, fillColor:'var(--sc)', fillOpacity:0.12, dashArray:'4,3' },
       interactive: false
     }).addTo(mapInstance);
     mapInstance._scLayer.bringToBack();
@@ -4649,6 +4681,7 @@ function setGlobalBaseLayer(key){
   if(globalMap._activeBase) globalMap.removeLayer(globalMap._activeBase);
   const cfg = TILE_LAYERS[key] || TILE_LAYERS.positron;
   globalMap._activeBase = L.tileLayer(cfg.url, {attribution:cfg.attribution, maxZoom:cfg.maxZoom}).addTo(globalMap);
+  _marcarBase(globalMap, key);
   // Reordena overlays para que queden encima
   if(globalAlcaldiasLayer) globalAlcaldiasLayer.bringToFront();
   Object.values(globalGroupLayers).forEach(l=>l.bringToFront());
@@ -4776,11 +4809,27 @@ function destroyMap(){
   if(activeMap){ activeMap.remove(); activeMap = null; activeBaseLayer = null; activeGeoLayer = null; }
 }
 
+
+/* ═══ SIMBOLOGÍA · CASCO BLANCO SOBRE ORTOFOTO ══════════════════════════
+   Sobre la imagen satelital los trazos de color se pierden contra la
+   vegetación y el terreno (verde sobre verde, café sobre café). La regla
+   cartográfica es dar a los contornos un casco claro cuando el fondo es
+   fotográfico. Se marca el contenedor del mapa y el CSS aplica un halo al
+   SVG de superposiciones completo —una sola operación de composición, no
+   una por polígono—. Se llama en cada cambio de base. */
+function _marcarBase(map, key){
+  try{
+    const c = map && map.getContainer && map.getContainer();
+    if(c) c.classList.toggle('base-satelite', key === 'satelite');
+  }catch(_){}
+}
+
 function setBaseLayer(key){
   if(!activeMap) return;
   if(activeBaseLayer){ activeMap.removeLayer(activeBaseLayer); }
   const cfg = TILE_LAYERS[key] || TILE_LAYERS.positron;
   activeBaseLayer = L.tileLayer(cfg.url, {attribution: cfg.attribution, maxZoom: cfg.maxZoom}).addTo(activeMap);
+  _marcarBase(activeMap, key);
   // Reordena geo layer encima
   if(activeGeoLayer){ activeGeoLayer.bringToFront(); }
   document.querySelectorAll('.map-block-toggle button').forEach(b=>{
@@ -4807,9 +4856,9 @@ function initMapForArea(d){
   activeGeoLayer = L.geoJSON(geo, {
     style: {
       color: 'var(--guinda)',
-      weight: 2,
+      weight: 2.5,
       fillColor: 'var(--guinda)',
-      fillOpacity: 0.18
+      fillOpacity: 0.14
     }
   }).addTo(activeMap);
   activeGeoLayer.bindTooltip(d.nombre, {sticky: true, direction: 'top'});
@@ -5749,6 +5798,30 @@ async function ubicarResolver(latlng, precision, etiqueta){
       pintarPgoedf(latlng, enANP);
     }
   }catch(_){}
+  /* Zona del programa de manejo en el punto, cuando el área principal tiene
+     zonificación publicada. Si tiene programa pero no archivo, se dice. */
+  try{
+    const zp = document.getElementById('ubiZonaPM');
+    if(zp){
+      const nombreArea = (_coberturasEn(latlng).find(c => c.ficha && c.ficha.indexOf('inv::') === 0) || {}).nombre;
+      if(nombreArea && typeof zonifDe === 'function'){
+        zonifDe(nombreArea).then(e => {
+          if(!document.getElementById('ubiZonaPM')) return;
+          if(!e){
+            zp.innerHTML = '<span class="ubi-zona-nd">Zonificación del programa de manejo aún no disponible en formato geoespacial.</span>';
+            return;
+          }
+          return zonaDePunto(nombreArea, latlng).then(z => {
+            if(!document.getElementById('ubiZonaPM')) return;
+            zp.innerHTML = z
+              ? '<span class="ubi-zona-k">Zona del programa de manejo en este punto</span>'
+                + '<span class="ubi-zona-v"><span class="ubi-zona-sw" style="background:' + esc(zonifFamilia(z.k).color) + '"></span>' + esc(z.zona) + '</span>'
+              : '<span class="ubi-zona-nd">El punto no cae en ninguna zona del programa de manejo (borde o hueco de la cartografía).</span>';
+          });
+        }).catch(()=>{});
+      }
+    }
+  }catch(_){}
   const cerrar = document.getElementById('ubicarCerrar');
   if(cerrar) cerrar.addEventListener('click', ()=>{
     if(_shellActivo()){ cerrarHoja(); return; }
@@ -5906,15 +5979,39 @@ function renderUbicarResultado(latlng, precision, etiqueta){
       aviso = `<div class="ubi-warn">A ${Math.round(c.borde)} m del límite · dentro del margen de error del GPS</div>`;
     }
 
+    /* Lo que decide qué hacer en campo, sin abrir la ficha: régimen de
+       administración, si hay programa de manejo y —cuando existe la
+       zonificación— en qué zona cae el punto. Antes había que ir a la ficha
+       para saberlo, y la zona ni siquiera estaba ahí para el punto. */
+    const dInv = (c.ficha && c.ficha.indexOf('inv::') === 0 && typeof DATA !== 'undefined')
+      ? DATA.find(x => x.nombre === c.nombre) : null;
+    let regimen = '';
+    if(dInv){
+      const pm = dInv.programa_manejo === 'Sí';
+      const coad = (typeof isCoadmin === 'function') && isCoadmin(dInv.nombre);
+      regimen = '<div class="ubi-regimen">'
+        + (coad ? '<span class="ubi-chip ubi-chip-coadmin" title="Convenio Marco SEMARNAT–CONANP–CDMX 2025">Coadministración con la Federación</span>' : '')
+        + `<span class="ubi-chip ${pm ? 'ubi-chip-pm' : 'ubi-chip-nopm'}">${pm
+            ? 'Programa de manejo publicado' + (dInv.fecha_pm ? ' · ' + esc(dInv.fecha_pm) : '')
+            : 'Sin programa de manejo vigente'}</span>`
+        + (sc === false ? '<span class="ubi-chip ubi-chip-urbano">Suelo urbano</span>' : '')
+        + '</div>'
+        + (pm ? '<div class="ubi-zona-pm" id="ubiZonaPM"></div>' : '');
+    }
     cuerpo += `<div class="ubi-main" style="--c:${esc(c.color)}">
       <div class="ubi-main-cat"><span class="ubi-dot"></span>${esc(c.tag)}`
       + (esLim ? ' <span class="lim">Limítrofe</span>' : '') + `</div>
       <div class="ubi-main-nom">${esc(c.nombre)}</div>
       ${aviso}
+      ${regimen}
       <button type="button" class="ubi-ficha" data-ficha="${esc(c.ficha)}">Ver ficha completa <span class="ar">→</span></button>
     </div>`;
 
     const resto = covs.slice(1);
+    if(resto.length){
+      cuerpo += '<div class="ubi-jerarquia">Se muestra primero la figura de mayor jerarquía normativa; '
+              + 'las demás aplican de forma concurrente en este punto.</div>';
+    }
     if(resto.length || sc === true){
       cuerpo += '<div class="ubi-lista">';
       resto.forEach(x=>{
@@ -6233,7 +6330,7 @@ function zonifGeo(entrada){
 const ZONIF_FAMILIAS = [
   { id:'proteccion',  prueba:/^proteccion/,                  color:'#1f6b4a', lbl:'Protección' },
   { id:'restaura',    prueba:/^(restauracion|recuperacion)/, color:'#b28e5c', lbl:'Restauración y recuperación' },
-  { id:'uso-publico', prueba:/^uso publico/,                 color:'#266cb4', lbl:'Uso público' },
+  { id:'uso-publico', prueba:/^uso publico/,                 color:'#364fc7', lbl:'Uso público' },   /* índigo: ΔE 13.7 frente al punto GPS; el azul anterior era el mismo de ANP Federal */
   { id:'uso-especial',prueba:/^uso especial/,                color:'#8f4889', lbl:'Uso especial' },
   { id:'agricola',    prueba:/^agricola/,                    color:'#5d8a5e', lbl:'Agrícola chinampera' },
   { id:'ahi',         prueba:/ahi|asentamiento/,             color:'#55585a', lbl:'Asentamientos humanos irregulares' },
@@ -6250,9 +6347,16 @@ function pintarZonificacion(d){
   if(!cont || !d) return;
   zonifDe(d.nombre).then(e=>{
     if(!e){
-      cont.innerHTML = '<div class="zonif-vacio">Sin zonificación publicada en este tablero. '
-        + 'Solo siete Áreas Naturales Protegidas de la Ciudad cuentan hoy con la zonificación '
-        + 'de su programa de manejo en formato geoespacial.</div>';
+      /* Regla del dato: puede haber programa de manejo sin archivo de
+         zonificación, nunca al revés. Los dos casos se dicen distinto. */
+      const tienePM = d.programa_manejo === 'Sí';
+      cont.innerHTML = tienePM
+        ? '<div class="zonif-vacio"><b>Cuenta con programa de manejo'
+          + (d.fecha_pm ? ' (' + esc(d.fecha_pm) + ')' : '') + '</b>, pero su zonificación aún no está '
+          + 'disponible en formato geoespacial en este tablero. Siete ANP la tienen hoy; '
+          + 'cuando se cargue la de esta área aparecerá aquí y en el mapa.</div>'
+        : '<div class="zonif-vacio"><b>Sin programa de manejo publicado.</b> No hay zonificación que mostrar: '
+          + 'la zonificación es un contenido del programa de manejo.</div>';
       return;
     }
     const sup = parseFloat(String(d.superficie || '').replace(/,/g,'')) || null;
@@ -6295,6 +6399,8 @@ function montarZonificacionEnMapa(mapa, d){
     if(!btn) return;
     let prendida = false;
     const apagar = ()=>{ if(_zonifCapa){ try{ mapa.removeLayer(_zonifCapa); }catch(_){} _zonifCapa = null; }
+                         try{ if(typeof activeGeoLayer!=='undefined' && activeGeoLayer) activeGeoLayer.setStyle({fillOpacity:0.14, weight:2.5}); }catch(_){}
+                         try{ if(mapa._scLayer) mapa._scLayer.setStyle({fillOpacity:0.12}); }catch(_){}
                          prendida = false; btn.classList.remove('active');
                          btn.setAttribute('aria-pressed','false');
                          const l = document.getElementById('zonifLeyenda'); if(l) l.hidden = true; };
@@ -6305,9 +6411,16 @@ function montarZonificacionEnMapa(mapa, d){
       btn.disabled = false;
       if(!g){ siaToast('No se pudo cargar la zonificación de esta área.'); return; }
       _zonifCapa = L.geoJSON(g, {
+        /* Borde blanco fino entre zonas: dos zonas contiguas de la misma familia
+           comparten color y sin él se leen como una sola. */
         style: f => { const c = zonifFamilia((f.properties||{}).zona_k).color;
-                      return { color:c, weight:1.4, fillColor:c, fillOpacity:.32 }; }
+                      return { color:'#fff', weight:1.25, opacity:.9, fillColor:c, fillOpacity:.45 }; }
       }).addTo(mapa);
+      /* El área cede su relleno mientras la zonificación está encendida: si no,
+         el guinda tiñe todas las zonas y el dorado se lee café y el azul gris.
+         El contorno del área se mantiene y se refuerza. */
+      try{ if(typeof activeGeoLayer!=='undefined' && activeGeoLayer) activeGeoLayer.setStyle({fillOpacity:0, weight:3}); }catch(_){}
+      try{ if(mapa._scLayer) mapa._scLayer.setStyle({fillOpacity:0.04}); }catch(_){}
       _zonifCapa.eachLayer(l=>{
         const p = (l.feature && l.feature.properties) || {};
         l.bindTooltip('<b>' + esc(p.zona || 'Zona') + '</b><br>'
