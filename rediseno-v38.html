@@ -6703,7 +6703,11 @@ async function ubicarResolver(latlng, precision, etiqueta){
 }
 
 function renderUbicarResultado(latlng, precision, etiqueta){
-  const coord = `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+  /* La coordenada y el ± del GPS se retiraron del pie (12-sep-2026): en campo
+     no se usan —el mapa de arriba ya muestra dónde cayó el punto— y ocupaban
+     una línea entera del resultado. La precisión SIGUE calculándose: alimenta
+     `cerca()` y el aviso ámbar de «estás dentro del margen de error del
+     límite», que sí es información operativa. */
   const acc = precision ? Math.round(precision) : null;
   const alc = _alcaldiaEn(latlng);
   const sc  = _enSueloConservacion(latlng);
@@ -6722,8 +6726,7 @@ function renderUbicarResultado(latlng, precision, etiqueta){
                 dom && dom.colonia ? 'Col. ' + dom.colonia : null,
                 dom && dom.cp      ? 'CP ' + dom.cp        : null ]
               .filter(Boolean).map(esc).join(sep)
-            + ' ' + _entChip(ent) + '<br>'
-            + [coord, acc ? `± ${acc} m` : null].filter(Boolean).join(sep);
+            + ' ' + _entChip(ent);
 
   let cabeza, cuerpo = '';
 
@@ -7270,8 +7273,8 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
   .cinta-borrador:hover .txt,.cinta-borrador:focus-visible .txt,.cinta-borrador.abierta .txt{display:inline}
   @media (max-width:760px){ .cinta-borrador{bottom:calc(62px + env(safe-area-inset-bottom, 0px))} }
 </style>
-<button type="button" class="cinta-borrador" title="Versión en revisión · rediseño v38 · sia-v35-2026-09-12a"
-        aria-label="Versión en revisión · rediseño v38 · sia-v35-2026-09-12a"
-        onclick="this.classList.toggle('abierta')"><span class="txt">revisión · sia-v35-2026-09-12a</span></button>
+<button type="button" class="cinta-borrador" title="Versión en revisión · rediseño v38 · sia-v35-2026-09-12b"
+        aria-label="Versión en revisión · rediseño v38 · sia-v35-2026-09-12b"
+        onclick="this.classList.toggle('abierta')"><span class="txt">revisión · sia-v35-2026-09-12b</span></button>
 </body>
 </html>
