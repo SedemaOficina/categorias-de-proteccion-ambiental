@@ -1845,6 +1845,13 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
      escritorio, porque describe un hecho del territorio, no un tamaño
      de pantalla. */
 
+  /* Aviso de respaldo: ámbar, junto al contador, sin tapar nada. */
+  .aviso-respaldo{display:inline-flex;align-items:center;gap:6px;margin-left:10px;
+    padding:3px 10px;border-radius:11px;background:#FDF0D5;color:#8a5a12;
+    font-family:'Roboto',sans-serif;font-size:var(--fs-mini);font-weight:600;
+    letter-spacing:.01em;text-transform:none}
+  .aviso-respaldo::before{content:'';width:7px;height:7px;border-radius:50%;background:#b8860b}
+
   /* ── CÁPSULA QUE SE APARTA AL BAJAR ──────────────────────────────── */
   .wrap.barra-oculta .ubicar-bar{transform:translateY(-135%)}
   .ubicar-bar{transition:transform .26s cubic-bezier(.2,.8,.2,1)}
@@ -1939,8 +1946,13 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
   .drawer-asa:active{cursor:grabbing}
   .drawer-asa span{display:block;width:36px;height:4px;border-radius:2px;background:#dadce0}
   .drawer-asa:focus-visible{outline:2px solid var(--guinda);outline-offset:-4px;border-radius:6px}
-  .drawer-inner{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-    overscroll-behavior:contain;padding:2px 18px 40px}
+  /* `overflow-x:hidden` no es cosmética: un elemento `sticky` se desplaza con
+     el scroll HORIZONTAL de su contenedor. Como el cuerpo de la ficha desborda
+     a lo ancho (tarjetas legales, mini-mapa), la cabecera fija se corría a la
+     izquierda y el nombre del área salía cortado. */
+  .drawer-inner{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:2px 18px 40px}
+  .drawer-inner > *{max-width:100%}
   /* Con la ficha abierta, la página de atrás no se mueve. `overscroll-behavior`
      por sí solo no basta en iOS: el cuerpo sigue recibiendo el gesto cuando la
      ficha llega a su tope. Se congela el documento mientras la hoja está arriba
@@ -1956,9 +1968,22 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
      desplazar el cuerpo, como la tarjeta de lugar de Maps. Antes el nombre se
      iba con el scroll y, en una ficha larga, se perdía de vista de qué área se
      estaba leyendo. */
-  .drawer .drawer-header-row{padding-right:52px;position:sticky;top:0;z-index:3;
+  /* z-index por encima de `--z-flotante` (500): el chip de Suelo de
+     Conservación del mini-mapa es `absolute` dentro del contenido y pasaba
+     POR ENCIMA de la cabecera al desplazar, tapando el nombre del área.
+     Cabecera de DOS renglones: tipo · jurisdicción · subcategoría arriba, y el
+     nombre debajo, más chico. Antes ocupaba tres y se comía la hoja. */
+  .drawer .drawer-header-row{padding-right:52px;position:sticky;top:0;z-index:600;
     background:var(--card);margin:0 -18px;padding-left:18px;padding-top:6px;
-    padding-bottom:10px;box-shadow:0 6px 10px -8px rgba(60,64,67,.35)}
+    padding-bottom:9px;box-shadow:0 6px 10px -8px rgba(60,64,67,.35)}
+  .drawer .drawer-header-left{display:flex;flex-wrap:wrap;align-items:baseline;
+    gap:0 7px;min-width:0}
+  .drawer .drawer-header-left .kat{order:1;margin:0}
+  .drawer .drawer-header-left .subcat{order:2;margin:0;font-size:var(--fs-xs);
+    font-style:normal;color:var(--muted)}
+  .drawer .drawer-header-left .subcat::before{content:'·';margin-right:6px;color:var(--line)}
+  .drawer .drawer-header-left h2{order:3;flex:1 1 100%;margin:2px 0 0;
+    font-size:var(--fs-lg);line-height:1.2}
 
   /* ── TOOLTIPS DE LAS CRONOLOGÍAS EN iOS ──────────────────────────
      El globo se ancla al pie con `position:fixed`, pero en Safari de iPhone
@@ -2301,19 +2326,43 @@ async function loadInventarioCSV(){
   return rows;
 }
 
+/* Respaldo del inventario dentro del repositorio.
+   El Sheet es la fuente autoritativa, pero es UNA fuente: el 11-sep-2026 su
+   publicación dejó de resolver y el tablero estuvo horas sin datos. Con esta
+   copia, una caída del Sheet deja de ser una caída del tablero y pasa a ser
+   una degradación: se sirven los datos del último corte, claramente rotulados
+   como tales para que nadie los confunda con el dato vivo.
+   Se regenera exportando la hoja «Inventario» como CSV a data/inventario.csv. */
+async function cargarRespaldoCSV(){
+  const r = await fetch('./data/inventario.csv', { cache: 'no-cache' });
+  if(!r.ok) throw new Error('HTTP ' + r.status);
+  const filas = parseCSV(await r.text());
+  if(!filas.length || !('nombre' in filas[0])) throw new Error('respaldo ilegible');
+  return filas;
+}
+
 /* Un fallo del Sheet no debe tumbar el tablero entero. Ubicar, los mapas,
    Zona Patrimonio y ARCAC no dependen del inventario y siguen sirviendo en
-   campo, que es el uso dominante. Se degrada a lista vacía y el motivo queda
-   a la vista en la tabla, no solo en la consola. */
+   campo, que es el uso dominante. */
 let INVENTARIO_ERROR = '';
+let INVENTARIO_RESPALDO = false;
 let DATA_RAW = [];
 try{
   DATA_RAW = await loadInventarioCSV();
 }catch(err){
-  INVENTARIO_ERROR = (err && err.message) ? err.message : String(err);
-  console.error('[Inventario] ' + INVENTARIO_ERROR);
-  _estadoTabla('No se pudo cargar el inventario. ' + INVENTARIO_ERROR);
-  setTimeout(()=>{ try{ siaToast('No se pudo cargar el inventario desde Google Sheets.'); }catch(_){} }, 1200);
+  const motivo = (err && err.message) ? err.message : String(err);
+  console.error('[Inventario] ' + motivo);
+  _estadoTabla('El inventario en vivo no respondió. Cargando la copia local…');
+  try{
+    DATA_RAW = await cargarRespaldoCSV();
+    INVENTARIO_RESPALDO = true;
+    console.warn('[Inventario] sirviendo el respaldo del repositorio');
+    setTimeout(()=>{ try{ siaToast('Inventario servido desde la copia local: el Sheet no respondió.'); }catch(_){} }, 1200);
+  }catch(err2){
+    INVENTARIO_ERROR = motivo;
+    _estadoTabla('No se pudo cargar el inventario. ' + motivo);
+    setTimeout(()=>{ try{ siaToast('No se pudo cargar el inventario desde Google Sheets.'); }catch(_){} }, 1200);
+  }
 }
 
 // Cargar polígonos de Suelo de Conservación (capa overlay)
@@ -4343,6 +4392,18 @@ function render(){
         })()}</td>
         <td>${d.dg_responsable ? `<span class="tag-dg tag-dg-${d.dg_responsable.toLowerCase()}" title="${d.dg_responsable === 'DGSANPAVA' ? 'Dirección General del Sistema de Áreas Naturales Protegidas y Áreas de Valor Ambiental' : 'Dirección General de la Comisión de Recursos Naturales y Desarrollo Rural'}">${d.dg_responsable}</span>` : '<span class="dg-empty">—</span>'}</td>
       </tr>`).join('');
+  }
+  /* Mientras se sirva la copia local, el aviso vive en pantalla —no en un
+     toast que se va—: quien consulte tiene derecho a saber que no está viendo
+     el dato vivo antes de citarlo en un oficio. */
+  if(INVENTARIO_RESPALDO){
+    const cr = document.querySelector('.counter-row');
+    if(cr && !document.getElementById('avisoRespaldo')){
+      const a = document.createElement('span');
+      a.id = 'avisoRespaldo'; a.className = 'aviso-respaldo';
+      a.textContent = 'Copia local · el inventario en vivo no respondió';
+      cr.appendChild(a);
+    }
   }
   document.getElementById('showCount').textContent = fmtInt(rows.length);
   document.getElementById('totalCount').textContent = fmtInt(base.length);

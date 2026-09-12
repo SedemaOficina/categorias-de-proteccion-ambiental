@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-09-12q';
+const CACHE_VERSION = 'sia-v35-2026-09-12s';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
@@ -19,7 +19,10 @@ const CORE_ASSETS = [
   './',
   './index.html',
   './assets/logo-sedema.png',
-  './assets/favicon.png'
+  './assets/favicon.png',
+  /* Respaldo del inventario: pesa 23 KB y es la diferencia entre un tablero
+     sin datos y uno con el último corte cuando el Sheet no responde. */
+  './data/inventario.csv'
 ];
 
 /* Capas que sí conviene tener offline, pero que no deben bloquear el install ni
