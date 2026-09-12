@@ -189,6 +189,29 @@ vencerlo), cápsula flotando arriba y **hoja deslizable** abajo.
 - El auditor de encimados (`traslapes-ui.mjs`) salta la comprobación de «hueco bajo la barra
   fija» cuando hay `gm-shell`: ahí nada vive en el flujo normal, así que el hueco no aplica.
 
+**Etapa 3 (12 sep).** Cuatro cierres:
+- **Marcas del kit** (`frame MARKS`): punto azul con aro blanco + halo de precisión cuando el
+  punto viene del GPS; **gota guinda** cuando viene de una dirección o coordenada tecleada. Son
+  dos hechos distintos y antes se pintaban igual.
+- **Botón de capas** (`montarBotonCapas`): en celular la rejilla de capas del mapa repetía los
+  chips del inventario y gastaba cuatro renglones. Se pliega tras un FAB redondo sobre el mapa.
+  No cambia lógica: son los mismos chips, guardados.
+- **La cápsula se aparta al bajar** y vuelve al subir (clase `barra-oculta`), fuera del
+  caparazón. Y **se retira del todo mientras hay una ficha abierta** (`html.ficha-abierta`):
+  flotaba encima y cortaba el nombre del área.
+- **La ficha es una hoja** en celular: sube desde abajo con asa, conserva el mapa detrás y se
+  cierra deslizando más de 110 px. El cajón lateral en un teléfono era un cambio de página
+  disfrazado.
+- **Resultado de ubicación rediseñado**: estaba partido en cuatro bloques con tratamientos
+  distintos y la frase principal iba en tipografía de titular (tres renglones para decir «aquí
+  no hay nada»). Ahora son renglones con el mismo ritmo; el pie de alcaldía dejó de ser un
+  apéndice tras una línea y es una fila más, con el icono de lugar.
+- **Zoom de iOS**: Safari amplía cualquier campo de texto menor a 16px y deja la página cortada.
+  No se cura con `user-scalable=no` —iOS lo ignora y además mataría el pellizco del mapa—: los
+  campos de tecleo van a 16px. Los desplegables se quedan en 13px.
+- **Pantalla completa**: iOS no la implementa fuera de video. Se detecta al arrancar
+  (`html.sin-fullscreen`) y el botón se oculta donde solo mostraría un error.
+
 ## Barra «¿Dónde estoy?» · flujo principal de campo (v37)
 El uso dominante del tablero es de **personal de SEDEMA**, no público: en celular para ubicarse
 en campo, en escritorio para consultar tablas y estadística. La barra refleja eso.

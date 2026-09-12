@@ -1633,6 +1633,15 @@
   --gm-tint:rgba(157,33,72,.11);     /* el «teal claro» del kit, en guinda */
   --gm-tint-fuerte:rgba(157,33,72,.18);
 }
+/* Marca de ubicación del kit: punto azul con aro blanco (GPS) y gota
+   guinda (lugar buscado). Van fuera de la media query porque describen un
+   hecho del territorio, no un tamaño de pantalla. */
+.gm-mark{background:none;border:none}
+.gm-mark-gps i{display:block;width:18px;height:18px;border-radius:50%;
+  background:#1971c2;border:3px solid #fff;box-shadow:0 1px 4px rgba(42,42,42,.45);
+  margin:2px}
+.gm-mark-pin svg{filter:drop-shadow(0 2px 3px rgba(42,42,42,.4))}
+
 /* Asa de arrastre (componente `handle` del kit) */
 .gm-handle{width:34px;height:4px;border-radius:2px;background:#dadce0;margin:8px auto 4px}
 
@@ -1802,6 +1811,87 @@
   .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-item{min-width:0;max-width:100%}
   .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-cerrar{top:10px;right:12px}
   .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-cabeza{padding-right:34px}
+
+
+  /* ── MARCAS DEL KIT (frame `MARKS`) ───────────────────────────────
+     Fuera de la media query: la marca es la misma en celular y en
+     escritorio, porque describe un hecho del territorio, no un tamaño
+     de pantalla. */
+
+  /* ── CÁPSULA QUE SE APARTA AL BAJAR ──────────────────────────────── */
+  .wrap.barra-oculta .ubicar-bar{transform:translateY(-135%)}
+  .ubicar-bar{transition:transform .26s cubic-bezier(.2,.8,.2,1)}
+
+  /* ── BOTÓN DE CAPAS (patrón `layers` del kit) ────────────────────── */
+  .panel-mapa{position:relative}
+  .map-filters{display:none;position:absolute;left:12px;bottom:66px;z-index:601;
+    margin:0;padding:11px;gap:7px;flex-direction:column;align-items:stretch;
+    background:var(--card);border-radius:16px;box-shadow:var(--gm-e3);
+    max-height:56vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .map-filters.abierto{display:flex}
+  .map-filter-chip{justify-content:flex-start}
+  .btn-capas{position:absolute;left:12px;bottom:12px;z-index:602;
+    width:44px;height:44px;border-radius:50%;border:none;background:var(--card);
+    color:var(--ink-2);box-shadow:var(--gm-e2);display:flex;align-items:center;
+    justify-content:center;cursor:pointer;padding:0}
+  .btn-capas svg{width:21px;height:21px}
+  .btn-capas.activo{background:var(--guinda);color:var(--crema)}
+  .btn-capas:active{transform:scale(.95)}
+
+  /* ── LA FICHA COMO HOJA (componente `location-card`) ──────────────
+     El cajón lateral llegaba desde la derecha y tapaba la pantalla
+     completa; en un teléfono eso es un cambio de página disfrazado.
+     Como hoja conserva el mapa detrás y se cierra con el pulgar. */
+  .drawer{top:auto;left:0;right:0;bottom:0;width:100%;
+    height:calc(100svh - 78px);
+    border-left:none;border-top:3px solid var(--guinda);
+    border-radius:18px 18px 0 0;
+    transform:translateY(100%);
+    box-shadow:0 -2px 18px rgba(60,64,67,.3)}
+  .drawer.open{transform:translateY(0)}
+  .drawer.arrastrando{transition:none}
+  .drawer .gm-handle{display:block;position:sticky;top:0;z-index:3;
+    background:var(--card);padding:0;margin:0 auto 2px;
+    width:100%;height:18px;border-radius:0;box-shadow:none}
+  .drawer .gm-handle::after{content:'';display:block;width:34px;height:4px;
+    border-radius:2px;background:#dadce0;margin:7px auto 0}
+  .drawer-inner{padding:0 18px 40px}
+  .drawer .close{top:20px;right:14px}
+
+
+  /* ── LA FICHA MANDA: fuera la cápsula mientras está abierta ───────
+     El buscador flotaba por encima de la ficha y cortaba el nombre del
+     área. No hay nada que buscar mientras se lee una ficha: la barra se
+     retira y vuelve al cerrarla. */
+  html.ficha-abierta .ubicar-bar{opacity:0;pointer-events:none;transform:translateY(-135%)}
+
+  /* ── RESULTADO DE UBICACIÓN · una sola pieza ──────────────────────
+     Estaba partido en cuatro bloques con tratamientos distintos —rótulo,
+     tarjeta enorme, fila de la más cercana y un pie suelto tras una
+     línea—, y la frase principal iba en tipografía de titular, que en
+     un teléfono ocupa tres renglones para decir «aquí no hay nada».
+     Ahora es una lista de renglones con el mismo ritmo, en la que el
+     tamaño solo distingue el dato del rótulo. */
+  #ubicarResultado .ubi-cabeza{font-size:var(--fs-micro);letter-spacing:.11em;
+    color:var(--muted);margin:0 0 8px}
+  #ubicarResultado .ubi-main{padding:12px 14px;border-left-width:4px;margin-bottom:8px}
+  #ubicarResultado .ubi-main-cat{font-size:var(--fs-micro);margin-bottom:3px}
+  #ubicarResultado .ubi-main-nom{font-size:var(--fs-lg);font-weight:700;line-height:1.25;
+    letter-spacing:0}
+  #ubicarResultado .ubi-vacio .ubi-main-nom{font-size:var(--fs-md);font-weight:500}
+  #ubicarResultado .ubi-item{padding:11px 12px}
+  #ubicarResultado .ubi-item-txt b{font-size:var(--fs-base)}
+  #ubicarResultado .ubi-item-txt span{font-size:var(--fs-micro);letter-spacing:.04em}
+  /* El pie deja de ser un apéndice tras una línea: es una fila más, con
+     el mismo icono de lugar que usa el resto del kit. */
+  #ubicarResultado .ubi-ctx{margin:8px 0 0;padding:12px;border-top:none;
+    background:var(--card);border-radius:12px;box-shadow:var(--gm-e1);
+    font-size:var(--fs-base);color:var(--ink-2);display:flex;align-items:center;gap:9px;
+    line-height:1.35}
+  #ubicarResultado .ubi-ctx::before{content:'';flex:0 0 auto;width:17px;height:17px;
+    background:no-repeat center/contain;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239D2148' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s7-6.2 7-11.4A7 7 0 0 0 5 10.6C5 15.8 12 22 12 22Z'/><circle cx='12' cy='10.4' r='2.4'/></svg>")}
+  #ubicarResultado .ubi-ficha{width:100%;justify-content:center;margin-top:12px}
 
   /* ── PILLS (componente `pills`) ───────────────────────────────────
      Los subfiltros ya eran pastillas; se les da la sombra y el blanco
@@ -2735,6 +2825,7 @@ function populateFilters(){
 }
 
 function renderDashboard(){
+  setTimeout(()=>{ try{ montarBotonCapas(); }catch(e){} }, 60);
   const g = currentGroup();
   const dash = document.getElementById('dashboard');
   const tblSec = document.getElementById('tableSection');
@@ -4559,7 +4650,9 @@ function openEmbFicha(e){
   if(typeof destroyMap === 'function'){ try{ destroyMap(); }catch(err){} }
   const p = e.props || {};
   const col = (typeof EMB_COLORS!=='undefined' && EMB_COLORS[e.tipo]) || COL_AZUL_EMB;
+  _marcaFicha(true);
   drIn.innerHTML = `
+    <div class="gm-handle" id="drawerAsa" aria-hidden="true"></div>
     <div class="drawer-header-row"><div class="drawer-header-left">
       <div class="kat" style="color:${col}">Embarcadero · ${e.tipo}</div>
       <h2>${p.nombre || 'Embarcadero'}</h2>
@@ -5029,7 +5122,9 @@ function openZPDrawer(row){
   const sup = (row.superficie != null && row.superficie !== '')
     ? `${fmt(row.superficie)}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">ha</span>`
     : `<span style="font-size:var(--fs-xl);color:var(--muted)">Por confirmar</span>`;
+  _marcaFicha(true);
   drIn.innerHTML = `
+    <div class="gm-handle" id="drawerAsa" aria-hidden="true"></div>
     <div class="drawer-header-row">
       <div class="drawer-header-left">
         <div class="kat">Zona Patrimonio · ${row.ambito||''}</div>
@@ -5461,7 +5556,9 @@ function openARCACFicha(no){
   const p = arcacByNo[no];
   if(!p) return;
   if(typeof destroyMap === 'function'){ try{ destroyMap(); }catch(e){} }
+  _marcaFicha(true);
   drIn.innerHTML = `
+    <div class="gm-handle" id="drawerAsa" aria-hidden="true"></div>
     <div class="drawer-header-row"><div class="drawer-header-left">
       <div class="kat">ARCAC · Núcleo agrario</div>
       <h2>${p.nombre}</h2>
@@ -6787,6 +6884,33 @@ function ubicarPorGPS(){
   }, {enableHighAccuracy:true, timeout:12000, maximumAge:0});
 }
 
+/* ═══ CÁPSULA QUE SE APARTA AL BAJAR ══════════════════════════════════
+   Fuera del caparazón la barra es pegajosa: se queda arriba y el contenido
+   pasa por debajo, que es lo que se ve cortado al desplazarse. Como en Maps,
+   se aparta al bajar y vuelve al subir —o al llegar arriba del todo—. Solo en
+   celular: en escritorio no estorba y la referencia constante sirve. */
+(function(){
+  let ultimo = 0, pendiente = false;
+  const UMBRAL = 8;
+  function evaluar(){
+    pendiente = false;
+    const wrap = document.querySelector('.wrap');
+    if(!wrap || !window.matchMedia('(max-width:760px)').matches
+       || wrap.classList.contains('gm-shell')){
+      if(wrap) wrap.classList.remove('barra-oculta');
+      ultimo = window.scrollY; return;
+    }
+    const y = window.scrollY;
+    if(y < 60){ wrap.classList.remove('barra-oculta'); ultimo = y; return; }
+    if(Math.abs(y - ultimo) < UMBRAL) return;
+    wrap.classList.toggle('barra-oculta', y > ultimo);
+    ultimo = y;
+  }
+  window.addEventListener('scroll', ()=>{
+    if(!pendiente){ pendiente = true; requestAnimationFrame(evaluar); }
+  }, {passive:true});
+})();
+
 /* ═══ HOJA DESLIZABLE · caparazón de mapa en celular ═══════════════════
    Tres posiciones, como en Maps: asomada (se ve el encabezado y la primera
    cobertura), media y completa. Se arrastra por el asa —no por el cuerpo, que
@@ -7016,6 +7140,34 @@ function renderUbicarResultado(latlng, precision, etiqueta){
   </div>`;
 }
 
+/* ═══ BOTÓN DE CAPAS (celular) ═════════════════════════════════════════
+   En celular la rejilla de capas del mapa repetía, con otro aspecto, los
+   mismos chips del inventario y gastaba cuatro renglones de pantalla. Se
+   pliega detrás de un botón redondo sobre el mapa —el patrón `layers` del
+   kit— y se despliega al tocarlo. No cambia ninguna lógica: son los mismos
+   chips, solo que guardados. */
+function montarBotonCapas(){
+  if(!window.matchMedia('(max-width:760px)').matches) return;
+  document.querySelectorAll('.panel-mapa').forEach(panel=>{
+    const filtros = panel.querySelector('.map-filters');
+    if(!filtros || filtros.classList.contains('map-filters--oculto')) return;
+    if(panel.querySelector('.btn-capas')) return;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn-capas';
+    b.setAttribute('aria-label','Capas del mapa');
+    b.setAttribute('aria-expanded','false');
+    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"'
+                + ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                + '<path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>';
+    b.addEventListener('click', ()=>{
+      const ab = filtros.classList.toggle('abierto');
+      b.classList.toggle('activo', ab);
+      b.setAttribute('aria-expanded', ab ? 'true' : 'false');
+    });
+    panel.appendChild(b);
+  });
+}
+
 /* Safari en iPhone no implementa la API de pantalla completa para elementos
    —solo para video—, así que el botón únicamente servía para mostrar el aviso
    «Tu navegador no admite el modo pantalla completa». Se marca el documento una
@@ -7052,12 +7204,26 @@ function _dibujarUbicacion(map, destino, latlng, precision){
     l.bindTooltip(c.nombre,{sticky:true,direction:'top'});
     try{ bounds.extend(l.getBounds()); }catch(e){}
   });
-  if(precision){
+  /* Marca del kit (frame MARKS). Dos marcas distintas porque son dos hechos
+     distintos: el punto azul con aro blanco es «aquí estás» según el GPS y va
+     acompañado del halo de precisión; la gota es «este es el lugar que
+     buscaste», que no tiene margen de error que dibujar. Antes las dos se
+     pintaban igual y el usuario no podía distinguirlas. */
+  if(precision != null){
     L.circle([latlng.lat,latlng.lng],{radius:precision,color:COL_AZUL_UBIC,weight:1,
-      fillColor:COL_AZUL_UBIC,fillOpacity:.12}).addTo(destino);
+      fillColor:COL_AZUL_UBIC,fillOpacity:.12,interactive:false}).addTo(destino);
+    L.marker([latlng.lat,latlng.lng],{interactive:false,keyboard:false,
+      icon:L.divIcon({className:'gm-mark gm-mark-gps',html:'<i></i>',
+        iconSize:[22,22],iconAnchor:[11,11]})}).addTo(destino);
+  } else {
+    L.marker([latlng.lat,latlng.lng],{interactive:false,keyboard:false,
+      icon:L.divIcon({className:'gm-mark gm-mark-pin',
+        html:'<svg viewBox="0 0 24 34" width="26" height="34" aria-hidden="true">'
+           + '<path d="M12 33.5C12 33.5 23 20.6 23 12A11 11 0 1 0 1 12c0 8.6 11 21.5 11 21.5Z"'
+           + ' fill="#9D2148" stroke="#fff" stroke-width="1.6"/>'
+           + '<circle cx="12" cy="12" r="4.1" fill="#6d1733"/></svg>',
+        iconSize:[26,34],iconAnchor:[13,34]})}).addTo(destino);
   }
-  L.circleMarker([latlng.lat,latlng.lng],{radius:7,color:'#fff',weight:2,
-    fillColor:COL_AZUL_UBIC,fillOpacity:1}).addTo(destino);
   return bounds;
 }
 
@@ -7113,7 +7279,9 @@ function openDrawer(d){
   if(location.hash !== newHash){
     history.replaceState(null, '', newHash);
   }
+  _marcaFicha(true);
   drIn.innerHTML = `
+    <div class="gm-handle" id="drawerAsa" aria-hidden="true"></div>
     <div class="drawer-header-row">
       <div class="drawer-header-left">
         <div class="kat">${d.tipo} · ${d.jurisdiccion}</div>
@@ -7198,7 +7366,37 @@ function openDrawer(d){
     });
   }
 }
+/* La ficha-hoja se cierra deslizando el asa hacia abajo, como en Maps. Se
+   arrastra solo desde el asa: el cuerpo de la ficha tiene su propio
+   desplazamiento y robárselo haría imposible leerla. */
+document.addEventListener('pointerdown', e=>{
+  const asa = e.target && e.target.closest && e.target.closest('#drawerAsa');
+  if(!asa || !window.matchMedia('(max-width:760px)').matches) return;
+  const dr = document.getElementById('dr'); if(!dr) return;
+  const y0 = e.clientY; let dy = 0;
+  dr.classList.add('arrastrando');
+  const mover = ev => { dy = Math.max(0, ev.clientY - y0);
+                        dr.style.transform = 'translateY(' + dy + 'px)'; };
+  const soltar = () => {
+    document.removeEventListener('pointermove', mover);
+    document.removeEventListener('pointerup', soltar);
+    document.removeEventListener('pointercancel', soltar);
+    dr.classList.remove('arrastrando');
+    dr.style.transform = '';
+    if(dy > 110) closeDrawer();
+  };
+  document.addEventListener('pointermove', mover);
+  document.addEventListener('pointerup', soltar);
+  document.addEventListener('pointercancel', soltar);
+  e.preventDefault();
+});
+
+function _marcaFicha(abierta){
+  try{ document.documentElement.classList.toggle('ficha-abierta', !!abierta); }catch(e){}
+}
+
 function closeDrawer(){
+  _marcaFicha(false);
   bd.classList.remove('open');
   dr.classList.remove('open');
   destroyMap();
@@ -7495,8 +7693,8 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
   .cinta-borrador:hover .txt,.cinta-borrador:focus-visible .txt,.cinta-borrador.abierta .txt{display:inline}
   @media (max-width:760px){ .cinta-borrador{bottom:calc(62px + env(safe-area-inset-bottom, 0px))} }
 </style>
-<button type="button" class="cinta-borrador" title="Versión en revisión · rediseño v38 · sia-v35-2026-09-12d"
-        aria-label="Versión en revisión · rediseño v38 · sia-v35-2026-09-12d"
-        onclick="this.classList.toggle('abierta')"><span class="txt">revisión · sia-v35-2026-09-12d</span></button>
+<button type="button" class="cinta-borrador" title="Versión en revisión · rediseño v38 · sia-v35-2026-09-12e"
+        aria-label="Versión en revisión · rediseño v38 · sia-v35-2026-09-12e"
+        onclick="this.classList.toggle('abierta')"><span class="txt">revisión · sia-v35-2026-09-12e</span></button>
 </body>
 </html>
