@@ -672,6 +672,26 @@ un acuerdo comunitario sobre el mismo suelo, lo que es materia de coordinación,
 datos. Regenerar con `python tools/traslapes.py` al cambiar cualquiera de las tres capas.
 
 ## Pendientes / riesgos conocidos
+- **Apagar GitHub Pages.** Ya hay dominio propio (`sia.contactoverde.com`, Cloudflare Workers) y
+  la dirección `sedemaoficina.github.io/categorias-de-proteccion-ambiental/` sigue viva sirviendo
+  el mismo repositorio: dos direcciones para un tablero oficial es una invitación a que alguien
+  cite la equivocada, y además es la que Telcel no rutea. Se apaga en el repositorio →
+  *Settings → Pages → Build and deployment → Source: None*. Hacerlo **después** de confirmar que
+  el dominio nuevo está estable, y avisar a quien tenga la liga vieja guardada.
+- **Login para el tablero.** El contenido incluye metas de gobierno e información que no debería
+  ser pública. Se requiere autenticación con usuario y contraseña, y que las credenciales queden
+  recordadas en escritorio y en celular. Notas para cuando se aborde: un sitio estático no puede
+  autenticar por sí mismo —cualquier comprobación en el navegador se saltea viendo el código—, así
+  que hay dos vías reales: **Cloudflare Access** (delante del Worker, sin tocar el tablero, con
+  correo institucional o clave de un solo uso; la sesión se recuerda por cookie) o mover la lectura
+  del inventario detrás de un Worker que exija sesión. La primera es la barata y la que conserva
+  el archivo único. Decidir también qué es público y qué no: hoy el inventario y los decretos son
+  información pública por obligación de transparencia; las metas de gobierno no.
+- **Tarjeta compartible de ARCAC y Zona Patrimonio.** El generador de imagen (`btnShareArea`) solo
+  existe en la ficha de las 66 áreas del inventario. Las fichas de ARCAC (`openARCACFicha`) y de
+  las designaciones ZP (`openZPDrawer`) no lo traen, y sus registros tienen campos distintos
+  —tenencia en vez de subcategoría, sin decreto ni programa de manejo—. Unificar exige que el
+  generador reciba un descriptor común, no el registro crudo.
 - **Migrar fuera de las IP de GitHub Pages** (ver hallazgo de arriba). Al hacerlo hay que actualizar
   `canonical`, `og:url`, `og:image`, `twitter:image` en `index.html` y la restricción de origen de
   la llave de Google en Cloud Console.

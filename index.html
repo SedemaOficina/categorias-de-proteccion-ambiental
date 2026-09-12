@@ -1944,6 +1944,11 @@
   .drawer-asa:focus-visible{outline:2px solid var(--guinda);outline-offset:-4px;border-radius:6px}
   .drawer-inner{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
     overscroll-behavior:contain;padding:2px 18px 40px}
+  /* Con la ficha abierta, la página de atrás no se mueve. `overscroll-behavior`
+     por sí solo no basta en iOS: el cuerpo sigue recibiendo el gesto cuando la
+     ficha llega a su tope. Se congela el documento mientras la hoja está arriba
+     y se libera al cerrarla. */
+  html.ficha-abierta, html.ficha-abierta body{overflow:hidden;overscroll-behavior:none}
   /* El tache, como en Maps: círculo gris en la esquina de la cabecera, a la
      altura del título —no flotando en el hueco de arriba—. */
   .drawer .close{position:absolute;z-index:4;top:32px;right:14px;
@@ -5197,10 +5202,30 @@ function _locatePopupHTML(latlng, accuracy, _i1, _i2, opts){
   return html + '</div>';
 }
 
+/* ═══ CONTEXTO DE UBICACIÓN PARA LA TARJETA COMPARTIBLE ════════════════
+   Cuando la ficha se abre desde una consulta —GPS, dirección o coordenada—,
+   la imagen debe decir QUÉ PUNTO se consultó: sin eso, la captura solo prueba
+   que el área existe, no que el punto de campo cae dentro. Se guarda el punto
+   al abrir la ficha desde un resultado de ubicación y se borra al abrirla
+   desde la tabla o el mapa, para que una consulta vieja no contamine una
+   ficha posterior. */
+let _ctxUbicFicha = null;
+let _fichaCtxUbic = null;   /* el que ve la tarjeta compartible */
+let _ubicarEtiqueta = '';
+function fijarCtxUbic(){
+  _ctxUbicFicha = (_ubicarOrigen && isFinite(_ubicarOrigen.lat))
+    ? { lat:_ubicarOrigen.lat, lng:_ubicarOrigen.lng, etiqueta:_ubicarEtiqueta || '' }
+    : null;
+}
+function limpiarCtxUbic(){ _ctxUbicFicha = null; }
+
 /* Acciones del popup: abrir ficha y copiar coordenada (delegadas: el popup se recrea) */
 document.addEventListener('click', ev=>{
   const t = ev.target.closest && ev.target.closest('[data-ficha]');
   if(t){
+    /* Estos botones solo existen en el resultado de ubicación y en el popup
+       del mapa: ambos vienen de un punto consultado. */
+    fijarCtxUbic();
     const raw = t.dataset.ficha || '';
     const i = raw.indexOf('::');
     const tipo = raw.slice(0, i), ref = raw.slice(i+2);
@@ -6649,7 +6674,7 @@ function _wrapText(ctx, txt, maxW){
   return lines;
 }
 
-function _drawGeoInBox(ctx, geoIn, x, y, w, h, color){
+function _drawGeoInBox(ctx, geoIn, x, y, w, h, color, punto){
   /* findGeometry() devuelve un Feature, no una geometría: hay que desenvolverlo */
   const geo = (geoIn && geoIn.type==='Feature') ? geoIn.geometry : geoIn;
   if(!geo) return;
@@ -6677,6 +6702,21 @@ function _drawGeoInBox(ctx, geoIn, x, y, w, h, color){
     ctx.fillStyle = color + '33'; ctx.fill('evenodd');
     ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.lineJoin='round'; ctx.stroke();
   });
+  /* Punto consultado, con la misma proyección del polígono: si se calculara
+     aparte quedaría desplazado. Se dibuja aunque caiga fuera del recuadro
+     —se recorta a sus bordes— porque «cerca pero afuera» también es
+     información: dice que el punto no está dentro del área. */
+  if(punto && isFinite(punto.lat) && isFinite(punto.lng)){
+    const [px0,py0] = P([punto.lng, punto.lat]);
+    const px = Math.max(x+12, Math.min(x+w-12, px0));
+    const py = Math.max(y+12, Math.min(y+h-12, py0));
+    ctx.beginPath(); ctx.arc(px,py,17,0,Math.PI*2);
+    ctx.fillStyle = COL_AZUL_UBIC + '2e'; ctx.fill();
+    ctx.beginPath(); ctx.arc(px,py,10,0,Math.PI*2);
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.beginPath(); ctx.arc(px,py,7,0,Math.PI*2);
+    ctx.fillStyle = COL_AZUL_UBIC; ctx.fill();
+  }
   ctx.restore();
 }
 
@@ -6719,7 +6759,8 @@ async function compartirFichaImagen(d, btn){
   const boxH=430;
   ctx.fillStyle='#f8f4e0'; ctx.fillRect(48,y,W-96,boxH);
   ctx.strokeStyle='#eae4cf'; ctx.lineWidth=2; ctx.strokeRect(48,y,W-96,boxH);
-  if(geo) _drawGeoInBox(ctx,geo,48,y,W-96,boxH,color);
+  const ctxU = _fichaCtxUbic;
+  if(geo) _drawGeoInBox(ctx,geo,48,y,W-96,boxH,color,ctxU);
   else{
     ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='400 26px Roboto, sans-serif';
     ctx.fillText('Polígono no disponible',48+30,y+boxH/2);
@@ -6749,14 +6790,21 @@ async function compartirFichaImagen(d, btn){
     ['SUELO DE CONSERVACIÓN', SC_CORTO(d)],
     ['DG RESPONSABLE', d.dg_responsable||'—']
   ];
+  /* El paso entre filas se calcula, no se fija: al pasar de cinco a ocho
+     filas el bloque se metía debajo del pie y la última renglonada quedaba
+     encimada con el filete. Se reparte el espacio que queda hasta el pie,
+     con un tope de 46 px para que con pocas filas no se vea estirado. */
+  const PIE_Y = H - 120;
+  const paso  = Math.max(30, Math.min(46, Math.floor((PIE_Y - y) / filas.length)));
   filas.forEach(([k,v])=>{
+    if(y > PIE_Y) return;                       /* nunca invadir el pie */
     ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='500 19px "Roboto Mono", monospace'; ctx.fillText(k,48,y);
     ctx.fillStyle='#2a2a2a'; ctx.font='500 25px Roboto, sans-serif';
     const lines=_wrapText(ctx,v,W-96-330);
     ctx.fillText(lines[0]||'',378,y);
     ctx.strokeStyle='#eae4cf'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(48,y+14); ctx.lineTo(W-48,y+14); ctx.stroke();
-    y+=46;
+    ctx.beginPath(); ctx.moveTo(48,y+paso-32); ctx.lineTo(W-48,y+paso-32); ctx.stroke();
+    y+=paso;
   });
 
   /* Pie */
@@ -6767,6 +6815,19 @@ async function compartirFichaImagen(d, btn){
   ctx.fillText('Sistema de Información Ambiental · SEDEMA CDMX',48,y);
   ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='400 17px "Roboto Mono", monospace';
   ctx.fillText('Consulta: '+hoy,48,y+26);
+  /* La coordenada consultada va al pie, alineada a la derecha: es el dato que
+     vuelve verificable la captura —sin ella, la imagen no dice desde dónde se
+     hizo la consulta—. */
+  if(ctxU){
+    ctx.textAlign='right';
+    ctx.fillStyle='#2a2a2a'; ctx.font='500 19px "Roboto Mono", monospace';
+    ctx.fillText(ctxU.lat.toFixed(6)+', '+ctxU.lng.toFixed(6), W-48, y);
+    if(ctxU.etiqueta){
+      ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='400 17px Roboto, sans-serif';
+      ctx.fillText(_wrapText(ctx, ctxU.etiqueta, 520)[0] || '', W-48, y+26);
+    }
+    ctx.textAlign='left';
+  }
 
   /* Compartir o descargar */
   const nombreArchivo = 'SIA_' + slugify(d.nombre) + '.png';
@@ -7087,6 +7148,7 @@ async function ubicarResolver(latlng, precision, etiqueta){
   else sec.scrollIntoView({behavior:'smooth', block:'start'});
   await _cargarCapasCobertura();
   _ubicarOrigen = { lat: latlng.lat, lng: latlng.lng };   // habilita distancias en las sugerencias
+  _ubicarEtiqueta = etiqueta || (precision != null ? 'Ubicación por GPS' : 'Punto consultado');
   sec.innerHTML = renderUbicarResultado(latlng, precision, etiqueta);
   const cerrar = document.getElementById('ubicarCerrar');
   if(cerrar) cerrar.addEventListener('click', ()=>{
@@ -7364,6 +7426,11 @@ function initUbicarMap(latlng, precision){
 const bd=document.getElementById('bd'),dr=document.getElementById('dr'),drIn=document.getElementById('drIn');
 function openDrawer(d){
   const legalParts = getLegalContext(d);
+  /* De un solo uso: lo pone el manejador de [data-ficha] justo antes de abrir
+     y se consume aquí. Así una ficha abierta después desde la tabla no arrastra
+     el punto de una consulta anterior. */
+  _fichaCtxUbic = _ctxUbicFicha;
+  _ctxUbicFicha = null;
   destroyMap();
   // Actualizar URL con slug del área (sin recargar página)
   const slug = slugify(d.nombre);
