@@ -1672,6 +1672,10 @@
 #mapCanvas .map-block-controls-floating .map-block-toggle button{padding:0 10px;
   font-size:var(--fs-micro)}
 
+/* El asa de la ficha solo existe cuando la ficha es hoja (celular). En
+   escritorio la ficha es un cajón lateral y no hay nada que arrastrar. */
+.drawer-asa{display:none}
+
 /* Asa de arrastre (componente `handle` del kit) */
 .gm-handle{width:34px;height:4px;border-radius:2px;background:#dadce0;margin:8px auto 4px}
 
@@ -1921,18 +1925,32 @@
   #ubicarResultado .ubi-ficha{width:100%;justify-content:center;margin-top:12px}
 
 
-  /* ── LA FICHA-HOJA NO DEBE CORTAR SU PROPIO CONTENIDO ────────────
-     Antes la hoja entera tenía el desplazamiento y el asa iba `sticky`
-     encima: el título pasaba por debajo y se veía rebanado, y el
-     arrastre competía con el scroll —de ahí la sensación pegajosa—.
-     Ahora la hoja es una columna fija: asa arriba, cuerpo con su propio
+  /* ── LA FICHA COMO HOJA ───────────────────────────────────────────
+     Columna rígida: asa de agarre arriba —fuera del desplazamiento, o se
+     iría con el scroll y dejaría de ser agarradera—, cuerpo con su propio
      desplazamiento debajo. `overscroll-behavior:contain` impide que al
-     llegar al final el gesto se lo lleve la página de atrás. */
-  .drawer{display:flex;flex-direction:column;overflow:hidden}
-  .drawer .gm-handle{flex:0 0 auto;position:static}
+     llegar al final el gesto se lo lleve la página de atrás, que era parte
+     de la sensación pegajosa.
+     La altura visible la manda `--dvis` (en píxeles, la fija el JS) y el
+     desplazamiento se calcula aquí, igual que en la hoja de «Ubicar». */
+  .drawer{display:flex;flex-direction:column;overflow:hidden;
+    --dvis:0px;transform:translateY(100%)}
+  .drawer.open{transform:translateY(calc(100% - var(--dvis)))}
+  .drawer.arrastrando{transition:none}
+  .drawer-asa{flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    height:26px;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent}
+  .drawer-asa:active{cursor:grabbing}
+  .drawer-asa span{display:block;width:36px;height:4px;border-radius:2px;background:#dadce0}
+  .drawer-asa:focus-visible{outline:2px solid var(--guinda);outline-offset:-4px;border-radius:6px}
   .drawer-inner{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-    overscroll-behavior:contain;padding-top:4px}
-  .drawer .close{position:absolute;z-index:4}
+    overscroll-behavior:contain;padding:2px 18px 40px}
+  /* El tache, como en Maps: círculo gris en la esquina de la cabecera, a la
+     altura del título —no flotando en el hueco de arriba—. */
+  .drawer .close{position:absolute;z-index:4;top:32px;right:14px;
+    width:34px;height:34px;border-radius:50%;background:var(--bg-2);color:var(--ink-2);
+    font-size:var(--fs-xl);box-shadow:var(--gm-e1)}
+  .drawer .close:active{background:#e6e1d4}
+  .drawer .drawer-header-row{padding-right:52px}
 
   /* ── TOOLTIPS DE LAS CRONOLOGÍAS EN iOS ──────────────────────────
      El globo se ancla al pie con `position:fixed`, pero en Safari de iPhone
@@ -2079,6 +2097,10 @@
 
 <div class="backdrop" id="bd"></div>
 <aside class="drawer" id="dr" role="dialog" aria-label="Ficha del área" tabindex="-1">
+  <!-- Cabecera fija de la hoja: el asa vivía dentro del cuerpo desplazable y
+       por eso se iba con el scroll y no servía de agarre. Aquí no se mueve. -->
+  <div class="drawer-asa" id="drawerAsa" role="slider" tabindex="0"
+       aria-label="Altura de la ficha" aria-valuetext="completa"><span></span></div>
   <button class="close" id="drClose" aria-label="Cerrar ficha">×</button>
   <div class="drawer-inner" id="drIn"></div>
 </aside>
@@ -4720,8 +4742,8 @@ function openEmbFicha(e){
   const p = e.props || {};
   const col = (typeof EMB_COLORS!=='undefined' && EMB_COLORS[e.tipo]) || COL_AZUL_EMB;
   _marcaFicha(true);
+  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
   drIn.innerHTML = `
-    <div class="gm-handle" id="drawerAsa" aria-hidden="true"></div>
     <div class="drawer-header-row"><div class="drawer-header-left">
       <div class="kat" style="color:${col}">Embarcadero · ${e.tipo}</div>
       <h2>${p.nombre || 'Embarcadero'}</h2>
@@ -4796,7 +4818,10 @@ function addResetViewControl(map, title){
       a.href='#'; a.title=title||'Vista general'; a.setAttribute('role','button');
       a.setAttribute('aria-label', title||'Vista general');
       a.style.cssText = 'display:flex;align-items:center;justify-content:center;color:var(--guinda)';
-      a.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4"/><path d="M20 9V5a1 1 0 0 0-1-1h-4"/><path d="M4 15v4a1 1 0 0 0 1 1h4"/><path d="M20 15v4a1 1 0 0 1-1 1h-4"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>';
+      /* Casita, no el marco de cuatro esquinas: ese se lee como «pantalla
+         completa» —de hecho se confundía con el botón que ya retiramos— y
+         esto es «volver a la vista general», el encuadre de partida. */
+      a.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></svg>';
       L.DomEvent.on(a,'click',L.DomEvent.stopPropagation).on(a,'click',L.DomEvent.preventDefault)
         .on(a,'click',()=>{
           const b = map._siaHome;
@@ -5195,8 +5220,8 @@ function openZPDrawer(row){
     ? `${fmt(row.superficie)}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">ha</span>`
     : `<span style="font-size:var(--fs-xl);color:var(--muted)">Por confirmar</span>`;
   _marcaFicha(true);
+  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
   drIn.innerHTML = `
-    <div class="gm-handle" id="drawerAsa" aria-hidden="true"></div>
     <div class="drawer-header-row">
       <div class="drawer-header-left">
         <div class="kat">Zona Patrimonio · ${row.ambito||''}</div>
@@ -5629,8 +5654,8 @@ function openARCACFicha(no){
   if(!p) return;
   if(typeof destroyMap === 'function'){ try{ destroyMap(); }catch(e){} }
   _marcaFicha(true);
+  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
   drIn.innerHTML = `
-    <div class="gm-handle" id="drawerAsa" aria-hidden="true"></div>
     <div class="drawer-header-row"><div class="drawer-header-left">
       <div class="kat">ARCAC · Núcleo agrario</div>
       <h2>${p.nombre}</h2>
@@ -6680,7 +6705,7 @@ async function compartirFichaImagen(d, btn){
   ctx.fillStyle=color; ctx.beginPath();
   ctx.roundRect ? ctx.roundRect(48,y-4,tw+32,42,5) : ctx.rect(48,y-4,tw+32,42);
   ctx.fill();
-  ctx.fillStyle='#fff'; ctx.fillText(tag,64,y+24); y+=76;
+  ctx.fillStyle='#fff'; ctx.fillText(tag,64,y+24); y+=92;   /* +16 de aire: el badge rozaba el nombre */
 
   /* Nombre */
   ctx.fillStyle='#2a2a2a'; ctx.font='900 54px Roboto, sans-serif';
@@ -6699,7 +6724,7 @@ async function compartirFichaImagen(d, btn){
     ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='400 26px Roboto, sans-serif';
     ctx.fillText('Polígono no disponible',48+30,y+boxH/2);
   }
-  y+=boxH+50;
+  y+=boxH+78;   /* +28: la cifra quedaba pegada al borde del recuadro */
 
   /* Superficie */
   ctx.fillStyle=color; ctx.font='900 70px Roboto, sans-serif';
@@ -6708,14 +6733,19 @@ async function compartirFichaImagen(d, btn){
   ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='400 30px Roboto, sans-serif'; ctx.fillText(' ha',48+sw+10,y);
   y+=34;
   ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='500 20px "Roboto Mono", monospace';
-  ctx.fillText('SUPERFICIE DECRETADA',48,y); y+=52;
+  ctx.fillText('SUPERFICIE DECRETADA',48,y); y+=64;
 
   /* Datos duros */
+  /* Las mismas filas que la ficha del tablero, en el mismo orden. Antes
+     faltaban Tipo, Jurisdicción y Subcategoría: iban solo en el badge y en
+     el subtítulo, y quien recibía la imagen suelta no los tenía completos. */
   const filas=[
-    /* SUBCATEGORÍA ya aparece bajo el nombre: no se repite aquí */
+    ['TIPO',         d.tipo==='AVA' ? 'Área de Valor Ambiental' : 'Área Natural Protegida'],
+    ['JURISDICCIÓN', d.jurisdiccion||'—'],
+    ['SUBCATEGORÍA', d.categoria||'—'],
     ['ALCALDÍA(S)',  d.alcaldia||'—'],
     ['DECRETO',      d.fecha_decreto||'—'],
-    ['PROGRAMA DE MANEJO', d.programa_manejo==='Sí' ? ('Sí' + (d.fecha_pm ? ' · '+d.fecha_pm : '')) : 'No'],
+    ['PROGRAMA DE MANEJO', d.programa_manejo==='Sí' ? ('Publicado' + (d.fecha_pm ? ' · '+d.fecha_pm : '')) : 'Sin programa vigente'],
     ['SUELO DE CONSERVACIÓN', SC_CORTO(d)],
     ['DG RESPONSABLE', d.dg_responsable||'—']
   ];
@@ -6746,7 +6776,10 @@ async function compartirFichaImagen(d, btn){
       const file = new File([blob], nombreArchivo, {type:'image/png'});
       try{
         if(navigator.canShare && navigator.canShare({files:[file]})){
-          await navigator.share({files:[file], title:d.nombre});
+          /* Solo `files`: agregar `title` hace que iOS trate la hoja como un
+             envío mixto y muestre la ficha genérica de documento en lugar de
+             la miniatura de la imagen. */
+          await navigator.share({files:[file]});
           return res(true);
         }
       }catch(err){ if(err && err.name==='AbortError') return res(false); }
@@ -7339,8 +7372,8 @@ function openDrawer(d){
     history.replaceState(null, '', newHash);
   }
   _marcaFicha(true);
+  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
   drIn.innerHTML = `
-    <div class="gm-handle" id="drawerAsa" aria-hidden="true"></div>
     <div class="drawer-header-row">
       <div class="drawer-header-left">
         <div class="kat">${d.tipo} · ${d.jurisdiccion}</div>
@@ -7425,24 +7458,57 @@ function openDrawer(d){
     });
   }
 }
-/* La ficha-hoja se cierra deslizando el asa hacia abajo, como en Maps. Se
-   arrastra solo desde el asa: el cuerpo de la ficha tiene su propio
-   desplazamiento y robárselo haría imposible leerla. */
+/* ═══ LA FICHA COMO HOJA DE TRES POSICIONES ════════════════════════════
+   Mismo contrato que la hoja de «Ubicar»: `--dvis` es la altura visible en
+   píxeles y el desplazamiento se calcula en CSS. Posiciones: asomada (se ve
+   el encabezado), media y completa. Se arrastra solo por el asa —el cuerpo
+   tiene su propio desplazamiento—; un toque simple baja a la siguiente y,
+   por debajo de la asomada, la ficha se cierra. En escritorio no aplica: ahí
+   la ficha sigue siendo un cajón lateral. */
+const DR_ASOMADA = 230;
+let _drVis = 0;
+const _drMovil = () => window.matchMedia('(max-width:760px)').matches;
+function _drAlturas(){
+  const d = document.getElementById('dr');
+  const max = d ? Math.round(d.getBoundingClientRect().height) : Math.round(innerHeight*0.85);
+  return [0, Math.min(DR_ASOMADA, max), Math.round(max*0.55), max];
+}
+function drIr(vis){
+  const d = document.getElementById('dr'); if(!d) return;
+  _drVis = Math.max(0, vis);
+  d.style.setProperty('--dvis', _drVis + 'px');
+  const a = document.getElementById('drawerAsa');
+  if(a){ const al = _drAlturas();
+    a.setAttribute('aria-valuetext', _drVis >= al[3]-2 ? 'completa'
+                                   : _drVis >= al[2]-2 ? 'media' : 'asomada'); }
+}
+function drSnap(vis){
+  let best = 0;
+  _drAlturas().forEach(v => { if(Math.abs(v - vis) < Math.abs(best - vis)) best = v; });
+  drIr(best);
+  return best;
+}
 document.addEventListener('pointerdown', e=>{
   const asa = e.target && e.target.closest && e.target.closest('#drawerAsa');
-  if(!asa || !window.matchMedia('(max-width:760px)').matches) return;
+  if(!asa || !_drMovil()) return;
   const dr = document.getElementById('dr'); if(!dr) return;
-  const y0 = e.clientY; let dy = 0;
+  const y0 = e.clientY, v0 = _drVis; let movio = false;
   dr.classList.add('arrastrando');
-  const mover = ev => { dy = Math.max(0, ev.clientY - y0);
-                        dr.style.transform = 'translateY(' + dy + 'px)'; };
-  const soltar = () => {
+  const mover = ev => { if(Math.abs(ev.clientY - y0) > 3) movio = true;
+                        drIr(v0 + (y0 - ev.clientY)); };
+  const soltar = ev => {
     document.removeEventListener('pointermove', mover);
     document.removeEventListener('pointerup', soltar);
     document.removeEventListener('pointercancel', soltar);
     dr.classList.remove('arrastrando');
-    dr.style.transform = '';
-    if(dy > 110) closeDrawer();
+    if(!movio){                       /* toque simple: baja a la siguiente */
+      const al = _drAlturas();
+      for(let i = al.length - 1; i >= 0; i--){
+        if(al[i] < _drVis - 4){ if(al[i] === 0) closeDrawer(); else drIr(al[i]); return; }
+      }
+      closeDrawer(); return;
+    }
+    if(drSnap(v0 + (y0 - ev.clientY)) === 0) closeDrawer();
   };
   document.addEventListener('pointermove', mover);
   document.addEventListener('pointerup', soltar);
@@ -7456,6 +7522,7 @@ function _marcaFicha(abierta){
 
 function closeDrawer(){
   _marcaFicha(false);
+  try{ _drVis = 0; document.getElementById('dr').style.removeProperty('--dvis'); }catch(e){}
   bd.classList.remove('open');
   dr.classList.remove('open');
   destroyMap();
