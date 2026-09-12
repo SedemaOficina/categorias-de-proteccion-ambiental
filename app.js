@@ -5328,10 +5328,37 @@ function initUbicarBar(){
   if(!inp || !sug || !gps || !go) return;
 
   /* En celular el placeholder largo se corta: se acorta a esa anchura */
-  if(window.innerWidth < 760) inp.placeholder = 'Dirección o coordenadas…';
+  if(window.innerWidth < 760) inp.placeholder = 'Dirección, lugar, coordenadas…';
 
   gps.addEventListener('click', ubicarPorGPS);
   go.addEventListener('click', ()=>ubicarDesdeTexto(inp.value));
+
+  /* «Borrar todo»: texto, sugerencias, resultado y punto del mapa, de un golpe.
+     El botón solo se muestra cuando hay algo que borrar. */
+  const limpiarBtn = document.getElementById('ubicarLimpiar');
+  const actualizarLimpiar = ()=>{
+    if(!limpiarBtn) return;
+    const res = document.getElementById('ubicarResultado');
+    /* Cuenta el texto y el resultado; NO el panel de sugerencias, que al
+       recuperar el foco se abre con las recientes y dejaría el «x» visible
+       justo después de borrar. Ese panel se cierra solo con Escape o al
+       tocar fuera. */
+    const hay = !!inp.value || !!(res && !res.hidden && res.innerHTML);
+    limpiarBtn.hidden = !hay;
+  };
+  window._actualizarLimpiarUbicar = actualizarLimpiar;
+  if(limpiarBtn) limpiarBtn.addEventListener('click', ()=>{
+    inp.value = ''; sug.hidden = true; sug.innerHTML = '';
+    const cerrar = document.getElementById('ubicarCerrar');
+    if(cerrar) cerrar.click();                       /* cierra el resultado por su propia vía */
+    try{ if(typeof limpiarUbicacionGlobal === 'function') limpiarUbicacionGlobal(); }catch(_){}
+    try{ lastSearchLatLng = null; _ubicarDomicilio = null; }catch(_){}
+    actualizarLimpiar();
+    inp.focus();
+  });
+  inp.addEventListener('input', actualizarLimpiar);
+  const resEl = document.getElementById('ubicarResultado');
+  if(resEl) new MutationObserver(actualizarLimpiar).observe(resEl, {attributes:true, childList:true, attributeFilter:['hidden']});
   inp.addEventListener('keydown', e=>{
     if(e.key==='Enter'){ e.preventDefault(); ubicarDesdeTexto(inp.value); }
     if(e.key==='Escape'){ sug.hidden = true; }
@@ -6370,8 +6397,11 @@ function openDrawer(d){
         </div>
         <div class="drawer-sc-floating">
           <button class="map-filter-chip active" id="drawerSCToggle" type="button" style="--chip-color:var(--sc)"><span class="chip-dot"></span>Suelo de Conservación</button>
-          <span id="zonifToggleWrap"><button class="map-filter-chip" id="zonifToggle" type="button" aria-pressed="false" style="--chip-color:#1f6b4a"><span class="chip-dot"></span>Zonificación</button></span>
         </div>
+        <!-- La zonificación del programa de manejo es la única capa propia de ESTA
+             ficha: va visible sobre el mapa, no guardada en el menú, para que se
+             encuentre. Solo existe en las siete ANP que la tienen publicada. -->
+        <div class="zonif-flotante" id="zonifToggleWrap"><button class="map-filter-chip" id="zonifToggle" type="button" aria-pressed="false" style="--chip-color:#1f6b4a"><span class="chip-dot"></span>Zonificación del programa de manejo</button></div>
         <div class="zonif-leyenda" id="zonifLeyenda" hidden></div>
       </div>
     </div>

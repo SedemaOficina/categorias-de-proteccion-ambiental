@@ -99,25 +99,6 @@ try{
       <span class="ubicar-kicker">¿Dónde estoy?</span>
       <span class="ubicar-hint">Ubica un punto y revisa qué instrumentos de protección aplican ahí</span>
     </div>
-    <details class="ubicar-formatos">
-      <summary>¿Qué puedo escribir aquí?</summary>
-      <ul>
-        <li><b>Una dirección</b> — calle y número, colonia o código postal.
-          <code>Av. Universidad 1200</code></li>
-        <li><b>El nombre de un lugar</b> — comercios, hospitales, escuelas, estaciones.
-          <code>Comercial Mexicana Coyoacán</code></li>
-        <li><b>Un área del inventario</b> — nombre completo o parte de él.
-          <code>Ajusco</code> · <code>Tempiluli</code></li>
-        <li><b>Coordenadas</b> — con punto o con coma decimal, y también en grados con
-          hemisferio. <code>19.4237, -99.1421</code> · <code>19.42 N, 99.14 O</code>.
-          Si vienen al revés, se corrigen solas.</li>
-        <li><b>Una liga de Google Maps</b> — pega la dirección completa del navegador y se
-          extrae el punto. <code>https://maps.google.com/…@19.4237,-99.1421,17z</code></li>
-      </ul>
-      <p>Las direcciones y los lugares abarcan la Ciudad de México, el Estado de México y
-        Morelos. Las áreas del inventario y las coordenadas se resuelven en el propio equipo,
-        sin conexión.</p>
-    </details>
     <div class="ubicar-row">
       <button type="button" class="ubicar-gps" id="ubicarGps">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/></svg>
@@ -126,8 +107,9 @@ try{
       <div class="ubicar-input-wrap">
         <input type="text" id="ubicarInput" autocomplete="off"
                role="combobox" aria-expanded="false" aria-controls="ubicarSug" aria-autocomplete="list"
-               placeholder="Dirección, coordenadas (lat, lng) o nombre de área…"
-               aria-label="Dirección, coordenadas o nombre de área">
+               placeholder="Dirección, lugar, área, coordenadas o liga de Google Maps…"
+               aria-label="Dirección, lugar, área del inventario, coordenadas o liga de Google Maps">
+        <button type="button" class="ubicar-limpiar" id="ubicarLimpiar" aria-label="Borrar la búsqueda y el resultado" title="Borrar todo" hidden>×</button>
         <button type="button" class="ubicar-go" id="ubicarGo" aria-label="Buscar">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         </button>
