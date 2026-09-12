@@ -6,8 +6,10 @@
   // carpeta data/. Por eso "Build command" va VACÍO en el panel y aquí
   // solo se declara qué carpeta se publica.
   //
-  // "directory": "./"  → se sirve el repositorio tal cual, igual que hace
-  // GitHub Pages hoy. Cloudflare excluye por su cuenta .git y node_modules.
+  // "directory": "./" publica el repositorio tal cual, como hace GitHub
+  // Pages. OJO: wrangler NO excluye .git por su cuenta —el primer
+  // despliegue la subió entera—, así que la exclusión vive en el archivo
+  // .assetsignore de la raíz. Los dos archivos van juntos.
   //
   // El Service Worker (sw.js) queda en la raíz, que es donde tiene que
   // estar: su ámbito es la carpeta desde la que se sirve, y moverlo lo
@@ -15,6 +17,12 @@
   // ───────────────────────────────────────────────────────────────────
   "name": "categorias-de-proteccion-ambiental",
   "compatibility_date": "2026-09-12",
+
+  // Se declaran explícitos para que no dependan de un valor por omisión
+  // que Cloudflare pueda cambiar: el aviso del primer build era por esto.
+  "workers_dev": true,
+  "preview_urls": true,
+
   "assets": {
     "directory": "./"
   }

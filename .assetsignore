@@ -1,0 +1,24 @@
+# Archivos del repositorio que NO deben publicarse como parte del sitio.
+# Sintaxis igual a .gitignore. Lo lee wrangler al construir la lista de assets.
+#
+# El motivo de este archivo: sin él, `assets.directory: "./"` publica TODO lo
+# que hay en la raíz del clon, incluida la carpeta .git —con su configuración,
+# sus registros y sus objetos—, que en internet no debe estar nunca.
+
+.git
+.github
+.wrangler
+.gitignore
+.gitattributes
+.assetsignore
+wrangler.jsonc
+node_modules
+
+# Herramientas y documentación interna: no forman parte del sitio publicado
+tools
+CLAUDE.md
+
+# Carpeta de descartes y respaldos locales
+_borrar
+*.bak
+*.bak[0-9]
