@@ -5118,19 +5118,26 @@ function descInventario(d){
     geo:    (typeof findGeometry==='function') ? findGeometry(d) : null,
     superficie: d.superficie,
     supLabel: 'SUPERFICIE DECRETADA',
+    /* Mismo orden lógico que la ficha: lo que se deriva de Suelo de
+       Conservación (PGOEDF) va debajo de ese dato; lo que se deriva del
+       programa de manejo (zonificación), debajo de él. */
     filas: [
       ['TIPO',         d.tipo==='AVA' ? 'Área de Valor Ambiental' : 'Área Natural Protegida'],
       ['JURISDICCIÓN', d.jurisdiccion||'—'],
       ['SUBCATEGORÍA', d.categoria||'—'],
       ['ALCALDÍA(S)',  d.alcaldia||'—'],
-      ['DECRETO',      d.fecha_decreto||'—'],
-      ['PROGRAMA DE MANEJO', d.programa_manejo==='Sí' ? ('Publicado' + (d.fecha_pm ? ' · '+d.fecha_pm : '')) : 'Sin programa vigente'],
-      ['SUELO DE CONSERVACIÓN', SC_CORTO(d)],
-      ['DG RESPONSABLE', d.dg_responsable||'—']
+      ['SUELO DE CONSERVACIÓN', SC_CORTO(d)]
     ].concat(
-      /* La coadministración solo aparece donde existe: son ocho ANP federales.
-         Añadir la fila vacía en las otras 58 gastaría un renglón para decir
-         «no aplica». */
+      _filaPgoedfResumen(d)
+    ).concat([
+      ['DECRETO',      d.fecha_decreto||'—'],
+      ['PROGRAMA DE MANEJO', d.programa_manejo==='Sí' ? ('Publicado' + (d.fecha_pm ? ' · '+d.fecha_pm : '')) : 'Sin programa vigente']
+    ]).concat(
+      _filaZonifResumen(d)
+    ).concat([
+      ['DG RESPONSABLE', d.dg_responsable||'—']
+    ]).concat(
+      /* La coadministración solo aparece donde existe: son ocho ANP federales. */
       (typeof isCoadmin==='function' && isCoadmin(d.nombre))
         ? [['COADMINISTRACIÓN', 'Convenio Marco SEMARNAT–CONANP–CDMX 2025']]
         : []
@@ -5142,6 +5149,36 @@ function descInventario(d){
         : []
     )
   };
+}
+/* Resúmenes de una línea para la imagen compartible. Leen las cachés que la
+   propia ficha ya llenó (índice de zonificación y cruce PGOEDF); si aún no
+   están, la fila simplemente no sale. Familias de zonificación agregadas
+   por superficie; PGOEDF: las dos zonas mayores. */
+function _filaZonifResumen(d){
+  try{
+    const e = _zonifIndice && _zonifIndice[d.nombre];
+    if(!e || !e.zonas || !e.zonas.length || !e.total_ha) return [];
+    const porFam = {};
+    e.zonas.forEach(z => { const f = zonifFamilia(z.k); porFam[f.lbl] = (porFam[f.lbl] || 0) + z.ha; });
+    const top = Object.entries(porFam).sort((a,b)=>b[1]-a[1]).slice(0,3)
+      .map(([l,ha]) => l + ' ' + (ha / e.total_ha * 100).toFixed(0) + '%');
+    return [['ZONIFICACIÓN PM', top.join(' · ')]];
+  }catch(_){ return []; }
+}
+function _filaPgoedfResumen(d){
+  try{
+    const est = scEstado(d);
+    if(est === 'fuera' || est === 'sindato' || !_pgoedfAreas) return [];
+    const e = _pgoedfAreas[d.nombre];
+    if(e && e.pct >= 2){
+      const orden = e.zonas.slice().sort((a,b)=>b.pct-a.pct);
+      const top = orden.filter((z,i) => i === 0 || z.pct >= 1).slice(0,2)
+        .map(z => pgoedfNombre(z.zona) + ' ' + z.pct.toFixed(z.pct >= 99.5 ? 0 : 1) + '%');
+      return [['PGOEDF', top.join(' · ')]];
+    }
+    if(d.tipo === 'ANP') return [['PGOEDF', 'Figura como ANP · rige su decreto y programa de manejo']];
+    return [];
+  }catch(_){ return []; }
 }
 function descArcac(p){
   const feat = ((ARCAC_GEO&&ARCAC_GEO.features)||[]).find(f=>String(f.properties.no)===String(p.no));
@@ -5194,10 +5231,14 @@ function botonCompartirHTML(){
        + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'
        + '<span class="btn-share-text">Compartir imagen</span></button>';
 }
-function conectarCompartir(desc){
+function conectarCompartir(descOrFn){
   const b = document.getElementById('btnShareArea');
   if(!b) return;
   b.addEventListener('click', async ()=>{
+    /* El descriptor se arma AL HACER CLIC, no al abrir la ficha: la
+       zonificación, el PGOEDF y la zona del punto llegan de forma asíncrona
+       y al abrir todavía no están. */
+    const desc = (typeof descOrFn === 'function') ? descOrFn() : descOrFn;
     const t = b.querySelector('.btn-share-text');
     const original = t ? t.textContent : '';
     if(t) t.textContent = 'Generando…';
@@ -6735,7 +6776,7 @@ function openDrawer(d){
   });
 
   /* Un solo conector para las tres fichas (inventario, ARCAC y ZP). */
-  conectarCompartir(descInventario(d));
+  conectarCompartir(()=>descInventario(d));
   pintarZonificacion(d);
   pintarPgoedfFicha(d);
   setTimeout(()=>{ try{ montarBotonBase(); }catch(e){} }, 120);
