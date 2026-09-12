@@ -1696,6 +1696,14 @@
   .ubicar-input-wrap{order:1}
   .dest-ubicar .ubicar-input-wrap input{height:44px;font-size:var(--fs-md)}
 
+  /* ── ZOOM DE iOS AL ENFOCAR ───────────────────────────────────────
+     Safari en iPhone hace zoom automático sobre cualquier campo de texto
+     con tipografía menor a 16px, y deja la página desplazada y cortada.
+     No se arregla con `user-scalable=no` —iOS lo ignora desde hace años y
+     además rompería el pellizco para acercar el mapa—: la única cura es
+     que el campo mida 16px. Solo aplica a lo que recibe tecleo. */
+  input[type="text"], input[type="search"], input:not([type]), textarea{font-size:16px!important}
+
   /* ── LIST ITEM (componente `list-item`) ───────────────────────────
      Filas blancas separadas por el fondo, no por líneas. El punto de
      color se conserva —aquí el color SÍ significa territorio— pero la
@@ -1741,9 +1749,18 @@
   /* Los controles del mapa bajan para no quedar bajo la cápsula flotante */
   .wrap.dest-ubicar.gm-shell #globalMapSection .leaflet-top{top:72px}
   .wrap.dest-ubicar.gm-shell #globalMapSection .map-block-controls-floating{top:78px}
+  /* El lienzo trae su propio alto por breakpoint (`#globalMapCanvas{height:420px}`
+     en celular). En el caparazón tiene que llenar la pantalla, así que hay que
+     vencerlo explícitamente: sin esto el mapa quedaba como una tarjeta de 420px
+     con el resto de la pantalla en color de fondo. */
+  .wrap.dest-ubicar.gm-shell #globalMapSection > .panel{display:flex;flex-direction:column}
+  .wrap.dest-ubicar.gm-shell #globalMapSection .global-map-block{flex:1;min-height:0;height:100%;
+    margin:0!important;padding:0!important;border:none!important;border-radius:0!important}
+  .wrap.dest-ubicar.gm-shell #globalMapCanvas,
   .wrap.dest-ubicar.gm-shell #globalMapSection .map-canvas,
   .wrap.dest-ubicar.gm-shell #globalMapSection .map-canvas-inner,
-  .wrap.dest-ubicar.gm-shell #globalMapSection .map-wrap{height:100%!important;border-radius:0;border:none}
+  .wrap.dest-ubicar.gm-shell #globalMapSection .map-wrap{height:100%!important;min-height:0!important;
+    border-radius:0!important;border:none!important}
   /* La cápsula flota sobre el lienzo, como en el kit */
   /* `.dest-ubicar .ubicar-bar` (0,2,1) gana a `.ubicar-bar` (0,1,0): el relleno
      de escritorio se colaba y la cápsula medía 84 px en vez de 56. */
@@ -1753,6 +1770,9 @@
 
   /* ── HOJA DESLIZABLE (componentes `handle` + `location-card`) ──── */
   .gm-handle{display:none}
+  /* iOS Safari no admite pantalla completa fuera de video: el botón solo
+     servía para mostrar un aviso de error. Se oculta donde no aplica. */
+  html.sin-fullscreen .map-fullscreen-btn{display:none}
   .wrap.dest-ubicar.gm-shell .gm-handle{display:block}
   .wrap.dest-ubicar.gm-shell #ubicarResultado{position:fixed;left:0;right:0;
     bottom:calc(var(--destbar-h) + env(safe-area-inset-bottom, 0px));
@@ -6996,6 +7016,19 @@ function renderUbicarResultado(latlng, precision, etiqueta){
   </div>`;
 }
 
+/* Safari en iPhone no implementa la API de pantalla completa para elementos
+   —solo para video—, así que el botón únicamente servía para mostrar el aviso
+   «Tu navegador no admite el modo pantalla completa». Se marca el documento una
+   sola vez al arrancar y el CSS oculta el botón en todos los mapas. */
+(function(){
+  try{
+    const hay = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled
+                || document.documentElement.requestFullscreen
+                || document.documentElement.webkitRequestFullscreen);
+    if(!hay) document.documentElement.classList.add('sin-fullscreen');
+  }catch(e){ document.documentElement.classList.add('sin-fullscreen'); }
+})();
+
 /* Capa de la ubicación resuelta sobre el mapa global. Vive aparte del resto
    de capas para poder borrarla entera en cada consulta sin tocar el
    inventario que ya está pintado. */
@@ -7462,8 +7495,8 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
   .cinta-borrador:hover .txt,.cinta-borrador:focus-visible .txt,.cinta-borrador.abierta .txt{display:inline}
   @media (max-width:760px){ .cinta-borrador{bottom:calc(62px + env(safe-area-inset-bottom, 0px))} }
 </style>
-<button type="button" class="cinta-borrador" title="Versión en revisión · rediseño v38 · sia-v35-2026-09-12c"
-        aria-label="Versión en revisión · rediseño v38 · sia-v35-2026-09-12c"
-        onclick="this.classList.toggle('abierta')"><span class="txt">revisión · sia-v35-2026-09-12c</span></button>
+<button type="button" class="cinta-borrador" title="Versión en revisión · rediseño v38 · sia-v35-2026-09-12d"
+        aria-label="Versión en revisión · rediseño v38 · sia-v35-2026-09-12d"
+        onclick="this.classList.toggle('abierta')"><span class="txt">revisión · sia-v35-2026-09-12d</span></button>
 </body>
 </html>
