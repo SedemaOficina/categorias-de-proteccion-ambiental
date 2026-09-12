@@ -1672,6 +1672,10 @@
 #mapCanvas .map-block-controls-floating .map-block-toggle button{padding:0 10px;
   font-size:var(--fs-micro)}
 
+/* «Sup. (ha)» no cabe en su columna desde que se redujo al redondear los
+   valores: se le permite partir en dos renglones, como en celular. */
+thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
+
 /* El asa de la ficha solo existe cuando la ficha es hoja (celular). En
    escritorio la ficha es un cajón lateral y no hay nada que arrastrar. */
 .drawer-asa{display:none}
@@ -1854,14 +1858,15 @@
   .ubicar-bar{transition:transform .26s cubic-bezier(.2,.8,.2,1)}
 
   /* ── BOTÓN DE CAPAS (patrón `layers` del kit) ────────────────────── */
-  .panel-mapa{position:relative}
-  .map-filters{display:none;position:absolute;left:12px;bottom:66px;z-index:601;
+  .panel-mapa, #globalMapCanvas{position:relative}
+  /* 34 px de holgura: es el alto de la barra de atribución de Leaflet. */
+  .map-filters{display:none;position:absolute;left:10px;bottom:90px;z-index:601;
     margin:0;padding:11px;gap:7px;flex-direction:column;align-items:stretch;
     background:var(--card);border-radius:16px;box-shadow:var(--gm-e3);
     max-height:56vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
   .map-filters.abierto{display:flex}
   .map-filter-chip{justify-content:flex-start}
-  .btn-capas{position:absolute;left:12px;bottom:12px;z-index:602;
+  .btn-capas{position:absolute;left:10px;bottom:34px;z-index:602;
     width:44px;height:44px;border-radius:50%;border:none;background:var(--card);
     color:var(--ink-2);box-shadow:var(--gm-e2);display:flex;align-items:center;
     justify-content:center;cursor:pointer;padding:0}
@@ -1967,6 +1972,16 @@
      Se renuncia al desplazamiento con inercia en esas dos gráficas —siguen
      desplazándose— a cambio de que el globo quede donde debe. */
   .cronologia-container{-webkit-overflow-scrolling:auto}
+
+  /* ── ENCABEZADOS DE TABLA LEGIBLES EN CELULAR ────────────────────
+     Con cuatro columnas estrechas y `nowrap`, «SUP. (HA)» y «PM» salían
+     cortados con puntos suspensivos: el encabezado dejaba de decir qué
+     columna era. Se permite que partan en dos renglones y se reduce el
+     cuerpo; el alto extra lo paga una sola fila, la del encabezado. */
+  thead.t-head th{white-space:normal;line-height:1.15;font-size:var(--fs-micro);
+    letter-spacing:.03em;padding:8px 5px;overflow:visible;text-overflow:clip;
+    vertical-align:bottom}
+  thead.t-head th .arrow{display:block;margin:1px 0 0}
 
   /* ── PILLS (componente `pills`) ───────────────────────────────────
      Los subfiltros ya eran pastillas; se les da la sombra y el blanco
@@ -4265,7 +4280,13 @@ function render(){
              omisión —95.96% y 1.29% se ven igual—, así que ahí sí se imprime la
              cifra: en celular no hay tooltip que la rescate. */
           const pin = `<span class="status-tag status-sc ${SC_CLS[e]}" title="${scTexto(d)}">${SC_CORTO(d)}</span>`;
-          return e === 'parcial' ? pin + `<span class="sc-pct" title="${scTexto(d)}">${Math.round(p)}%</span>` : pin;
+          /* La cifra acompaña a todo lo que tiene algo dentro —«dentro» y
+             «parcial»—: un punto lleno no distingue 100% de 99.5%, y quien
+             consulta Suelo de Conservación necesita el dato, no el matiz.
+             En «fuera» se omite: un 0% en 42 renglones es ruido. */
+          return (p !== null && p >= 0.5)
+            ? pin + `<span class="sc-pct" title="${scTexto(d)}">${p >= 99.5 ? 100 : Math.round(p)}%</span>`
+            : pin;
         })()}</td>
         <td>${d.dg_responsable ? `<span class="tag-dg tag-dg-${d.dg_responsable.toLowerCase()}" title="${d.dg_responsable === 'DGSANPAVA' ? 'Dirección General del Sistema de Áreas Naturales Protegidas y Áreas de Valor Ambiental' : 'Dirección General de la Comisión de Recursos Naturales y Desarrollo Rural'}">${d.dg_responsable}</span>` : '<span class="dg-empty">—</span>'}</td>
       </tr>`).join('');
@@ -5253,6 +5274,7 @@ function openZPDrawer(row){
         <h2>${row.nombre}</h2>
         <div class="subcat">${row.categoria||''}</div>
       </div>
+      ${botonCompartirHTML()}
     </div>
 
     <div class="map-block" id="zpFichaMapBlock">
@@ -5275,6 +5297,15 @@ function openZPDrawer(row){
   // Renderiza el mapa de la designación (solo mapa + zoom, sin buscador/toggle/fullscreen)
   loadZonaPatrimonio().then(()=>{
     initZPFichaMap(row);
+    /* El polígono se busca aquí, ya cargada la capa: la designación se
+       identifica por `capa`, igual que en el diagnóstico de ubicación. */
+    /* La designación se identifica por `key`, no por `capa`: es la misma
+       correspondencia que usa el mini-mapa de la ficha. Con `capa` el polígono
+       nunca se encontraba y la imagen salía con «Polígono no disponible». */
+    let feat = null;
+    try{ feat = ((ZP_DESIGNACIONES&&ZP_DESIGNACIONES.features)||[])
+                  .find(f=>f.properties && f.properties.capa===row.key) || null; }catch(e){}
+    conectarCompartir(descZP(row, feat));
   });
 }
 
@@ -5685,7 +5716,7 @@ function openARCACFicha(no){
       <div class="kat">ARCAC · Núcleo agrario</div>
       <h2>${p.nombre}</h2>
       <div class="subcat">${arcacBadge(p.tenencia)}</div>
-    </div></div>
+    </div>${botonCompartirHTML()}</div>
     <div class="map-block" id="arcacFichaMapBlock">
       <div class="map-canvas" id="mapCanvas" style="position:relative"></div>
     </div>
@@ -5697,7 +5728,9 @@ function openARCACFicha(no){
     <div class="legal-block"><div class="title">ℹ ARCAC</div><p>Área de Restauración y Conservación Ambiental Comunitaria (núcleo agrario en suelo de conservación). Capa complementaria; no forma parte del inventario ANP/AVA ni de sus conteos.</p></div>
   `;
   bd.classList.add('open'); dr.classList.add('open');
-  loadARCAC().then(()=> initARCACFichaMap(no));
+  /* La geometría llega bajo demanda: el descriptor se arma al conectar, ya
+     cargada la capa, o el polígono saldría vacío en la imagen. */
+  loadARCAC().then(()=>{ initARCACFichaMap(no); conectarCompartir(descArcac(p)); });
 }
 
 /* Mini-mapa del polígono dentro de la ficha ARCAC */
@@ -6643,6 +6676,21 @@ function initMapForArea(d){
   activeGeoLayer.bringToFront();
   activeMap.fitBounds(activeGeoLayer.getBounds(), {padding: [20,20], maxZoom: 16});
   try{ activeMap._siaHome = activeGeoLayer.getBounds(); }catch(e){}
+  /* Si la ficha se abrió tras una consulta de ubicación, el punto sigue
+     dibujado aquí: quien viene de «¿dónde estoy?» necesita ver DÓNDE cae su
+     punto dentro del polígono, no solo el polígono. El encuadre se amplía
+     para que el punto entre en cuadro aunque quede en el borde. */
+  try{
+    if(_fichaCtxUbic && isFinite(_fichaCtxUbic.lat)){
+      const ll = [_fichaCtxUbic.lat, _fichaCtxUbic.lng];
+      L.circleMarker(ll,{radius:8,color:'#fff',weight:3,fillColor:COL_AZUL_UBIC,
+        fillOpacity:1,interactive:false}).addTo(activeMap)
+       .bindTooltip(_fichaCtxUbic.etiqueta || 'Punto consultado',{direction:'top'});
+      const b2 = activeGeoLayer.getBounds().extend(ll);
+      activeMap.fitBounds(b2,{padding:[26,26], maxZoom:16});
+      activeMap._siaHome = b2;
+    }
+  }catch(e){}
   // Habilita scroll-wheel solo después de clic en el mapa (mejor UX)
   activeMap.on('click focus', ()=>activeMap.scrollWheelZoom.enable());
   activeMap.on('mouseout', ()=>activeMap.scrollWheelZoom.disable());
@@ -6720,12 +6768,104 @@ function _drawGeoInBox(ctx, geoIn, x, y, w, h, color, punto){
   ctx.restore();
 }
 
+/* ═══ DESCRIPTOR DE FICHA PARA LA TARJETA COMPARTIBLE ══════════════════
+   El generador recibía el registro crudo del inventario y por eso solo servía
+   para las 66 áreas: ARCAC trae tenencia en lugar de subcategoría y no tiene
+   decreto ni programa de manejo, y Zona Patrimonio trae instrumento y ámbito.
+   Con un descriptor común las tres fichas comparten estructura —encabezado,
+   badge, polígono, cifra, filas— y solo cambia qué se pone en cada casilla. */
+function descInventario(d){
+  return {
+    nombre: d.nombre,
+    badge:  `${d.tipo} · ${d.jurisdiccion}`,
+    subtitulo: d.categoria || '',
+    color:  colorLiteral((typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[d.grupo]) || 'var(--guinda)'),
+    geo:    (typeof findGeometry==='function') ? findGeometry(d) : null,
+    superficie: d.superficie,
+    supLabel: 'SUPERFICIE DECRETADA',
+    filas: [
+      ['TIPO',         d.tipo==='AVA' ? 'Área de Valor Ambiental' : 'Área Natural Protegida'],
+      ['JURISDICCIÓN', d.jurisdiccion||'—'],
+      ['SUBCATEGORÍA', d.categoria||'—'],
+      ['ALCALDÍA(S)',  d.alcaldia||'—'],
+      ['DECRETO',      d.fecha_decreto||'—'],
+      ['PROGRAMA DE MANEJO', d.programa_manejo==='Sí' ? ('Publicado' + (d.fecha_pm ? ' · '+d.fecha_pm : '')) : 'Sin programa vigente'],
+      ['SUELO DE CONSERVACIÓN', SC_CORTO(d)],
+      ['DG RESPONSABLE', d.dg_responsable||'—']
+    ]
+  };
+}
+function descArcac(p){
+  const feat = ((ARCAC_GEO&&ARCAC_GEO.features)||[]).find(f=>String(f.properties.no)===String(p.no));
+  return {
+    nombre: p.nombre,
+    badge:  'ARCAC · ' + (p.tenencia||'').toUpperCase(),
+    subtitulo: 'Área de Restauración y Conservación Ambiental Comunitaria',
+    color:  colorLiteral(ARCAC_COLORS && ARCAC_COLORS[p.tenencia] ? ARCAC_COLORS[p.tenencia] : 'var(--guinda)'),
+    geo:    feat || null,
+    superficie: p.sup_ha,
+    /* Los núcleos ARCAC no se decretan: se registran. El rótulo de la cifra
+       tiene que decir la verdad de cada figura, no copiar el del inventario.
+       La fila «FIGURA» se quitó: el subtítulo ya dice el nombre completo y en
+       la columna de valores quedaba cortado. */
+    supLabel: 'SUPERFICIE REGISTRADA',
+    filas: [
+      ['TENENCIA',    p.tenencia||'—'],
+      ['ALCALDÍA',    p.alcaldia||'—'],
+      ['No. DE REGISTRO', String(p.no||'—')],
+      ['INVENTARIO',  'Capa complementaria · no cuenta como ANP ni AVA']
+    ]
+  };
+}
+function descZP(row, feat){
+  return {
+    nombre: row.nombre,
+    badge:  'ZONA PATRIMONIO · ' + String(row.ambito||'').toUpperCase(),
+    subtitulo: row.categoria || '',
+    color:  colorLiteral(row.color || 'var(--guinda)'),
+    geo:    feat || null,
+    superficie: (row.superficie != null && row.superficie !== '') ? row.superficie : null,
+    supLabel: 'SUPERFICIE DE LA DESIGNACIÓN',
+    filas: [
+      ['INSTRUMENTO', row.categoria||'—'],
+      ['ÁMBITO',      row.ambito||'—'],
+      ['ALCALDÍA(S)', row.alcaldia||'—'],
+      ['DECLARATORIA / INSCRIPCIÓN', row.fecha_decreto||'—'],
+      ['ACTUALIZACIÓN / PLAN',       row.fecha_pm||'—'],
+      ['INVENTARIO',  'Capa complementaria · no cuenta como ANP ni AVA']
+    ]
+  };
+}
+
+/* Botón «Compartir imagen» común a las tres fichas. Se inyecta y se conecta
+   en un solo lugar: antes el listener vivía suelto en openDrawer y por eso
+   ARCAC y ZP se quedaron sin él. */
+function botonCompartirHTML(){
+  return '<button class="btn-share-area" id="btnShareArea" type="button"'
+       + ' aria-label="Compartir esta ficha como imagen">'
+       + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'
+       + '<span class="btn-share-text">Compartir imagen</span></button>';
+}
+function conectarCompartir(desc){
+  const b = document.getElementById('btnShareArea');
+  if(!b) return;
+  b.addEventListener('click', async ()=>{
+    const t = b.querySelector('.btn-share-text');
+    const original = t ? t.textContent : '';
+    if(t) t.textContent = 'Generando…';
+    b.disabled = true;
+    try{ await compartirFichaImagen(desc, b); }
+    catch(err){ siaToast('No se pudo generar la imagen de la ficha.'); }
+    finally{ if(t) t.textContent = original; b.disabled = false; }
+  });
+}
+
 async function compartirFichaImagen(d, btn){
   const W=1080, H=1440;
   try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(_){}
   const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
   const ctx=cv.getContext('2d');
-  const color = colorLiteral((typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[d.grupo]) || 'var(--guinda)');
+  const color = d.color || colorLiteral('var(--guinda)');
 
   ctx.fillStyle='#fffdf0'; ctx.fillRect(0,0,W,H);
 
@@ -6740,7 +6880,7 @@ async function compartirFichaImagen(d, btn){
 
   /* Badge de categoría */
   ctx.font='600 22px "Roboto Mono", monospace';
-  const tag=`${d.tipo} · ${d.jurisdiccion}`.toUpperCase();
+  const tag=String(d.badge||'').toUpperCase();
   const tw=ctx.measureText(tag).width;
   ctx.fillStyle=color; ctx.beginPath();
   ctx.roundRect ? ctx.roundRect(48,y-4,tw+32,42,5) : ctx.rect(48,y-4,tw+32,42);
@@ -6752,10 +6892,10 @@ async function compartirFichaImagen(d, btn){
   _wrapText(ctx,d.nombre,W-96).forEach(l=>{ ctx.fillText(l,48,y); y+=62; });
   y+=6;
   ctx.fillStyle='#55585a'; ctx.font='400 28px Roboto, sans-serif';
-  ctx.fillText(d.categoria||'',48,y); y+=44;
+  ctx.fillText(d.subtitulo||'',48,y); y+=44;
 
   /* Polígono */
-  const geo=(typeof findGeometry==='function') ? findGeometry(d) : null;
+  const geo = d.geo || null;
   const boxH=430;
   ctx.fillStyle='#f8f4e0'; ctx.fillRect(48,y,W-96,boxH);
   ctx.strokeStyle='#eae4cf'; ctx.lineWidth=2; ctx.strokeRect(48,y,W-96,boxH);
@@ -6769,27 +6909,18 @@ async function compartirFichaImagen(d, btn){
 
   /* Superficie */
   ctx.fillStyle=color; ctx.font='900 70px Roboto, sans-serif';
-  ctx.fillText(fmt(d.superficie),48,y);
-  const sw=ctx.measureText(fmt(d.superficie)).width;
-  ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='400 30px Roboto, sans-serif'; ctx.fillText(' ha',48+sw+10,y);
+  const supTxt = (d.superficie == null || d.superficie === '') ? 'Por confirmar' : fmt(d.superficie);
+  if(d.superficie == null || d.superficie === '') ctx.font='700 44px Roboto, sans-serif';
+  ctx.fillText(supTxt,48,y);
+  const sw=ctx.measureText(supTxt).width;
+  ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='400 30px Roboto, sans-serif';
+  if(d.superficie != null && d.superficie !== '') ctx.fillText(' ha',48+sw+10,y);
   y+=34;
   ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='500 20px "Roboto Mono", monospace';
-  ctx.fillText('SUPERFICIE DECRETADA',48,y); y+=64;
+  ctx.fillText(d.supLabel || 'SUPERFICIE',48,y); y+=64;
 
   /* Datos duros */
-  /* Las mismas filas que la ficha del tablero, en el mismo orden. Antes
-     faltaban Tipo, Jurisdicción y Subcategoría: iban solo en el badge y en
-     el subtítulo, y quien recibía la imagen suelta no los tenía completos. */
-  const filas=[
-    ['TIPO',         d.tipo==='AVA' ? 'Área de Valor Ambiental' : 'Área Natural Protegida'],
-    ['JURISDICCIÓN', d.jurisdiccion||'—'],
-    ['SUBCATEGORÍA', d.categoria||'—'],
-    ['ALCALDÍA(S)',  d.alcaldia||'—'],
-    ['DECRETO',      d.fecha_decreto||'—'],
-    ['PROGRAMA DE MANEJO', d.programa_manejo==='Sí' ? ('Publicado' + (d.fecha_pm ? ' · '+d.fecha_pm : '')) : 'Sin programa vigente'],
-    ['SUELO DE CONSERVACIÓN', SC_CORTO(d)],
-    ['DG RESPONSABLE', d.dg_responsable||'—']
-  ];
+  const filas = d.filas || [];
   /* El paso entre filas se calcula, no se fija: al pasar de cinco a ocho
      filas el bloque se metía debajo del pie y la última renglonada quedaba
      encimada con el filete. Se reparte el espacio que queda hasta el pie,
@@ -6830,7 +6961,7 @@ async function compartirFichaImagen(d, btn){
   }
 
   /* Compartir o descargar */
-  const nombreArchivo = 'SIA_' + slugify(d.nombre) + '.png';
+  const nombreArchivo = 'SIA_' + slugify(d.nombre||'ficha') + '.png';
   return new Promise(res=>{
     cv.toBlob(async blob=>{
       if(!blob){ siaToast('No se pudo generar la imagen.'); return res(false); }
@@ -7319,6 +7450,10 @@ function montarBotonCapas(){
     const filtros = panel.querySelector('.map-filters');
     if(!filtros || filtros.classList.contains('map-filters--oculto')) return;
     if(panel.querySelector('.btn-capas')) return;
+    /* Anclar al LIENZO y no al panel: el panel es más alto que el mapa —trae
+       el título y el relleno— y con `bottom` referido a él el botón caía unos
+       píxeles por debajo del mapa, encima de la atribución de Leaflet. */
+    const lienzo = panel.querySelector('#globalMapCanvas') || panel.querySelector('.map-canvas') || panel;
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'btn-capas';
     b.setAttribute('aria-label','Capas del mapa');
@@ -7331,7 +7466,8 @@ function montarBotonCapas(){
       b.classList.toggle('activo', ab);
       b.setAttribute('aria-expanded', ab ? 'true' : 'false');
     });
-    panel.appendChild(b);
+    lienzo.appendChild(filtros);   /* conserva sus escuchas: es el mismo nodo */
+    lienzo.appendChild(b);
   });
 }
 
@@ -7508,22 +7644,8 @@ function openDrawer(d){
     });
   });
 
-  // Listener del botón Compartir enlace
-  const shareBtn = document.getElementById('btnShareArea');
-  if(shareBtn){
-    shareBtn.addEventListener('click', async () => {
-      const textSpan = shareBtn.querySelector('.btn-share-text');
-      const original = textSpan ? textSpan.textContent : '';
-      if(textSpan) textSpan.textContent = 'Generando…';
-      shareBtn.disabled = true;
-      try{ await compartirFichaImagen(d, shareBtn); }
-      catch(err){ siaToast('No se pudo generar la imagen de la ficha.'); }
-      finally{
-        shareBtn.disabled = false;
-        if(textSpan) textSpan.textContent = original;
-      }
-    });
-  }
+  /* Un solo conector para las tres fichas (inventario, ARCAC y ZP). */
+  conectarCompartir(descInventario(d));
 }
 /* ═══ LA FICHA COMO HOJA DE TRES POSICIONES ════════════════════════════
    Mismo contrato que la hoja de «Ubicar»: `--dvis` es la altura visible en
