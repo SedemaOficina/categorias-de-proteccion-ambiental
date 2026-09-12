@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-09-12v';
+const CACHE_VERSION = 'sia-v35-2026-09-12z';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
@@ -18,11 +18,22 @@ const CACHE_DATA    = 'sia-data-v35';
 const CORE_ASSETS = [
   './',
   './index.html',
+  /* Desde la v44 el tablero son cuatro archivos y se instalan como UNIDAD: un
+     index.html nuevo con un styles.css viejo se ve raro sin dar error, que es
+     el peor fallo posible. cacheUtilizable() exige los cuatro antes de purgar
+     cachés anteriores. config.js lleva la llave y solo lo edita el responsable. */
+  './styles.css',
+  './app.js',
+  './config.js',
   './assets/logo-sedema.png',
   './assets/favicon.png',
   /* Respaldo del inventario: pesa 23 KB y es la diferencia entre un tablero
      sin datos y uno con el último corte cuando el Sheet no responde. */
-  './data/inventario.csv'
+  './data/inventario.csv',
+  /* Indice de zonificaciones: 4.8 KB. Sin el, una ficha abierta sin conexion no
+     puede ni decir si esa ANP tiene zonificacion publicada. Los siete GeoJSON
+     —686 KB en total— NO entran: se piden uno a la vez cuando hacen falta. */
+  './data/zonificacion/index.json'
 ];
 
 /* Capas que sí conviene tener offline, pero que no deben bloquear el install ni
@@ -78,9 +89,10 @@ async function repararCore(){
 /* ¿La caché de ESTA versión alcanza para arrancar la app sin red? */
 async function cacheUtilizable(){
   const cache = await caches.open(CACHE_VERSION);
-  const raiz  = await cache.match('./');
-  const index = await cache.match('./index.html');
-  return !!(raiz && index);
+  const piezas = await Promise.all(
+    ['./', './index.html', './styles.css', './app.js', './config.js'].map(u => cache.match(u))
+  );
+  return piezas.every(Boolean);
 }
 
 /* === ACTIVATE: limpiar caches viejos, pero NUNCA a ciegas ===

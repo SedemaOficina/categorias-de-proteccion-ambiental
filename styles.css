@@ -1,0 +1,2415 @@
+/* ═════════════════════════════════════════════════════════════════════
+   Dashboard · Categorías de Protección Ambiental · SIA · SEDEMA CDMX
+   Hoja de estilos. Hasta la v43 vivía incrustada en index.html; se separó
+   para poder analizarla con herramientas de CSS y para que un cambio de
+   estilo no obligue a reenviar el archivo completo.
+
+   Reglas que no se rompen:
+   · Las reglas compiten por ORDEN cuando la especificidad empata. No mover
+     bloques de sitio sin verificar con el arnés.
+   · Nunca borrar «la línea que contiene X»: un selector puede ocupar varios
+     renglones y la llave de apertura vivir en el último.
+   · Toda clase de nombre genérico (.meta, .item, .sub) lleva contexto.
+   ═════════════════════════════════════════════════════════════════════ */
+  :root{
+    /* Paleta oficial · Gobierno de la Ciudad de México */
+    --font-titulo:'Cabin','Roboto',sans-serif;  /* Identidad: Cabin para títulos */
+    --guinda:#9d2148;   /* Pantone 7420 C — institucional primario */
+    --guinda-900:#7a1a37;   /* Guinda oscurecido · estados :hover y :active */
+    --guinda-400:#c0426d;   /* Guinda aclarado · degradados y barras de avance */
+    --dorado:#b28e5c;   /* Pantone 465 C — institucional primario (uso gráfico) */
+    --dorado-text:#7a5d35;  /* Variante oscura para texto (contraste 5.6:1 sobre crema, AA) */
+    --naranja:#f08217;
+    --marron:#ac6d14;
+    --magenta:#d72f89;
+    --rojo:#e5074c;
+    --verde:#027a35;
+    --azul:#266cb4;
+    --gris:#55585a;
+    --violeta:#8F4889;
+    --crema:#fffdf0;
+
+    /* Mapeo funcional */
+    --bg:var(--crema);
+    --bg-2:#f8f4e0;
+    --bg-3:#f1ead4;
+    --ink:#2a2a2a;
+    --ink-2:var(--gris);
+    /* 2.78:1 sobre --bg-3 no cumplia AA y es el color de la etiqueta que
+       identifica cada dato en la ficha. #67696b da 5.40 sobre crema y 4.58
+       sobre el fondo mas oscuro del sistema. */
+    --muted:#67696b;
+    --marron-900:#8f5610;   /* fondo de insignia con texto crema · 5.86:1 */
+    --magenta-900:#c2277a;  /* idem · 5.32:1 */
+    --line:#d9d3c0;
+    --line-soft:#eae4cf;
+    --card:#ffffff;
+
+    /* Paleta de subcategorias · Pantone de referencia entre parentesis.
+       Se tokeniza para que un cambio de identidad no obligue a cazar
+       hex sueltos por toda la hoja. */
+    --sub-bu:#8a5a12;      /* Bosque Urbano · Naranja 158C oscurecido */
+    --sub-zsce:#1c6b85;    /* ZSCE · Azul claro 0821C */
+    --sub-zpe:#8a6a00;     /* ZPE · Amarillo 7548C oscurecido */
+    --sub-zec:#a63a52;     /* ZEC · Rosa 176C oscurecido */
+    --sub-pn:#b5133f;      /* Parque Nacional · Rojo 1925C */
+    --sub-rvs:#5d8a5e;     /* Fallback · Verde oliva */
+    --sub-rb:#8b4513;      /* Fallback · Sienna */
+    --sub-mn:#4a90a4;      /* Fallback · Azul gris */
+    --sub-apff:#7e57c2;    /* Fallback · Purpura */
+    --sub-san:#d35400;     /* Fallback · Naranja oscuro */
+
+    /* Colores por grupo */
+    --bu:var(--verde);
+    --br:var(--marron);
+    --anpl:var(--naranja);
+    --anpf:var(--azul);
+    --legal:var(--violeta);
+
+    --shadow:0 1px 2px rgba(42,42,42,.04),0 4px 12px -6px rgba(42,42,42,.08);
+    --radius:7px;
+
+    /* ─── Sistema de diseno · consolidacion 2026-08-22 ────────────────────
+       Antes: 36 tamanos de letra, 14 radios, 20 sombras, 11 z-index y 32
+       colores hex sueltos fuera de este bloque. Cada token conserva el valor
+       que ya tenia el caso dominante: es consolidacion, no rediseno.
+       Movimiento maximo: 1 px. */
+    /* Rediseno 2026-09-10 · piso tipografico de 11 px (antes 9.5) y escala
+       reducida: el cuerpo sube y las cifras gigantes bajan, porque el dato
+       util es la comparacion, no el tamano. */
+    --fs-micro:11px;    --fs-mini:11px;    --fs-xs:11.5px;
+    --fs-sm:12.5px;     --fs-base:13.5px;  --fs-md:14.5px;
+    --fs-lg:18px;       --fs-xl:22px;      --fs-2xl:26px;
+    --fs-hero:27px;     --fs-mega:36px;
+
+    --r-chip:2px;       /* insignias y puntos de color */
+    --r-ui:5px;         /* botones, campos, celdas */
+
+    --sh-1:0 1px 3px rgba(42,42,42,.08);      /* tarjeta en reposo */
+    --sh-2:0 4px 14px rgba(42,42,42,.12);     /* control flotante */
+    --sh-3:0 8px 24px rgba(42,42,42,.22);     /* ficha, popup, toast */
+
+    --z-flotante:500; --z-sticky:900;
+    /* Alto de la barra de destinos fija en celular. Lo usan la propia barra y
+       el hueco que .wrap reserva al pie: si se tocan en un solo sitio no vuelven
+       a desincronizarse (el pie quedaba 15 px por debajo de la barra). */
+    --destbar-h:56px;
+    --z-drawer:1000; --z-drawer-top:1001; --z-modal:1500; --z-toast:2000;
+
+    --guinda-900:#7d1839;   /* hover del guinda */
+    --arcac-com:#7048e8;    /* ARCAC · Comunidad */
+    --acento-mapa:#f4c842;
+    --sc:#00838f;  --sc-900:#006064;
+    --warn-bg:#fff8e1;  --alert-bg:#fdf0f3;  --alert-text:#8a2242;
+    --map-bg:#e8e3d4;       /* lienzo del mapa sin tiles */
+  }
+  /* Celular: el tablero se lee de pie, al sol y a un brazo de distancia.
+     La escala sube un escalon completo. */
+  @media (max-width:760px){
+    :root{ --fs-sm:13px; --fs-base:14.5px; --fs-md:15px; --fs-xs:12px; }
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Roboto',sans-serif;font-size:var(--fs-md);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1560px;margin:0 auto;padding:18px 24px 80px}
+
+  /* Banda institucional — v36: el logo vive dentro del header (una sola banda) */
+  .logo-inst{display:block;height:38px;width:auto;max-width:100%;object-fit:contain;object-position:left center;flex-shrink:0}
+  .brand-divider{width:1px;align-self:stretch;background:var(--line);margin:3px 0;flex-shrink:0}
+  @media (max-width:1024px){ .logo-inst{height:44px} }
+  @media (max-width:900px){ .brand-divider{display:none} }
+  @media (max-width:640px){ .logo-inst{height:42px} }
+  @media (max-width:420px){ .logo-inst{height:36px} }
+
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:0 0 10px;border-bottom:2px solid var(--guinda);margin-bottom:12px}
+  .brand{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;max-width:780px}
+  /* .eyebrow eliminada en v34 — el span se removió del header en v33 */
+  h1{font-family:var(--font-titulo);font-weight:700;font-size:var(--fs-xl);line-height:1.12;letter-spacing:-.015em;color:var(--ink);max-width:900px}
+  h1 em{font-style:normal;color:var(--guinda);font-weight:900}
+  .sub{color:var(--ink-2);margin-top:2px;margin-bottom:0;font-size:var(--fs-sm);font-weight:400;text-wrap:balance}
+  @media (min-width:1100px){ .sub{white-space:nowrap} }
+  /* Acotado a la cabecera: como selector de clase suelto, su `text-align:right`
+     se filtraba a TODOS los `.meta` del documento —entre ellos la segunda linea
+     de cada sugerencia de busqueda, que en escritorio salia pegada al borde
+     derecho, lejos de su titulo—. */
+  header.top .meta{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:right;letter-spacing:.05em;line-height:1.8}
+  header.top .meta b{color:var(--guinda);font-weight:500}
+
+  /* ═══ Barra «¿Dónde estoy?» · acción principal en campo ═══
+     En escritorio es compacta (el uso ahí es consulta de tablas y estadística).
+     En celular crece: es la primera acción de la pantalla y el uso dominante. */
+  /* Siempre a la vista, como la barra de Google Maps: se ancla arriba y
+     acompaña el desplazamiento, así buscar una dirección o una coordenada
+     nunca obliga a volver al principio de la página. Es la única búsqueda del
+     tablero desde que los mapas perdieron la suya (11-sep-2026), de modo que
+     no puede quedar fuera de cuadro. El fondo lleva un color opaco debajo del
+     degradado: pegada, pasa por encima del contenido. */
+  .ubicar-bar{background:linear-gradient(100deg,rgba(157,33,72,.05),rgba(178,142,92,.05)),var(--card);
+    border:1px solid var(--line);border-left:3px solid var(--guinda);border-radius:var(--radius);
+    padding:12px 16px;margin-bottom:14px;
+    position:sticky;top:0;z-index:var(--z-sticky);box-shadow:0 3px 12px rgba(42,42,42,.07)}
+  .ubicar-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:9px}
+  .ubicar-kicker{font-family:'Cabin',sans-serif;font-weight:700;font-size:var(--fs-base);color:var(--guinda);
+    text-transform:uppercase;letter-spacing:.06em}
+  .ubicar-hint{font-size:var(--fs-sm);color:var(--ink-2)}
+  .ubicar-row{display:flex;gap:10px;align-items:stretch}
+  .ubicar-gps{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;
+    background:var(--guinda);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;
+    padding:0 16px;height:40px;font-family:'Roboto',sans-serif;font-size:var(--fs-base);font-weight:700;
+    transition:background .15s;white-space:nowrap}
+  .ubicar-gps:hover{background:var(--guinda-900)}
+  .ubicar-gps:disabled{opacity:.6;cursor:wait}
+  .ubicar-input-wrap{position:relative;flex:1;display:flex;min-width:0}
+  .ubicar-input-wrap input{flex:1;min-width:0;height:40px;padding:0 14px;border:1px solid var(--line);
+    border-right:none;border-radius:var(--radius) 0 0 var(--radius);background:#fff;
+    font-family:'Roboto',sans-serif;font-size:var(--fs-base);color:var(--ink);outline:none}
+  .ubicar-input-wrap input:focus{border-color:var(--guinda)}
+  .ubicar-go{width:44px;flex-shrink:0;border:1px solid var(--line);border-left:none;
+    border-radius:0 var(--radius) var(--radius) 0;background:#fff;color:var(--ink-2);cursor:pointer}
+  .ubicar-go:hover{color:var(--guinda)}
+  .ubicar-sugerencias{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);
+    border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--sh-3);
+    max-height:300px;overflow-y:auto;z-index:var(--z-sticky)}
+  .ubicar-sugerencias .res-group{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.11em;
+    text-transform:uppercase;color:var(--muted);padding:8px 12px 5px;background:var(--bg-2);
+    border-bottom:1px solid var(--line-soft);position:sticky;top:0;z-index:2}
+  .ubicar-sugerencias .item{position:relative;z-index:1;background:var(--card);padding:10px 12px 10px 28px;
+    cursor:pointer;border-bottom:1px dotted var(--line-soft);font-size:var(--fs-base);color:var(--ink)}
+  .ubicar-sugerencias .item:last-child{border-bottom:none}
+  .ubicar-sugerencias .item:hover{background:var(--bg-2)}
+  .ubicar-sugerencias .item .sw{position:absolute;left:12px;top:14px;width:8px;height:8px;border-radius:var(--r-chip)}
+  .ubicar-sugerencias .item .meta{display:block;font-size:var(--fs-xs);color:var(--muted);margin-top:2px}
+  .ubicar-sugerencias .item .rt{position:absolute;right:10px;top:9px;text-align:right}
+  .ubicar-sugerencias .item .dist{display:block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);
+    color:var(--guinda);font-weight:700;margin-top:3px}
+  .ubicar-sugerencias .item.ext{background:var(--bg-2)}
+  .ubicar-sugerencias .item.dir{padding-left:12px;padding-right:90px}
+
+  /* Chips de entidad federativa: el ambito de busqueda incluye colindantes */
+  .ent{display:inline-block;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.1em;
+    font-weight:700;padding:2px 6px;border-radius:var(--r-chip);color:#fff;vertical-align:middle}
+  .e-cdmx{background:var(--guinda)}
+  .e-mex{background:var(--azul)}
+  .e-mor{background:var(--verde)}
+  /* Distintivo de area cuyo poligono cruza el limite estatal */
+  .lim{display:inline-flex;align-items:center;gap:4px;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);
+    letter-spacing:.09em;font-weight:700;text-transform:uppercase;background:var(--dorado);color:var(--ink);
+    padding:2px 6px;border-radius:var(--r-chip);white-space:nowrap}
+
+  /* Filas de tabla operables con teclado: sin esto, examinar el inventario
+     y abrir una ficha —el flujo central— es imposible sin raton. */
+  tr[tabindex]:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px}
+  .ubicar-sugerencias .item:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px;background:var(--bg-2)}
+  /* Escritorio: el modulo se colapsa a una franja de una linea.
+     El boton de GPS se oculta porque en escritorio navigator.geolocation
+     resuelve por IP y WiFi (cientos de metros a kilometros): con poligonos
+     de 20 ha ese margen no distingue nada y el dato no es utilizable. */
+  @media (min-width:761px){
+    .ubicar-bar{display:flex;align-items:center;gap:12px;background:var(--bg-2);
+      border-left-width:3px;padding:8px 12px;margin-bottom:12px}
+    /* En «Ubicar» crece, pero deja de ser pegajosa: ahí la barra ES la página
+       y anclarla solo duplicaría su altura al desplazar. */
+    .dest-ubicar .ubicar-bar{position:static;box-shadow:none}
+    .ubicar-head{margin:0;flex:0 0 auto;align-items:center;flex-wrap:nowrap;gap:8px}
+    .ubicar-kicker{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.11em;
+      color:var(--ink-2);font-weight:700}
+    .ubicar-kicker::before{content:'\25CE  ';color:var(--guinda)}
+    .ubicar-hint{display:none}
+    .ubicar-gps{display:none}
+    .ubicar-row{flex:1;min-width:0}
+    .ubicar-input-wrap input{height:30px;font-size:var(--fs-sm);border-radius:4px 0 0 4px}
+    .ubicar-go{width:34px;border-radius:0 4px 4px 0}
+  }
+
+  @media (max-width:760px){
+    .ubicar-bar{padding:14px;border-left-width:4px}
+    .ubicar-head{margin-bottom:11px}
+    .ubicar-kicker{font-size:var(--fs-md)}
+    .ubicar-hint{font-size:var(--fs-sm);width:100%}
+    .ubicar-row{flex-direction:column;gap:9px}
+    .ubicar-gps{width:100%;height:48px;font-size:var(--fs-md)}
+    .ubicar-input-wrap input{height:44px;font-size:var(--fs-md)}
+    .ubicar-go{width:48px}
+  }
+
+  /* ═══ Resultado de ubicación · ejecutivo ═══
+     Una respuesta grande, lo demás en una lista compacta, contexto en una línea.
+     Superficie, decreto y programa de manejo NO están aquí: viven en la ficha. */
+  .ubi-panel{position:relative}
+  .ubi-cerrar{position:absolute;top:12px;right:14px;width:32px;height:32px;border:none;background:transparent;
+    font-size:var(--fs-2xl);line-height:1;color:var(--ink-2);cursor:pointer;border-radius:50%}
+  .ubi-cerrar:hover{background:var(--bg-2);color:var(--guinda)}
+  .ubi-cargando{padding:32px;text-align:center;color:var(--muted);font-family:'Roboto Mono',monospace;font-size:var(--fs-base)}
+  .ubi-cabeza{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.13em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:14px;padding-right:40px}
+  .ubi-etiqueta{font-size:var(--fs-base);color:var(--ink-2);margin:-8px 0 14px}
+  .ubi-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+  .ubi-col{min-width:0}
+
+  /* La respuesta */
+  .ubi-main{border-left:4px solid var(--c);padding:2px 0 0 16px}
+  .ubi-main-cat{display:flex;align-items:center;gap:8px;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);
+    font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--c);margin-bottom:6px}
+  .ubi-dot{width:9px;height:9px;border-radius:var(--r-chip);background:var(--c);flex-shrink:0}
+  .ubi-main-nom{font-size:var(--fs-hero);font-weight:900;line-height:1.12;letter-spacing:-.02em;color:var(--ink)}
+  .ubi-vacio .ubi-main-nom{font-size:var(--fs-xl);font-weight:500;color:var(--ink-2)}
+  .ubi-warn{margin-top:10px;padding:7px 10px;background:var(--warn-bg);border-left:2px solid var(--dorado);
+    font-size:var(--fs-sm);color:var(--dorado-text);border-radius:0 3px 3px 0;line-height:1.4}
+  .ubi-ficha{display:inline-flex;align-items:center;gap:7px;margin-top:14px;background:var(--guinda);color:#fff;
+    border:none;border-radius:var(--r-ui);padding:10px 16px;cursor:pointer;font-family:'Roboto',sans-serif;
+    font-size:var(--fs-base);font-weight:700}
+  .ubi-ficha:hover{background:var(--guinda-900)}
+  .ubi-ficha .ar{font-family:'Roboto Mono',monospace}
+
+  /* Lo demás que aplica: lista compacta */
+  .ubi-lista{margin-top:18px;border-top:1px solid var(--line-soft)}
+  .ubi-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line-soft)}
+  .ubi-item-txt{flex:1;min-width:0;line-height:1.3}
+  .ubi-item-txt b{display:block;font-size:var(--fs-md);font-weight:700;color:var(--ink)}
+  .ubi-item-txt span{display:block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);margin-top:2px}
+  .ubi-mini{flex-shrink:0;width:30px;height:30px;border:1px solid var(--c);color:var(--c);background:transparent;
+    border-radius:var(--r-ui);cursor:pointer;font-family:'Roboto Mono',monospace;font-size:var(--fs-md);line-height:1}
+  .ubi-mini:hover{background:var(--c);color:#fff}
+
+  .ubi-map{height:280px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-soft);background:var(--map-bg)}
+  .ubi-ctx{margin-top:16px;padding-top:12px;border-top:1px solid var(--line-soft);
+    font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:.03em}
+
+  @media (max-width:900px){
+    .ubi-grid{grid-template-columns:1fr;gap:16px}
+    .ubi-col:last-child{order:-1}
+    .ubi-map{height:220px}
+    .ubi-main-nom{font-size:var(--fs-2xl)}
+    .ubi-ficha{width:100%;justify-content:center;padding:13px}
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     Navegación de dos niveles · rediseño 2026-09-10
+     Once destinos planos mezclaban filtros del inventario, inventarios
+     independientes y herramientas. Ahora: cuatro destinos arriba y, dentro
+     de cada uno, sus subconjuntos como filtros. Los ids de GROUPS no cambian.
+     ═══════════════════════════════════════════════════════════════ */
+  .destbar{display:flex;gap:4px;background:var(--card);border:1px solid var(--line-soft);
+    border-radius:var(--radius);padding:4px;box-shadow:var(--shadow);margin-bottom:10px}
+  .dest{flex:1 1 0;min-width:0;height:46px;display:flex;align-items:center;justify-content:center;gap:9px;
+    background:transparent;border:none;border-radius:var(--r-ui);cursor:pointer;
+    font-family:'Roboto',sans-serif;font-size:var(--fs-md);font-weight:500;color:var(--ink-2);
+    transition:background .15s,color .15s;padding:0 10px;white-space:nowrap}
+  .dest:hover{background:var(--bg-2);color:var(--ink)}
+  .dest:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+  .dest .dest-ico{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .dest .dest-ico svg{width:100%;height:100%}
+  .dest .dest-lbl{overflow:hidden;text-overflow:ellipsis}
+  .dest.active{background:var(--guinda);color:var(--crema);font-weight:700;
+    box-shadow:0 2px 8px rgba(157,33,72,.22)}
+
+  .subnav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center}
+  .subnav:empty{display:none}
+  .subnav-lbl{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);margin-right:4px}
+  .subchip{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 13px;
+    background:var(--card);border:1px solid var(--line);border-radius:17px;cursor:pointer;
+    font-family:'Roboto',sans-serif;font-size:var(--fs-sm);color:var(--ink);
+    transition:border-color .15s,background .15s,color .15s;white-space:nowrap}
+  .subchip:hover{border-color:var(--guinda);color:var(--guinda)}
+  .subchip:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+  .subchip .sw{width:9px;height:9px;border-radius:var(--r-chip);flex-shrink:0}
+  .subchip .n{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);color:var(--muted)}
+  .subchip.active{background:var(--guinda);border-color:var(--guinda);color:var(--crema);font-weight:700}
+  .subchip.active .n{color:var(--crema);opacity:.85}
+  .subchip.active .sw{box-shadow:0 0 0 1.5px rgba(255,253,240,.9)}
+
+  /* Destino «Ubicar»: la barra deja de ser una franja y ocupa el escenario */
+  .dest-ubicar .ubicar-bar{background:linear-gradient(100deg,rgba(157,33,72,.06),rgba(178,142,92,.06));
+    display:block;padding:20px 22px;border-left-width:4px}
+  .dest-ubicar .ubicar-head{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin-bottom:14px}
+  .dest-ubicar .ubicar-kicker{font-family:var(--font-titulo);font-size:var(--fs-xl);color:var(--ink);
+    text-transform:none;letter-spacing:-.01em}
+  .dest-ubicar .ubicar-kicker::before{content:''}
+  .dest-ubicar .ubicar-hint{display:block;font-size:var(--fs-md)}
+  @media (max-width:760px){
+    .dest-ubicar .ubicar-gps{display:inline-flex;height:52px;font-size:var(--fs-md)}
+  }
+  .dest-ubicar .ubicar-input-wrap input{height:48px;font-size:var(--fs-md)}
+  .dest-ubicar .ubicar-go{height:48px}
+
+  @media (max-width:760px){
+    .destbar{padding:3px;gap:2px}
+    .dest{height:48px;flex-direction:column;gap:2px;font-size:var(--fs-xs);padding:0 4px}
+    .dest .dest-ico{width:19px;height:19px}
+    .subchip{height:44px;padding:0 15px;border-radius:22px;font-size:var(--fs-sm)}
+    .subnav-lbl{display:none}
+  }
+
+
+  .panel{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:26px 28px;margin-bottom:20px;box-shadow:var(--shadow)}
+  .panel-title{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--guinda);margin-bottom:10px;font-weight:500}
+  .panel h3{font-family:'Roboto',sans-serif;font-size:var(--fs-2xl);font-weight:700;line-height:1.2;margin-bottom:6px;letter-spacing:-.01em}
+  .panel h3 em{font-style:normal;color:var(--guinda);font-weight:900}
+  .panel-intro{color:var(--ink-2);font-size:var(--fs-md);margin-top:8px;margin-bottom:20px;max-width:760px;line-height:1.6}
+
+  /* ═══════════════════════════════════════════════════════════════
+     Campo primero · celular · rediseño 2026-09-10
+     La navegacion baja al pulgar, la cabecera se reduce a lo que identifica
+     a la institucion y la tabla se lee como lista.
+     ═══════════════════════════════════════════════════════════════ */
+  @media (max-width:760px){
+    .wrap{padding-bottom:calc(var(--destbar-h) + 24px + env(safe-area-inset-bottom, 0px))}
+    header.top{padding:0 0 8px;margin-bottom:10px;gap:8px}
+    h1{font-size:var(--fs-md);font-weight:600}
+    .sub{display:none}
+    header.top .meta{display:none}
+    /* La barra está en las cuatro vistas: desde que los mapas perdieron su
+       buscador flotante, es la única entrada de direcciones y coordenadas del
+       tablero y no puede desaparecer al cambiar de destino. Fuera de «Ubicar»
+       se comprime a una fila —sin subtítulo y con el GPS reducido a su icono—
+       para no robarse el primer tercio de la pantalla. */
+    .wrap:not(.dest-ubicar) .ubicar-bar{display:flex;align-items:center;gap:9px;
+      padding:8px 10px;margin-bottom:10px}
+    .wrap:not(.dest-ubicar) .ubicar-head{margin:0;flex:0 0 auto}
+    .wrap:not(.dest-ubicar) .ubicar-kicker{font-size:var(--fs-xs)}
+    .wrap:not(.dest-ubicar) .ubicar-hint{display:none}
+    .wrap:not(.dest-ubicar) .ubicar-row{flex:1;min-width:0;flex-direction:row;gap:7px;align-items:stretch}
+    .wrap:not(.dest-ubicar) .ubicar-gps{width:auto;flex:0 0 auto;height:44px;padding:0 12px;font-size:var(--fs-sm)}
+    .wrap:not(.dest-ubicar) .ubicar-gps span{display:none}
+    .dest-ubicar .ubicar-bar{position:static;box-shadow:none}
+
+    /* Navegacion fija al alcance del pulgar */
+    .destbar{position:fixed;left:0;right:0;bottom:0;z-index:var(--z-sticky);
+      margin:0;border-radius:0;border:none;border-top:1px solid var(--line);
+      padding:2px 4px calc(4px + env(safe-area-inset-bottom, 0px));
+      box-shadow:0 -2px 14px rgba(42,42,42,.12)}
+    .subnav{margin-bottom:12px;overflow-x:auto;flex-wrap:nowrap;
+      -webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+    .subnav::-webkit-scrollbar{display:none}
+    .subchip{flex-shrink:0}
+
+    /* La tabla de once columnas se lee como lista */
+    .table-scroll{overflow-x:visible}
+    table.t{min-width:0 !important;table-layout:fixed !important}
+    table.t th:nth-child(2), table.t td:nth-child(2),
+    table.t th:nth-child(3), table.t td:nth-child(3),
+    table.t th:nth-child(4), table.t td:nth-child(4),
+    table.t th:nth-child(5), table.t td:nth-child(5),
+    table.t th:nth-child(6), table.t td:nth-child(6),
+    table.t th:nth-child(9), table.t td:nth-child(9),
+    table.t th:nth-child(11),table.t td:nth-child(11){display:none}
+    /* `body` no adorna: sin él estas cuatro reglas pierden contra las anchuras
+       base de `table.t th:nth-child(n)`, que se declaran MÁS ABAJO en la hoja
+       con la misma especificidad. El bloque móvil llevaba tiempo sin aplicar y
+       las columnas se repartían por normalización de los porcentajes base
+       (57/14/12/17 en lugar de 52/24/10/14), que es lo que cortaba «6,000». */
+    body table.t th:nth-child(1), body table.t td:nth-child(1){width:48%}
+    body table.t th:nth-child(7), body table.t td:nth-child(7){width:22%}
+    body table.t th:nth-child(8), body table.t td:nth-child(8){width:10%}
+    body table.t th:nth-child(10),body table.t td:nth-child(10){width:20%}
+    tbody.t-body td{padding:12px 6px;white-space:normal}
+    tbody.t-body td.name{white-space:normal;line-height:1.3;font-size:var(--fs-md)}
+    .name-sub{display:block;font-size:var(--fs-xs);color:var(--muted);font-weight:400;margin-top:3px}
+    thead.t-head th{padding:9px 6px}
+    /* Objetivo tactil de 44 px en toda accion de la barra de ubicacion */
+    .ubicar-gps{height:52px}
+    .ubicar-input-wrap input,.ubicar-go{height:48px}
+  }
+
+  /* ═══ Resumen del inventario · sustituye a las 4 tarjetas KPI ═══ */
+  .panel-mapa{padding-top:14px !important;padding-bottom:14px !important}
+  .panel-mapa .mapa-h{font-size:var(--fs-lg) !important;margin-bottom:10px !important}
+  .resumen{display:grid;grid-template-columns:auto auto minmax(260px,1fr);gap:0 34px;align-items:center;
+    background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);
+    padding:16px 22px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .res-blk{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .res-k{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);font-weight:500}
+  .res-v{font-family:var(--font-titulo);font-size:var(--fs-2xl);font-weight:700;line-height:1.05;
+    color:var(--ink);letter-spacing:-.02em}
+  .res-v .u{font-size:var(--fs-sm);color:var(--muted);margin-left:5px;font-weight:500;letter-spacing:0}
+  .res-s{font-size:var(--fs-xs);color:var(--muted)}
+  .res-alerta{color:var(--alert-text);font-weight:500}
+  .res-pm{gap:6px}
+  .res-pm-top{display:flex;align-items:baseline;justify-content:space-between;gap:14px}
+  .res-pm-n{font-family:'Roboto Mono',monospace;font-size:var(--fs-sm);font-weight:500;color:var(--ink)}
+  .res-bar{height:7px;background:var(--bg-3);border-radius:4px;overflow:hidden;display:flex}
+  .res-bar-si{background:var(--verde);border-radius:4px 0 0 4px}
+  @media (max-width:900px){
+    .resumen{grid-template-columns:1fr 1fr;gap:14px 20px;padding:14px 16px}
+    .res-pm{grid-column:span 2}
+  }
+
+  .hero{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .hero-card{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:20px 22px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+  .hero-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--guinda)}
+  .hero-card.bu::before{background:var(--bu)}
+  .hero-card.br::before{background:var(--br)}
+  .hero-card.anpl::before{background:var(--anpl)}
+  .hero-card.anpf::before{background:var(--anpf)}
+  .hero-label{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:500}
+  .hero-value{font-family:'Roboto',sans-serif;font-size:var(--fs-mega);line-height:1;color:var(--ink);font-weight:900;letter-spacing:-.02em}
+  .hero-value .u{font-size:var(--fs-md);color:var(--muted);margin-left:6px;font-weight:500;letter-spacing:0}
+  .hero-sub{font-size:var(--fs-sm);color:var(--muted);margin-top:8px;font-family:'Roboto Mono',monospace;letter-spacing:.04em}
+
+  /* ============================================================
+   * Separador institucional · diferencia secciones dentro de un mismo tab
+   * ============================================================ */
+  .seccion-divider{margin-top:48px;margin-bottom:24px;padding:24px 28px;background:linear-gradient(180deg,var(--bg-2) 0%,var(--card) 100%);border-radius:var(--radius);border-top:3px solid var(--guinda);position:relative}
+  .seccion-divider::before{content:"";position:absolute;top:-12px;left:28px;width:24px;height:24px;background:var(--card);border:3px solid var(--guinda);border-radius:50%;box-shadow:0 0 0 4px var(--bg)}
+  .seccion-divider-eyebrow{display:inline-block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.16em;text-transform:uppercase;color:var(--guinda);font-weight:600;margin-bottom:10px;background:rgba(157,33,72,.08);padding:4px 10px;border-radius:var(--r-ui)}
+  .seccion-divider-title{font-family:'Roboto',sans-serif;font-size:var(--fs-hero);font-weight:700;line-height:1.15;margin:0 0 12px;color:var(--ink);letter-spacing:-.015em}
+  .seccion-divider-title em{font-style:italic;font-weight:400;color:var(--guinda)}
+  .seccion-divider-sub{font-size:var(--fs-md);color:var(--ink-2);line-height:1.6;margin:0;max-width:880px}
+
+  /* ============================================================
+   * BRECHAS · CSS
+   * ============================================================ */
+  /* Variantes hero para diagnóstico de brechas.
+     Sin semáforo (v38): el rojo y el azul de antes competían con la marca y
+     con los colores de categoría —el azul es «ANP Federal» en todo el tablero—.
+     El guinda marca lo que exige decisión; el dorado, lo que solo contextualiza. */
+  .hero-card.hero-warning::before{background:var(--guinda)}
+  .hero-card.hero-info::before{background:var(--dorado)}
+  .hero-eyebrow{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.15em;text-transform:uppercase;color:var(--guinda);font-weight:600;margin-bottom:8px}
+  .hero-card.hero-info .hero-eyebrow{color:var(--dorado-text)}
+  .hero-meta{font-size:var(--fs-xs);color:var(--muted);margin-top:10px;font-family:'Roboto Mono',monospace;letter-spacing:.04em;line-height:1.3}
+
+  /* Grid de tarjetas de brecha por grupo (2 columnas en desktop) */
+  /* Etiqueta de grupo dentro de las tablas de Análisis: el color lo pone el JS
+     con GROUP_COLORS; aquí solo el tamaño y la caja tipográfica. */
+  .grp-mini{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);white-space:nowrap}
+  /* Encabezado ordenable de las tablas de brechas. La flecha está siempre, en
+     gris tenue, para que se vea que la columna se puede ordenar antes de
+     tocarla; se enciende en la columna activa. */
+  .comp th.th-ord{cursor:pointer;user-select:none;white-space:nowrap}
+  .comp th.th-ord:hover{color:var(--guinda)}
+  .comp th.th-ord:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px}
+  .comp th.th-ord .ord-flecha{margin-left:5px;font-size:var(--fs-micro);opacity:.28}
+  .comp th.th-ord.act{color:var(--guinda)}
+  .comp th.th-ord.act .ord-flecha{opacity:1}
+  /* Fila complementaria de las tablas de Análisis: cuenta en hectáreas pero no
+     en el total. El filete la separa de lo que sí suma. */
+  .comp tr.fila-complementaria td{border-top:1px dashed var(--line);
+    background:rgba(112,72,232,.045);color:var(--ink-2)}
+  /* Nota de lectura al pie de un panel: dice cómo NO leer la cifra de arriba.
+     Filete dorado, no rojo: advierte sobre la interpretación, no alarma. */
+  .nota-analisis{margin-top:16px;padding:13px 16px;background:var(--bg-2);
+    border-left:3px solid var(--dorado);border-radius:0 var(--radius) var(--radius) 0;
+    font-size:var(--fs-sm);color:var(--ink-2);line-height:1.55}
+  .nota-analisis b{color:var(--ink)}
+  .brechas-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+  .brecha-card{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:18px 20px;border-left:3px solid var(--card-color, var(--guinda));position:relative}
+  .brecha-card-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;gap:10px}
+  .brecha-card-grupo{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;color:var(--ink-2);font-weight:500;text-transform:uppercase}
+  .brecha-card-pct{font-family:'Roboto',sans-serif;font-size:var(--fs-lg);font-weight:700;color:var(--card-color, var(--guinda));letter-spacing:-.01em}
+  .brecha-card-num{font-family:'Roboto',sans-serif;font-size:var(--fs-mega);line-height:1;color:var(--ink);font-weight:900;letter-spacing:-.02em}
+  .brecha-card-lbl{font-size:var(--fs-sm);color:var(--muted);margin-top:4px;font-family:'Roboto',sans-serif}
+  .brecha-card-bar{margin-top:14px;height:6px;background:var(--bg-2);border-radius:var(--r-ui);overflow:hidden}
+  .brecha-card-bar-fill{height:100%;background:var(--card-color, var(--guinda));transition:width .4s ease}
+  .brecha-card-details{margin-top:14px;border-top:1px dotted var(--line-soft);padding-top:10px}
+  .brecha-card-details summary{cursor:pointer;font-size:var(--fs-sm);color:var(--ink-2);font-family:'Roboto Mono',monospace;letter-spacing:.06em;padding:4px 0;user-select:none}
+  .brecha-card-details summary:hover{color:var(--card-color, var(--guinda))}
+  .brecha-card-details[open] summary{color:var(--card-color, var(--guinda));margin-bottom:8px}
+  .brecha-list{list-style:none;padding:0;margin:0}
+  .brecha-list li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dotted var(--line-soft);font-size:var(--fs-sm);color:var(--ink-2);line-height:1.4}
+  .brecha-list li:last-child{border-bottom:none}
+  .brecha-list-meta{color:var(--muted);font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);flex-shrink:0;white-space:nowrap}
+
+  /* Ranking de alcaldías */
+  .brechas-rank{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+  .rank-row{display:grid;grid-template-columns:36px 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px dotted var(--line-soft)}
+  .rank-row:last-child{border-bottom:none}
+  .rank-pos{font-family:'Roboto',sans-serif;font-size:var(--fs-2xl);font-weight:900;color:var(--guinda);text-align:center;letter-spacing:-.02em;line-height:1}
+  .rank-body{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .rank-header{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .rank-name{font-size:var(--fs-md);font-weight:600;color:var(--ink)}
+  .rank-count{font-size:var(--fs-xs);color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.04em;white-space:nowrap}
+  .rank-bar{height:5px;background:var(--bg-2);border-radius:var(--r-ui);overflow:hidden}
+  .rank-bar-fill{height:100%;background:linear-gradient(90deg,var(--guinda),var(--guinda-400));transition:width .4s ease}
+
+  /* ============================================================
+   * CRONOLOGÍA · CSS
+   * ============================================================ */
+  .cronologia-container{margin-top:20px;background:var(--bg-2);border-radius:var(--radius);padding:24px 20px 14px;border:1px solid var(--line-soft)}
+  .cronologia-chart{display:flex;align-items:flex-end;gap:6px;height:240px;padding:0 6px;border-bottom:2px solid var(--line)}
+  .cron-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;height:100%;justify-content:flex-end;position:relative}
+  .cron-bar-count{font-family:'Roboto',sans-serif;font-size:var(--fs-xs);font-weight:600;color:var(--ink-2);min-height:14px;letter-spacing:-.01em}
+  .cron-bar{width:100%;max-width:42px;background:var(--guinda);border-radius:var(--r-ui) 3px 0 0;transition:all .25s ease;position:relative;cursor:pointer;min-height:2px}
+  .cron-bar[data-count="0"]{background:transparent !important;border:1px dashed var(--line);min-height:6px;max-height:6px;height:6px !important;opacity:.5}
+  /* Etiqueta de década vacía atenuada */
+  .cron-bar-col:has(.cron-bar[data-count="0"]) .cron-bar-label{opacity:.45}
+  .cron-bar-col:has(.cron-bar[data-count="0"]) .cron-bar-count{visibility:hidden}
+  .cron-bar:hover{background:var(--guinda-900);transform:translateY(-2px)}
+  .cron-bar-tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--crema);padding:10px 12px;border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:var(--fs-sm);line-height:1.4;white-space:normal;width:220px;box-shadow:var(--sh-3);opacity:0;pointer-events:none;transition:opacity .15s;z-index:10}
+  .cron-bar:hover .cron-bar-tooltip, .cron-bar:focus .cron-bar-tooltip{opacity:1}
+  .cron-bar:focus{outline:2px solid var(--guinda);outline-offset:2px}
+  /* El globo de la primera y la última barra se salía del panel y empujaba la
+     página a scroll horizontal en tabletas —aunque esté invisible, ocupa caja—.
+     En los extremos se alinea hacia dentro en vez de centrarse. La barra cuelga
+     de .cron-bar-col, así que el :first-child/:last-child va en la columna. */
+  .cron-bar-col:first-child .cron-bar-tooltip{left:0;transform:none}
+  .cron-bar-col:last-child  .cron-bar-tooltip{left:auto;right:0;transform:none}
+  .cron-tt-decada{font-weight:700;font-size:var(--fs-sm);margin-bottom:2px;color:#fff}
+  .cron-tt-count{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.06em;color:var(--acento-mapa);margin-bottom:8px;text-transform:uppercase}
+  .cron-tt-list{list-style:none;padding:0;margin:0;font-size:var(--fs-xs);line-height:1.45}
+  .cron-tt-list li{padding:2px 0;color:rgba(255,253,240,.85)}
+  .cron-bar-label{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.04em;color:var(--muted);margin-top:4px;text-align:center}
+  .cron-bar-label.is-pico{color:var(--guinda);font-weight:600}
+
+  /* === Gráfico independiente de Decretos por Administración Electa CDMX === */
+  .cron-gob-chart{display:flex;align-items:flex-end;gap:8px;height:280px;padding:0 6px;border-bottom:2px solid var(--line);margin-top:4px}
+  .cron-gob-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;height:100%;justify-content:flex-end;position:relative}
+  .cron-gob-count{font-family:'Roboto',sans-serif;font-size:var(--fs-md);font-weight:700;color:var(--ink);min-height:18px;letter-spacing:-.01em}
+  .cron-gob-bar{width:100%;max-width:64px;border-radius:var(--r-ui) 3px 0 0;transition:filter .2s,transform .2s;position:relative;cursor:pointer;min-height:2px;box-shadow:var(--sh-1)}
+  .cron-gob-bar[data-count="0"]{background:transparent !important;border:1px dashed var(--line);min-height:8px}
+  .cron-gob-bar:hover{filter:brightness(1.08);transform:translateY(-2px)}
+  .cron-gob-tooltip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--crema);padding:12px 14px;border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:var(--fs-sm);line-height:1.45;white-space:normal;width:260px;box-shadow:var(--sh-3);opacity:0;pointer-events:none;transition:opacity .15s;z-index:15}
+  .cron-gob-bar:hover .cron-gob-tooltip, .cron-gob-bar:focus .cron-gob-tooltip{opacity:1}
+  .cron-gob-bar:focus{outline:2px solid var(--guinda);outline-offset:2px}
+  /* Mismo caso que la cronología por década: los globos de los extremos se
+     alinean hacia dentro para no desbordar el panel. */
+  .cron-gob-col:first-child .cron-gob-tooltip{left:0;transform:none}
+  .cron-gob-col:last-child  .cron-gob-tooltip{left:auto;right:0;transform:none}
+  .cron-gob-tt-title{font-weight:700;font-size:var(--fs-base);color:#fff;margin-bottom:4px;line-height:1.3}
+  .cron-gob-tt-period{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.04em;color:var(--acento-mapa);margin-bottom:6px}
+  .cron-gob-tt-meta{font-size:var(--fs-xs);color:rgba(255,253,240,.85);margin-bottom:6px;font-style:italic}
+  .cron-gob-tt-list{list-style:none;padding:0;margin:0;font-size:var(--fs-xs);line-height:1.5;border-top:1px solid rgba(255,255,255,.15);padding-top:6px;margin-top:4px}
+  .cron-gob-tt-list li{padding:2px 0;color:rgba(255,253,240,.9)}
+  .cron-gob-col-label{font-family:'Roboto',sans-serif;font-size:var(--fs-xs);letter-spacing:.01em;color:var(--ink-2);font-weight:500;margin-top:6px;text-align:center;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
+  .cron-gob-col-period{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.04em;color:var(--muted);text-align:center;margin-top:1px}
+  .cron-gob-caption{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.06em;color:var(--muted);text-transform:uppercase;text-align:center}
+
+  /* .grid-3 y .mini eliminadas en v34 (sin uso en HTML) — usar .legal-grid-3 si se necesita grid de 3 columnas */
+          
+  /* Paneles compactos — menor padding, sin h3 */
+  .panel-compact{padding:18px 22px}
+  .panel-compact .panel-title{margin-bottom:8px}
+
+  /* Separación entre tabla y mapa cartográfico */
+  #globalMapSection{display:block;margin-top:0;margin-bottom:14px}
+  #globalMapSection > .panel{margin-bottom:0}
+
+  /* ═══ Columnas redundantes · rediseño 2026-09-11 ═══
+     Misma regla que en los filtros: una columna cuyo subconjunto activo tiene un
+     solo valor no informa nada. Dentro de «Barrancas» la columna Tipo repite AVA
+     veintiséis veces y Subcategoría repite Barranca. Se retiran mientras ese
+     subconjunto esté activo y vuelven en «Todas». Lo decide el dato, no una lista. */
+  table.t.oc-2  th:nth-child(2),  table.t.oc-2  td:nth-child(2),
+  table.t.oc-3  th:nth-child(3),  table.t.oc-3  td:nth-child(3),
+  table.t.oc-4  th:nth-child(4),  table.t.oc-4  td:nth-child(4),
+  table.t.oc-5  th:nth-child(5),  table.t.oc-5  td:nth-child(5),
+  table.t.oc-6  th:nth-child(6),  table.t.oc-6  td:nth-child(6),
+  table.t.oc-8  th:nth-child(8),  table.t.oc-8  td:nth-child(8),
+  table.t.oc-10 th:nth-child(10), table.t.oc-10 td:nth-child(10),
+  table.t.oc-11 th:nth-child(11), table.t.oc-11 td:nth-child(11){display:none}
+
+  /* ═══ Vista partida · rediseño 2026-09-10 ═══
+     El mapa vivia debajo de la tabla, en un producto cuyo uso dominante es de
+     campo: obligaba a recorrer toda la pagina y nunca se veian juntos. A partir
+     de 1200 px comparten pantalla; el mapa queda fijo mientras la tabla corre. */
+  @media (min-width:1200px){
+    main#main-content{display:grid;grid-template-columns:minmax(0,0.88fr) minmax(0,1fr);
+      gap:16px;align-items:start}
+    main#main-content > .ubicar-bar,
+    main#main-content > #ubicarResultado,
+    main#main-content > nav.nav2,
+    main#main-content > #dashboard{grid-column:1 / -1}
+    #globalMapSection{grid-column:1;position:sticky;top:12px;margin-bottom:0}
+    #tableSection{grid-column:2}
+    /* Sin tabla (destinos Capas, Análisis o Ubicar) el mapa toma todo el ancho */
+    main#main-content:has(#tableSection[style*="display: none"]) #globalMapSection{grid-column:1 / -1}
+    /* En la columna estrecha de la vista partida, el buscador toma la primera
+       fila entero y los desplegables se reparten debajo. */
+    #tableSection > .toolbar > label.f-buscar{flex:1 1 100%}
+    #tableSection > .toolbar select{max-width:320px}   /* que un campo solo en su fila no se estire de lado a lado */
+    #tableSection > .toolbar label:not(.f-buscar){flex:1 1 150px}
+    #tableSection > .table-wrap{max-height:calc(100vh - 40px);overflow:auto}
+    #globalMapCanvas{height:calc(100vh - 250px);min-height:460px}
+    /* En vista partida se retiran solo las tres columnas de menor consulta:
+       Jurisdicción (redundante con el Tipo y con el filete), Decreto y Fecha PM.
+       Tipo y DG responsable permanecen: identifican competencia y responsable,
+       que es lo que se consulta al repartir trabajo. Las ocultas siguen en la ficha. */
+    #tableSection table.t th:nth-child(3),#tableSection table.t td:nth-child(3),
+    #tableSection table.t th:nth-child(9),#tableSection table.t td:nth-child(9){display:none}
+    /* El Decreto solo estorba cuando la tabla va llena de verdad. Si la regla de
+       columnas redundantes dejó siete o menos, cabe y entra: `con-decreto` lo
+       decide. Hoy eso deja fuera únicamente a «Todas», con sus ocho columnas. */
+    #tableSection table.t:not(.con-decreto) th:nth-child(6),
+    #tableSection table.t:not(.con-decreto) td:nth-child(6){display:none}
+    #tableSection table.t.con-decreto th:nth-child(6),
+    #tableSection table.t.con-decreto td:nth-child(6){width:9%}
+    /* Si el subconjunto no tiene fechas —ARCAC—, la columna se va igual. */
+    #tableSection table.t.oc-6 th:nth-child(6),
+    #tableSection table.t.oc-6 td:nth-child(6){display:none}
+    #tableSection table.t th:nth-child(1),#tableSection table.t td:nth-child(1){width:28%}
+    /* Caso lleno: ocho columnas con el año. Se reparte a mano para que ni el
+       encabezado «Decreto» ni su flecha de orden queden cortados. */
+    #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(1),
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(1){width:24%}
+    #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(4),
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(4){width:16%}
+    #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(5),
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(5){width:13%}
+    #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(6),
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(6){width:11%}
+    #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(7),
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(7){width:9%}
+    #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(10),
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(10){width:8%}
+    #tableSection table.t.con-decreto:not(.oc-4) th:nth-child(11),
+    #tableSection table.t.con-decreto:not(.oc-4) td:nth-child(11){width:12.5%}
+    #tableSection table.t th:nth-child(2),#tableSection table.t td:nth-child(2){width:7%}
+    #tableSection table.t th:nth-child(4),#tableSection table.t td:nth-child(4){width:15%}
+    #tableSection table.t th:nth-child(5),#tableSection table.t td:nth-child(5){width:15%}
+    #tableSection table.t th:nth-child(7),#tableSection table.t td:nth-child(7){width:10%}
+    #tableSection table.t th:nth-child(8),#tableSection table.t td:nth-child(8){width:5%}
+    #tableSection table.t th:nth-child(10),#tableSection table.t td:nth-child(10){width:8%}
+    #tableSection table.t th:nth-child(11),#tableSection table.t td:nth-child(11){width:12%}
+    #tableSection thead.t-head th:nth-child(2) .arrow,
+    #tableSection thead.t-head th:nth-child(11) .arrow{display:none}
+    /* La sigla larga no cabe entera en 14%: se abrevia visualmente y el nombre
+       completo queda en el title de la celda. */
+    #tableSection td .tag-dg{font-size:var(--fs-mini)}
+    #tableSection thead.t-head th{padding:9px 5px;letter-spacing:.04em}
+    #tableSection thead.t-head th:nth-child(8) .arrow,
+    #tableSection thead.t-head th:nth-child(10) .arrow{display:none}
+    #tableSection tbody.t-body td{padding:9px 5px}
+    #tableSection tbody.t-body td.name{padding-left:16px}
+  }
+  .panel-compact h3{font-size:var(--fs-xl);margin-bottom:10px}
+
+  /* Tabla compacta de hitos — reemplaza grid de tarjetas */
+  .hitos-table tr{border-bottom:1px dotted var(--line-soft)}
+  .hitos-table tr:last-child{border-bottom:none}
+  .hitos-table th{text-align:left;padding:10px 14px 10px 0;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;width:190px;white-space:nowrap;vertical-align:baseline}
+  .hitos-table td{padding:10px 12px;font-size:var(--fs-base);color:var(--ink);vertical-align:baseline}
+
+  /* Nota al pie dentro de paneles (sustituye estilos inline) */
+  .panel-note{margin-top:14px;padding:10px 14px;background:var(--bg-2);border-radius:var(--r-ui);font-size:var(--fs-sm);color:var(--muted);line-height:1.55;border-left:3px solid var(--dorado)}
+
+  @media (max-width:1024px){
+    .hitos-table th{width:160px;font-size:var(--fs-mini)}
+    .hitos-table td.hitos-val{width:110px;font-size:var(--fs-lg)}
+  }
+  @media (max-width:640px){
+    .panel-compact{padding:16px 18px}
+    .hitos-table th{width:auto;display:block;padding:10px 0 2px;border:none}
+    .hitos-table td{display:block;padding:0 0 4px}
+    .hitos-table td.hitos-val{width:auto;display:inline-block;margin-right:10px;font-size:var(--fs-lg)}
+    .hitos-table td.hitos-ctx{display:inline;font-size:var(--fs-sm)}
+    .hitos-table tr{padding:8px 0;display:block}
+  }
+
+  .comp{width:100%;border-collapse:collapse}
+  .comp th,.comp td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line-soft);font-size:var(--fs-md)}
+  .comp th{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.12em;text-transform:uppercase;color:var(--guinda);font-weight:500;background:var(--bg-2)}
+  .comp td.num{font-family:'Roboto Mono',monospace;text-align:right;color:var(--ink);font-weight:500}
+  .comp td.grp{font-weight:500;color:var(--ink)}
+  .comp .chip{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:10px;vertical-align:middle}
+  .chip.bu{background:var(--bu)} .chip.br{background:var(--br)}
+  .chip.anpl{background:var(--anpl)} .chip.anpf{background:var(--anpf)}
+  .comp .share{position:relative;width:100%;height:6px;background:var(--bg-2);border-radius:var(--r-ui);overflow:hidden}
+  .comp .share-fill{position:absolute;left:0;top:0;bottom:0;border-radius:var(--r-ui)}
+  /* Wrapper con scroll horizontal e indicador visual en mobile */
+  .comp-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .share-fill.bu{background:var(--bu)} .share-fill.br{background:var(--br)}
+  .share-fill.anpl{background:var(--anpl)} .share-fill.anpf{background:var(--anpf)}
+
+
+  /* === Barra apilada de Áreas por Alcaldía (desglose por tipo) === */
+  .alc-legend{display:flex;flex-wrap:wrap;gap:14px 18px;margin:8px 0 14px;padding:10px 12px;background:var(--bg-2);border-radius:var(--radius);font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.04em;color:var(--ink-2);text-transform:uppercase}
+  .alc-leg-item{display:inline-flex;align-items:center;gap:6px;font-weight:500}
+  .alc-leg-swatch{display:inline-block;width:14px;height:11px;border-radius:var(--r-chip);flex-shrink:0}
+
+  .alc-stacked{display:flex;flex-direction:column;gap:7px}
+  .alc-row{display:grid;grid-template-columns:1.3fr 2.4fr auto;gap:12px;align-items:center;font-size:var(--fs-base)}
+  .alc-name{color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400}
+  .alc-track{display:flex;height:22px;background:var(--bg-2);border-radius:var(--r-ui);overflow:hidden;transition:width .4s cubic-bezier(.2,.8,.2,1)}
+  .alc-seg{display:flex;align-items:center;justify-content:center;height:100%;color:#fff;font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);font-weight:600;letter-spacing:.02em;cursor:help;transition:filter .15s;border-right:1px solid rgba(255,255,255,.25);min-width:0}
+  .alc-seg:last-child{border-right:none}
+  .alc-seg:hover{filter:brightness(1.12)}
+  .alc-seg-num{padding:0 4px;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+  .alc-total{font-family:'Roboto Mono',monospace;font-size:var(--fs-sm);color:var(--ink);white-space:nowrap;min-width:90px;text-align:right;font-weight:600}
+
+  /* Mobile: stack vertical para legibilidad */
+  @media (max-width:640px){
+    .alc-row{grid-template-columns:1fr;gap:4px}
+    .alc-name{font-size:var(--fs-sm);font-weight:500;color:var(--ink)}
+    .alc-track{width:100% !important;height:20px}
+    .alc-total{text-align:left;font-size:var(--fs-xs);color:var(--muted)}
+    .alc-legend{font-size:var(--fs-micro);gap:8px 12px;padding:8px 10px}
+    .alc-leg-swatch{width:12px;height:9px}
+  }
+
+  /* Tarjetas de definición (glosario técnico-jurídico) */
+  .legal-card{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:20px 22px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+  .legal-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--legal)}
+  .legal-card .l-art{display:inline-block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;color:var(--legal);background:rgba(143,72,153,.08);padding:3px 8px;border-radius:var(--r-ui);margin-bottom:10px;font-weight:500}
+  .legal-card h4{font-family:'Roboto',sans-serif;font-size:var(--fs-xl);font-weight:700;line-height:1.2;margin-bottom:10px;color:var(--ink);letter-spacing:-.01em}
+  .legal-card p{font-size:var(--fs-base);color:var(--ink-2);line-height:1.6}
+
+  /* Header de instrumento normativo: título a la izquierda, botón de descarga a la derecha */
+  .norma-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:14px;flex-wrap:wrap}
+  .norma-header-left{flex:1;min-width:280px}
+  .norma-header-left h3{margin:0}
+  .norma-header-right{flex-shrink:0}
+  .btn-pdf{display:inline-flex;align-items:center;gap:10px;background:var(--card);color:var(--ink);padding:10px 14px;border-radius:var(--radius);text-decoration:none;font-family:'Roboto',sans-serif;font-size:var(--fs-sm);font-weight:500;border:1.5px solid var(--line);transition:all .2s;white-space:nowrap}
+  .btn-pdf:hover{border-color:var(--guinda);color:var(--guinda);background:#fff}
+  .btn-pdf:hover .pdf-badge{background:var(--guinda);color:#fff}
+  /* Badge PDF — claramente identificable como un archivo descargable */
+  .btn-pdf .pdf-badge{display:inline-flex;align-items:center;justify-content:center;width:32px;height:24px;background:#d44a3a;color:#fff;border-radius:var(--r-ui);font-family:'Roboto',sans-serif;font-size:var(--fs-micro);font-weight:700;letter-spacing:.04em;flex-shrink:0;transition:background .2s}
+  .btn-pdf .pdf-arrow{display:inline-flex;align-items:center;color:var(--muted);font-size:var(--fs-md);font-weight:700;line-height:1}
+  .btn-pdf:hover .pdf-arrow{color:var(--guinda)}
+  .btn-pdf-federal:hover{border-color:var(--azul);color:var(--azul)}
+  .btn-pdf-federal:hover .pdf-badge{background:var(--azul)}
+  .btn-pdf-federal:hover .pdf-arrow{color:var(--azul)}
+  /* Sub-secciones agrupadas por instrumento (línea divisoria sutil) */
+  .norma-subsec{margin-top:24px;padding-top:20px;border-top:1px solid var(--line-soft)}
+  .norma-subsec-title{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;font-weight:500;display:block}
+  /* Sub-tarjetas dentro del panel "ANP Federales" — sirven para LGEEPA y Convenio */
+  .anp-fed-card{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:22px 24px;border-left:3px solid var(--azul)}
+  .convenio-meta{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+  .convenio-meta-item{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:18px 20px;border-left:3px solid var(--guinda)}
+  .convenio-meta-item .l-art{display:inline-block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;color:var(--guinda);background:rgba(157,33,72,.08);padding:3px 8px;border-radius:var(--r-ui);margin-bottom:10px;font-weight:500}
+  .convenio-meta-item p{font-size:var(--fs-base);color:var(--ink-2);line-height:1.6;margin:0}
+  .convenio-table{font-size:var(--fs-base)}
+  .convenio-table th{background:rgba(157,33,72,.06);color:var(--guinda);font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.08em;text-transform:uppercase;font-weight:600;padding:10px 12px}
+  .convenio-table td{padding:10px 12px;border-bottom:1px dotted var(--line-soft)}
+  .convenio-table tbody tr:hover{background:rgba(157,33,72,.03)}
+  .legal-card-mini{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:14px 16px;border-left:2px solid var(--guinda)}
+  .legal-card-mini .l-art{display:inline-block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;color:var(--guinda);background:rgba(157,33,72,.08);padding:2px 7px;border-radius:var(--r-ui);margin-bottom:8px;font-weight:500}
+  .legal-card-mini p{font-size:var(--fs-sm);color:var(--ink-2);line-height:1.55;margin:0}
+
+  /* Listados normativos — contenidos por artículo, dentro de paneles */
+  .legal-list{margin-top:14px}
+  .legal-list ul{list-style:none;padding:0;margin:0}
+  .legal-list li{padding:12px 0;font-size:var(--fs-base);color:var(--ink-2);border-bottom:1px dotted var(--line-soft);display:block;line-height:1.55;word-wrap:break-word;overflow-wrap:break-word}
+  .legal-list li:last-child{border-bottom:none}
+  /* Variante en 2 columnas (Prohibiciones, etc.) */
+  .legal-list-cols-2 ul{display:grid;grid-template-columns:1fr 1fr;column-gap:28px}
+  .legal-list-cols-2 li{padding:10px 0}
+  /* En cada columna, el último elemento visible no debe tener border-bottom */
+  .legal-list-cols-2 li:nth-last-child(-n+2):nth-child(odd),
+  .legal-list-cols-2 li:last-child{border-bottom:1px dotted var(--line-soft)}
+  .legal-list-cols-2 li:nth-last-child(1),
+  .legal-list-cols-2 li:nth-last-child(2):nth-child(odd){border-bottom:none}
+  .legal-list li .lbl{color:var(--ink);font-weight:500;display:block;margin-bottom:3px;word-wrap:break-word;overflow-wrap:break-word;hyphens:auto}
+  .legal-list li .ref{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:.04em;font-weight:400;display:block;word-wrap:break-word;overflow-wrap:break-word;white-space:normal}
+
+  /* Variante compacta — ref a la izquierda (mono, pequeña) · contenido a la
+     derecha. El comentario anunciaba el bloque desde hace tiempo pero la regla
+     nunca se escribió: `legalList(LEGAL.sistema.items, 'compact')` emitía la
+     clase y el listado se pintaba como uno normal. Escrita el 11-sep-2026. */
+  .legal-list-compact li{display:grid;grid-template-columns:minmax(96px,auto) 1fr;
+    gap:4px 16px;align-items:baseline;padding:9px 0}
+  .legal-list-compact li .ref{order:-1;margin:0;text-align:right;white-space:nowrap;
+    font-size:var(--fs-mini);letter-spacing:.06em}
+  .legal-list-compact li .lbl{margin:0;font-weight:400;color:var(--ink-2)}
+  @media (max-width:640px){
+    /* En celular la referencia vuelve arriba: dos columnas dejan al texto en
+       una tira de 40 caracteres. */
+    .legal-list-compact li{grid-template-columns:1fr;gap:2px}
+    .legal-list-compact li .ref{text-align:left;white-space:normal}
+  }
+
+  @media (max-width:640px){
+    .legal-list-cols-2 ul{grid-template-columns:1fr;column-gap:0}
+          }
+
+  /* Acento cromático a nivel panel — sin solapamiento con la envoltura interna */
+  .panel-accent-ava{border-left:3px solid var(--verde)}
+  .panel-accent-ava .panel-title{color:var(--verde)}
+  .panel-accent-anp{border-left:3px solid var(--guinda)}
+  .panel-accent-anp .panel-title{color:var(--guinda)}
+
+  /* Enlaces a textos oficiales de leyes · pie institucional del panel */
+
+  /* Listado de fracciones del Art. 46 LGEEPA — compacto, todas federales */
+  .fracciones-list{list-style:none;padding:0;margin:12px 0 0 0}
+  .fr-item{display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:baseline;padding:9px 0;border-bottom:1px dotted var(--line-soft)}
+  .fr-item:last-child{border-bottom:none}
+  .fr-num{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--azul);font-weight:500;letter-spacing:.04em;white-space:nowrap}
+  .fr-body{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .fr-lbl{font-size:var(--fs-base);color:var(--ink);font-weight:600;line-height:1.3}
+  .fr-desc{font-size:var(--fs-sm);color:var(--ink-2);line-height:1.5}
+
+  @media (max-width:640px){
+    .fr-item{grid-template-columns:52px 1fr;gap:10px;padding:8px 0}
+    .fr-lbl{font-size:var(--fs-base)}
+    .fr-desc{font-size:var(--fs-xs)}
+  }
+  .legal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+  .legal-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+
+  /* ═══ Barra de filtros · compacta (11 sep 2026) ═══════════════════════
+     Antes era una rejilla de campos de formulario: cada filtro con su rótulo
+     encima, a 44 px de alto y a media columna de ancho. Siete filtros así
+     ocupaban unos 400 px de alto y empujaban la tabla fuera de la pantalla.
+     El problema no era el número de columnas, era el tamaño de cada campo:
+     esto es una barra de filtros de tablero, no un formulario de captura.
+     Ahora el rótulo va EN LÍNEA con su control, cada campo mide lo que su
+     contenido pide y la fila envuelve sola según el ancho disponible. */
+  .toolbar{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);
+    padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;
+    margin-bottom:12px;box-shadow:var(--shadow)}
+  .toolbar label{display:flex;flex-direction:row;align-items:center;gap:7px;flex:0 1 auto;min-width:0}
+  .toolbar .lab{white-space:nowrap;flex:0 0 auto}
+  .toolbar select{width:auto;min-width:0;max-width:190px}
+  .toolbar label.f-buscar{flex:1 1 210px;min-width:170px}
+  .toolbar label.f-buscar input{flex:1 1 auto;min-width:0}
+  .btn-masf{gap:7px}
+  .btn-masf .masf-caret{font-size:var(--fs-micro);opacity:.6;transition:transform .18s;display:inline-block}
+  .btn-masf[aria-expanded="true"] .masf-caret{transform:rotate(180deg)}
+  .btn-masf .masf-n{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);background:var(--guinda);
+    color:var(--crema);border-radius:9px;padding:1px 7px;font-weight:700}
+  /* Los avanzados siguen la misma regla: una fila que envuelve, no una rejilla
+     de anchos iguales que estira «Tipo» hasta el tamaño de «Dirección». */
+  .filtros-av{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;
+    padding-top:10px;margin-top:2px;border-top:1px dashed var(--line)}
+  .filtros-av[hidden]{display:none}
+  .toolbar .lab{font-size:var(--fs-micro);letter-spacing:.06em}
+  .toolbar select,.toolbar input{font-size:var(--fs-sm);padding:5px 8px;height:30px}
+  .toolbar select{padding-right:22px}
+  .toolbar .btn{height:30px;padding:0 13px;font-size:var(--fs-sm)}
+  .toolbar .btn-group{margin-left:auto;flex:0 0 auto}
+  /* Visible solo para lectores de pantalla (captions de tabla, etiquetas de contexto) */
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+  .skip-link{position:absolute;left:-9999px;top:0;z-index:var(--z-toast,100000);background:var(--guinda);color:#fff;padding:10px 18px;font-family:'Roboto',sans-serif;font-size:var(--fs-base);border-radius:0 0 var(--radius) 0;text-decoration:none}
+  .skip-link:focus{left:0}
+  .lab{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+  input[type=search],select{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:9px 11px;font-family:'Roboto',sans-serif;font-size:var(--fs-md);color:var(--ink);outline:none;transition:border-color .15s;width:100%}
+  input[type=search]:focus,select:focus{border-color:var(--guinda)}
+  /* Después de la regla genérica de campos, que declara width:100% y un alto de
+     formulario: en la barra de filtros mandan estos. */
+  .toolbar label{display:flex;flex-direction:row;align-items:center;gap:7px;flex:0 1 auto;min-width:0}
+  .toolbar .lab{white-space:nowrap;flex:0 0 auto;font-size:var(--fs-micro);letter-spacing:.06em}
+  /* El desplegable se dimensiona por su contenido, no por el reparto del flex:
+     con `flex:0 0 auto` deja de encogerse y «Todas» no se corta. El tope de
+     ancho evita que «Zona de Protección Hidrológica y Ecológica» se lleve la
+     fila entera. */
+  .toolbar select{width:auto;flex:1 1 auto;min-width:88px;max-width:200px;
+    padding:5px 22px 5px 9px;height:30px;font-size:var(--fs-sm);text-overflow:ellipsis}
+  .toolbar input[type=search]{height:30px;padding:5px 9px;font-size:var(--fs-sm);width:auto;flex:1 1 auto;min-width:0}
+  .toolbar label.f-buscar{flex:1 1 230px;min-width:170px}
+  /* El indicador de foco de estos controles era un borde de 1px, el más débil de la
+     interfaz, justo en los controles más usados. Se alinea con el resto del sitio. */
+  input[type=search]:focus-visible,select:focus-visible{outline:2px solid var(--guinda);outline-offset:1px}
+  .btn{background:var(--guinda);color:var(--crema);border:none;border-radius:var(--radius);padding:0 16px;font-family:'Roboto',sans-serif;font-weight:500;font-size:var(--fs-base);letter-spacing:.02em;cursor:pointer;transition:background .15s;height:38px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+  .btn:hover{background:var(--guinda-900)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .btn.ghost:hover{background:var(--bg-2);border-color:var(--guinda);color:var(--guinda)}
+  .btn-group{display:flex;gap:8px}
+
+  .counter-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+    font-size:var(--fs-sm);color:var(--ink-2);font-weight:400}
+  .counter-row b{color:var(--ink);font-weight:500;font-family:'Roboto Mono',monospace}
+
+  /* Indicadores de interactividad — ayuda contextual para nuevos usuarios */
+  .tabla-hint{font-size:var(--fs-xs);color:var(--muted);margin-bottom:8px;line-height:1.4}
+
+  .table-wrap{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+  .table-scroll{max-height:70vh;overflow:auto}
+  /* table-layout fixed + anchos % calculados → cabe sin scroll horizontal en desktop ≥1100px */
+  table.t{width:100%;border-collapse:collapse;table-layout:fixed}
+  /* Distribución óptima de las 11 columnas — total: 100% */
+  table.t th:nth-child(1), table.t td:nth-child(1){width:24%}    /* Nombre        */
+  table.t th:nth-child(2), table.t td:nth-child(2){width:5%}     /* Tipo          */
+  table.t th:nth-child(3), table.t td:nth-child(3){width:6%}     /* Jur.          */
+  table.t th:nth-child(4), table.t td:nth-child(4){width:9%}     /* Subcat.       */
+  table.t th:nth-child(5), table.t td:nth-child(5){width:12%}    /* Alcaldía (permite wrap a 2 líneas) */
+  table.t th:nth-child(6), table.t td:nth-child(6){width:10%}    /* Decreto       */
+  table.t th:nth-child(7), table.t td:nth-child(7){width:6%}     /* Sup. (ha) · redondeada */
+  table.t th:nth-child(8), table.t td:nth-child(8){width:5%}     /* PM            */
+  table.t th:nth-child(9), table.t td:nth-child(9){width:10%}    /* Fecha PM      */
+  table.t th:nth-child(10),table.t td:nth-child(10){width:7%}    /* SC · punto + % en parciales */
+  table.t th:nth-child(11),table.t td:nth-child(11){width:6%}    /* DG resp.      */
+  /* Celda de Alcaldía permite wrap (puede ocupar 2 líneas si el nombre es largo) */
+  table.t td.cell-alcaldia{white-space:normal;line-height:1.3;word-break:break-word}
+  thead.t-head th{background:var(--bg-2);text-align:left;padding:10px 8px;font-size:var(--fs-mini);font-family:'Roboto Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:500;border-bottom:2px solid var(--guinda);cursor:pointer;user-select:none;position:sticky;top:0;white-space:nowrap;z-index:2;transition:background .15s,color .15s;overflow:hidden;text-overflow:ellipsis}
+  thead.t-head th:hover{color:var(--guinda);background:#fff}
+  thead.t-head th .arrow{opacity:.45;margin-left:4px;font-size:var(--fs-mini);transition:opacity .15s,color .15s;display:inline-block}
+  thead.t-head th:hover .arrow{opacity:.8}
+  thead.t-head th.sort-asc .arrow,thead.t-head th.sort-desc .arrow{opacity:1;color:var(--guinda)}
+  tbody.t-body tr{border-bottom:1px solid var(--line-soft);cursor:pointer;transition:background .15s,box-shadow .15s}
+  tbody.t-body tr:hover{background:var(--bg-2)}
+  /* Filete de categoria: el color identifica territorio de un vistazo y libera
+     a la columna Subcat. de tener que hacerlo con relleno saturado. */
+  tbody.t-body tr[data-g]{box-shadow:inset 3px 0 0 var(--line)}
+  tbody.t-body tr[data-g="bu"]  {box-shadow:inset 3px 0 0 var(--bu)}
+  tbody.t-body tr[data-g="br"]  {box-shadow:inset 3px 0 0 var(--br)}
+  tbody.t-body tr[data-g="anpl"]{box-shadow:inset 3px 0 0 var(--anpl)}
+  tbody.t-body tr[data-g="anpf"]{box-shadow:inset 3px 0 0 var(--anpf)}
+  tbody.t-body tr[data-g="arcac"]{box-shadow:inset 3px 0 0 var(--arcac-com)}
+  tbody.t-body td{padding:10px 8px;font-size:var(--fs-base);color:var(--ink-2);vertical-align:top;font-weight:400;position:relative;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  tbody.t-body td.name{color:var(--ink);font-weight:500;padding-left:18px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+  /* En celular la fila se lee como ficha: la categoria y la alcaldia bajan
+     a una segunda linea y las columnas sobrantes se retiran. */
+  .name-sub{display:none}
+  tbody.t-body td.name::before{content:"›";position:absolute;left:4px;top:10px;color:var(--line);font-weight:700;font-size:var(--fs-lg);transition:color .15s,transform .15s}
+  tbody.t-body tr:hover td.name::before{color:var(--guinda);transform:translateX(2px)}
+  tbody.t-body td.num{font-family:'Roboto Mono',monospace;font-size:var(--fs-sm);text-align:right;white-space:nowrap;font-weight:500}
+  tbody.t-body td.date{font-family:'Roboto Mono',monospace;font-size:var(--fs-sm);white-space:nowrap;color:var(--ink-2)}
+
+  /* ===== Sistema de tags con paleta oficial GCDMX · cero repeticiones ===== */
+  /* TIPO (outline discreto) — deja que la subcategoría destaque como dato principal */
+  .tag{display:inline-block;padding:2px 8px;border-radius:var(--r-chip);font-size:var(--fs-mini);font-family:'Roboto Mono',monospace;letter-spacing:.04em;white-space:nowrap;font-weight:500}
+    
+  /* JURISDICCIÓN (también outline para mantener jerarquía) */
+  .tag-jur-Local{background:transparent;color:var(--ink-2);border:1px solid var(--line)}
+  .tag-jur-Federal{background:transparent;color:var(--azul);border:1px solid var(--azul)}
+
+  /* TIPO (AVA · ANP) — fondo sólido institucional */
+  .tag-AVA  {background:transparent; color:var(--dorado-text);  border:1px solid var(--dorado-text)}
+  .tag-ANP  {background:transparent; color:var(--guinda);  border:1px solid var(--guinda)}
+  /* Variantes "full" usadas en la ficha técnica: nombre completo dentro del recuadro */
+  .tag.tag-full{padding:4px 12px;font-size:var(--fs-xs);letter-spacing:.02em}
+  .tag-AVA.tag-full{background:rgba(178,142,92,.12)}
+  .tag-ANP.tag-full{background:rgba(157,33,72,.08)}
+
+  /* SUBCATEGORÍA — todas con color único basado en paleta GCDMX */
+  /* Etiqueta de tenencia de la ficha ARCAC. Vivía dentro del <style> de la
+     página independiente de ARCAC, que nunca se inyectaba: la insignia se
+     pintaba sin estilo. Rescatada al retirar esa página (11-sep-2026). */
+  .ten-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:var(--fs-xs);
+    font-weight:600;color:#fff;letter-spacing:.01em}
+  .tag-sub{display:inline-block;padding:2px 8px;border-radius:var(--r-chip);font-size:var(--fs-mini);font-family:'Roboto Mono',monospace;letter-spacing:.03em;white-space:nowrap;font-weight:500;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  /* Variante full: nombre completo dentro del recuadro con su color característico */
+  .tag-sub.tag-sub-full{padding:4px 12px;font-size:var(--fs-xs);letter-spacing:.02em;white-space:normal}
+  /* AVA */
+  .sub-BU   {background:transparent; color:var(--sub-bu); border:1px solid rgba(240,130,23,.55)}
+  .sub-BR   {background:transparent; color:var(--marron-900); border:1px solid rgba(143,86,16,.45)}
+  /* ANP Local */
+  .sub-ZCE{background:transparent; color:var(--gris); border:1px solid rgba(85,88,90,.45)}      /* Gris 425C    */
+  .sub-ZSCE{background:transparent; color:var(--sub-zsce); border:1px solid rgba(28,107,133,.45)}        /* Azul cl 0821C */
+  .sub-ZPE{background:transparent; color:var(--sub-zpe); border:1px solid rgba(138,106,0,.45)}        /* Amarillo 7548C */
+  .sub-ZEC{background:transparent; color:var(--sub-zec); border:1px solid rgba(166,58,82,.45)}        /* Rosa 176C    */
+  .sub-ZPHE{background:transparent; color:var(--magenta-900); border:1px solid rgba(194,39,122,.45)}      /* Magenta 225C oscurecido · AA */
+  .sub-REC{background:transparent; color:var(--dorado-text); border:1px solid rgba(122,93,53,.5)}        /* Dorado 465C · texto oscuro por contraste */
+  /* ANP Federal */
+  .sub-PN{background:transparent; color:var(--sub-pn); border:1px solid rgba(181,19,63,.45)}      /* Rojo 1925C   */
+  .sub-APRN{background:transparent; color:var(--violeta); border:1px solid rgba(143,72,137,.45)}      /* Violeta 258C */
+  /* Fallbacks · subcategorías no presentes en inventario actual */
+  .sub-RVS  {background:var(--sub-rvs);           color:var(--crema)}      /* Verde oliva  */
+  .sub-RB   {background:var(--sub-rb);           color:var(--crema)}      /* Sienna       */
+  .sub-MN   {background:var(--sub-mn);           color:var(--crema)}      /* Azul gris    */
+  .sub-APFF {background:var(--sub-apff);           color:var(--crema)}      /* Púrpura      */
+  .sub-SAN  {background:var(--sub-san);           color:var(--crema)}      /* Naranja oscuro */
+
+  .empty{padding:60px 20px;text-align:center;color:var(--muted);font-style:italic}
+
+  /* Leyenda institucional de nomenclatura */
+  /* (Bloque de nomenclatura institucional eliminado) */
+
+  /* Bloque constitucional — norma suprema local */
+  .constitucion-block{border-left:4px solid var(--guinda)}
+  .constitucion-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:18px}
+  .constitucion-card{background:var(--bg-2);border:1px solid var(--line-soft);border-radius:var(--radius);padding:16px 18px}
+  .constitucion-card .l-art{display:inline-block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;color:var(--guinda);background:rgba(157,33,72,.08);padding:3px 8px;border-radius:var(--r-ui);margin-bottom:10px;font-weight:500}
+  .constitucion-card h4{font-family:'Roboto',sans-serif;font-size:var(--fs-lg);font-weight:700;line-height:1.25;margin-bottom:8px;color:var(--ink);letter-spacing:-.005em}
+  .constitucion-card p{font-size:var(--fs-base);color:var(--ink-2);line-height:1.6}
+  @media (max-width:900px){ .constitucion-grid{grid-template-columns:1fr} }
+
+  /* Meta comparable · línea base sexenal */
+  .meta-block{border-left:4px solid var(--guinda)}
+  .meta-block .panel-intro{max-width:100%}
+  .meta-hero{display:grid;grid-template-columns:1fr 40px 1fr;gap:18px;align-items:stretch;margin:22px 0}
+  .meta-col{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:22px 24px;display:flex;flex-direction:column;gap:14px}
+  .meta-col-base{border-top:3px solid var(--gris)}
+  .meta-col-goal{border-top:3px solid var(--guinda);background:linear-gradient(to bottom, rgba(157,33,72,.03), var(--card))}
+  .meta-col-head{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--line-soft);padding-bottom:12px}
+  /* El nombre de quien encabeza va ARRIBA del periodo: un sexenio se reconoce
+     por su titular antes que por sus cuatro dígitos, y así las dos columnas se
+     distinguen de un vistazo sin leer las fechas. */
+  .meta-titular{font-family:var(--font-titulo);font-size:var(--fs-md);font-weight:700;
+    color:var(--ink-2);letter-spacing:-.01em;line-height:1.2}
+  .meta-col-goal .meta-titular{color:var(--guinda)}
+  .meta-period{font-family:'Roboto',sans-serif;font-size:var(--fs-xl);font-weight:900;color:var(--ink);letter-spacing:-.02em}
+  .meta-col-goal .meta-period{color:var(--guinda)}
+  .meta-label{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+  .meta-stats{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .meta-stat{display:flex;flex-direction:column;gap:4px}
+  .meta-n{font-family:'Roboto',sans-serif;font-size:var(--fs-mega);font-weight:900;line-height:.95;color:var(--gris);letter-spacing:-.03em}
+  .meta-n.meta-actual{color:var(--guinda)}
+  .meta-t{font-size:var(--fs-sm);color:var(--ink-2);line-height:1.35}
+  .meta-rate{font-size:var(--fs-sm);color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.02em;margin-top:auto;padding-top:10px;border-top:1px dotted var(--line-soft)}
+  .meta-rate b{color:var(--ink);font-weight:700}
+  .meta-arrow{display:flex;align-items:center;justify-content:center;font-family:'Roboto',sans-serif;font-size:var(--fs-mega);color:var(--guinda);font-weight:400}
+
+  .meta-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  .meta-card{background:var(--bg-2);border:1px solid var(--line-soft);border-radius:var(--radius);padding:16px 18px}
+  .meta-card.meta-current{background:#fff;border-left:3px solid var(--guinda)}
+  .meta-card-title{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--guinda);font-weight:500;margin-bottom:12px}
+  .meta-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .meta-tag{padding:3px 9px !important;font-size:var(--fs-xs) !important}
+  .meta-details{margin-top:10px}
+  .meta-details summary{cursor:pointer;font-size:var(--fs-sm);color:var(--guinda);padding:8px 14px;background:var(--bg-2);border:1px solid var(--line-soft);border-radius:var(--r-ui);font-weight:500;user-select:none;list-style:none;display:inline-flex;align-items:center;gap:8px;transition:all .15s}
+  .meta-details summary::-webkit-details-marker{display:none}
+  .meta-details summary::before{content:"▸";font-size:var(--fs-xs);display:inline-block;transition:transform .2s ease;color:var(--guinda)}
+  .meta-details[open] summary::before{transform:rotate(90deg)}
+  .meta-details summary:hover{background:#fff;border-color:var(--guinda);box-shadow:0 1px 3px rgba(157,33,72,.08)}
+  .meta-details[open] summary{background:#fff;border-color:var(--guinda)}
+  .meta-list{list-style:none;padding:0;margin:8px 0 0 0}
+  .meta-list li{padding:8px 0;font-size:var(--fs-sm);color:var(--ink-2);border-bottom:1px dotted var(--line-soft);display:block;line-height:1.5}
+  .meta-list li:last-child{border-bottom:none}
+  .meta-list li .lbl{color:var(--ink);font-weight:500;display:block}
+  .meta-list li .ref{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);color:var(--muted);letter-spacing:.03em;display:block;margin-top:2px}
+  .meta-ref{margin-top:16px;padding:10px 14px;background:var(--bg-2);border-radius:var(--r-ui);font-size:var(--fs-xs);color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.03em;text-align:center}
+
+  @media (max-width:900px){
+    .meta-hero{grid-template-columns:1fr;gap:12px}
+    .meta-arrow{transform:rotate(90deg);font-size:var(--fs-2xl)}
+    .meta-n{font-size:var(--fs-mega)}
+    .meta-breakdown{grid-template-columns:1fr}
+  }
+  @media (max-width:640px){
+    .meta-stats{grid-template-columns:1fr}
+    .meta-n{font-size:var(--fs-mega)}
+    .meta-col{padding:18px 18px}
+  }
+
+  .backdrop{position:fixed;inset:0;background:rgba(42,42,42,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:var(--z-drawer)}
+  .backdrop.open{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(580px,94vw);background:var(--card);border-left:3px solid var(--guinda);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:var(--z-drawer-top);overflow-y:auto}
+  .drawer.open{transform:translateX(0)}
+  .drawer-inner{padding:30px 34px 50px}
+  .drawer .close{position:absolute;top:16px;right:18px;background:transparent;border:none;font-size:var(--fs-2xl);cursor:pointer;color:var(--ink-2);width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;line-height:1}
+  .drawer .close:hover{background:var(--bg-2);color:var(--guinda)}
+  .drawer .kat{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--guinda);margin-bottom:10px;font-weight:500}
+  .drawer h2{font-family:'Roboto',sans-serif;font-weight:700;font-size:var(--fs-2xl);line-height:1.2;margin-bottom:6px;color:var(--ink);letter-spacing:-.01em}
+  .drawer .subcat{font-size:var(--fs-base);color:var(--muted);margin-bottom:18px;font-style:italic}
+  /* Encabezado del drawer con botón Compartir alineado a la derecha */
+  .drawer-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:8px;padding-right:44px}
+  .drawer-header-left{flex:1;min-width:0}
+  .drawer-header-left h2{margin-bottom:6px}
+  .drawer-header-left .subcat{margin-bottom:0}
+  .btn-share-area{display:inline-flex;align-items:center;gap:8px;background:var(--card);color:var(--ink-2);padding:8px 14px;border:1.5px solid var(--line);border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:var(--fs-sm);font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;margin-top:4px}
+  .btn-share-area:hover{border-color:var(--guinda);color:var(--guinda);background:#fff}
+  .btn-share-area:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+
+  /* Mapa Leaflet dentro del drawer */
+  .map-block{margin-top:8px;margin-bottom:22px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-soft);position:relative;background:var(--bg-2)}
+  /* Contenedor de controles flotantes (toggle + fullscreen) */
+  /* Leaflet pone sus cuatro esquinas en z-index 1000 —por encima de nuestra
+     barra de destinos fija (900)—, así que la atribución y los controles se
+     quedaban los toques destinados a la navegación cuando el mapa llegaba al
+     pie de la pantalla. Se bajan a 800: siguen por encima de los globos de
+     Leaflet (700) y ya no compiten con la interfaz de la página. */
+  .leaflet-top, .leaflet-bottom{z-index:800}
+  .map-block-controls-floating{position:absolute;top:10px;right:10px;z-index:var(--z-flotante);display:flex;gap:6px;align-items:stretch}
+  .map-block-controls-floating .map-block-toggle{position:static;box-shadow:var(--sh-2);background:var(--card)}
+  /* Botón de pantalla completa */
+  .map-fullscreen-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;background:var(--card);border:none;border-radius:var(--radius);cursor:pointer;color:var(--ink-2);box-shadow:var(--sh-2);transition:all .15s;padding:0}
+  .map-fullscreen-btn:hover{background:#fff;color:var(--guinda)}
+  .map-fullscreen-btn:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+  /* Mapa en pantalla completa — usa Fullscreen API nativa */
+  #globalMapCanvas:fullscreen,#mapCanvas:fullscreen,#zpMapCanvas:fullscreen{height:100vh !important;width:100vw !important;background:var(--card)}
+  #globalMapCanvas:-webkit-full-screen,#mapCanvas:-webkit-full-screen,#zpMapCanvas:-webkit-full-screen{height:100vh !important;width:100vw !important;background:var(--card)}
+  /* Marcador del resultado de búsqueda */
+  .search-result-marker{background:var(--guinda);border:3px solid #fff;border-radius:50%;width:18px !important;height:18px !important;margin-left:-9px !important;margin-top:-9px !important;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  /* ── Popup de ubicación · ejecutivo: una respuesta, no un expediente ── */
+  .lp{font-family:'Roboto',sans-serif;color:var(--ink);line-height:1.4;min-width:0}
+  .loc-loading{padding:14px 4px;text-align:center;color:var(--muted);font-size:var(--fs-sm);font-family:'Roboto Mono',monospace}
+  .lp-cat{display:flex;align-items:center;gap:7px;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);
+    font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-2);margin-bottom:5px}
+  .lp-cat.gris{color:var(--muted)}
+  .lp-dot{width:9px;height:9px;border-radius:var(--r-chip);flex-shrink:0}
+  .lp-nom{font-size:var(--fs-xl);font-weight:700;line-height:1.2;color:var(--ink);letter-spacing:-.01em}
+  .lp-nom.sm{font-size:var(--fs-md);font-weight:500}
+  .lp-mas{font-size:var(--fs-sm);color:var(--ink-2);margin-top:5px}
+  .lp-warn{margin-top:8px;padding:5px 8px;background:var(--warn-bg);border-left:2px solid var(--dorado);
+    font-size:var(--fs-xs);color:var(--dorado-text);border-radius:0 3px 3px 0;line-height:1.35}
+  .lp-pie{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;
+    padding-top:9px;border-top:1px solid var(--line-soft)}
+  .lp-ctx{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);color:var(--muted);letter-spacing:.03em;
+    min-width:0;line-height:1.5}
+  .lp-warn.rojo{background:var(--alert-bg);border-left-color:var(--guinda);color:var(--alert-text)}
+  .lp-ficha{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;background:var(--guinda);color:#fff;
+    border:none;border-radius:var(--r-ui);padding:6px 11px;cursor:pointer;font-family:'Roboto',sans-serif;
+    font-size:var(--fs-sm);font-weight:700;max-width:150px;overflow:hidden;white-space:nowrap}
+  .lp-ficha:hover{background:var(--guinda-900)}
+  .lp-ficha .ar{font-family:'Roboto Mono',monospace}
+  /* Chip SC flotante en la ficha técnica (esquina inferior izquierda para no chocar con buscador) */
+  /* El lienzo Leaflet de la ficha vive en su propio hijo para no borrar los flotantes */
+  .map-canvas-inner{position:absolute;inset:0;z-index:0}
+  /* Ficha: el panel mide 580px, así que el buscador (316px desde left:50) se encimaba
+     con el toggle Mapa/Satélite + pantalla completa (262px desde la derecha).
+     El buscador toma el ancho disponible y los controles bajan una fila. */
+  #mapCanvas .map-block-controls-floating{top:52px}
+  .drawer-sc-floating{position:absolute;bottom:10px;left:10px;z-index:var(--z-flotante)}
+  .drawer-sc-floating .map-filter-chip{box-shadow:var(--sh-2);font-size:var(--fs-xs);padding:5px 10px}
+  .map-block-toggle{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:var(--r-ui);overflow:hidden}
+  .map-block-toggle button{background:#fff;border:none;padding:3px 9px;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);cursor:pointer;font-weight:500;transition:all .15s}
+  .map-block-toggle button:hover{background:var(--bg-2);color:var(--guinda)}
+  .map-block-toggle button.active{background:var(--guinda);color:var(--crema)}
+  .map-block-toggle button + button{border-left:1px solid var(--line)}
+  .map-canvas{height:340px;width:100%;background:var(--map-bg)}
+  .map-canvas.no-data{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:var(--fs-sm);text-align:center;padding:20px;background:var(--bg-2);font-family:'Roboto',sans-serif}
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     SISTEMA UNIFICADO DE CONTROLES DE MAPA · v36
+     Antes convivían tres lenguajes visuales (los controles nativos de Leaflet,
+     los botones flotantes propios y los chips), con alturas, radios, sombras y
+     colores distintos, y la columna izquierda se veía como cuatro cajas sueltas.
+     Ahora todos comparten los mismos tokens y se agrupan por función:
+       · arriba-izquierda  → navegación (zoom · ubicarme · vista general) en UNA tarjeta
+       · a su derecha      → buscador
+       · arriba-derecha    → vista (capa base · pantalla completa) en UNA tarjeta
+       · abajo-izquierda   → capas/leyenda (chip de Suelo de Conservación)
+     ═══════════════════════════════════════════════════════════════════════ */
+  :root{
+    --mc-h:34px;                                   /* alto común de todo control */
+    --mc-bg:#fff;
+    --mc-line:rgba(42,42,42,.13);                  /* borde exterior */
+    --mc-div:rgba(42,42,42,.09);                   /* separador interno */
+    --mc-shadow:0 1px 2px rgba(42,42,42,.10), 0 4px 12px -5px rgba(42,42,42,.28);
+  }
+
+  /* ── Columna de navegación: las 4 acciones en una sola tarjeta ── */
+  .leaflet-top.leaflet-left{
+    top:10px; left:10px; display:flex; flex-direction:column;
+    background:var(--mc-bg); border:1px solid var(--mc-line);
+    border-radius:var(--radius); box-shadow:var(--mc-shadow); overflow:hidden;
+  }
+  .leaflet-top.leaflet-left .leaflet-control{
+    margin:0 !important; float:none; clear:none; border:0 !important;
+    box-shadow:none !important; border-radius:0 !important;
+  }
+  .leaflet-top.leaflet-left .leaflet-control + .leaflet-control{border-top:1px solid var(--mc-div) !important}
+  .leaflet-bar a,
+  .leaflet-control-zoom a{
+    width:var(--mc-h); height:var(--mc-h); line-height:var(--mc-h);
+    background:transparent; border:0; border-radius:0;
+    color:var(--ink-2); font-family:'Roboto',sans-serif; font-size:var(--fs-lg); font-weight:400;
+    display:flex; align-items:center; justify-content:center; transition:background .15s,color .15s;
+  }
+  .leaflet-bar a + a{border-top:1px solid var(--mc-div)}
+  .leaflet-bar a:hover,
+  .leaflet-control-zoom a:hover{background:var(--bg-2); color:var(--guinda)}
+  .leaflet-bar a:focus-visible{outline:2px solid var(--guinda); outline-offset:-2px}
+  .leaflet-bar a.leaflet-disabled{color:var(--muted); background:var(--bg-2); opacity:.55}
+  /* Íconos propios: mismo peso y color que el resto; el color solo aparece al pasar el cursor */
+  /* «Ubicarme» va en guinda: es la misma acción que el botón redondo de la
+     barra de búsqueda y debe leerse igual. «Vista general» se queda en gris
+     —es una utilidad del mapa, no la acción principal—. El `!important` venía
+     de cuando ambos controles se igualaban; se conserva porque el icono trae
+     color en línea desde el JS de Leaflet. */
+  .resetview-ctrl a{color:var(--ink-2) !important}
+  .locate-ctrl a{color:var(--guinda) !important}
+  .resetview-ctrl a:hover{color:var(--guinda) !important}
+  .locate-ctrl a:hover{color:var(--guinda-900) !important}
+  .locate-ctrl a svg, .resetview-ctrl a svg{width:16px; height:16px}
+
+  /* ── Vista: capa base + pantalla completa en una sola tarjeta ── */
+  .map-block-controls-floating{
+    top:10px; right:10px; gap:0; align-items:center;
+    background:var(--mc-bg); border:1px solid var(--mc-line); border-radius:var(--radius);
+    box-shadow:var(--mc-shadow); overflow:hidden;
+  }
+  .map-block-controls-floating .map-block-toggle{border:0; border-radius:0; box-shadow:none; background:transparent}
+  .map-block-controls-floating .map-block-toggle button{
+    height:var(--mc-h); padding:0 13px; font-size:var(--fs-mini); letter-spacing:.1em; background:transparent;
+  }
+  .map-block-controls-floating .map-block-toggle button + button{border-left:1px solid var(--mc-div)}
+  .map-block-controls-floating .map-block-toggle button.active{background:var(--guinda); color:var(--crema)}
+  .map-block-controls-floating .map-fullscreen-btn{
+    width:var(--mc-h); height:var(--mc-h); border-radius:0; box-shadow:none;
+    border-left:1px solid var(--mc-div); background:transparent;
+  }
+  .map-block-controls-floating .map-fullscreen-btn:hover{background:var(--bg-2); color:var(--guinda)}
+
+  /* ── Capas/leyenda: chip flotante con el mismo acabado ── */
+  .drawer-sc-floating{bottom:10px; left:10px}
+  .drawer-sc-floating .map-filter-chip,
+  .drawer-sc-floating .map-filter-chip.active{
+    height:28px; padding:0 11px; font-size:var(--fs-mini); background:var(--mc-bg);
+    border:1px solid var(--mc-line); border-radius:var(--radius); box-shadow:var(--mc-shadow);
+    color:var(--ink-2); font-weight:500;
+  }
+  /* El estado activo lo comunica el punto de color, no un borde de otro color:
+     así el chip no compite visualmente con el resto de los controles. */
+  .drawer-sc-floating .map-filter-chip.active{background:var(--bg-2); color:var(--ink)}
+  .drawer-sc-floating .map-filter-chip:hover{border-color:var(--guinda); color:var(--guinda)}
+
+  /* ── Pantallas angostas: los controles caben en UNA fila ──────────────
+     Con el buscador flotante retirado (11-sep-2026) no queda nada que
+     empuje la segunda fila: zoom a la izquierda, vista a la derecha, ambos
+     al ras superior. Antes se apilaban en dos filas y entre el buscador de
+     ancho completo y la tarjeta de vista se comían medio mapa. */
+  @media (max-width:760px){
+    /* Los botones +/− se retiran: en un teléfono se acerca con dos dedos, y la
+       columna de controles terminaba pisando la barra de navegación inferior.
+       Quedan «Ubicarme» y «Vista general», que no tienen gesto equivalente. */
+    .leaflet-control-zoom{display:none !important}
+
+    /* El mapa ocupa casi toda la pantalla: si se queda con el gesto completo,
+       arrastrar hacia abajo mueve el mapa y la página no avanza. Con pan-y el
+       navegador se queda el desplazamiento vertical —la página baja— y a
+       Leaflet le siguen llegando el arrastre horizontal y el pellizco de dos
+       dedos, que es como se acerca. Las tres clases son las que Leaflet pone
+       según los gestos activos; hay que ganarles a las tres. */
+    .leaflet-container,
+    .leaflet-container.leaflet-touch-drag,
+    .leaflet-container.leaflet-touch-zoom,
+    .leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{touch-action:pan-y !important}
+
+    .leaflet-top.leaflet-left{top:10px}
+    .map-block-controls-floating{top:10px; right:10px}
+    /* El popup no debe exceder el ancho del mapa */
+    .lp{min-width:0}
+    /* Mientras el globo está abierto, la columna de navegación se quita de en medio:
+       los controles de Leaflet se pintan por encima de los popups por diseño. */
+    .leaflet-container.sia-popup-abierto .leaflet-top.leaflet-left{
+      opacity:0; pointer-events:none; transition:opacity .15s}
+    .lp-nom{font-size:var(--fs-lg)}
+    .lp-ficha{font-size:var(--fs-xs);padding:6px 10px}
+    .lp-ctx{font-size:var(--fs-mini)}
+  }
+  .map-canvas.no-data b{display:block;color:var(--ink-2);margin-bottom:6px;font-size:var(--fs-base)}
+  /* Leaflet override · suaviza tooltips para identidad institucional */
+        @media (max-width:640px){
+    /* Con los controles a 44 px la columna izquierda mide 178 px y a 280 px
+       de alto se encimaba con el chip de Suelo de Conservacion (14 px de
+       traslape, medido en produccion). 340 px deja 46 px de holgura y de paso
+       da mas mapa util en campo. */
+    .map-canvas{height:340px}
+    /* En táctil agrandamos los toggles para superar 32px de alto (recomendación WCAG) */
+    .map-block-toggle button{padding:11px 14px;font-size:var(--fs-mini)}
+    .map-block-toggle{flex-shrink:0}
+  }
+
+  /* Touch-friendly: en cualquier dispositivo táctil agrandamos botones críticos */
+  @media (pointer:coarse), (max-width:640px){
+    .map-filter-chip{padding:8px 14px;font-size:var(--fs-sm);min-height:44px}
+    .map-filter-chip .chip-dot{width:11px;height:11px}
+    .drawer .close{width:44px;height:44px;font-size:var(--fs-hero)}
+  }
+
+  /* Accesibilidad: respeta la preferencia del usuario por menos movimiento */
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{
+      animation-duration:.01ms!important;
+      animation-iteration-count:1!important;
+      transition-duration:.01ms!important;
+      scroll-behavior:auto!important;
+    }
+  }
+  .map-filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;margin-bottom:10px}
+  /* «Ubicar» esconde los chips pero conserva el contenedor: de él cuelga el
+     interruptor de Suelo de Conservación, que es quien monta esa capa en el
+     mapa. Quitarlo del DOM dejaría la vista de campo sin SC dibujado.
+     [hidden] no bastaba: .map-filters declara display:flex y le gana. */
+  .map-filters--oculto{display:none !important}
+  .map-filter-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 13px;background:#fff;border:1.5px solid var(--line);border-radius:var(--r-ui);font-size:var(--fs-sm);color:var(--ink-2);cursor:pointer;font-weight:500;font-family:'Roboto',sans-serif;transition:all .15s}
+  .map-filter-chip:hover{border-color:var(--ink-2)}
+  .map-filter-chip .chip-dot{width:10px;height:10px;border-radius:50%;background:var(--chip-color);display:inline-block;flex-shrink:0;border:1.5px solid var(--chip-color)}
+  .map-filter-chip:not(.active){opacity:.55}
+  .map-filter-chip:not(.active) .chip-dot{background:transparent}
+  .map-filter-chip.active{border-color:var(--chip-color);color:var(--ink);background:#fff}
+  /* Chip especial de Coadministración — icono de estrella en lugar de punto */
+  #coadminToggle .chip-dot{background:var(--acento-mapa);border-color:var(--acento-mapa);border-radius:0;width:10px;height:10px;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+  #coadminToggle:not(.active) .chip-dot{background:transparent;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);background:var(--acento-mapa);opacity:.45}
+  #coadminToggle.active{background:var(--warn-bg);border-color:var(--guinda);color:var(--guinda);font-weight:600}
+  .map-filter-chip .chip-count{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);color:var(--muted);font-weight:500;letter-spacing:.04em;margin-left:2px}
+  .map-filter-chip.active .chip-count{color:var(--chip-color)}
+
+  .global-map-block{margin-top:6px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-soft);background:var(--bg-2)}
+  #globalMapCanvas{height:600px;width:100%;background:var(--map-bg)}
+
+  /* Tooltip discreto para alcaldías (overlay de contexto) */
+  
+  @media (max-width:1024px){
+    #globalMapCanvas{height:500px}
+  }
+  @media (max-width:640px){
+    #globalMapCanvas{height:420px}
+    .map-filter-chip{padding:5px 10px;font-size:var(--fs-xs)}
+    /* Una sola fila: zoom a la izquierda, vista a la derecha. */
+    .leaflet-top{top:10px}
+    .map-block-controls-floating{top:10px;right:10px;gap:4px}
+    .map-fullscreen-btn{width:30px;height:30px}
+  }
+  /* `baseline` alineaba la etiqueta con la ULTIMA linea del valor: cuando una
+     etiqueta de subcategoria se partia en dos renglones, el rotulo caia al
+     segundo y el campo se leia desfasado. Con `start` ambos arrancan arriba
+     y el relleno de la etiqueta compensa el borde y el relleno del recuadro. */
+  .field{padding:12px 0;border-bottom:1px solid var(--line-soft);display:grid;grid-template-columns:140px 1fr;gap:16px;align-items:start}
+  .field .k{padding-top:4px}
+  .field .k{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+  .field .v{color:var(--ink);font-size:var(--fs-md);font-weight:400}
+  .big-num{font-family:'Roboto',sans-serif;font-size:var(--fs-mega);line-height:1;color:var(--guinda);margin:20px 0 4px;font-weight:900;letter-spacing:-.02em}
+  .big-num-lbl{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;font-weight:500}
+  .legal-block{margin-top:24px;padding:18px 20px;background:var(--bg-2);border-left:3px solid var(--legal);border-radius:0 3px 3px 0}
+  .legal-block .title{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.14em;text-transform:uppercase;color:var(--legal);margin-bottom:10px;font-weight:500}
+  .legal-block p{font-size:var(--fs-base);color:var(--ink-2);line-height:1.6;margin-bottom:8px}
+
+  /* Documentos oficiales en ficha técnica (PDFs y Gacetas del decreto y PM) */
+  .documentos-oficiales{margin-top:20px;padding:18px 20px;background:var(--card);border:1px solid var(--line-soft);border-left:3px solid var(--guinda);border-radius:0 3px 3px 0}
+  .documentos-oficiales-title{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.14em;text-transform:uppercase;color:var(--guinda);margin-bottom:14px;font-weight:600}
+  .doc-group{margin-bottom:14px}
+  .doc-group:last-child{margin-bottom:0}
+  .doc-group-title{font-family:'Roboto',sans-serif;font-size:var(--fs-sm);font-weight:600;color:var(--ink-2);margin-bottom:8px;letter-spacing:.02em}
+  .doc-group-links{display:flex;flex-wrap:wrap;gap:8px}
+  .doc-link{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);text-decoration:none;color:var(--ink-2);font-family:'Roboto',sans-serif;font-size:var(--fs-sm);font-weight:500;transition:all .18s;cursor:pointer}
+  .doc-link:hover{background:#fff;border-color:var(--guinda);color:var(--guinda);transform:translateY(-1px);box-shadow:0 2px 8px rgba(157,33,72,.15)}
+  .doc-link:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+  .doc-link-pdf{border-color:#e5074c33}
+  .doc-link-pdf:hover{border-color:var(--rojo);color:var(--rojo);box-shadow:0 2px 8px rgba(229,7,76,.15)}
+  .doc-link-pdf svg:first-child{color:var(--rojo)}
+  .doc-link-gaceta svg:first-child{color:var(--azul)}
+  .doc-link-gaceta:hover{border-color:var(--azul);color:var(--azul);box-shadow:0 2px 8px rgba(38,108,180,.15)}
+  .doc-link-label{flex:1;white-space:nowrap}
+  .doc-link-ext{opacity:.6;flex-shrink:0}
+  .doc-link:hover .doc-link-ext{opacity:1}
+  @media (max-width:640px){
+    .documentos-oficiales{padding:14px 16px}
+    .doc-link{font-size:var(--fs-sm);padding:7px 10px}
+    .doc-link-label{font-size:var(--fs-xs)}
+  }
+  .legal-block p:last-child{margin-bottom:0}
+  .legal-block .ref{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);font-weight:500}
+
+  /* FIX v36: la lista de selectores quedaba abierta con coma final y se comía el
+     @media siguiente, dejando TODO el BREAKPOINT 1 (≤1200px) muerto en producción. */
+  .panel h3, .panel-intro, .hero-sub{overflow-wrap:break-word}
+
+  /* ===== BREAKPOINT 1 — iPad 11" landscape y pantallas medianas (≤1200px) ===== */
+  @media (max-width:1200px){
+    .wrap{padding:28px 22px 70px}
+    h1{font-size:var(--fs-2xl)}
+    .hero{grid-template-columns:repeat(2,1fr)}
+    .legal-grid-3{grid-template-columns:1fr 1fr}
+  }
+
+  /* ===== BREAKPOINT 2 — iPad 11" portrait y tablets (≤1024px) ===== */
+  @media (max-width:1024px){
+    .wrap{padding:26px 20px 60px}
+    h1{font-size:var(--fs-2xl)}
+    .grid-2,.legal-grid{grid-template-columns:1fr}
+    .legal-grid-3{grid-template-columns:repeat(2,1fr)}
+    .constitucion-grid{grid-template-columns:1fr}
+    .panel{padding:22px 22px}
+    .hero-value{font-size:var(--fs-mega)}
+    /* Table: enable horizontal scroll only if truly needed */
+    .table-scroll{overflow-x:auto}
+    table.t{min-width:980px;table-layout:auto}  /* En mobile/tablet usa scroll si hace falta */
+  }
+
+  /* ===== BREAKPOINT 3 — iPad 11" portrait estricto y tablets pequeñas (≤900px) ===== */
+  @media (max-width:900px){
+    header.top{flex-direction:column;align-items:flex-start;gap:14px}
+    header.top .meta{text-align:left}
+    .hero{grid-template-columns:repeat(2,1fr);gap:10px}
+    .hero-card{padding:16px 18px}
+    .hero-value{font-size:var(--fs-hero)}
+        .constitucion-card h4{font-size:var(--fs-md)}
+    .panel h3{font-size:var(--fs-xl)}
+  }
+
+  /* ===== BREAKPOINT 4 — Móvil grande (≤640px) ===== */
+  @media (max-width:640px){
+    .wrap{padding:14px 14px calc(var(--destbar-h) + 24px + env(safe-area-inset-bottom, 0px))}
+    h1{font-size:var(--fs-md);font-weight:600}
+    .hero{grid-template-columns:1fr}
+    .legal-grid-3{grid-template-columns:1fr}
+    /* Convenio en mobile: una sola columna */
+    .convenio-meta{grid-template-columns:1fr}
+    .convenio-table{min-width:520px}
+    /* Header de norma en mobile: apilado vertical para que el botón quepa */
+    .norma-header{flex-direction:column;align-items:stretch}
+    .norma-header-right .btn-pdf{justify-content:center}
+    /* En celular el buscador toma la fila entera y los desplegables van de a
+       dos; el rótulo sigue en línea, que es lo que ahorra la mitad del alto. */
+    /* En celular manda el ancho de la pantalla: el campo se encoge antes que
+       desbordar, y el rótulo puede partirse si hace falta. */
+    /* En celular manda el ancho de la pantalla: el campo se encoge antes que
+       desbordar y el desplegable puede bajar de su mínimo de escritorio. Sin
+       `min-width:0` en el propio label, el rótulo sin partir fija un piso que
+       la fila no puede respetar y la página termina con barra horizontal. */
+    .toolbar{padding:10px}
+    .toolbar > label.f-buscar{flex:1 1 100%}
+    .toolbar label:not(.f-buscar){flex:1 1 140px;min-width:0}
+    .toolbar select{max-width:none;flex:1 1 60px;min-width:0}
+    .toolbar .lab{white-space:normal;overflow-wrap:anywhere}
+    .field{grid-template-columns:100px 1fr;gap:10px}
+    .field .k{font-size:var(--fs-micro)}
+    .field .v{font-size:var(--fs-base)}
+    .comp{font-size:var(--fs-sm)}
+    .comp th,.comp td{padding:8px 6px}
+    .comp-scroll{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 24px),transparent 100%);mask-image:linear-gradient(to right,#000 calc(100% - 24px),transparent 100%)}
+    .comp-scroll .comp{min-width:560px}
+    .panel{padding:18px 16px}
+    .panel h3{font-size:var(--fs-xl)}
+    .panel-intro{font-size:var(--fs-base)}
+    /* Brechas en mobile: 1 columna */
+    .brechas-grid{grid-template-columns:1fr}
+    .brecha-card-num{font-size:var(--fs-hero)}
+    /* Separador institucional adaptado a mobile */
+    .seccion-divider{margin-top:32px;padding:18px 18px;border-top-width:2px}
+    .seccion-divider::before{left:18px;width:18px;height:18px;border-width:2px;top:-9px}
+    .seccion-divider-title{font-size:var(--fs-xl)}
+    .seccion-divider-sub{font-size:var(--fs-base)}
+    /* Cronología en mobile: scroll horizontal */
+    .cronologia-container{padding:18px 12px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .cronologia-chart{min-width:520px;height:200px}
+    /* En celular el globo flotante no cabe: la barra mide 20 px, el panel se
+       desplaza en horizontal y el globo salía cortado o fuera de cuadro. Aquí
+       deja de flotar sobre la barra y se ancla al pie de la pantalla, a todo lo
+       ancho y con desplazamiento propio si la lista es larga. Se abre al tocar
+       —la barra es enfocable— y se cierra al tocar fuera. */
+    .cron-bar-tooltip, .cron-gob-tooltip{
+      position:fixed; left:10px; right:10px; bottom:calc(var(--destbar-h) + 12px);
+      top:auto; width:auto; max-height:44vh; overflow-y:auto;
+      transform:none !important; font-size:var(--fs-sm); padding:14px 16px;
+      border-left:3px solid var(--dorado); z-index:var(--z-sticky);
+      -webkit-overflow-scrolling:touch}
+    .cron-bar:focus .cron-bar-tooltip, .cron-gob-bar:focus .cron-gob-tooltip{pointer-events:auto}
+    .cron-bar-col:first-child .cron-bar-tooltip,
+    .cron-bar-col:last-child  .cron-bar-tooltip,
+    .cron-gob-col:first-child .cron-gob-tooltip,
+    .cron-gob-col:last-child  .cron-gob-tooltip{left:10px;right:10px}
+    .cron-gob-chart{min-width:580px;height:240px;gap:6px}
+    .cron-gob-col-label{font-size:var(--fs-mini)}
+    .cron-gob-col-period{font-size:var(--fs-micro)}
+    .rank-pos{font-size:var(--fs-xl)}
+    .constitucion-card{padding:14px 16px}
+    .constitucion-card h4{font-size:var(--fs-md)}
+    .constitucion-card p{font-size:var(--fs-sm)}
+    .legal-card{padding:16px 18px}
+    .legal-card h4{font-size:var(--fs-lg)}
+    .legal-card li{padding:9px 0;font-size:var(--fs-sm)}
+    .legal-card li .ref{font-size:var(--fs-mini)}
+        .hero-value{font-size:var(--fs-hero)}
+    .big-num{font-size:var(--fs-hero)}
+    .counter-row{flex-direction:column;align-items:flex-start;gap:6px;font-size:var(--fs-mini)}
+    .drawer{width:100vw}
+    .drawer-inner{padding:24px 22px 40px}
+    .drawer-header-row{padding-right:50px}
+    .btn-share-area{padding:8px 10px}
+    .btn-share-area .btn-share-text{display:none}
+    .drawer h2{font-size:var(--fs-2xl)}
+  }
+
+  /* ===== BREAKPOINT 5 — Móvil pequeño (≤420px) ===== */
+  @media (max-width:420px){
+    .wrap{padding:16px 12px calc(var(--destbar-h) + 20px + env(safe-area-inset-bottom, 0px))}
+    h1{font-size:var(--fs-xl)}
+    .hero-card{padding:14px 14px}
+    .hero-value{font-size:var(--fs-2xl)}
+        .panel h3{font-size:var(--fs-lg)}
+  }
+
+
+  /* === Suelo de Conservación: capa overlay === */
+  /* Estado (PM · SC): se lee por RELLENO, no por matiz. El verde ya significa
+     «Bosque Urbano» y el rojo leia como alarma en un dato que solo describe
+     una condicion territorial. Punto lleno = si · punto hueco = no. */
+  .status-tag{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-xs);
+    font-family:'Roboto',sans-serif;font-weight:400;color:var(--ink-2);white-space:nowrap}
+  .status-tag::before{content:'';width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .status-tag-si::before{background:var(--ink-2)}
+  .status-tag-no::before{background:transparent;border:1.6px solid #c0bbaa}
+  .status-tag-no{color:var(--muted)}
+  .status-sc.status-tag-si::before{background:var(--sc)}
+  /* Tercer estado: dentro EN PARTE. El punto va medio lleno —relleno a la
+     izquierda, hueco a la derecha—, que es exactamente lo que dice el dato, y
+     mantiene la regla de v38: el estado no se codifica por matiz. */
+  .status-tag-parcial{color:var(--ink-2)}
+  .status-tag-nd::before{background:transparent;border:1.6px dashed #c0bbaa}
+  .status-tag-nd{color:var(--muted)}
+  .sc-pct{font-size:var(--fs-mini);color:var(--muted);margin-left:3px;
+          font-variant-numeric:tabular-nums;white-space:nowrap}
+  .status-tag-parcial::before{background:linear-gradient(90deg,var(--sc) 0 50%,transparent 50% 100%);
+    border:1.6px solid var(--sc)}
+  /* Dentro de la ficha el indicador es un dato más: hereda el tamaño del valor y
+     se alinea a su línea base, no a la del contenedor flexible. */
+  /* Dentro de la ficha el indicador lleva texto largo —«Parcialmente dentro ·
+     96.0% de su superficie»— y con `nowrap` se salia del renglon y quedaba
+     cortado en el borde derecho. Aqui envuelve; el punto no se separa. */
+  /* Campo de coadministracion · solo aparece en las ocho ANP federales del
+     Convenio Marco 2025. Es informacion de regimen, no una etiqueta mas. */
+  .tag-coadmin{display:inline-block;padding:3px 10px;border-radius:var(--r-chip);
+    border:1px solid var(--azul);color:var(--azul);background:transparent;
+    font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.02em;
+    line-height:1.4;font-weight:500}
+  .coadmin-nota{margin-top:5px;font-size:var(--fs-xs);color:var(--muted);line-height:1.45}
+  .field .status-tag{font-size:inherit;align-items:baseline;gap:8px;
+    white-space:normal;line-height:1.35}
+  .field .status-tag::before{position:relative;top:-1px;align-self:center}
+  /* En la tabla el punto basta; el texto queda solo para lectores de pantalla. */
+  td .status-tag{font-size:0;gap:0}
+  td .status-tag::before{width:10px;height:10px}
+  /* Tag de DG responsable — compacto, monoespaciado, color institucional según DG */
+  .tag-dg{display:inline-block;font-size:var(--fs-mini);font-weight:500;font-family:'Roboto Mono',monospace;letter-spacing:.03em;white-space:nowrap;cursor:help;color:var(--ink-2)}
+  /* En la ficha el dato es protagonista y conserva recuadro; en la tabla no. */
+  .field .tag-dg{padding:2px 8px;border-radius:var(--r-ui);border:1px solid var(--line);background:var(--bg-2)}
+  .tag-dg-dgsanpava{color:var(--guinda)}
+  .tag-dg-dgcorenader{color:#1f5a99}
+  .dg-empty{color:var(--muted);font-family:'Roboto Mono',monospace;font-size:var(--fs-xs)}
+  @media (max-width: 480px){
+  }
+
+  
+  /* Footer institucional · siempre visible al final del wrap */
+  .sia-footer{margin-top:48px;padding:24px 0;border-top:1px solid var(--line);background:transparent}
+  .sia-footer-inner{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .sia-footer-text{color:var(--guinda);font-weight:600}
+  .sia-footer-text-2{color:var(--ink-2);font-weight:400}
+  .sia-footer-sep{color:var(--line);font-weight:400}
+  /* Procedencia del dato · exigencia de gobierno digital: fuente, corte, unidad
+     responsable, carácter no vinculante y vía de contacto ciudadano. */
+  .sia-proc{max-width:900px;margin:0 auto 18px;padding:0 20px;display:flex;flex-direction:column;gap:8px;font-family:'Roboto',sans-serif;font-size:var(--fs-xs);line-height:1.55;color:var(--ink-2);text-align:center}
+  .sia-proc p{margin:0}
+  .sia-proc b{color:var(--ink);font-weight:500}
+  .sia-proc-aviso{border-left:3px solid var(--dorado);background:var(--warn-bg,rgba(178,142,92,.08));padding:10px 14px;text-align:left;border-radius:0 var(--radius) var(--radius) 0}
+  .sia-proc-contacto a{color:var(--guinda);font-weight:500}
+
+  /* ============================================================
+   * E3 · INDICADOR DE ESTADO DE CONEXIÓN (Service Worker)
+   * ============================================================ */
+  .offline-notice{position:fixed;bottom:80px;right:20px;background:var(--ink);color:var(--crema);padding:12px 18px;border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:var(--fs-base);line-height:1.4;box-shadow:var(--sh-3);z-index:var(--z-modal);max-width:320px;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none}
+  .offline-notice.visible{opacity:1;transform:translateY(0);pointer-events:auto}
+  .offline-notice[data-type="online"]{background:var(--verde)}
+  .offline-notice[data-type="offline"]{background:var(--dorado-text)}
+  .offline-notice[data-type="update"]{background:var(--azul);cursor:pointer}
+  .offline-notice[data-type="update"]:hover{background:#1f5a99}
+  @media (max-width:640px){
+    .offline-notice{bottom:74px;right:14px;left:14px;max-width:none;font-size:var(--fs-sm);padding:10px 14px}
+  }
+  @media (max-width:600px){
+    .sia-footer-inner{flex-direction:column;gap:4px;font-size:var(--fs-mini);text-align:center}
+    .sia-footer-sep{display:none}
+  }
+
+    /* ═══ OBJETIVOS TACTILES ═══════════════════════════════════════════════
+     Medido en produccion: 17 controles quedaban por debajo de 44 px, entre
+     ellos el zoom de Leaflet (30x30) que aparece en los seis mapas del sitio
+     y es el control que mas se toca en campo.
+     Se usa pointer:coarse y no max-width para cubrir tambien tabletas
+     tactiles anchas, que con el criterio de ancho quedaban fuera.
+     Se agranda el area de toque sin cambiar la caja visual donde importa. */
+  @media (pointer:coarse), (max-width:640px){
+    .leaflet-touch .leaflet-bar a,
+    .leaflet-bar a,
+    .map-fullscreen-btn,
+    .ubi-mini,
+    .ubi-cerrar,
+    .locate-ctrl a,
+    .resetview-ctrl a      { min-width:44px; min-height:44px }
+    .leaflet-bar a         { line-height:44px }
+    .map-filter-chip,
+    .btn, .btn.ghost,
+    .map-block-toggle button,
+    #q, select,
+    .ubicar-go             { min-height:44px }
+    .ubi-ficha             { min-height:46px }
+    /* La columna de controles crece con los botones */
+    .map-block-controls-floating,
+    .leaflet-top.leaflet-left { --mc-h:44px }
+  }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SISTEMA «GOOGLE MAPS» · adaptación del kit de Figma (11 sep 2026)
+   ───────────────────────────────────────────────────────────────────
+   Se toma del kit la GEOMETRÍA y la ELEVACIÓN —cápsulas de radio
+   completo, botones redondos de 48/56, sombras de tres niveles, la
+   barra inferior con pastilla teñida detrás del icono, las filas de
+   lista sobre fondo gris—. NO se toma su paleta: el turquesa del kit
+   es la marca de Google. En su lugar va el guinda institucional, que
+   es lo que este tablero señala como activo y accionable.
+   Este bloque va DELIBERADAMENTE al final de la hoja: varias reglas
+   compiten con las de arriba con la misma especificidad y aquí gana
+   el orden, no el `!important`.
+   ═══════════════════════════════════════════════════════════════════ */
+:root{
+  /* Tres niveles de elevación del kit, con el gris de sombra de Material */
+  --gm-e1:0 1px 2px rgba(60,64,67,.30), 0 1px 3px 1px rgba(60,64,67,.15);
+  --gm-e2:0 1px 2px rgba(60,64,67,.30), 0 2px 6px 2px rgba(60,64,67,.15);
+  --gm-e3:0 1px 3px rgba(60,64,67,.30), 0 4px 8px 3px rgba(60,64,67,.15);
+  --gm-tint:rgba(157,33,72,.11);     /* el «teal claro» del kit, en guinda */
+  --gm-tint-fuerte:rgba(157,33,72,.18);
+}
+/* Marca de ubicación del kit: punto azul con aro blanco (GPS) y gota
+   guinda (lugar buscado). Van fuera de la media query porque describen un
+   hecho del territorio, no un tamaño de pantalla. */
+.gm-mark{background:none;border:none}
+.gm-mark-gps i{display:block;width:18px;height:18px;border-radius:50%;
+  background:#1971c2;border:3px solid #fff;box-shadow:0 1px 4px rgba(42,42,42,.45);
+  margin:2px}
+.gm-mark-pin svg{filter:drop-shadow(0 2px 3px rgba(42,42,42,.4))}
+
+/* ── PANTALLA COMPLETA: FUERA DE LOS CUATRO MAPAS ──────────────────
+   No aportaba nada —en celular el mapa ya ocupa la pantalla y en
+   escritorio la ventana ES la pantalla— y en iOS solo servía para mostrar
+   «Tu navegador no admite el modo pantalla completa». Va sin media query:
+   sobra en todos los anchos. Deja sin efecto a `html.sin-fullscreen`. */
+.map-fullscreen-btn{display:none!important}
+
+/* ── «Ubicarme» en guinda ──────────────────────────────────────────
+   Es la misma acción que el botón redondo de la barra de búsqueda y debía
+   leerse igual. El azul se reserva para el punto que marca dónde estás,
+   que es un dato, no un control. Va en la hoja y no en un estilo en línea
+   porque así se aplica también a los controles que Leaflet recrea. */
+.locate-ctrl a{color:var(--guinda)}
+.locate-ctrl a:hover{color:var(--guinda-900)}
+
+/* ── Tarjeta de capa base · sin el botón de pantalla completa ───────
+   El grupo se angosta y deja de rozar el borde derecho del lienzo. En el
+   mini-mapa de la ficha, el más estrecho de los cuatro, además se reduce
+   el tamaño de las etiquetas. */
+#mapCanvas .map-block-controls-floating{top:10px;right:10px}
+#mapCanvas .map-block-controls-floating .map-block-toggle button{padding:0 10px;
+  font-size:var(--fs-micro)}
+
+/* «Sup. (ha)» no cabe en su columna desde que se redujo al redondear los
+   valores: se le permite partir en dos renglones, como en celular. */
+thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
+
+/* El asa de la ficha solo existe cuando la ficha es hoja (celular). En
+   escritorio la ficha es un cajón lateral y no hay nada que arrastrar. */
+.drawer-asa{display:none}
+
+/* Asa de arrastre (componente `handle` del kit) */
+.gm-handle{width:34px;height:4px;border-radius:2px;background:#dadce0;margin:8px auto 4px}
+
+@media (max-width:760px){
+  /* ── NAVBAR (componente `navbar`) ──────────────────────────────────
+     El kit no pinta el destino activo como un bloque de color: pone una
+     pastilla teñida DETRÁS DEL ICONO y deja la etiqueta en texto oscuro
+     en negritas. Se lee igual de rápido y no mete un rectángulo saturado
+     al pie de cada pantalla. */
+  .destbar{gap:0;padding:6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    background:var(--card);border-top:1px solid var(--line-soft);box-shadow:var(--gm-e2)}
+  .dest{flex-direction:column;gap:3px;height:auto;padding:2px 0 0;
+    font-size:var(--fs-mini);font-weight:500;color:var(--ink-2);background:transparent}
+  .dest:hover{background:transparent;color:var(--ink)}
+  .dest .dest-ico{width:auto;height:26px;min-width:58px;padding:0 18px;border-radius:13px;
+    transition:background .18s}
+  .dest .dest-ico svg{width:20px;height:20px}
+  .dest .dest-lbl{overflow:visible;text-overflow:clip;line-height:1.1}
+  .dest.active{background:transparent;color:var(--ink);font-weight:700;box-shadow:none}
+  .dest.active .dest-ico{background:var(--gm-tint);color:var(--guinda)}
+
+  /* ── SEARCH BAR (componente `search-bar`) ─────────────────────────
+     Cápsula blanca con sombra, icono guía a la izquierda y acción a la
+     derecha. Sustituye a la caja con borde y esquinas de 6 px: es el
+     elemento que más distingue a Google Maps de un formulario web. */
+  .ubicar-bar{background:var(--card);border:none;border-left:none;border-radius:28px;
+    padding:6px 6px 6px 8px;box-shadow:var(--gm-e2);margin-bottom:12px}
+  .wrap:not(.dest-ubicar) .ubicar-bar{padding:6px 6px 6px 8px;gap:0}
+  .ubicar-head{display:none}
+  .dest-ubicar .ubicar-bar{box-shadow:var(--gm-e2);background:var(--card)}
+  /* En el caparazon de mapa la barra es una capsula flotante de 56 px sobre
+     el lienzo: cualquier cosa que la haga mas alta pisa los controles del
+     mapa. La ayuda de formatos se ofrece ahi desde el panel de sugerencias. */
+  .dest-ubicar .ubicar-head,
+  .dest-ubicar .ubicar-formatos{display:none}
+  .ubicar-row{gap:6px;align-items:center}
+  .ubicar-input-wrap{align-items:center}
+  /* El icono de lupa se dibuja como fondo del campo: no exige tocar el HTML */
+  .ubicar-input-wrap input{height:44px;border:none;border-radius:24px;padding:0 10px 0 40px;
+    background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2355585A' stroke-width='2' stroke-linecap='round'><circle cx='11' cy='11' r='7'/><path d='m20 20-3.6-3.6'/></svg>") no-repeat 12px center/18px 18px;
+    font-size:var(--fs-md)}
+  .ubicar-input-wrap input:focus{border:none;box-shadow:inset 0 0 0 2px var(--gm-tint-fuerte)}
+  .ubicar-go{display:none}                       /* la lupa ya está en el campo */
+  .ubicar-sugerencias{border:none;border-radius:16px;box-shadow:var(--gm-e3);top:calc(100% + 8px);
+    overflow:hidden}
+
+  /* ── FAB (componente `Button /Round`) ─────────────────────────────
+     «Usar mi ubicación» deja de ser un botón rectangular con texto: es
+     el gesto que más repite el personal en campo y en el kit eso es un
+     círculo. Guinda relleno = acción primaria. */
+  .ubicar-gps{width:44px;height:44px;min-width:44px;padding:0;border-radius:50%;
+    background:var(--guinda);color:#fff;box-shadow:var(--gm-e1);flex:0 0 auto}
+  .ubicar-gps span{display:none}
+  .ubicar-gps svg{width:20px;height:20px}
+  .ubicar-gps:active{box-shadow:var(--gm-e2);transform:scale(.96)}
+  .wrap:not(.dest-ubicar) .ubicar-gps{width:44px;height:44px;padding:0}
+  /* En «Ubicar» el alto lo fijaban dos reglas de escritorio (52 y 48 px) que
+     estiraban el círculo a óvalo. La cápsula es de una sola altura. */
+  .dest-ubicar .ubicar-row{flex-direction:row;align-items:center;gap:6px}
+  .dest-ubicar .ubicar-gps{width:44px;height:44px;align-self:center;font-size:0}
+  /* En el kit la acción de la derecha cierra la cápsula (ahí va el avatar).
+     El GPS está primero en el HTML por orden de lectura con lector de
+     pantalla; `order` lo mueve solo en pantalla. */
+  .ubicar-gps{order:2}
+  .ubicar-input-wrap{order:1}
+  .dest-ubicar .ubicar-input-wrap input{height:44px;font-size:var(--fs-md)}
+
+  /* ── ZOOM DE iOS AL ENFOCAR ───────────────────────────────────────
+     Safari en iPhone hace zoom automático sobre cualquier campo de texto
+     con tipografía menor a 16px, y deja la página desplazada y cortada.
+     No se arregla con `user-scalable=no` —iOS lo ignora desde hace años y
+     además rompería el pellizco para acercar el mapa—: la única cura es
+     que el campo mida 16px. Solo aplica a lo que recibe tecleo. */
+  input[type="text"], input[type="search"], input:not([type]), textarea{font-size:16px!important}
+
+  /* ── LIST ITEM (componente `list-item`) ───────────────────────────
+     Filas blancas separadas por el fondo, no por líneas. El punto de
+     color se conserva —aquí el color SÍ significa territorio— pero la
+     fila adopta el ritmo del kit. */
+  .ubi-item{background:var(--card);border:none;border-radius:12px;margin-bottom:6px;
+    padding:13px 12px;box-shadow:var(--gm-e1);align-items:center}
+  .ubi-lista{background:transparent;gap:0}
+  .ubi-main{border-radius:16px;box-shadow:var(--gm-e2);border:none;
+    border-left:4px solid var(--c, var(--guinda))}
+
+  /* ── ACTION BUTTON (componente `Button /Action`) ──────────────────
+     Pastilla de radio completo con icono a la izquierda. El kit tiene
+     dos pesos: relleno para la acción principal, teñido para las demás. */
+  .ubi-ficha{border-radius:24px;min-height:48px;padding:0 22px;box-shadow:var(--gm-e1);
+    font-weight:700;letter-spacing:.01em}
+  .ubi-ficha:active{transform:scale(.98)}
+  .ubi-mini{width:40px;height:40px;border-radius:50%;background:var(--gm-tint);
+    border:none;color:var(--guinda);font-size:var(--fs-lg);flex:0 0 auto}
+
+
+  /* ═══ CAPARAZÓN DE MAPA · etapa 2 del kit (12 sep 2026) ═══════════
+     En «Ubicar» el celular deja de ser una página con un mapa dentro y
+     pasa a ser un mapa con una página encima: el lienzo ocupa la
+     pantalla, la cápsula de búsqueda flota arriba y el resultado sube
+     en una hoja deslizable de tres posiciones. La clase `gm-shell` la
+     pone el JS solo cuando se cumplen las dos condiciones —destino
+     Ubicar y ancho de celular—, así que una sola regla de más no puede
+     romper el escritorio. */
+  .wrap.dest-ubicar.gm-shell{padding:0}
+  .wrap.dest-ubicar.gm-shell header.top,
+  .wrap.dest-ubicar.gm-shell footer,
+  .wrap.dest-ubicar.gm-shell .subnav{display:none}
+  .wrap.dest-ubicar.gm-shell #globalMapSection{position:fixed;left:0;right:0;top:0;
+    bottom:calc(var(--destbar-h) + env(safe-area-inset-bottom, 0px));
+    margin:0;z-index:1}
+  /* `!important` a regañadientes: `.panel-mapa` fija su relleno con
+     `!important` y el filete guinda del `.panel` viene de una regla base.
+     Aquí el panel deja de ser una tarjeta: es el lienzo. */
+  .wrap.dest-ubicar.gm-shell #globalMapSection > .panel{height:100%;margin:0!important;
+    padding:0!important;border:none!important;border-radius:0!important;
+    box-shadow:none!important;background:transparent!important}
+  .wrap.dest-ubicar.gm-shell #globalMapSection .mapa-h{display:none}
+  /* Los controles del mapa bajan para no quedar bajo la cápsula flotante */
+  .wrap.dest-ubicar.gm-shell #globalMapSection .leaflet-top{top:72px}
+  .wrap.dest-ubicar.gm-shell #globalMapSection .map-block-controls-floating{top:78px}
+  /* El lienzo trae su propio alto por breakpoint (`#globalMapCanvas{height:420px}`
+     en celular). En el caparazón tiene que llenar la pantalla, así que hay que
+     vencerlo explícitamente: sin esto el mapa quedaba como una tarjeta de 420px
+     con el resto de la pantalla en color de fondo. */
+  .wrap.dest-ubicar.gm-shell #globalMapSection > .panel{display:flex;flex-direction:column}
+  .wrap.dest-ubicar.gm-shell #globalMapSection .global-map-block{flex:1;min-height:0;height:100%;
+    margin:0!important;padding:0!important;border:none!important;border-radius:0!important}
+  .wrap.dest-ubicar.gm-shell #globalMapCanvas,
+  .wrap.dest-ubicar.gm-shell #globalMapSection .map-canvas,
+  .wrap.dest-ubicar.gm-shell #globalMapSection .map-canvas-inner{height:100%!important;
+    min-height:0!important;border-radius:0!important;border:none!important}
+  /* La cápsula flota sobre el lienzo, como en el kit */
+  /* `.dest-ubicar .ubicar-bar` (0,2,1) gana a `.ubicar-bar` (0,1,0): el relleno
+     de escritorio se colaba y la cápsula medía 84 px en vez de 56. */
+  .wrap.dest-ubicar.gm-shell .ubicar-bar{position:fixed;z-index:1200;margin:0;
+    top:calc(10px + env(safe-area-inset-top, 0px));left:10px;right:10px;
+    padding:6px 6px 6px 8px}
+
+  /* ── HOJA DESLIZABLE (componentes `handle` + `location-card`) ──── */
+  .gm-handle{display:none}
+  .wrap.dest-ubicar.gm-shell .gm-handle{display:block}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado{position:fixed;left:0;right:0;
+    bottom:calc(var(--destbar-h) + env(safe-area-inset-bottom, 0px));
+    /* Tope de altura: la hoja NUNCA debe subir por debajo de la cápsula de
+       búsqueda, o su asa queda tapada y deja de poder arrastrarse. 78px =
+       10 de margen superior + 56 de cápsula + 12 de holgura. */
+    height:calc(100svh - var(--destbar-h) - env(safe-area-inset-bottom, 0px) - 78px);
+    z-index:850;--vis:0px;
+    transform:translateY(calc(100% - var(--vis)));
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
+    background:var(--card);border-radius:18px 18px 0 0;box-shadow:0 -2px 16px rgba(60,64,67,.28);
+    display:flex;flex-direction:column;overflow:hidden;touch-action:none}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado.arrastrando{transition:none}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-panel{flex:1;min-height:0;overflow-y:auto;
+    -webkit-overflow-scrolling:touch;touch-action:pan-y;
+    margin:0;border:none;border-radius:0;box-shadow:none;padding:0 14px 18px}
+  /* Con el mapa detrás, el mini-mapa del resultado sobra: mostraba el
+     mismo punto dos veces y partía la pantalla en dos lienzos. */
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-map,
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-col:has(.ubi-map){display:none}
+  /* Sin el mini-mapa, la rejilla de dos columnas deja una columna con ancho
+     mínimo que se desborda de la hoja. En la hoja el resultado es una sola
+     columna, sin excepción. */
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-grid{display:block}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-col,
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-main,
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-item{min-width:0;max-width:100%}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-cerrar{top:10px;right:12px}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-cabeza{padding-right:34px}
+
+
+  /* ── MARCAS DEL KIT (frame `MARKS`) ───────────────────────────────
+     Fuera de la media query: la marca es la misma en celular y en
+     escritorio, porque describe un hecho del territorio, no un tamaño
+     de pantalla. */
+
+  /* Aviso de respaldo: ámbar, junto al contador, sin tapar nada. */
+  .aviso-respaldo{display:inline-flex;align-items:center;gap:6px;margin-left:10px;
+    padding:3px 10px;border-radius:11px;background:#FDF0D5;color:#8a5a12;
+    font-family:'Roboto',sans-serif;font-size:var(--fs-mini);font-weight:600;
+    letter-spacing:.01em;text-transform:none}
+  .aviso-respaldo::before{content:'';width:7px;height:7px;border-radius:50%;background:#b8860b}
+  /* Aviso de integridad del inventario: mismo sitio y misma familia visual que
+     el de copia local, pero en guinda porque no es una degradacion del canal
+     sino un dato que no cuadra. Es un boton: al pulsarlo se lee el detalle. */
+  .aviso-integridad{display:inline-flex;align-items:center;gap:6px;margin-left:10px;
+    padding:3px 10px;border-radius:11px;border:none;cursor:pointer;
+    background:#F8E6EC;color:var(--guinda);
+    font-family:'Roboto',sans-serif;font-size:var(--fs-mini);font-weight:600;
+    letter-spacing:.01em;text-transform:none}
+  .aviso-integridad::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--guinda)}
+  .aviso-integridad:hover{background:#F2D6DF}
+  .aviso-integridad:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+
+  /* ── CÁPSULA QUE SE APARTA AL BAJAR ──────────────────────────────── */
+  .wrap.barra-oculta .ubicar-bar{transform:translateY(-135%)}
+  .ubicar-bar{transition:transform .26s cubic-bezier(.2,.8,.2,1)}
+
+  /* ── BOTÓN DE CAPAS (patrón `layers` del kit) ────────────────────── */
+  .panel-mapa, #globalMapCanvas{position:relative}
+  /* 34 px de holgura: es el alto de la barra de atribución de Leaflet. */
+  .map-filters{display:none;position:absolute;left:10px;bottom:90px;z-index:601;
+    margin:0;padding:11px;gap:7px;flex-direction:column;align-items:stretch;
+    background:var(--card);border-radius:16px;box-shadow:var(--gm-e3);
+    max-height:56vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .map-filters.abierto{display:flex}
+  .map-filter-chip{justify-content:flex-start}
+  .btn-capas{position:absolute;left:10px;bottom:34px;z-index:602;
+    width:44px;height:44px;border-radius:50%;border:none;background:var(--card);
+    color:var(--ink-2);box-shadow:var(--gm-e2);display:flex;align-items:center;
+    justify-content:center;cursor:pointer;padding:0}
+  .btn-capas svg{width:21px;height:21px}
+  .btn-capas.activo{background:var(--guinda);color:var(--crema)}
+  .btn-capas:active{transform:scale(.95)}
+
+  /* ── LA FICHA COMO HOJA (componente `location-card`) ──────────────
+     El cajón lateral llegaba desde la derecha y tapaba la pantalla
+     completa; en un teléfono eso es un cambio de página disfrazado.
+     Como hoja conserva el mapa detrás y se cierra con el pulgar. */
+  .drawer{top:auto;left:0;right:0;bottom:0;width:100%;
+    height:calc(100svh - 78px);
+    border-left:none;border-top:3px solid var(--guinda);
+    border-radius:18px 18px 0 0;
+    transform:translateY(100%);
+    box-shadow:0 -2px 18px rgba(60,64,67,.3)}
+  .drawer.open{transform:translateY(0)}
+  .drawer.arrastrando{transition:none}
+  .drawer .gm-handle{display:block;position:sticky;top:0;z-index:3;
+    background:var(--card);padding:0;margin:0 auto 2px;
+    width:100%;height:18px;border-radius:0;box-shadow:none}
+  .drawer .gm-handle::after{content:'';display:block;width:34px;height:4px;
+    border-radius:2px;background:#dadce0;margin:7px auto 0}
+  .drawer-inner{padding:0 18px 40px}
+  .drawer .close{top:20px;right:14px}
+
+
+  /* ── LA FICHA MANDA: fuera la cápsula mientras está abierta ───────
+     El buscador flotaba por encima de la ficha y cortaba el nombre del
+     área. No hay nada que buscar mientras se lee una ficha: la barra se
+     retira y vuelve al cerrarla. */
+  html.ficha-abierta .ubicar-bar{opacity:0;pointer-events:none;transform:translateY(-135%)}
+
+  /* ── RESULTADO DE UBICACIÓN · una sola pieza ──────────────────────
+     Estaba partido en cuatro bloques con tratamientos distintos —rótulo,
+     tarjeta enorme, fila de la más cercana y un pie suelto tras una
+     línea—, y la frase principal iba en tipografía de titular, que en
+     un teléfono ocupa tres renglones para decir «aquí no hay nada».
+     Ahora es una lista de renglones con el mismo ritmo, en la que el
+     tamaño solo distingue el dato del rótulo. */
+  #ubicarResultado .ubi-cabeza{font-size:var(--fs-micro);letter-spacing:.11em;
+    color:var(--muted);margin:0 0 8px}
+  #ubicarResultado .ubi-main{padding:12px 14px;border-left-width:4px;margin-bottom:8px}
+  #ubicarResultado .ubi-main-cat{font-size:var(--fs-micro);margin-bottom:3px}
+  #ubicarResultado .ubi-main-nom{font-size:var(--fs-lg);font-weight:700;line-height:1.25;
+    letter-spacing:0}
+  #ubicarResultado .ubi-vacio .ubi-main-nom{font-size:var(--fs-md);font-weight:500}
+  #ubicarResultado .ubi-item{padding:11px 12px}
+  #ubicarResultado .ubi-item-txt b{font-size:var(--fs-base)}
+  #ubicarResultado .ubi-item-txt span{font-size:var(--fs-micro);letter-spacing:.04em}
+  /* El pie deja de ser un apéndice tras una línea: es una fila más, con
+     el mismo icono de lugar que usa el resto del kit. */
+  #ubicarResultado .ubi-ctx{margin:8px 0 0;padding:12px;border-top:none;
+    background:var(--card);border-radius:12px;box-shadow:var(--gm-e1);
+    font-size:var(--fs-base);color:var(--ink-2);display:flex;align-items:center;gap:9px;
+    line-height:1.35}
+  #ubicarResultado .ubi-ctx::before{content:'';flex:0 0 auto;width:17px;height:17px;
+    background:no-repeat center/contain;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239D2148' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s7-6.2 7-11.4A7 7 0 0 0 5 10.6C5 15.8 12 22 12 22Z'/><circle cx='12' cy='10.4' r='2.4'/></svg>")}
+  #ubicarResultado .ubi-ficha{width:100%;justify-content:center;margin-top:12px}
+
+
+  /* ── LA FICHA COMO HOJA ───────────────────────────────────────────
+     Columna rígida: asa de agarre arriba —fuera del desplazamiento, o se
+     iría con el scroll y dejaría de ser agarradera—, cuerpo con su propio
+     desplazamiento debajo. `overscroll-behavior:contain` impide que al
+     llegar al final el gesto se lo lleve la página de atrás, que era parte
+     de la sensación pegajosa.
+     La altura visible la manda `--dvis` (en píxeles, la fija el JS) y el
+     desplazamiento se calcula aquí, igual que en la hoja de «Ubicar». */
+  .drawer{display:flex;flex-direction:column;overflow:hidden;
+    --dvis:0px;transform:translateY(100%)}
+  .drawer.open{transform:translateY(calc(100% - var(--dvis)))}
+  .drawer.arrastrando{transition:none}
+  .drawer-asa{flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    height:26px;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent}
+  .drawer-asa:active{cursor:grabbing}
+  .drawer-asa span{display:block;width:36px;height:4px;border-radius:2px;background:#dadce0}
+  .drawer-asa:focus-visible{outline:2px solid var(--guinda);outline-offset:-4px;border-radius:6px}
+  /* `overflow-x:hidden` no es cosmética: un elemento `sticky` se desplaza con
+     el scroll HORIZONTAL de su contenedor. Como el cuerpo de la ficha desborda
+     a lo ancho (tarjetas legales, mini-mapa), la cabecera fija se corría a la
+     izquierda y el nombre del área salía cortado. */
+  .drawer-inner{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 18px 40px}
+  /* Sin relleno superior: con 2px, `top:0` dejaba una rendija por la que se
+     veia pasar el renglon de texto por encima de la cabecera al desplazar. */
+  .drawer-inner > *{max-width:100%}
+  /* La cabecera es la excepcion: sale de los margenes laterales a proposito
+     (margin:0 -18px) para tapar de borde a borde lo que pasa por debajo. El
+     max-width de arriba la encogia al ancho del contenido y dejaba ver el
+     mini-mapa por la derecha, con el tache flotando fuera del bloque. */
+  .drawer-inner > .drawer-header-row{max-width:none}
+  /* Con la ficha abierta, la página de atrás no se mueve. `overscroll-behavior`
+     por sí solo no basta en iOS: el cuerpo sigue recibiendo el gesto cuando la
+     ficha llega a su tope. Se congela el documento mientras la hoja está arriba
+     y se libera al cerrarla. */
+  html.ficha-abierta, html.ficha-abierta body{overflow:hidden;overscroll-behavior:none}
+  /* El tache, como en Maps: círculo gris en la esquina de la cabecera, a la
+     altura del título —no flotando en el hueco de arriba—. */
+  /* z-index por encima de la cabecera fija (600): desde que la cabecera cubre
+     el ancho completo, un valor menor dejaba el tache tapado por ella. */
+  .drawer .close{position:absolute;z-index:601;top:32px;right:14px;
+    width:34px;height:34px;border-radius:50%;background:var(--bg-2);color:var(--ink-2);
+    font-size:var(--fs-xl);box-shadow:var(--gm-e1)}
+  .drawer .close:active{background:#e6e1d4}
+  /* Cabecera fija: nombre, categoría y los dos botones se quedan arriba al
+     desplazar el cuerpo, como la tarjeta de lugar de Maps. Antes el nombre se
+     iba con el scroll y, en una ficha larga, se perdía de vista de qué área se
+     estaba leyendo. */
+  /* z-index por encima de `--z-flotante` (500): el chip de Suelo de
+     Conservación del mini-mapa es `absolute` dentro del contenido y pasaba
+     POR ENCIMA de la cabecera al desplazar, tapando el nombre del área.
+     Cabecera de DOS renglones: tipo · jurisdicción · subcategoría arriba, y el
+     nombre debajo, más chico. Antes ocupaba tres y se comía la hoja. */
+  .drawer .drawer-header-row{padding-right:62px;position:sticky;top:0;z-index:600;
+    background:var(--card);margin:0 -18px;padding-left:18px;padding-top:6px;
+    padding-bottom:9px;box-shadow:0 6px 10px -8px rgba(60,64,67,.35)}
+  .drawer .drawer-header-left{display:flex;flex-wrap:wrap;align-items:baseline;
+    gap:0 7px;min-width:0}
+  .drawer .drawer-header-left .kat{order:1;margin:0}
+  .drawer .drawer-header-left .subcat{order:2;margin:0;font-size:var(--fs-xs);
+    font-style:normal;color:var(--muted)}
+  .drawer .drawer-header-left .subcat::before{content:'·';margin-right:6px;color:var(--line)}
+  .drawer .drawer-header-left h2{order:3;flex:1 1 100%;margin:2px 0 0;
+    font-size:var(--fs-lg);line-height:1.2}
+
+  /* ── TOOLTIPS DE LAS CRONOLOGÍAS EN iOS ──────────────────────────
+     El globo se ancla al pie con `position:fixed`, pero en Safari de iPhone
+     un elemento fijo DENTRO de un contenedor con
+     `-webkit-overflow-scrolling:touch` deja de ser fijo respecto a la
+     ventana y pasa a quedar contenido por ese contenedor: por eso salía
+     angosto, encimado sobre la barra y cortado por el borde de la gráfica.
+     Chromium no reproduce la falla, así que solo se ve en el teléfono.
+     Se renuncia al desplazamiento con inercia en esas dos gráficas —siguen
+     desplazándose— a cambio de que el globo quede donde debe. */
+  .cronologia-container{-webkit-overflow-scrolling:auto}
+
+  /* ── ENCABEZADOS DE TABLA LEGIBLES EN CELULAR ────────────────────
+     Con cuatro columnas estrechas y `nowrap`, «SUP. (HA)» y «PM» salían
+     cortados con puntos suspensivos: el encabezado dejaba de decir qué
+     columna era. Se permite que partan en dos renglones y se reduce el
+     cuerpo; el alto extra lo paga una sola fila, la del encabezado. */
+  thead.t-head th{white-space:normal;line-height:1.15;font-size:var(--fs-micro);
+    letter-spacing:.03em;padding:8px 5px;overflow:visible;text-overflow:clip;
+    vertical-align:bottom}
+  thead.t-head th .arrow{display:block;margin:1px 0 0}
+
+
+
+  /* ── PILLS (componente `pills`) ───────────────────────────────────
+     Los subfiltros ya eran pastillas; se les da la sombra y el blanco
+     del kit para que floten sobre el fondo en vez de dibujar borde. */
+  .subchip{border:none;background:var(--card);box-shadow:var(--gm-e1);height:44px;border-radius:22px}
+  .subchip.active{background:var(--guinda);box-shadow:var(--gm-e2)}
+}
+
+/* ═══ PANTALLA DE AYUDA ═══════════════════════════════════════════════
+   Explica las categorías a quien entra por primera vez. Vive al final de
+   la hoja a propósito: no la sobrescribe ninguna media query anterior. */
+.ayuda-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;
+  border:1px solid var(--line);border-radius:16px;background:var(--card);
+  color:var(--guinda);font-family:'Roboto',sans-serif;font-size:var(--fs-xs);
+  font-weight:600;cursor:pointer;white-space:nowrap;transition:border-color .15s,background .15s}
+.ayuda-btn:hover{border-color:var(--guinda);background:var(--bg-2)}
+.ayuda-btn:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+.ayuda-btn .ay-ico{display:inline-flex;align-items:center;justify-content:center;
+  width:17px;height:17px;border-radius:50%;background:var(--guinda);color:var(--crema);
+  font-size:11px;font-weight:700;line-height:1;flex-shrink:0}
+header.top .meta{display:flex;align-items:center;gap:12px}
+
+/* `hidden` debe ganar: sin esto, el `display:flex` de la regla siguiente lo
+   anula por especificidad y el dialogo sigue ocupando sitio, tabulable y
+   visible para el lector de pantalla aunque este cerrado. */
+.ayuda-bd[hidden], .ayuda-dlg[hidden]{display:none !important}
+.ayuda-bd{position:fixed;inset:0;background:rgba(42,42,42,.55);z-index:var(--z-modal);
+  opacity:0;pointer-events:none;transition:opacity .2s}
+.ayuda-bd.open{opacity:1;pointer-events:auto}
+.ayuda-dlg{position:fixed;z-index:calc(var(--z-modal) + 1);left:50%;top:50%;
+  transform:translate(-50%,-48%);width:min(720px,calc(100vw - 32px));
+  max-height:min(86vh,860px);display:flex;flex-direction:column;
+  background:var(--card);border-radius:12px;box-shadow:0 18px 50px -12px rgba(42,42,42,.45);
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.ayuda-dlg.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.ayuda-head{flex-shrink:0;display:flex;align-items:flex-start;gap:14px;
+  padding:20px 22px 16px;border-bottom:2px solid var(--guinda)}
+.ayuda-head h2{margin:0;font-family:var(--font-titulo);font-size:var(--fs-xl);
+  color:var(--guinda);line-height:1.2;font-weight:700}
+.ayuda-head p{margin:4px 0 0;font-size:var(--fs-xs);color:var(--muted);line-height:1.45}
+.ayuda-cerrar{margin-left:auto;flex-shrink:0;width:34px;height:34px;border:none;
+  border-radius:50%;background:var(--bg-2);color:var(--ink);font-size:22px;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ayuda-cerrar:hover{background:var(--line-soft)}
+.ayuda-cerrar:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+.ayuda-cuerpo{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  padding:18px 22px 26px}
+.ayuda-sec{margin:0 0 22px}
+.ayuda-sec:last-child{margin-bottom:0}
+.ayuda-sec > h3{margin:0 0 8px;font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);
+  letter-spacing:.14em;text-transform:uppercase;color:var(--guinda);font-weight:500}
+.ayuda-sec p{margin:0 0 9px;font-size:var(--fs-sm);line-height:1.55;color:var(--ink)}
+.ayuda-sec p:last-child{margin-bottom:0}
+.ayuda-fam{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 4px}
+.ayuda-fam-card{border:1px solid var(--line-soft);border-left:4px solid var(--guinda);
+  border-radius:var(--radius);padding:12px 14px;background:var(--bg-2)}
+.ayuda-fam-card.ava{border-left-color:var(--verde)}
+.ayuda-fam-card.anp{border-left-color:var(--naranja)}
+.ayuda-fam-card .sig{display:block;font-family:'Roboto Mono',monospace;font-size:var(--fs-sm);
+  font-weight:500;color:var(--ink);letter-spacing:.04em}
+.ayuda-fam-card .nom{display:block;margin-top:2px;font-size:var(--fs-xs);color:var(--muted);line-height:1.35}
+.ayuda-fam-card .cifra{display:block;margin-top:8px;font-family:'Roboto',sans-serif;
+  font-size:var(--fs-2xl);font-weight:900;letter-spacing:-.02em;line-height:1;color:var(--ink)}
+.ayuda-fam-card .desglose{display:block;margin-top:4px;font-size:var(--fs-mini);
+  font-family:'Roboto Mono',monospace;color:var(--muted);line-height:1.4}
+.ayuda-tabla{width:100%;border-collapse:collapse;margin:8px 0 0;font-size:var(--fs-xs)}
+.ayuda-tabla th{text-align:left;padding:6px 8px;background:var(--guinda);color:var(--crema);
+  font-family:'Roboto Mono',monospace;font-weight:500;letter-spacing:.06em;font-size:var(--fs-mini);
+  text-transform:uppercase}
+.ayuda-tabla td{padding:6px 8px;border-bottom:1px solid var(--line-soft);
+  vertical-align:top;line-height:1.4;color:var(--ink)}
+.ayuda-tabla tr:nth-child(even) td{background:var(--bg-2)}
+.ayuda-tabla td:first-child{font-family:'Roboto Mono',monospace;white-space:nowrap;font-weight:500}
+.ayuda-sc{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.ayuda-sc-fila{display:flex;align-items:baseline;gap:10px;font-size:var(--fs-xs);line-height:1.45}
+.ayuda-sc-fila .status-tag{flex-shrink:0}
+.ayuda-lista{margin:6px 0 0;padding-left:18px}
+.ayuda-lista li{font-size:var(--fs-sm);line-height:1.55;margin-bottom:6px;color:var(--ink)}
+.ayuda-lista li:last-child{margin-bottom:0}
+.ayuda-sublista{margin:6px 0 4px;padding-left:18px}
+.ayuda-sublista li{font-size:var(--fs-xs);line-height:1.5;margin-bottom:4px;color:var(--ink-2)}
+.ayuda-sublista code{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);
+  background:var(--bg-2);border:1px solid var(--line-soft);border-radius:4px;
+  padding:1px 5px;color:var(--gris)}
+.ayuda-aviso{margin-top:18px;padding:12px 14px;border:1px solid var(--line);
+  border-left:4px solid var(--dorado);border-radius:var(--radius);background:var(--bg-2)}
+.ayuda-aviso p{margin:0;font-size:var(--fs-xs);line-height:1.5;color:var(--gris)}
+.ayuda-aviso b{color:var(--ink)}
+.sia-footer-ayuda{background:none;border:none;padding:0;cursor:pointer;
+  font-family:'Roboto',sans-serif;font-size:inherit;color:var(--guinda);
+  font-weight:600;text-decoration:underline;text-underline-offset:2px}
+@media (max-width:760px){
+  .ayuda-dlg{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;
+    top:0;left:0;transform:none;border-radius:0}
+  .ayuda-dlg.open{transform:none}
+  .ayuda-fam{grid-template-columns:1fr}
+  .ayuda-head{padding:16px 16px 13px}
+  .ayuda-cuerpo{padding:16px 16px calc(30px + env(safe-area-inset-bottom, 0px))}
+  .ayuda-btn{height:40px;border-radius:20px;padding:0 14px;font-size:var(--fs-sm)}
+}
+
+/* ═══ CAJON LATERAL · CIERRE POR GESTO (escritorio) ══════════════════
+   En celular la ficha ya se cierra deslizando el asa. En escritorio solo
+   habia tache, Escape y clic fuera. El tirador de la izquierda se arrastra
+   hacia la derecha para cerrar, que es la direccion en la que el cajon
+   entro. Se posiciona con `fixed` porque el cajon es el contenedor
+   desplazable en escritorio y un `absolute` se iria con el scroll. */
+.drawer-tirador{position:fixed;left:0;top:0;bottom:0;width:15px;z-index:3;
+  display:flex;align-items:center;justify-content:center;padding:0;border:none;
+  background:transparent;cursor:grab;touch-action:none}
+.drawer-tirador::before{content:'';width:4px;height:46px;border-radius:2px;
+  background:var(--line);transition:background .15s,height .15s}
+.drawer-tirador:hover::before{background:var(--guinda);height:64px}
+.drawer-tirador:active{cursor:grabbing}
+.drawer-tirador:focus-visible{outline:2px solid var(--guinda);outline-offset:-3px;border-radius:4px}
+.drawer.arrastrando-x{transition:none}
+.drawer.arrastrando-x .drawer-tirador::before{background:var(--guinda)}
+@media (max-width:760px){ .drawer-tirador{display:none} }
+
+/* ═══ CAPA SUPERPUESTA DENTRO DEL MENU DE CAPAS (celular) ════════════
+   El interruptor de Suelo de Conservacion se movia de la esquina del mapa al
+   menu; aqui pierde el aspecto de chip flotante y toma el de renglon de
+   ajuste. Solo aplica en celular: la clase `en-menu` la pone el JS, que no
+   corre por encima de 760 px. */
+.map-block-controls-floating .map-block-toggle{min-width:232px}
+.map-block-controls-floating .map-block-toggle .capa-extra{
+  border-top:1px solid var(--line-soft);padding:9px 14px 11px;display:block}
+.map-block-controls-floating .map-block-toggle .capa-extra-tit{
+  display:block;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.drawer-sc-floating.en-menu{position:static;z-index:auto;bottom:auto;left:auto}
+.drawer-sc-floating.en-menu .map-filter-chip,
+.drawer-sc-floating.en-menu .map-filter-chip.active{
+  display:flex;align-items:center;gap:10px;width:100%;min-height:40px;
+  padding:6px 2px;border:none;background:transparent;box-shadow:none;
+  font-family:'Roboto',sans-serif;font-size:var(--fs-sm);text-align:left;
+  white-space:nowrap;line-height:1.25;color:var(--ink);text-transform:none;
+  letter-spacing:0;font-weight:500}
+.drawer-sc-floating.en-menu .map-filter-chip:not(.active){color:var(--muted)}
+.drawer-sc-floating.en-menu .map-filter-chip .chip-dot{flex:0 0 auto}
+
+/* ═══ AYUDA DE FORMATOS DEL BUSCADOR ═════════════════════════════════
+   `details` nativo: cero JavaScript, accesible por teclado y plegado por
+   omision para no robarle altura a la barra en celular. */
+.ubicar-formatos{margin-top:8px;font-family:'Roboto',sans-serif}
+.ubicar-formatos > summary{display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+  font-size:var(--fs-xs);color:var(--guinda);font-weight:600;list-style:none;
+  padding:5px 2px;min-height:32px}
+.ubicar-formatos > summary::-webkit-details-marker{display:none}
+.ubicar-formatos > summary::before{content:'?';display:inline-flex;align-items:center;
+  justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--guinda);
+  color:var(--crema);font-size:11px;font-weight:700;line-height:1;flex-shrink:0}
+.ubicar-formatos > summary:focus-visible{outline:2px solid var(--guinda);outline-offset:2px;
+  border-radius:4px}
+.ubicar-formatos[open] > summary{margin-bottom:4px}
+.ubicar-formatos ul{margin:0;padding-left:18px}
+.ubicar-formatos li{font-size:var(--fs-xs);line-height:1.55;color:var(--ink-2);margin-bottom:5px}
+.ubicar-formatos li b{color:var(--ink)}
+.ubicar-formatos code{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);
+  background:var(--bg-2);border:1px solid var(--line-soft);border-radius:4px;
+  padding:1px 5px;color:var(--gris);white-space:nowrap}
+.ubicar-formatos p{margin:8px 0 0;font-size:var(--fs-mini);color:var(--muted);line-height:1.5}
+@media (max-width:760px){
+  .ubicar-formatos code{white-space:normal;word-break:break-word}
+}
+
+/* Aviso cuando el servicio de direcciones no responde: antes fallaba en
+   silencio y quien buscaba una calle creia que no existia. */
+.ubicar-sugerencias .item.aviso{cursor:default}
+.ubicar-sugerencias .item.aviso .ico{background:var(--warn-bg,#fdf6e3);color:var(--dorado-text)}
+.ubicar-sugerencias .item.aviso b{color:var(--ink-2);font-weight:500}
+
+/* ═══ SUBCATEGORIA LARGA EN CELULAR ══════════════════════════════════
+   «Zona Sujeta a Conservacion Ecologica» y «Area de Proteccion de Recursos
+   Naturales» no caben en un renglon de la columna de valores del telefono.
+   Dentro de un recuadro, al partirse en dos lineas el borde seguia ocupando
+   todo el ancho y dejaba un hueco grande a la derecha. Aqui el recuadro se
+   retira y queda el nombre en su color: misma informacion, sin el aire. */
+@media (max-width:760px){
+  .drawer .field .tag-sub.tag-sub-full{
+    border:none;background:transparent;padding:0;
+    font-family:'Roboto',sans-serif;font-size:var(--fs-base);
+    font-weight:500;letter-spacing:0;line-height:1.4}
+}
+
+/* ═══ ARRANQUE EN CELULAR ════════════════════════════════════════════
+   El destino se decidia al final del guion, despues de leer el inventario:
+   el telefono pintaba la pagina de inventario y un instante despues saltaba
+   al mapa a pantalla completa. La clase la pone un guion de dos lineas en
+   la cabecera, antes del primer pintado, y la retira el propio arranque. */
+.sia-arranque{display:none}
+html.arranque-campo .sia-arranque{display:flex;position:fixed;inset:0;z-index:3000;
+  flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  background:var(--bg)}
+html.arranque-campo body > .wrap{visibility:hidden}
+.sia-arranque-marca{font-family:var(--font-titulo);font-size:var(--fs-2xl);
+  font-weight:700;color:var(--guinda);letter-spacing:.02em}
+.sia-arranque-txt{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);
+  letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.sia-arranque-barra{width:112px;height:3px;border-radius:2px;background:var(--line-soft);
+  overflow:hidden}
+.sia-arranque-barra span{display:block;width:40%;height:100%;background:var(--guinda);
+  animation:siaArranque 1.1s ease-in-out infinite}
+@keyframes siaArranque{0%{transform:translateX(-110%)}100%{transform:translateX(320%)}}
+@media (prefers-reduced-motion:reduce){
+  .sia-arranque-barra span{animation:none;width:100%}
+}
+
+/* ═══ SUGERENCIAS CON ESTRUCTURA DE RESULTADO ════════════════════════
+   Filas altas, icono circular gris a la izquierda, titulo en negritas y
+   segunda linea atenuada. El separador va indentado a la altura del texto,
+   para que la columna de iconos se lea continua.
+
+   Estas reglas vivian DENTRO de la consulta de medios de celular. En
+   escritorio el `.ico` se quedaba sin caja y su SVG —que trae `viewBox` pero
+   no ancho ni alto— se estiraba hasta llenar el panel: un rombo negro gigante
+   tapaba la lista entera. La estructura es la misma en los dos tamanios, asi
+   que sube a nivel superior. */
+/* En escritorio el campo ocupa mas de mil pixeles; la lista no debe seguirlo,
+   o el dato de la derecha de cada fila queda a un palmo de su titulo. */
+.ubicar-sugerencias{max-width:640px;border-radius:18px;box-shadow:var(--gm-e3);border:none;
+  max-height:min(62vh, 460px);top:calc(100% + 8px);overflow-y:auto;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.ubicar-sugerencias .res-group{background:var(--card);border-bottom:none;
+  padding:12px 16px 4px;font-size:var(--fs-micro);color:var(--muted)}
+.ubicar-sugerencias .item{display:flex;align-items:center;gap:13px;
+  padding:11px 16px;border-bottom:none;position:relative}
+.ubicar-sugerencias .item + .item::before{content:'';position:absolute;
+  left:65px;right:16px;top:0;height:1px;background:var(--line-soft)}
+.ubicar-sugerencias .item .ico{position:static;flex:0 0 auto;width:36px;height:36px;
+  border-radius:50%;background:var(--bg-2);color:var(--ink-2);
+  display:flex;align-items:center;justify-content:center}
+.ubicar-sugerencias .item .ico svg{width:19px;height:19px}
+/* El punto de categoría se conserva —el color sí significa territorio— pero
+   como marca sobre el icono, no como viñeta suelta contra el borde. */
+.ubicar-sugerencias .item .ico .sw{position:absolute;left:44px;top:14px;
+  width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 2px var(--card)}
+.ubicar-sugerencias .item .txt{flex:1;min-width:0;line-height:1.3}
+.ubicar-sugerencias .item .txt b{display:block;font-weight:600;color:var(--ink);
+  font-size:var(--fs-md);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ubicar-sugerencias .item .meta{display:block;margin-top:1px;font-size:var(--fs-sm);
+  color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ubicar-sugerencias .item .rt{position:static;flex:0 0 auto;text-align:right}
+.ubicar-sugerencias .item.ext{background:var(--card)}
+.sug-limpiar{display:block;width:100%;padding:13px 16px;border:none;
+  border-top:1px solid var(--line-soft);background:var(--card);color:var(--guinda);
+  font-family:'Roboto',sans-serif;font-size:var(--fs-sm);font-weight:600;
+  text-align:center;cursor:pointer}
+.sug-limpiar:active{background:var(--bg-2)}
+
+/* ═══ SELECTOR DE CAPA BASE, PLEGADO ═════════════════════════════════
+   El contenedor deja de ser una barra y pasa a ser el boton redondo; el par
+   MAPA | SATELITE se convierte en una tarjeta que cuelga debajo, con la capa
+   superpuesta de Suelo de Conservacion en su propia seccion.
+
+   Vivia dentro de la consulta de medios de celular: en escritorio el par
+   seguia siendo una barra permanente sobre el lienzo, con otro aspecto y otra
+   mecanica para la misma decision. El control es el mismo en los dos tamanios. */
+.map-block-controls-floating{background:transparent;border:none;box-shadow:none;
+  overflow:visible;display:block;width:44px;height:44px}
+.btn-base{width:44px;height:44px;border-radius:50%;border:none;background:var(--card);
+  color:var(--ink-2);box-shadow:var(--gm-e2);display:flex;align-items:center;
+  justify-content:center;cursor:pointer;padding:0}
+.btn-base svg{width:21px;height:21px}
+.btn-base[aria-expanded="true"]{background:var(--guinda);color:var(--crema)}
+.btn-base:active{transform:scale(.95)}
+.map-block-controls-floating .map-block-toggle{display:none;position:absolute;
+  top:52px;right:0;flex-direction:column;align-items:stretch;
+  background:var(--card);border-radius:14px;box-shadow:var(--gm-e3);overflow:hidden;
+  min-width:132px}
+.map-block-controls-floating.base-abierto .map-block-toggle{display:flex}
+.map-block-controls-floating .map-block-toggle button{height:44px;padding:0 16px;
+  text-align:left;font-size:var(--fs-sm);letter-spacing:.02em}
+.map-block-controls-floating .map-block-toggle button + button{border-left:none;
+  border-top:1px solid var(--line-soft)}
+
+
+/* ═══ CABECERA FIJA DE LA FICHA TAMBIEN EN ESCRITORIO ════════════════
+   Era una regla de celular. En escritorio el cajon mide 580 px de ancho y una
+   ficha completa pasa de dos mil de alto: al bajar a «fundamento juridico» ya
+   no se veia de que area se estaba leyendo, que es justo lo que la cabecera
+   fija resolvio en el telefono. Mismo componente, mismas medidas del cajon. */
+@media (min-width:761px){
+  .drawer-inner{padding-top:0}
+  .drawer .drawer-header-row{position:sticky;top:0;z-index:600;background:var(--card);
+    margin:0 -34px;padding:22px 62px 12px 34px;
+    box-shadow:0 6px 10px -8px rgba(60,64,67,.35)}
+  .drawer-inner > .drawer-header-row{max-width:none}
+  .drawer .close{z-index:601}
+}
+
+/* ═══ MONITORES ANCHOS ═══════════════════════════════════════════════
+   A 1920 sobraban 360 px de margen a cada lado mientras la tabla de once
+   columnas vivia en 794. El contenedor crece a partir de 1600 px, pero la
+   prosa NO: un parrafo de 1800 px de ancho es ilegible, asi que los bloques
+   de texto corrido se acotan por medida de linea, no por el contenedor. */
+@media (min-width:1600px){
+  .wrap{max-width:1800px}
+  .panel-intro,
+  .panel > p,
+  .legal-block p,
+  .norma-subsec > p,
+  .legal-card > p{max-width:82ch}
+}
+
+/* ═══ ZONIFICACION DE LOS PROGRAMAS DE MANEJO ════════════════════════ */
+.zonif-bloque{margin:18px 0 4px}
+.zonif-h{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.14em;
+  text-transform:uppercase;color:var(--guinda);font-weight:500;margin-bottom:8px}
+.zonif-vacio{font-size:var(--fs-sm);color:var(--muted);line-height:1.5;
+  border-left:3px solid var(--line);padding-left:12px}
+.zonif-nota{margin:0 0 10px;font-size:var(--fs-xs);line-height:1.5;color:var(--ink-2);
+  background:var(--bg-2);border-left:3px solid var(--dorado);padding:8px 12px;border-radius:4px}
+.zonif-tabla{width:100%;border-collapse:collapse;font-size:var(--fs-sm)}
+.zonif-tabla th{text-align:left;padding:6px 8px;background:var(--guinda);color:var(--crema);
+  font-family:'Roboto Mono',monospace;font-weight:500;letter-spacing:.06em;
+  font-size:var(--fs-mini);text-transform:uppercase}
+.zonif-tabla td{padding:7px 8px;border-bottom:1px solid var(--line-soft);line-height:1.35}
+.zonif-tabla tbody tr:nth-child(even) td{background:var(--bg-2)}
+.zonif-tabla .num{text-align:right;font-family:'Roboto Mono',monospace;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.zonif-tabla th.num{text-align:right}
+.zonif-tabla tfoot td{padding:7px 8px;border-top:2px solid var(--guinda);font-weight:600;
+  background:transparent}
+.zonif-sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px;
+  vertical-align:baseline;flex-shrink:0}
+.zonif-pie{margin:8px 0 0;font-size:var(--fs-mini);color:var(--muted);line-height:1.5;font-style:italic}
+
+/* Los dos interruptores de capa se apilan; en el menu de capas heredan la
+   disposicion vertical de la seccion y no necesitan nada mas. */
+.drawer-sc-floating{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+#zonifToggle[disabled]{opacity:.55;cursor:progress}
+
+/* Por encima de la atribucion de Leaflet, que vive pegada al borde inferior:
+   a 10 px la leyenda le caia justo encima y las dos quedaban ilegibles. */
+.zonif-leyenda{position:absolute;left:10px;bottom:26px;z-index:var(--z-flotante);
+  display:flex;flex-wrap:wrap;gap:4px 12px;max-width:calc(100% - 20px);
+  background:rgba(255,255,255,.93);border-radius:8px;padding:7px 10px;box-shadow:var(--sh-2)}
+.zonif-leyenda .zl-i{display:inline-flex;align-items:center;gap:6px;
+  font-size:var(--fs-mini);color:var(--ink-2);line-height:1.3}
+.zonif-leyenda .zl-sw{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+@media (max-width:760px){
+  .zonif-leyenda{left:8px;right:8px;bottom:24px;max-width:none}
+}
+
+/* ═══ PGOEDF · ZONIFICACION DEL SUELO DE CONSERVACION ════════════════ */
+.pg-cont{margin:14px 0 4px}
+.pg-cargando,.pg-vacio{font-size:var(--fs-sm);color:var(--muted);line-height:1.5;
+  border-left:3px solid var(--line);padding:8px 12px}
+.pg-vacio b{color:var(--ink-2)}
+.pg-bloque{border:1px solid var(--line-soft);border-left:4px solid var(--c,var(--sc));
+  border-radius:var(--radius);padding:12px 14px;background:var(--card)}
+.pg-kicker{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.pg-zona{display:flex;align-items:center;gap:9px;font-family:'Roboto',sans-serif;
+  font-size:var(--fs-lg);font-weight:700;color:var(--ink);line-height:1.2;flex-wrap:wrap}
+.pg-dot{width:11px;height:11px;border-radius:50%;background:var(--c,var(--sc));flex-shrink:0}
+.pg-clave{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);font-weight:500;
+  letter-spacing:.08em;padding:2px 7px;border-radius:var(--r-chip);
+  border:1px solid var(--c,var(--sc));color:var(--c,var(--sc))}
+.pg-texto{margin:8px 0 0;font-size:var(--fs-sm);line-height:1.5;color:var(--ink-2)}
+.pg-resumen{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 8px}
+.pg-resumen span{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.04em;
+  padding:3px 9px;border-radius:var(--r-chip);font-weight:500}
+.pg-si{background:#e6f1ea;color:#1f6b4a}
+.pg-no{background:#f8e6ec;color:var(--guinda)}
+.pg-catalogo > summary{cursor:pointer;font-size:var(--fs-sm);font-weight:600;color:var(--guinda);
+  padding:6px 0;list-style:none;display:inline-flex;align-items:center;gap:6px;min-height:32px}
+.pg-catalogo > summary::-webkit-details-marker{display:none}
+.pg-catalogo > summary::before{content:'▸';font-size:var(--fs-xs);transition:transform .15s}
+.pg-catalogo[open] > summary::before{transform:rotate(90deg)}
+.pg-catalogo > summary:focus-visible{outline:2px solid var(--guinda);outline-offset:2px;border-radius:4px}
+.pg-sector{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.12em;
+  text-transform:uppercase;color:var(--guinda);margin:12px 0 4px;font-weight:500}
+.pg-tabla{width:100%;border-collapse:collapse}
+.pg-tabla td{padding:5px 6px;border-bottom:1px solid var(--line-soft);vertical-align:top;
+  font-size:var(--fs-xs);line-height:1.35;color:var(--ink)}
+.pg-tabla td b{display:block;font-weight:500}
+.pg-tabla td span{display:block;color:var(--muted);font-size:var(--fs-mini)}
+.pg-tabla .pg-marca{width:22px;text-align:center;font-weight:700;font-family:'Roboto',sans-serif}
+.pg-tabla tr.si .pg-marca{color:#1f6b4a}
+.pg-tabla tr.no .pg-marca{color:var(--guinda)}
+.pg-tabla tr.no td b{color:var(--ink-2)}
+.pg-nota{margin:10px 0 0;font-size:var(--fs-mini);color:var(--muted);line-height:1.5;font-style:italic}
+/* En escritorio el catalogo de 117 filas se reparte en dos columnas; cada
+   sector se mantiene entero para que su rotulo no quede huerfano. */
+.pg-grupo{break-inside:avoid;page-break-inside:avoid;margin-bottom:6px}
+@media (min-width:1100px){
+  .pg-cuerpo{columns:2;column-gap:32px}
+}

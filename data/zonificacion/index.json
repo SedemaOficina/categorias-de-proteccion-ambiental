@@ -1,0 +1,264 @@
+{
+ "Cerro de la Estrella (local)": {
+  "archivo": "cerro-de-la-estrella.geojson",
+  "areas": [
+   "Cerro de la Estrella (local)"
+  ],
+  "zonas": [
+   {
+    "zona": "Zona de Recuperación",
+    "k": "recuperacion",
+    "ha": 71.14,
+    "n": 1
+   },
+   {
+    "zona": "Zona de Uso Público Recreativo",
+    "k": "uso publico recreativo",
+    "ha": 27.03,
+    "n": 3
+   },
+   {
+    "zona": "Zona de Uso Público Educativo y Cultural",
+    "k": "uso publico educativo y cultural",
+    "ha": 23.02,
+    "n": 3
+   }
+  ],
+  "total_ha": 121.19,
+  "poligonos": 7
+ },
+ "La Loma": {
+  "archivo": "la-loma.geojson",
+  "areas": [
+   "La Loma"
+  ],
+  "zonas": [
+   {
+    "zona": "Zona de Restauracion Ecologica",
+    "k": "restauracion ecologica",
+    "ha": 52.38,
+    "n": 65
+   },
+   {
+    "zona": "Zona de Proteccion Estricta",
+    "k": "proteccion estricta",
+    "ha": 19.29,
+    "n": 27
+   },
+   {
+    "zona": "Zona de Uso Publico Intensivo",
+    "k": "uso publico intensivo",
+    "ha": 2.2,
+    "n": 9
+   },
+   {
+    "zona": "Zona de Uso Especial",
+    "k": "uso especial",
+    "ha": 1.71,
+    "n": 9
+   },
+   {
+    "zona": "Zona de Uso Público Extensivo",
+    "k": "uso publico extensivo",
+    "ha": 1.34,
+    "n": 17
+   }
+  ],
+  "total_ha": 76.91,
+  "poligonos": 127
+ },
+ "Sierra de Santa Catarina (ZCE)": {
+  "archivo": "sierra-de-santa-catarina.geojson",
+  "areas": [
+   "Sierra de Santa Catarina (ZCE)",
+   "Sierra de Santa Catarina (ZSCE)"
+  ],
+  "zonas": [
+   {
+    "zona": "Zona de protección",
+    "k": "proteccion",
+    "ha": 405.34,
+    "n": 4
+   },
+   {
+    "zona": "Recuperación",
+    "k": "recuperacion",
+    "ha": 192.51,
+    "n": 4
+   },
+   {
+    "zona": "Uso público",
+    "k": "uso publico",
+    "ha": 147.06,
+    "n": 13
+   }
+  ],
+  "total_ha": 744.92,
+  "poligonos": 21
+ },
+ "Sierra de Santa Catarina (ZSCE)": {
+  "archivo": "sierra-de-santa-catarina.geojson",
+  "areas": [
+   "Sierra de Santa Catarina (ZCE)",
+   "Sierra de Santa Catarina (ZSCE)"
+  ],
+  "zonas": [
+   {
+    "zona": "Zona de protección",
+    "k": "proteccion",
+    "ha": 405.34,
+    "n": 4
+   },
+   {
+    "zona": "Recuperación",
+    "k": "recuperacion",
+    "ha": 192.51,
+    "n": 4
+   },
+   {
+    "zona": "Uso público",
+    "k": "uso publico",
+    "ha": 147.06,
+    "n": 13
+   }
+  ],
+  "total_ha": 744.92,
+  "poligonos": 21
+ },
+ "Ejidos de Xochimilco y San Gregorio Atlapulco": {
+  "archivo": "ejidos-de-xochimilco-y-san-gregorio-atlapulco.geojson",
+  "areas": [
+   "Ejidos de Xochimilco y San Gregorio Atlapulco"
+  ],
+  "zonas": [
+   {
+    "zona": "Agricola Chinampera",
+    "k": "agricola chinampera",
+    "ha": 1186.02,
+    "n": 1
+   },
+   {
+    "zona": "Restauración Ecológica",
+    "k": "restauracion ecologica",
+    "ha": 531.3,
+    "n": 1
+   },
+   {
+    "zona": "Uso Público",
+    "k": "uso publico",
+    "ha": 446.07,
+    "n": 1
+   },
+   {
+    "zona": "Protección",
+    "k": "proteccion",
+    "ha": 347.3,
+    "n": 1
+   }
+  ],
+  "total_ha": 2510.69,
+  "poligonos": 4
+ },
+ "Desierto de los Leones": {
+  "archivo": "desierto-de-los-leones.geojson",
+  "areas": [
+   "Desierto de los Leones"
+  ],
+  "zonas": [
+   {
+    "zona": "Zona de Recuperación",
+    "k": "recuperacion",
+    "ha": 1227.13,
+    "n": 4
+   },
+   {
+    "zona": "Zona de uso público",
+    "k": "uso publico",
+    "ha": 293.75,
+    "n": 5
+   }
+  ],
+  "total_ha": 1520.88,
+  "poligonos": 9
+ },
+ "Sierra de Guadalupe (local)": {
+  "archivo": "sierra-de-guadalupe.geojson",
+  "areas": [
+   "Sierra de Guadalupe (local)"
+  ],
+  "zonas": [
+   {
+    "zona": "Protección con Uso Restringido",
+    "k": "proteccion con uso restringido",
+    "ha": 354.99,
+    "n": 12
+   },
+   {
+    "zona": "Restauración Ecológica",
+    "k": "restauracion ecologica",
+    "ha": 253.56,
+    "n": 20
+   },
+   {
+    "zona": "Zona con AHI",
+    "k": "con ahi",
+    "ha": 17.51,
+    "n": 2
+   },
+   {
+    "zona": "Zona de Uso Especial",
+    "k": "uso especial",
+    "ha": 4.25,
+    "n": 2
+   }
+  ],
+  "total_ha": 630.31,
+  "poligonos": 36
+ },
+ "Bosque de Tlalpan": {
+  "archivo": "bosque-de-tlalpan.geojson",
+  "areas": [
+   "Bosque de Tlalpan"
+  ],
+  "zonas": [
+   {
+    "zona": "Proteccion Estricta",
+    "k": "proteccion estricta",
+    "ha": 97.05,
+    "n": 4
+   },
+   {
+    "zona": "Uso Publico Extensivo",
+    "k": "uso publico extensivo",
+    "ha": 62.49,
+    "n": 2
+   },
+   {
+    "zona": "Proteccion con Uso Restringido",
+    "k": "proteccion con uso restringido",
+    "ha": 60.87,
+    "n": 4
+   },
+   {
+    "zona": "Uso Publico Intensivo",
+    "k": "uso publico intensivo",
+    "ha": 16.21,
+    "n": 1
+   },
+   {
+    "zona": "Uso Especial",
+    "k": "uso especial",
+    "ha": 11.36,
+    "n": 5
+   },
+   {
+    "zona": "Restauracion",
+    "k": "restauracion",
+    "ha": 3.77,
+    "n": 7
+   }
+  ],
+  "total_ha": 251.75,
+  "poligonos": 23
+ }
+}
