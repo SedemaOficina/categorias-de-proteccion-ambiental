@@ -1960,7 +1960,13 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
     width:34px;height:34px;border-radius:50%;background:var(--bg-2);color:var(--ink-2);
     font-size:var(--fs-xl);box-shadow:var(--gm-e1)}
   .drawer .close:active{background:#e6e1d4}
-  .drawer .drawer-header-row{padding-right:52px}
+  /* Cabecera fija: nombre, categoría y los dos botones se quedan arriba al
+     desplazar el cuerpo, como la tarjeta de lugar de Maps. Antes el nombre se
+     iba con el scroll y, en una ficha larga, se perdía de vista de qué área se
+     estaba leyendo. */
+  .drawer .drawer-header-row{padding-right:52px;position:sticky;top:0;z-index:3;
+    background:var(--card);margin:0 -18px;padding-left:18px;padding-top:6px;
+    padding-bottom:10px;box-shadow:0 6px 10px -8px rgba(60,64,67,.35)}
 
   /* ── TOOLTIPS DE LAS CRONOLOGÍAS EN iOS ──────────────────────────
      El globo se ancla al pie con `position:fixed`, pero en Safari de iPhone
@@ -1982,6 +1988,61 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
     letter-spacing:.03em;padding:8px 5px;overflow:visible;text-overflow:clip;
     vertical-align:bottom}
   thead.t-head th .arrow{display:block;margin:1px 0 0}
+
+  /* ── SELECTOR DE CAPA BASE, PLEGADO ──────────────────────────────
+     El contenedor deja de ser una barra y pasa a ser el botón redondo; el
+     par MAPA | SATÉLITE se convierte en una tarjeta que cuelga debajo. */
+  .map-block-controls-floating{background:transparent;border:none;box-shadow:none;
+    overflow:visible;display:block;width:44px;height:44px}
+  .btn-base{width:44px;height:44px;border-radius:50%;border:none;background:var(--card);
+    color:var(--ink-2);box-shadow:var(--gm-e2);display:flex;align-items:center;
+    justify-content:center;cursor:pointer;padding:0}
+  .btn-base svg{width:21px;height:21px}
+  .btn-base[aria-expanded="true"]{background:var(--guinda);color:var(--crema)}
+  .btn-base:active{transform:scale(.95)}
+  .map-block-controls-floating .map-block-toggle{display:none;position:absolute;
+    top:52px;right:0;flex-direction:column;align-items:stretch;
+    background:var(--card);border-radius:14px;box-shadow:var(--gm-e3);overflow:hidden;
+    min-width:132px}
+  .map-block-controls-floating.base-abierto .map-block-toggle{display:flex}
+  .map-block-controls-floating .map-block-toggle button{height:44px;padding:0 16px;
+    text-align:left;font-size:var(--fs-sm);letter-spacing:.02em}
+  .map-block-controls-floating .map-block-toggle button + button{border-left:none;
+    border-top:1px solid var(--line-soft)}
+
+  /* ── SUGERENCIAS CON ESTRUCTURA DE RESULTADO ─────────────────────
+     Filas altas, icono circular gris a la izquierda, título en negritas y
+     segunda línea atenuada. El separador va indentado a la altura del texto,
+     como en el kit, para que la columna de iconos se lea continua. */
+  .ubicar-sugerencias{border-radius:18px;box-shadow:var(--gm-e3);border:none;
+    max-height:min(62vh, 460px);top:calc(100% + 8px);overflow-y:auto;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .ubicar-sugerencias .res-group{background:var(--card);border-bottom:none;
+    padding:12px 16px 4px;font-size:var(--fs-micro);color:var(--muted)}
+  .ubicar-sugerencias .item{display:flex;align-items:center;gap:13px;
+    padding:11px 16px;border-bottom:none;position:relative}
+  .ubicar-sugerencias .item + .item::before{content:'';position:absolute;
+    left:65px;right:16px;top:0;height:1px;background:var(--line-soft)}
+  .ubicar-sugerencias .item .ico{position:static;flex:0 0 auto;width:36px;height:36px;
+    border-radius:50%;background:var(--bg-2);color:var(--ink-2);
+    display:flex;align-items:center;justify-content:center}
+  .ubicar-sugerencias .item .ico svg{width:19px;height:19px}
+  /* El punto de categoría se conserva —el color sí significa territorio— pero
+     como marca sobre el icono, no como viñeta suelta contra el borde. */
+  .ubicar-sugerencias .item .ico .sw{position:absolute;left:44px;top:14px;
+    width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 2px var(--card)}
+  .ubicar-sugerencias .item .txt{flex:1;min-width:0;line-height:1.3}
+  .ubicar-sugerencias .item .txt b{display:block;font-weight:600;color:var(--ink);
+    font-size:var(--fs-md);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ubicar-sugerencias .item .meta{display:block;margin-top:1px;font-size:var(--fs-sm);
+    color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ubicar-sugerencias .item .rt{position:static;flex:0 0 auto;text-align:right}
+  .ubicar-sugerencias .item.ext{background:var(--card)}
+  .sug-limpiar{display:block;width:100%;padding:13px 16px;border:none;
+    border-top:1px solid var(--line-soft);background:var(--card);color:var(--guinda);
+    font-family:'Roboto',sans-serif;font-size:var(--fs-sm);font-weight:600;
+    text-align:center;cursor:pointer}
+  .sug-limpiar:active{background:var(--bg-2)}
 
   /* ── PILLS (componente `pills`) ───────────────────────────────────
      Los subfiltros ya eran pastillas; se les da la sombra y el blanco
@@ -2919,7 +2980,7 @@ function populateFilters(){
 }
 
 function renderDashboard(){
-  setTimeout(()=>{ try{ montarBotonCapas(); }catch(e){} }, 60);
+  setTimeout(()=>{ try{ montarBotonCapas(); montarBotonBase(); }catch(e){} }, 60);
   const g = currentGroup();
   const dash = document.getElementById('dashboard');
   const tblSec = document.getElementById('tableSection');
@@ -4768,7 +4829,10 @@ function openEmbFicha(e){
   const p = e.props || {};
   const col = (typeof EMB_COLORS!=='undefined' && EMB_COLORS[e.tipo]) || COL_AZUL_EMB;
   _marcaFicha(true);
-  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
+  /* Abre a media altura, como la tarjeta de lugar de Maps: se lee el nombre y
+     lo esencial sin perder de vista el mapa, y se sube con el asa si hace
+     falta. Antes abría en «completa» y tapaba el territorio. */
+  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[2]), 0);
   drIn.innerHTML = `
     <div class="drawer-header-row"><div class="drawer-header-left">
       <div class="kat" style="color:${col}">Embarcadero · ${e.tipo}</div>
@@ -5107,6 +5171,10 @@ function _doLocate(map,getContainment,btn,getFeatures){
     if(btn) btn.style.opacity = '';
     const prev=_locateRefs.get(map);
     if(prev){ try{map.removeLayer(prev.m);map.removeLayer(prev.c);}catch(_){} }
+    /* Dos sistemas dibujaban el punto: este control y `pintarUbicacionEnGlobal`
+       de la barra «¿dónde estoy?». Cada uno limpiaba solo lo suyo, así que al
+       usar los dos quedaban dos puntos azules a la vez. Se limpian entre sí. */
+    if(map === globalMap && typeof limpiarUbicacionGlobal === 'function') limpiarUbicacionGlobal();
     const c=L.circle(e.latlng,{radius:e.accuracy||30,color:COL_AZUL_UBIC,weight:1,fillColor:COL_AZUL_UBIC,fillOpacity:0.12}).addTo(map);
     const m=L.circleMarker(e.latlng,{radius:7,color:'#fff',weight:2,fillColor:COL_AZUL_UBIC,fillOpacity:1}).addTo(map);
     _locateRefs.set(map,{m,c});
@@ -5138,7 +5206,10 @@ function _locatePopupHTML(latlng, accuracy, _i1, _i2, opts){
 
   /* Pie: lugar + chip de entidad en la primera linea, precision en la segunda */
   const lugar = enCDMX ? (alc || 'Ciudad de México') : 'Fuera de la CDMX';
-  const pie = esc(lugar) + ' ' + _entChip(ent) + (acc ? `<br>± ${acc} m` : '');
+  /* Sin el ± del GPS, igual que la ficha de resultado (12-sep-2026): en campo
+     no se usa y ocupaba un renglón. La precisión se sigue calculando: alimenta
+     el aviso de «dentro del margen de error del límite». */
+  const pie = esc(lugar) + ' ' + _entChip(ent);
 
   /* Si una capa no cargo, se dice ANTES del diagnostico: el resultado no es
      concluyente y quien esta en campo tiene que saberlo antes de leerlo. */
@@ -5266,7 +5337,10 @@ function openZPDrawer(row){
     ? `${fmt(row.superficie)}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">ha</span>`
     : `<span style="font-size:var(--fs-xl);color:var(--muted)">Por confirmar</span>`;
   _marcaFicha(true);
-  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
+  /* Abre a media altura, como la tarjeta de lugar de Maps: se lee el nombre y
+     lo esencial sin perder de vista el mapa, y se sube con el asa si hace
+     falta. Antes abría en «completa» y tapaba el territorio. */
+  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[2]), 0);
   drIn.innerHTML = `
     <div class="drawer-header-row">
       <div class="drawer-header-left">
@@ -5306,6 +5380,7 @@ function openZPDrawer(row){
     try{ feat = ((ZP_DESIGNACIONES&&ZP_DESIGNACIONES.features)||[])
                   .find(f=>f.properties && f.properties.capa===row.key) || null; }catch(e){}
     conectarCompartir(descZP(row, feat));
+    setTimeout(()=>{ try{ montarBotonBase(); }catch(e){} }, 80);
   });
 }
 
@@ -5710,7 +5785,10 @@ function openARCACFicha(no){
   if(!p) return;
   if(typeof destroyMap === 'function'){ try{ destroyMap(); }catch(e){} }
   _marcaFicha(true);
-  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
+  /* Abre a media altura, como la tarjeta de lugar de Maps: se lee el nombre y
+     lo esencial sin perder de vista el mapa, y se sube con el asa si hace
+     falta. Antes abría en «completa» y tapaba el territorio. */
+  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[2]), 0);
   drIn.innerHTML = `
     <div class="drawer-header-row"><div class="drawer-header-left">
       <div class="kat">ARCAC · Núcleo agrario</div>
@@ -5730,7 +5808,8 @@ function openARCACFicha(no){
   bd.classList.add('open'); dr.classList.add('open');
   /* La geometría llega bajo demanda: el descriptor se arma al conectar, ya
      cargada la capa, o el polígono saldría vacío en la imagen. */
-  loadARCAC().then(()=>{ initARCACFichaMap(no); conectarCompartir(descArcac(p)); });
+  loadARCAC().then(()=>{ initARCACFichaMap(no); conectarCompartir(descArcac(p));
+    setTimeout(()=>{ try{ montarBotonBase(); }catch(e){} }, 80); });
 }
 
 /* Mini-mapa del polígono dentro de la ficha ARCAC */
@@ -7107,13 +7186,14 @@ function pintarUbicarSug(locales, direcciones){
   let html = '';
   if(locales.length){
     html += '<div class="res-group">En el inventario</div>' + locales.map((x,i)=>
-      `<div class="item" data-local="${i}"><span class="sw" style="background:${esc(x.color)}"></span>${esc(x.nombre)}<span class="meta">${esc(x.sub||'')}</span></div>`).join('');
+      filaSug({attrs:`data-local="${i}"`, icono:ICO_SUG.area, punto:x.color,
+               titulo:x.nombre, sub:x.sub||''})).join('');
   }
   if(direcciones.length){
     html += '<div class="res-group">Direcciones · CDMX · Méx. · Mor.</div>' + direcciones.map((d,i)=>
-      `<div class="item dir${d.ent && d.ent !== 'CDMX' ? ' ext' : ''}" data-dir="${i}">
-         <span class="rt">${d.ent ? _entChip(d.ent) : ''}${d.d != null ? `<span class="dist">${_fmtDist(d.d)}</span>` : ''}</span>
-         ${esc(d.principal)}<span class="meta">${esc(d.secundario||'')}</span></div>`).join('');
+      filaSug({attrs:`data-dir="${i}"`, cls:(d.ent && d.ent!=='CDMX') ? 'ext' : '',
+               icono:ICO_SUG.lugar, titulo:d.principal, sub:d.secundario||'',
+               derecha:(d.ent ? _entChip(d.ent) : '') + (d.d != null ? `<span class="dist">${_fmtDist(d.d)}</span>` : '')})).join('');
   }
   if(!html){ sug.hidden = true; return; }
   sug.innerHTML = html; sug.hidden = false;
@@ -7123,6 +7203,7 @@ function pintarUbicarSug(locales, direcciones){
       const x = locales[+el.dataset.local];
       sug.hidden = true;
       document.getElementById('ubicarInput').value = x.nombre;
+      recienteGuardar({t:x.t, ref:x.ref, titulo:x.nombre, sub:x.sub||''});
       try{
         if(x.t==='inv'){ const a=DATA.find(d=>d.nombre===x.ref); if(a) return openDrawer(a); }
         if(x.t==='arcac') return openARCACFicha(Number(x.ref));
@@ -7135,6 +7216,7 @@ function pintarUbicarSug(locales, direcciones){
       const d = direcciones[+el.dataset.dir];
       sug.hidden = true;
       document.getElementById('ubicarInput').value = d.principal;
+      recienteGuardar({t:'dir', titulo:d.principal, sub:d.secundario||''});
       try{
         const r = await siaResolverLugar(d.place);
         ubicarResolver({lat:r.lat, lng:r.lng}, null, r.etiqueta || d.principal);
@@ -7142,6 +7224,81 @@ function pintarUbicarSug(locales, direcciones){
     });
   });
 }
+
+/* ═══ FILAS DE SUGERENCIA · estructura del kit ═════════════════════════
+   Icono circular a la izquierda, título en negritas y segunda línea gris.
+   Antes el resultado era una línea de texto con un punto de color pegado al
+   borde: se leía como una lista de opciones de formulario, no como resultados
+   de búsqueda. La estructura es la misma para las tres clases de resultado
+   —área del inventario, dirección y búsqueda reciente—; solo cambia el icono. */
+const ICO_SUG = {
+  area:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>',
+  lugar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-6.2 7-11.4A7 7 0 0 0 5 10.6C5 15.8 12 22 12 22Z"/><circle cx="12" cy="10.4" r="2.4"/></svg>',
+  reciente:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 1.9"/></svg>'
+};
+function filaSug(o){
+  const punto = o.punto ? `<span class="sw" style="background:${esc(o.punto)}"></span>` : '';
+  return `<div class="item ${o.cls||''}" ${o.attrs||''} role="option" tabindex="-1">
+      <span class="ico" aria-hidden="true">${o.icono||''}${punto}</span>
+      <span class="txt"><b>${esc(o.titulo||'')}</b>${o.sub ? `<span class="meta">${esc(o.sub)}</span>` : ''}</span>
+      ${o.derecha ? `<span class="rt">${o.derecha}</span>` : ''}
+    </div>`;
+}
+
+/* ═══ BÚSQUEDAS RECIENTES ══════════════════════════════════════════════
+   Al enfocar el campo vacío, Maps ofrece lo último consultado en vez de una
+   caja en blanco. En campo eso importa: se vuelve una y otra vez a las mismas
+   áreas. Se guardan cinco en el propio navegador —nada sale del equipo— y se
+   limpian con el botón del pie de la lista. */
+const REC_CLAVE = 'sia_busquedas_recientes';
+function recientesLeer(){
+  try{ const v = JSON.parse(localStorage.getItem(REC_CLAVE) || '[]');
+       return Array.isArray(v) ? v.slice(0,5) : []; }catch(e){ return []; }
+}
+function recienteGuardar(item){
+  if(!item || !item.titulo) return;
+  try{
+    const prev = recientesLeer().filter(x => x.titulo !== item.titulo);
+    localStorage.setItem(REC_CLAVE, JSON.stringify([item, ...prev].slice(0,5)));
+  }catch(e){}   /* modo privado o almacenamiento bloqueado: se sigue sin historial */
+}
+function pintarRecientes(){
+  const sug = document.getElementById('ubicarSug'); if(!sug) return false;
+  const rec = recientesLeer();
+  if(!rec.length) return false;
+  sug.innerHTML = '<div class="res-group">Recientes</div>'
+    + rec.map((r,i)=>filaSug({attrs:`data-rec="${i}"`, icono:ICO_SUG.reciente,
+                              titulo:r.titulo, sub:r.sub||''})).join('')
+    + '<button type="button" class="sug-limpiar" id="sugLimpiar">Borrar recientes</button>';
+  sug.hidden = false;
+  const lim = document.getElementById('sugLimpiar');
+  if(lim) lim.addEventListener('click', e=>{
+    e.stopPropagation();
+    try{ localStorage.removeItem(REC_CLAVE); }catch(err){}
+    sug.hidden = true; sug.innerHTML = '';
+  });
+  sug.querySelectorAll('[data-rec]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const r = rec[+el.dataset.rec];
+      sug.hidden = true;
+      const inp = document.getElementById('ubicarInput');
+      if(inp) inp.value = r.titulo;
+      try{
+        if(r.t==='inv'){ const a=DATA.find(d=>d.nombre===r.ref); if(a) return openDrawer(a); }
+        if(r.t==='arcac') return openARCACFicha(Number(r.ref));
+        if(r.t==='zp')    return openZPFicha(r.ref);
+        if(r.t==='coord' && r.lat != null) return ubicarResolver({lat:r.lat,lng:r.lng}, null, r.titulo);
+        ubicarDesdeTexto(r.titulo);
+      }catch(err){ siaToast('No se pudo repetir esa búsqueda.'); }
+    });
+  });
+  return true;
+}
+document.addEventListener('focusin', e=>{
+  if(!e.target || e.target.id !== 'ubicarInput') return;
+  if(String(e.target.value||'').trim()) return;
+  pintarRecientes();
+});
 
 function ubicarDesdeTexto(txt){
   const q = String(txt||'').trim();
@@ -7444,6 +7601,45 @@ function renderUbicarResultado(latlng, precision, etiqueta){
    pliega detrás de un botón redondo sobre el mapa —el patrón `layers` del
    kit— y se despliega al tocarlo. No cambia ninguna lógica: son los mismos
    chips, solo que guardados. */
+/* ═══ SELECTOR DE CAPA BASE PLEGADO (celular) ══════════════════════════
+   El par MAPA | SATÉLITE ocupaba media anchura del lienzo de forma permanente
+   para una decisión que se toma una vez. Como en Maps, se pliega tras un botón
+   redondo en la esquina superior derecha y las opciones aparecen al tocarlo.
+   Se reutiliza el mismo par de botones —no se duplica nada—: solo se esconde
+   y se le pone encima el disparador. */
+function montarBotonBase(){
+  if(!window.matchMedia('(max-width:760px)').matches) return;
+  document.querySelectorAll('.map-block-controls-floating').forEach(cont=>{
+    const toggle = cont.querySelector('.map-block-toggle');
+    if(!toggle || cont.querySelector('.btn-base')) return;
+    const b = document.createElement('button');
+    b.type='button'; b.className='btn-base';
+    b.setAttribute('aria-label','Tipo de mapa');
+    b.setAttribute('aria-expanded','false');
+    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"'
+                + ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                + '<path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>';
+    b.addEventListener('click', e=>{
+      e.stopPropagation();
+      const ab = cont.classList.toggle('base-abierto');
+      b.setAttribute('aria-expanded', ab ? 'true' : 'false');
+    });
+    /* Al elegir una capa se cierra, como en Maps: la decisión ya se tomó. */
+    toggle.addEventListener('click', ()=>{
+      cont.classList.remove('base-abierto');
+      b.setAttribute('aria-expanded','false');
+    });
+    cont.appendChild(b);
+  });
+}
+/* Un toque fuera cierra el panel abierto. */
+document.addEventListener('click', ()=>{
+  document.querySelectorAll('.map-block-controls-floating.base-abierto').forEach(c=>{
+    c.classList.remove('base-abierto');
+    const b = c.querySelector('.btn-base'); if(b) b.setAttribute('aria-expanded','false');
+  });
+});
+
 function montarBotonCapas(){
   if(!window.matchMedia('(max-width:760px)').matches) return;
   document.querySelectorAll('.panel-mapa').forEach(panel=>{
@@ -7522,6 +7718,10 @@ function _dibujarUbicacion(map, destino, latlng, precision){
 function pintarUbicacionEnGlobal(latlng, precision){
   if(!globalMap || typeof L === 'undefined') return;
   if(_capaUbicGlobal){ try{ globalMap.removeLayer(_capaUbicGlobal); }catch(e){} }
+  /* …y en el otro sentido: el marcador que dejó el control «Ubicarme» del
+     mapa se retira antes de pintar el de la consulta. */
+  try{ const pv=_locateRefs.get(globalMap);
+       if(pv){ globalMap.removeLayer(pv.m); globalMap.removeLayer(pv.c); _locateRefs.delete(globalMap); } }catch(e){}
   _capaUbicGlobal = L.layerGroup().addTo(globalMap);
   const bounds = _dibujarUbicacion(globalMap, _capaUbicGlobal, latlng, precision);
   const hoja = document.getElementById('ubicarResultado');
@@ -7575,7 +7775,10 @@ function openDrawer(d){
     history.replaceState(null, '', newHash);
   }
   _marcaFicha(true);
-  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
+  /* Abre a media altura, como la tarjeta de lugar de Maps: se lee el nombre y
+     lo esencial sin perder de vista el mapa, y se sube con el asa si hace
+     falta. Antes abría en «completa» y tapaba el territorio. */
+  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[2]), 0);
   drIn.innerHTML = `
     <div class="drawer-header-row">
       <div class="drawer-header-left">
@@ -7646,6 +7849,7 @@ function openDrawer(d){
 
   /* Un solo conector para las tres fichas (inventario, ARCAC y ZP). */
   conectarCompartir(descInventario(d));
+  setTimeout(()=>{ try{ montarBotonBase(); }catch(e){} }, 120);
 }
 /* ═══ LA FICHA COMO HOJA DE TRES POSICIONES ════════════════════════════
    Mismo contrato que la hoja de «Ubicar»: `--dvis` es la altura visible en
