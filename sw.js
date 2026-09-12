@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-09-12zb';
+const CACHE_VERSION = 'sia-v35-2026-09-12zd';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
@@ -33,7 +33,8 @@ const CORE_ASSETS = [
   /* Indice de zonificaciones: 4.8 KB. Sin el, una ficha abierta sin conexion no
      puede ni decir si esa ANP tiene zonificacion publicada. Los siete GeoJSON
      —686 KB en total— NO entran: se piden uno a la vez cuando hacen falta. */
-  './data/zonificacion/index.json'
+  './data/zonificacion/index.json',
+  './data/pgoedf_areas.json'
 ];
 
 /* Capas que sí conviene tener offline, pero que no deben bloquear el install ni

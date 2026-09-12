@@ -158,7 +158,7 @@
     transition:background .15s;white-space:nowrap}
   .ubicar-gps:hover{background:var(--guinda-900)}
   .ubicar-gps:disabled{opacity:.6;cursor:wait}
-  .ubicar-input-wrap{position:relative;flex:1;display:flex;min-width:0}
+  .ubicar-input-wrap{position:relative;flex:1;display:flex;min-width:0;--go-w:44px}
   .ubicar-input-wrap input{flex:1;min-width:0;height:40px;padding:0 14px;border:1px solid var(--line);
     border-right:none;border-radius:var(--radius) 0 0 var(--radius);background:#fff;
     font-family:'Roboto',sans-serif;font-size:var(--fs-base);color:var(--ink);outline:none}
@@ -218,6 +218,7 @@
     .ubicar-row{flex:1;min-width:0}
     .ubicar-input-wrap input{height:30px;font-size:var(--fs-sm);border-radius:4px 0 0 4px}
     .ubicar-go{width:34px;border-radius:0 4px 4px 0}
+    .ubicar-input-wrap{--go-w:34px}
   }
 
   @media (max-width:760px){
@@ -229,6 +230,7 @@
     .ubicar-gps{width:100%;height:48px;font-size:var(--fs-md)}
     .ubicar-input-wrap input{height:44px;font-size:var(--fs-md)}
     .ubicar-go{width:48px}
+    .ubicar-input-wrap{--go-w:48px}
   }
 
   /* ═══ Resultado de ubicación · ejecutivo ═══
@@ -931,12 +933,16 @@
   tbody.t-body tr:hover{background:var(--bg-2)}
   /* Filete de categoria: el color identifica territorio de un vistazo y libera
      a la columna Subcat. de tener que hacerlo con relleno saturado. */
-  tbody.t-body tr[data-g]{box-shadow:inset 3px 0 0 var(--line)}
-  tbody.t-body tr[data-g="bu"]  {box-shadow:inset 3px 0 0 var(--bu)}
-  tbody.t-body tr[data-g="br"]  {box-shadow:inset 3px 0 0 var(--br)}
-  tbody.t-body tr[data-g="anpl"]{box-shadow:inset 3px 0 0 var(--anpl)}
-  tbody.t-body tr[data-g="anpf"]{box-shadow:inset 3px 0 0 var(--anpf)}
-  tbody.t-body tr[data-g="arcac"]{box-shadow:inset 3px 0 0 var(--arcac-com)}
+  /* El filete se pinta en la PRIMERA CELDA, no en la fila: con
+     border-collapse, Safari/Chrome en celular ignoran el box-shadow de <tr>
+     y la tabla salía sin color. La celda ya es position:relative. */
+  tbody.t-body tr[data-g] td:first-child::before{content:"";position:absolute;left:0;top:0;bottom:0;
+    width:3px;background:var(--line)}
+  tbody.t-body tr[data-g="bu"]   td:first-child::before{background:var(--bu)}
+  tbody.t-body tr[data-g="br"]   td:first-child::before{background:var(--br)}
+  tbody.t-body tr[data-g="anpl"] td:first-child::before{background:var(--anpl)}
+  tbody.t-body tr[data-g="anpf"] td:first-child::before{background:var(--anpf)}
+  tbody.t-body tr[data-g="arcac"] td:first-child::before{background:var(--arcac-com)}
   tbody.t-body td{padding:10px 8px;font-size:var(--fs-base);color:var(--ink-2);vertical-align:top;font-weight:400;position:relative;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   tbody.t-body td.name{color:var(--ink);font-weight:500;padding-left:18px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
   /* En celular la fila se lee como ficha: la categoria y la alcaldia bajan
@@ -1302,10 +1308,12 @@
   .map-filter-chip:not(.active){opacity:.55}
   .map-filter-chip:not(.active) .chip-dot{background:transparent}
   .map-filter-chip.active{border-color:var(--chip-color);color:var(--ink);background:#fff}
-  /* Chip especial de Coadministración — icono de estrella en lugar de punto */
-  #coadminToggle .chip-dot{background:var(--acento-mapa);border-color:var(--acento-mapa);border-radius:0;width:10px;height:10px;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
-  #coadminToggle:not(.active) .chip-dot{background:transparent;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);background:var(--acento-mapa);opacity:.45}
-  #coadminToggle.active{background:var(--warn-bg);border-color:var(--guinda);color:var(--guinda);font-weight:600}
+  /* Chip de Coadministración: muestra achurada en azul federal, la misma
+     textura con la que se dibujan esas áreas en el mapa. */
+  #coadminToggle .chip-dot{border-radius:2px;width:11px;height:11px;border-color:var(--azul);
+    background:repeating-linear-gradient(45deg,var(--azul) 0 2px,rgba(38,108,180,.15) 2px 5px)}
+  #coadminToggle:not(.active) .chip-dot{background:repeating-linear-gradient(45deg,var(--azul) 0 2px,transparent 2px 5px)}
+  #coadminToggle.active{border-color:var(--azul);color:var(--azul);font-weight:600;background:rgba(38,108,180,.06)}
   .map-filter-chip .chip-count{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);color:var(--muted);font-weight:500;letter-spacing:.04em;margin-left:2px}
   .map-filter-chip.active .chip-count{color:var(--chip-color)}
 
@@ -1524,11 +1532,10 @@
      cortado en el borde derecho. Aqui envuelve; el punto no se separa. */
   /* Campo de coadministracion · solo aparece en las ocho ANP federales del
      Convenio Marco 2025. Es informacion de regimen, no una etiqueta mas. */
-  .tag-coadmin{display:inline-block;padding:3px 10px;border-radius:var(--r-chip);
+  .tag-coadmin{display:inline-block;max-width:100%;box-sizing:border-box;padding:3px 10px;border-radius:var(--r-chip);
     border:1px solid var(--azul);color:var(--azul);background:transparent;
     font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.02em;
-    line-height:1.4;font-weight:500}
-  .coadmin-nota{margin-top:5px;font-size:var(--fs-xs);color:var(--muted);line-height:1.45}
+    line-height:1.4;font-weight:500;white-space:normal;overflow-wrap:anywhere}
   .field .status-tag{font-size:inherit;align-items:baseline;gap:8px;
     white-space:normal;line-height:1.35}
   .field .status-tag::before{position:relative;top:-1px;align-self:center}
@@ -2133,7 +2140,7 @@ header.top .meta{display:flex;align-items:center;gap:12px}
   display:flex;align-items:center;justify-content:center;padding:0;border:none;
   background:transparent;cursor:grab;touch-action:none}
 .drawer-tirador::before{content:'';width:4px;height:46px;border-radius:2px;
-  background:var(--line);transition:background .15s,height .15s}
+  background:rgba(85,88,90,.42);transition:background .15s,height .15s}   /* antes var(--line): se leía como una raya blanca suelta */
 .drawer-tirador:hover::before{background:var(--guinda);height:64px}
 .drawer-tirador:active{cursor:grabbing}
 .drawer-tirador:focus-visible{outline:2px solid var(--guinda);outline-offset:-3px;border-radius:4px}
@@ -2153,6 +2160,11 @@ header.top .meta{display:flex;align-items:center;gap:12px}
   display:block;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);
   letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
 .drawer-sc-floating.en-menu{position:static;z-index:auto;bottom:auto;left:auto}
+.map-filters.en-menu{display:flex !important;position:static;left:auto;bottom:auto;margin:0;padding:0;gap:0;
+  flex-direction:column;align-items:stretch;background:transparent;border-radius:0;box-shadow:none;
+  max-height:none;overflow:visible}
+.map-filters.en-menu .map-filter-chip,
+.map-filters.en-menu .map-filter-chip.active,
 .drawer-sc-floating.en-menu .map-filter-chip,
 .drawer-sc-floating.en-menu .map-filter-chip.active{
   display:flex;align-items:center;gap:10px;width:100%;min-height:40px;
@@ -2160,7 +2172,15 @@ header.top .meta{display:flex;align-items:center;gap:12px}
   font-family:'Roboto',sans-serif;font-size:var(--fs-sm);text-align:left;
   white-space:nowrap;line-height:1.25;color:var(--ink);text-transform:none;
   letter-spacing:0;font-weight:500}
-.drawer-sc-floating.en-menu .map-filter-chip:not(.active){color:var(--muted)}
+.drawer-sc-floating.en-menu .map-filter-chip:not(.active),
+.map-filters.en-menu .map-filter-chip:not(.active){color:var(--muted);opacity:1}
+.map-filters.en-menu .map-filter-chip .chip-count{margin-left:auto}
+/* El menú crece con las capas: en celular no debe salirse del lienzo. */
+@media (max-width:760px){
+  .map-block-controls-floating .map-block-toggle{max-height:calc(var(--lienzo-h,100dvh) - 66px);overflow-y:auto;
+    -webkit-overflow-scrolling:touch}
+  .map-filters.en-menu .map-filter-chip,.map-filters.en-menu .map-filter-chip.active{min-height:38px;padding:4px 2px}
+}
 .drawer-sc-floating.en-menu .map-filter-chip .chip-dot{flex:0 0 auto}
 
 /* Aviso cuando el servicio de direcciones no responde: antes fallaba en
@@ -2335,6 +2355,7 @@ html.arranque-campo body > .wrap{visibility:hidden}
 .zonif-leyenda{position:absolute;left:10px;bottom:56px;z-index:var(--z-flotante);
   display:flex;flex-wrap:wrap;gap:4px 12px;max-width:calc(100% - 20px);
   background:rgba(255,255,255,.93);border-radius:8px;padding:7px 10px;box-shadow:var(--sh-2)}
+.zonif-leyenda[hidden]{display:none !important}   /* display:flex le ganaba a [hidden]: quedaba una píldora blanca vacía */
 .zonif-leyenda .zl-i{display:inline-flex;align-items:center;gap:6px;
   font-size:var(--fs-mini);color:var(--ink-2);line-height:1.3}
 .zonif-leyenda .zl-sw{width:10px;height:10px;border-radius:2px;flex-shrink:0}
@@ -2393,15 +2414,21 @@ html.arranque-campo body > .wrap{visibility:hidden}
    algo que borrar: texto, sugerencias abiertas o un resultado en pantalla.
    Borra las tres cosas y el punto del mapa; es el «x» de Maps. */
 .ubicar-input-wrap{align-items:stretch}
-.ubicar-limpiar{flex:0 0 auto;width:36px;border:1px solid var(--line);border-left:none;
-  border-right:none;background:#fff;color:var(--muted);font-size:22px;line-height:1;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
-.ubicar-limpiar:hover{color:var(--guinda)}
-.ubicar-limpiar:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px}
-.ubicar-input-wrap input:focus ~ .ubicar-limpiar{border-color:var(--guinda)}
+/* El «x» va DENTRO del campo, pegado a la lupa: un solo objeto visual, como en
+   Maps. Antes era un tercer segmento con bordes propios y se leía como un
+   botón suelto que se encimaba al campo. */
+.ubicar-input-wrap input{padding-right:40px}
+.ubicar-limpiar{position:absolute;top:50%;right:calc(var(--go-w) + 5px);transform:translateY(-50%);
+  width:30px;height:30px;border:none;border-radius:50%;background:transparent;color:var(--muted);
+  font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  padding:0;z-index:2}
+.ubicar-limpiar:hover{color:var(--guinda);background:rgba(157,33,72,.08)}
+.ubicar-limpiar:focus-visible{outline:2px solid var(--guinda);outline-offset:1px}
 @media (max-width:760px){
-  .ubicar-limpiar{width:40px;font-size:24px}
-  .wrap.dest-ubicar.gm-shell .ubicar-limpiar{border:none;background:transparent}
+  .ubicar-limpiar{width:34px;height:34px;font-size:24px}
+  .wrap.dest-ubicar.gm-shell .ubicar-input-wrap{--go-w:0px}
+  .wrap.dest-ubicar.gm-shell .ubicar-limpiar{right:8px}
+  .wrap.dest-ubicar.gm-shell .ubicar-input-wrap input{padding-right:44px}
 }
 
 /* Interruptor de zonificacion flotante sobre el mini-mapa de la ficha, en la
@@ -2444,4 +2471,51 @@ html.arranque-campo body > .wrap{visibility:hidden}
   padding-left:10px;border-left:2px solid var(--line-soft)}
 @media (max-width:760px){
   .ubi-chip{white-space:normal;line-height:1.3}
+}
+
+/* ═══ GPS SOBRE EL MAPA · VOLVER ARRIBA (12-sep-2026) ═════════════════
+   El botón «Usar mi ubicación» sale de la fila del buscador y pasa al mapa
+   global como botón redondo guinda (acción primaria) en la esquina inferior
+   derecha, encima de la atribución de Leaflet. El botón original queda en el
+   DOM, oculto: conserva el manejador y el estado «Ubicando…». */
+.ubicar-gps{display:none !important}
+#globalMapCanvas{position:relative}
+.gps-fab{position:absolute;right:10px;bottom:34px;z-index:602;width:52px;height:52px;border-radius:50%;
+  border:none;background:var(--guinda);color:#fff;box-shadow:var(--gm-e2);cursor:pointer;padding:0;
+  display:none;align-items:center;justify-content:center;transition:transform .15s,background .15s}
+/* Solo en «¿Dónde estoy?»: ahí vive el panel de resultado que alimenta. En
+   los demás destinos el mapa conserva su control pequeño de ubicación, que
+   por eso se retira aquí: dos botones para lo mismo sobran. */
+.wrap.dest-ubicar .gps-fab{display:flex}
+.wrap.dest-ubicar #globalMapCanvas .locate-ctrl{display:none}
+.ubicar-limpiar[hidden]{display:none !important}
+.gps-fab svg{width:24px;height:24px}
+.gps-fab:hover{background:var(--guinda-900)}
+.gps-fab:active{transform:scale(.95)}
+.gps-fab:focus-visible{outline:3px solid #fff;outline-offset:-5px}
+.gps-fab:disabled,.gps-fab.buscando{opacity:.75;cursor:wait}
+.gps-fab.buscando svg{animation:gpsGiro 1.1s linear infinite}
+@keyframes gpsGiro{to{transform:rotate(360deg)}}
+
+.ir-arriba{position:fixed;right:22px;bottom:22px;z-index:calc(var(--z-drawer-top,1000) + 1);width:44px;height:44px;
+  border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--guinda);
+  box-shadow:var(--gm-e2);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;
+  transition:transform .15s,opacity .2s}
+.ir-arriba svg{width:20px;height:20px}
+.ir-arriba:hover{background:var(--guinda);color:#fff;border-color:var(--guinda)}
+.ir-arriba:active{transform:scale(.95)}
+.ir-arriba[hidden]{display:none !important}
+@media (max-width:760px){
+  /* Por encima de la barra de destinos fija (48 px) y sin pisar el FAB del mapa. */
+  .ir-arriba{right:14px;bottom:calc(var(--destbar-h) + 12px);width:42px;height:42px}
+  .gps-fab{right:12px;bottom:34px;width:52px;height:52px}
+}
+/* Con el menú de capas abierto el FAB se aparta: en celular comparten esquina. */
+.map-block-controls-floating.base-abierto ~ .gps-fab,
+#globalMapCanvas:has(.base-abierto) .gps-fab{opacity:0;pointer-events:none;transform:scale(.6)}
+/* En celular la etiqueta de coadministración pierde el recuadro, como la de
+   subcategoría: partida en dos líneas, el borde dejaba aire a la derecha. */
+@media (max-width:760px){
+  .drawer .field .tag-coadmin{border:none;background:transparent;padding:0;
+    font-family:'Roboto',sans-serif;font-size:var(--fs-base);font-weight:500;letter-spacing:0;line-height:1.4}
 }

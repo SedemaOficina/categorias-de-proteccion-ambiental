@@ -4302,10 +4302,40 @@ async function initGlobalMap(){
 }
 
 /* === Pantalla completa (Fullscreen API nativa) === */
-/* === Resaltar áreas en coadministración SEMARNAT–CONANP–CDMX 2025 === */
+/* === Resaltar áreas en coadministración SEMARNAT–CONANP–CDMX 2025 ===
+   Son los mismos polígonos de ANP Federal, no otra categoría: por eso no se
+   recolorean. La condición (convenio) se expresa como TEXTURA —achurado
+   diagonal en el propio azul federal— y el resto del inventario se atenúa.
+   Es la convención cartográfica para un atributo de estatus sobre una
+   unidad que ya tiene color propio. El patrón vive en el <defs> del SVG del
+   mapa y Leaflet lo usa por referencia (fillColor:'url(#…)'). */
+const COADMIN_HATCH_ID = 'siaAchuradoCoadmin';
+function _asegurarAchuradoCoadmin(mapa, capaRef){
+  try{
+    const r = mapa.getRenderer(capaRef); const svg = r && r._container;
+    if(!svg || svg.querySelector('#' + COADMIN_HATCH_ID)) return true;
+    const azul = colorLiteral('var(--azul)');
+    const NS = 'http://www.w3.org/2000/svg';
+    let defs = svg.querySelector('defs');
+    if(!defs){ defs = document.createElementNS(NS,'defs'); svg.insertBefore(defs, svg.firstChild); }
+    const pat = document.createElementNS(NS,'pattern');
+    pat.setAttribute('id', COADMIN_HATCH_ID);
+    pat.setAttribute('patternUnits','userSpaceOnUse');
+    pat.setAttribute('width','7'); pat.setAttribute('height','7');
+    pat.setAttribute('patternTransform','rotate(45)');
+    const fondo = document.createElementNS(NS,'rect');
+    fondo.setAttribute('width','7'); fondo.setAttribute('height','7');
+    fondo.setAttribute('fill', azul); fondo.setAttribute('fill-opacity','.14');
+    const raya = document.createElementNS(NS,'line');
+    raya.setAttribute('x1','0'); raya.setAttribute('y1','0'); raya.setAttribute('x2','0'); raya.setAttribute('y2','7');
+    raya.setAttribute('stroke', azul); raya.setAttribute('stroke-width','2'); raya.setAttribute('stroke-opacity','.6');
+    pat.appendChild(fondo); pat.appendChild(raya); defs.appendChild(pat);
+    return true;
+  }catch(e){ return false; }
+}
 function applyCoadminHighlight(){
   if(!globalMap || !globalGroupLayers) return;
-  // Recorrer todas las capas del mapa global y aplicar estilo según el flag
+  let patronListo = null;
   Object.entries(globalGroupLayers).forEach(([grupo, layerGroup]) => {
     if(!layerGroup) return;
     layerGroup.eachLayer(lyr => {
@@ -4314,31 +4344,19 @@ function applyCoadminHighlight(){
       const isCoa = isCoadmin(name);
       const baseColor = GROUP_COLORS[grupo];
       if(state.highlightCoadmin){
-        // En modo resaltado: las coadministradas se ven con borde grueso guinda + fondo amarillo
         if(isCoa){
-          lyr.setStyle({
-            color: 'var(--guinda)',
-            weight: 3.5,
-            fillColor: 'var(--acento-mapa)',
-            fillOpacity: 0.55,
-            dashArray: null
-          });
+          if(patronListo === null) patronListo = _asegurarAchuradoCoadmin(globalMap, lyr);
+          lyr.setStyle(patronListo
+            ? { color: baseColor, weight: 2.5, opacity: 1, fillColor: 'url(#' + COADMIN_HATCH_ID + ')', fillOpacity: 1, dashArray: null }
+            : { color: baseColor, weight: 2.5, opacity: 1, fillColor: baseColor, fillOpacity: 0.38, dashArray: null });
           lyr.bringToFront();
-          // Tooltip enriquecido
           lyr.unbindTooltip();
-          lyr.bindTooltip(`<b>${name}</b><br><span style="font-size:var(--fs-mini);color:var(--guinda);font-weight:500">⭐ En coadministración · Convenio 2025</span>`, {sticky:true, direction:'top'});
+          lyr.bindTooltip(`<b>${esc(name)}</b><br><span style="font-size:var(--fs-mini);color:var(--azul);font-weight:500">En coadministración · Convenio Marco SEMARNAT–CONANP–CDMX 2025</span>`, {sticky:true, direction:'top'});
         } else {
-          // Las demás se atenúan para resaltar las coadministradas
-          lyr.setStyle({
-            color: baseColor,
-            weight: 1,
-            fillColor: baseColor,
-            fillOpacity: 0.08,
-            opacity: 0.4
-          });
+          /* Las demás ceden protagonismo sin desaparecer: siguen ubicables. */
+          lyr.setStyle({ color: baseColor, weight: 1, fillColor: baseColor, fillOpacity: 0.05, opacity: 0.35 });
         }
       } else {
-        // Modo normal: estilo original
         lyr.setStyle({
           color: baseColor,
           weight: 1.75,
@@ -5591,31 +5609,16 @@ function recienteGuardar(item){
     localStorage.setItem(REC_CLAVE, JSON.stringify([item, ...prev].slice(0,5)));
   }catch(e){}   /* modo privado o almacenamiento bloqueado: se sigue sin historial */
 }
-/* Fila «que puedo escribir»: en celular la capsula del mapa no tiene sitio para
-   la ayuda plegable, y este panel es justo donde esta quien no sabe que teclear. */
-function filaFormatos(){
-  return filaSug({attrs:'data-formatos="1"', icono:ICO_SUG.lugar,
-    titulo:'¿Qué puedo escribir aquí?',
-    sub:'Dirección, lugar, área del inventario, coordenadas o una liga de Google Maps'});
-}
-function conectarFilaFormatos(sug){
-  const el = sug.querySelector('[data-formatos]');
-  if(el) el.addEventListener('click', ()=>{
-    sug.hidden = true;
-    if(typeof window.abrirAyuda === 'function') window.abrirAyuda();
-  });
-}
 function pintarRecientes(){
   const sug = document.getElementById('ubicarSug'); if(!sug) return false;
   const rec = recientesLeer();
-  sug.innerHTML = (rec.length
-      ? '<div class="res-group">Recientes</div>'
-        + rec.map((r,i)=>filaSug({attrs:`data-rec="${i}"`, icono:ICO_SUG.reciente,
-                                  titulo:r.titulo, sub:r.sub||''})).join('')
-        + '<button type="button" class="sug-limpiar" id="sugLimpiar">Borrar recientes</button>'
-      : '')
-    + '<div class="res-group">Ayuda</div>' + filaFormatos();
-  conectarFilaFormatos(sug);
+  /* Sin recientes no hay panel: la guía de qué se puede teclear vive en el
+     placeholder del campo (decisión del 12-sep-2026). */
+  if(!rec.length){ sug.hidden = true; sug.innerHTML = ''; return false; }
+  sug.innerHTML = '<div class="res-group">Recientes</div>'
+    + rec.map((r,i)=>filaSug({attrs:`data-rec="${i}"`, icono:ICO_SUG.reciente,
+                              titulo:r.titulo, sub:r.sub||''})).join('')
+    + '<button type="button" class="sug-limpiar" id="sugLimpiar">Borrar recientes</button>';
   sug.hidden = false;
   const lim = document.getElementById('sugLimpiar');
   if(lim) lim.addEventListener('click', e=>{
@@ -5688,6 +5691,34 @@ function ubicarPorGPS(){
     siaToast('No se pudo obtener tu ubicación. Revisa el permiso del navegador (requiere HTTPS).');
   }, {enableHighAccuracy:true, timeout:12000, maximumAge:0});
 }
+
+/* ═══ VOLVER ARRIBA ═══════════════════════════════════════════════════
+   Inventario, analítica y fichas largas pasan de dos mil píxeles. El botón
+   aparece pasada una pantalla de desplazamiento y regresa al inicio de la
+   vista visitada; en el cajón de la ficha, al inicio de la ficha. */
+(function(){
+  const b = document.createElement('button');
+  b.type = 'button'; b.id = 'irArriba'; b.className = 'ir-arriba';
+  b.setAttribute('aria-label','Volver al inicio'); b.title = 'Volver al inicio'; b.hidden = true;
+  b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>';
+  document.body.appendChild(b);
+  const drEl = document.getElementById('dr');
+  const UMBRAL = 600;
+  const fichaAbierta = () => !!(drEl && drEl.classList.contains('open')) && !window.matchMedia('(max-width:760px)').matches;
+  function refrescar(){
+    const y = fichaAbierta() ? drEl.scrollTop : (window.scrollY || document.documentElement.scrollTop || 0);
+    b.hidden = y < UMBRAL;
+  }
+  b.addEventListener('click', ()=>{
+    const suave = { top:0, behavior:'smooth' };
+    if(fichaAbierta()) drEl.scrollTo(suave); else window.scrollTo(suave);
+  });
+  let tic = false;
+  const onScroll = ()=>{ if(tic) return; tic = true; requestAnimationFrame(()=>{ tic = false; refrescar(); }); };
+  window.addEventListener('scroll', onScroll, {passive:true});
+  if(drEl) drEl.addEventListener('scroll', onScroll, {passive:true});
+  document.addEventListener('click', ()=>setTimeout(refrescar, 350));
+})();
 
 /* ═══ CÁPSULA QUE SE APARTA AL BAJAR ══════════════════════════════════
    Fuera del caparazón la barra es pegajosa: se queda arriba y el contenido
@@ -5866,6 +5897,16 @@ function cargarPgoedf(){
     .catch(err => { console.warn('[PGOEDF] no disponible:', err.message); _pgoedfPromesa = null; return false; });
   return _pgoedfPromesa;
 }
+/* La cartografía trae los nombres sin acento; aquí se escriben bien. */
+const PGOEDF_NOMBRE = {
+  'Agroecologico':'Agroecológico', 'Agroecologico Especial':'Agroecológico Especial',
+  'Agroforestal':'Agroforestal', 'Agroforestal Especial':'Agroforestal Especial',
+  'Forestal de Conservacion':'Forestal de Conservación', 'Forestal de Conservacion Especial':'Forestal de Conservación Especial',
+  'Forestal de Proteccion':'Forestal de Protección', 'Forestal de Proteccion Especial':'Forestal de Protección Especial',
+  'Equipamiento Rural':'Equipamiento Rural', 'Poblados Rurales':'Poblados Rurales',
+  'Programas Parciales':'Programas Parciales', 'Zona Urbana':'Zona Urbana'
+};
+const pgoedfNombre = z => PGOEDF_NOMBRE[z] || z || '';
 const PGOEDF_COLOR = {
   FC:'#1f6b4a', FCE:'#3f8f6a', FP:'#1c6b85', FPE:'#4a8fa8',
   AF:'#5d8a5e', AFE:'#86a36a', AE:'#b28e5c', AEE:'#c9a878', PDU:'#8a8d8f'
@@ -5919,7 +5960,7 @@ function pintarPgoedf(latlng, enANP){
     cont.innerHTML =
       `<div class="pg-bloque" style="--c:${color}">
         <div class="pg-kicker">Zonificación del Suelo de Conservación · PGOEDF 2000</div>
-        <div class="pg-zona"><span class="pg-dot"></span>${esc(z.zona)}`
+        <div class="pg-zona"><span class="pg-dot"></span>${esc(pgoedfNombre(z.zona))}`
         + (esPDU ? '' : ` <span class="pg-clave">${esc(z.clave)}</span>`) + `</div>`
         + (esPDU
           ? `<p class="pg-texto">Esta zona se rige por su <b>instrumento de desarrollo urbano</b> —programa parcial, `
@@ -6120,6 +6161,9 @@ function montarBotonBase(){
                 + '<path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>';
     b.addEventListener('click', e=>{
       e.stopPropagation();
+      /* El menú no debe salirse del lienzo: se le pasa el alto del mapa y el
+         CSS lo convierte en tope con desplazamiento interno. */
+      try{ const lz = cont.parentElement; if(lz) cont.style.setProperty('--lienzo-h', lz.clientHeight + 'px'); }catch(_){}
       const ab = cont.classList.toggle('base-abierto');
       b.setAttribute('aria-expanded', ab ? 'true' : 'false');
     });
@@ -6150,6 +6194,48 @@ function montarBotonBase(){
       sc.classList.add('en-menu');
       toggle.appendChild(sec);
     }
+    /* «Usar mi ubicación» vive SOBRE el mapa, como botón redondo guinda en la
+       esquina inferior derecha: es la acción que más se repite en campo y al
+       lado del buscador estorbaba (decisión del 12-sep-2026). Dispara el
+       mismo manejador que el botón original, que queda oculto pero vivo. */
+    if(lienzo && lienzo.id === 'globalMapCanvas' && !lienzo.querySelector('.gps-fab')){
+      const fab = document.createElement('button');
+      fab.type = 'button'; fab.className = 'gps-fab';
+      fab.setAttribute('aria-label','Usar mi ubicación'); fab.title = 'Usar mi ubicación';
+      fab.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        + '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/></svg>';
+      fab.addEventListener('click', e=>{
+        e.stopPropagation();
+        const orig = document.getElementById('ubicarGps');
+        if(orig && !orig.disabled) orig.click();
+      });
+      const orig = document.getElementById('ubicarGps');
+      if(orig && typeof MutationObserver !== 'undefined'){
+        new MutationObserver(()=>{ fab.disabled = orig.disabled; fab.classList.toggle('buscando', orig.disabled); })
+          .observe(orig, {attributes:true, attributeFilter:['disabled']});
+      }
+      lienzo.appendChild(fab);
+    }
+    /* En celular, los chips de categoría (inventario, coadministración, ARCAC,
+       Suelo de Conservación) entran al MISMO menú. Antes tenían un segundo
+       botón con el mismo icono en la esquina opuesta: dos controles iguales
+       para «capas» en un mapa de 360 px. Un solo menú, dos secciones: fondo
+       arriba, capas abajo. Es el mismo nodo #mapFilters: conserva id y
+       escuchas, y las funciones que lo rellenan lo siguen encontrando. */
+    if(window.matchMedia('(max-width:760px)').matches){
+      const panel = cont.closest('.panel-mapa');
+      const filtros = panel && panel.querySelector('.map-filters');
+      if(filtros && !filtros.classList.contains('map-filters--oculto') && !toggle.contains(filtros)){
+        let sec = toggle.querySelector('.capa-extra');
+        if(!sec){
+          sec = document.createElement('div'); sec.className = 'capa-extra';
+          const tit = document.createElement('span'); tit.className = 'capa-extra-tit'; tit.textContent = 'Capas';
+          sec.appendChild(tit); toggle.appendChild(sec);
+        }
+        filtros.classList.add('en-menu');
+        sec.appendChild(filtros);
+      }
+    }
   });
 }
 /* Un toque FUERA cierra el panel abierto. Dentro no: ahi vive el interruptor
@@ -6164,30 +6250,9 @@ document.addEventListener('click', e=>{
 });
 
 function montarBotonCapas(){
-  if(!window.matchMedia('(max-width:760px)').matches) return;
-  document.querySelectorAll('.panel-mapa').forEach(panel=>{
-    const filtros = panel.querySelector('.map-filters');
-    if(!filtros || filtros.classList.contains('map-filters--oculto')) return;
-    if(panel.querySelector('.btn-capas')) return;
-    /* Anclar al LIENZO y no al panel: el panel es más alto que el mapa —trae
-       el título y el relleno— y con `bottom` referido a él el botón caía unos
-       píxeles por debajo del mapa, encima de la atribución de Leaflet. */
-    const lienzo = panel.querySelector('#globalMapCanvas') || panel.querySelector('.map-canvas') || panel;
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'btn-capas';
-    b.setAttribute('aria-label','Capas del mapa');
-    b.setAttribute('aria-expanded','false');
-    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"'
-                + ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-                + '<path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>';
-    b.addEventListener('click', ()=>{
-      const ab = filtros.classList.toggle('abierto');
-      b.classList.toggle('activo', ab);
-      b.setAttribute('aria-expanded', ab ? 'true' : 'false');
-    });
-    lienzo.appendChild(filtros);   /* conserva sus escuchas: es el mismo nodo */
-    lienzo.appendChild(b);
-  });
+  /* Retirado el 12-sep-2026: los chips de capa viven ahora dentro del menú
+     de «Tipo de mapa» (ver montarBotonBase). Se conserva la función porque
+     el arranque la invoca. */
 }
 
 /* Capa de la ubicación resuelta sobre el mapa global. Vive aparte del resto
@@ -6350,13 +6415,13 @@ function pintarZonificacion(d){
       /* Regla del dato: puede haber programa de manejo sin archivo de
          zonificación, nunca al revés. Los dos casos se dicen distinto. */
       const tienePM = d.programa_manejo === 'Sí';
-      cont.innerHTML = tienePM
+      cont.innerHTML = '<div class="zonif-h">Zonificación del programa de manejo</div>' + (tienePM
         ? '<div class="zonif-vacio"><b>Cuenta con programa de manejo'
           + (d.fecha_pm ? ' (' + esc(d.fecha_pm) + ')' : '') + '</b>, pero su zonificación aún no está '
           + 'disponible en formato geoespacial en este tablero. Siete ANP la tienen hoy; '
           + 'cuando se cargue la de esta área aparecerá aquí y en el mapa.</div>'
         : '<div class="zonif-vacio"><b>Sin programa de manejo publicado.</b> No hay zonificación que mostrar: '
-          + 'la zonificación es un contenido del programa de manejo.</div>';
+          + 'la zonificación es un contenido del programa de manejo.</div>');
       return;
     }
     const sup = parseFloat(String(d.superficie || '').replace(/,/g,'')) || null;
@@ -6384,6 +6449,87 @@ function pintarZonificacion(d){
       + '<p class="zonif-pie">' + e.poligonos + ' polígonos · fuente: programa de manejo '
       + 'publicado. La superficie zonificada no coincide al decimal con la decretada: la primera '
       + 'se calcula sobre la cartografía del programa y la segunda proviene del decreto.</p>';
+  });
+}
+
+/* ── PGOEDF en la ficha ──────────────────────────────────────────────
+   Para las áreas que caen en Suelo de Conservación, la ficha dice bajo qué
+   zona del Programa General de Ordenamiento Ecológico quedan. No repite el
+   catálogo de actividades —eso se consulta por punto en «¿Dónde estoy?»—.
+   El cruce es precalculado (data/pgoedf_areas.json): 66 poligonales contra
+   523 zonas no se hacen en el navegador. Regla del dato: la cartografía del
+   PGOEDF trae las ANP de la época como zona propia y sin ordenamiento; por
+   eso un ANP decretado antes del Programa sale con cobertura ~0 y así se
+   explica, mientras que los decretados después (Tempiluli, Bosque de
+   Tláhuac, San Miguel Ajusco…) sí traen zona. */
+let _pgoedfAreas = null, _pgoedfAreasPromesa = null;
+function pgoedfAreas(){
+  if(_pgoedfAreas) return Promise.resolve(_pgoedfAreas);
+  if(_pgoedfAreasPromesa) return _pgoedfAreasPromesa;
+  _pgoedfAreasPromesa = fetch('./data/pgoedf_areas.json')
+    .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+    .then(j => {
+      const a = (j && j.areas) || {};
+      try{
+        const inv = new Set((DATA || []).map(d => d.nombre));
+        const sueltos = Object.keys(a).filter(n => !inv.has(n));
+        if(sueltos.length) console.warn('[PGOEDF] nombres sin área en el inventario:', sueltos.join(', '));
+      }catch(_){}
+      return (_pgoedfAreas = a);
+    })
+    .catch(err => { console.warn('[PGOEDF] cruce por área no disponible:', err.message); return (_pgoedfAreas = {}); });
+  return _pgoedfAreasPromesa;
+}
+function pintarPgoedfFicha(d){
+  const cont = document.getElementById('fichaPgoedf');
+  if(!cont || !d) return;
+  const estado = scEstado(d);
+  if(estado === 'fuera' || estado === 'sindato'){ cont.innerHTML = ''; return; }
+  const scp = scPct(d);
+  pgoedfAreas().then(areas => {
+    if(!document.getElementById('fichaPgoedf')) return;
+    const e = areas[d.nombre] || null;
+    const cob = e ? e.pct : 0;
+    const esANP = d.tipo === 'ANP';
+    const intro = '<p class="zonif-nota">Por estar en Suelo de Conservación'
+      + (scp != null && scp < 99.5 ? ' (' + scp.toFixed(scp < 10 ? 2 : 1) + '% de su superficie)' : '')
+      + ', esta área queda en el ámbito del Programa General de Ordenamiento Ecológico del Distrito Federal (PGOEDF, 2000).</p>';
+    let cuerpo = '';
+    if(cob >= 2 && e){
+      const vis = e.zonas.filter(z => z.pct >= 0.5);
+      const resto = e.zonas.filter(z => z.pct < 0.5);
+      const filas = vis.map(z => '<tr>'
+        + '<td><span class="zonif-sw" style="background:' + (PGOEDF_COLOR[z.clave] || PGOEDF_COLOR.PDU) + '"></span>'
+        + esc(pgoedfNombre(z.zona)) + (z.clave !== 'PDU' ? ' <span class="pg-clave">' + esc(z.clave) + '</span>' : '') + '</td>'
+        + '<td class="num">' + fmt(Math.round(z.ha)) + '</td>'
+        + '<td class="num">' + z.pct.toFixed(1) + '%</td></tr>').join('')
+        + (resto.length ? '<tr><td>Otras zonas (menos de 0.5% cada una)</td><td class="num">'
+            + fmt(Math.round(resto.reduce((a,z)=>a+z.ha,0))) + '</td><td class="num">'
+            + resto.reduce((a,z)=>a+z.pct,0).toFixed(1) + '%</td></tr>' : '');
+      cuerpo = '<table class="zonif-tabla"><thead><tr><th>Zona del PGOEDF</th><th class="num">ha</th>'
+        + '<th class="num">% del área</th></tr></thead><tbody>' + filas + '</tbody>'
+        + '<tfoot><tr><td>Total con zona de ordenamiento</td><td class="num">' + fmt(Math.round(e.cubierto_ha))
+        + '</td><td class="num">' + cob.toFixed(1) + '%</td></tr></tfoot></table>';
+      const notas = [];
+      const restoSC = (scp != null ? scp : 100) - cob;
+      if(esANP && restoSC >= 2)
+        notas.push('El ' + restoSC.toFixed(1) + '% restante dentro del Suelo de Conservación figura en la cartografía del PGOEDF como Área Natural Protegida, zona que se rige por su decreto y su programa de manejo.');
+      if(scp != null && 100 - scp >= 2)
+        notas.push('El ' + (100 - scp).toFixed(1) + '% de la poligonal está fuera del Suelo de Conservación de la Ciudad de México y no le aplica el PGOEDF.');
+      if(vis.some(z => z.clave === 'PDU'))
+        notas.push('Las zonas PDU (poblados rurales, programas parciales, zona urbana y equipamiento rural) se rigen por su instrumento de desarrollo urbano, no por el catálogo de actividades del PGOEDF.');
+      cuerpo += notas.map(n => '<p class="zonif-nota">' + n + '</p>').join('');
+    } else if(esANP){
+      cuerpo = '<div class="zonif-vacio"><b>Figura como Área Natural Protegida en la cartografía del PGOEDF.</b> '
+        + 'El Programa no le asigna zona de ordenamiento ni catálogo de actividades: rigen su decreto y, en su caso, su programa de manejo.'
+        + (cob >= 0.5 ? ' Una franja marginal (' + cob.toFixed(1) + '%) cae en zonas colindantes por ajuste cartográfico.' : '') + '</div>';
+    } else {
+      cuerpo = '<div class="zonif-vacio"><b>Sin zona del PGOEDF asignada.</b> La porción de esta área dentro del Suelo de Conservación es marginal'
+        + (scp != null ? ' (' + scp.toFixed(2) + '%)' : '') + ' y la cartografía del Programa no la cubre.</div>';
+    }
+    cont.innerHTML = '<div class="zonif-h">Ordenamiento ecológico · PGOEDF</div>' + intro + cuerpo
+      + '<p class="zonif-pie">Fuente: cartografía del PGOEDF (GODF 01/08/2000), cruce geométrico con la poligonal decretada. '
+      + 'Las actividades permitidas y prohibidas por zona se consultan por punto en «¿Dónde estoy?».</p>';
   });
 }
 
@@ -6534,8 +6680,6 @@ function openDrawer(d){
     ${isCoadmin(d.nombre) ? `
     <div class="field"><div class="k">Coadministración</div><div class="v">
       <span class="tag-coadmin">Convenio Marco SEMARNAT–CONANP–CDMX 2025</span>
-      <div class="coadmin-nota">Administración conjunta con la Federación: manejo, gestión y uso
-        racional de recursos, conforme a la Cláusula Segunda del Convenio.</div>
     </div></div>` : ''}
     <div class="field"><div class="k">Fecha decreto</div><div class="v">${d.fecha_decreto}</div></div>
     <div class="field"><div class="k">Programa de manejo</div><div class="v"><span class="status-tag ${d.programa_manejo==='Sí'?'status-tag-si':'status-tag-no'}">${d.programa_manejo==='Sí'?'Publicado':'Sin programa vigente'}</span></div></div>
@@ -6546,6 +6690,7 @@ function openDrawer(d){
       '<span style="color:var(--muted)">Sin asignar</span>'
     }</div></div>
     <div id="fichaZonif" class="zonif-bloque"></div>
+    <div id="fichaPgoedf" class="zonif-bloque"></div>
     ${renderDocumentosOficiales(d)}
     ${legalParts.length ? `
     <div class="legal-block">
@@ -6566,6 +6711,7 @@ function openDrawer(d){
   /* Un solo conector para las tres fichas (inventario, ARCAC y ZP). */
   conectarCompartir(descInventario(d));
   pintarZonificacion(d);
+  pintarPgoedfFicha(d);
   setTimeout(()=>{ try{ montarBotonBase(); }catch(e){} }, 120);
 }
 /* ═══ LA FICHA COMO HOJA DE TRES POSICIONES ════════════════════════════
