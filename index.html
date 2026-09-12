@@ -600,7 +600,6 @@
   .cron-gob-col-period{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.04em;color:var(--muted);text-align:center;margin-top:1px}
   .cron-gob-caption{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.06em;color:var(--muted);text-transform:uppercase;text-align:center}
 
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
   /* .grid-3 y .mini eliminadas en v34 (sin uso en HTML) — usar .legal-grid-3 si se necesita grid de 3 columnas */
           
   /* Paneles compactos — menor padding, sin h3 */
@@ -701,14 +700,10 @@
   .panel-compact h3{font-size:var(--fs-xl);margin-bottom:10px}
 
   /* Tabla compacta de hitos — reemplaza grid de tarjetas */
-  .hitos-table{width:100%;border-collapse:collapse;margin-top:6px}
   .hitos-table tr{border-bottom:1px dotted var(--line-soft)}
   .hitos-table tr:last-child{border-bottom:none}
   .hitos-table th{text-align:left;padding:10px 14px 10px 0;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;width:190px;white-space:nowrap;vertical-align:baseline}
   .hitos-table td{padding:10px 12px;font-size:var(--fs-base);color:var(--ink);vertical-align:baseline}
-  .hitos-table td.hitos-val{font-family:'Roboto',sans-serif;font-weight:700;font-size:var(--fs-lg);color:var(--guinda);width:130px;white-space:nowrap;letter-spacing:-.01em}
-  .hitos-table td.hitos-ctx{color:var(--ink-2);font-size:var(--fs-base);line-height:1.45}
-  .hitos-table .hitos-u{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);font-weight:500;margin-left:2px}
 
   /* Nota al pie dentro de paneles (sustituye estilos inline) */
   .panel-note{margin-top:14px;padding:10px 14px;background:var(--bg-2);border-radius:var(--r-ui);font-size:var(--fs-sm);color:var(--muted);line-height:1.55;border-left:3px solid var(--dorado)}
@@ -1517,8 +1512,6 @@
     .hero-card{padding:14px 14px}
     .hero-value{font-size:var(--fs-2xl)}
         .panel h3{font-size:var(--fs-lg)}
-    .tab-name{font-size:var(--fs-mini);line-height:1.15}
-    .tab-icon{width:18px;height:18px}
   }
 
 
@@ -1805,9 +1798,8 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
     margin:0!important;padding:0!important;border:none!important;border-radius:0!important}
   .wrap.dest-ubicar.gm-shell #globalMapCanvas,
   .wrap.dest-ubicar.gm-shell #globalMapSection .map-canvas,
-  .wrap.dest-ubicar.gm-shell #globalMapSection .map-canvas-inner,
-  .wrap.dest-ubicar.gm-shell #globalMapSection .map-wrap{height:100%!important;min-height:0!important;
-    border-radius:0!important;border:none!important}
+  .wrap.dest-ubicar.gm-shell #globalMapSection .map-canvas-inner{height:100%!important;
+    min-height:0!important;border-radius:0!important;border:none!important}
   /* La cápsula flota sobre el lienzo, como en el kit */
   /* `.dest-ubicar .ubicar-bar` (0,2,1) gana a `.ubicar-bar` (0,1,0): el relleno
      de escritorio se colaba y la cápsula medía 84 px en vez de 56. */
@@ -5309,7 +5301,6 @@ function fijarCtxUbic(){
     ? { lat:_ubicarOrigen.lat, lng:_ubicarOrigen.lng, etiqueta:_ubicarEtiqueta || '' }
     : null;
 }
-function limpiarCtxUbic(){ _ctxUbicFicha = null; }
 
 /* Acciones del popup: abrir ficha y copiar coordenada (delegadas: el popup se recrea) */
 document.addEventListener('click', ev=>{
