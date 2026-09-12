@@ -1715,6 +1715,74 @@
   .ubi-mini{width:40px;height:40px;border-radius:50%;background:var(--gm-tint);
     border:none;color:var(--guinda);font-size:var(--fs-lg);flex:0 0 auto}
 
+
+  /* ═══ CAPARAZÓN DE MAPA · etapa 2 del kit (12 sep 2026) ═══════════
+     En «Ubicar» el celular deja de ser una página con un mapa dentro y
+     pasa a ser un mapa con una página encima: el lienzo ocupa la
+     pantalla, la cápsula de búsqueda flota arriba y el resultado sube
+     en una hoja deslizable de tres posiciones. La clase `gm-shell` la
+     pone el JS solo cuando se cumplen las dos condiciones —destino
+     Ubicar y ancho de celular—, así que una sola regla de más no puede
+     romper el escritorio. */
+  .wrap.dest-ubicar.gm-shell{padding:0}
+  .wrap.dest-ubicar.gm-shell header.top,
+  .wrap.dest-ubicar.gm-shell footer,
+  .wrap.dest-ubicar.gm-shell .subnav{display:none}
+  .wrap.dest-ubicar.gm-shell #globalMapSection{position:fixed;left:0;right:0;top:0;
+    bottom:calc(var(--destbar-h) + env(safe-area-inset-bottom, 0px));
+    margin:0;z-index:1}
+  /* `!important` a regañadientes: `.panel-mapa` fija su relleno con
+     `!important` y el filete guinda del `.panel` viene de una regla base.
+     Aquí el panel deja de ser una tarjeta: es el lienzo. */
+  .wrap.dest-ubicar.gm-shell #globalMapSection > .panel{height:100%;margin:0!important;
+    padding:0!important;border:none!important;border-radius:0!important;
+    box-shadow:none!important;background:transparent!important}
+  .wrap.dest-ubicar.gm-shell #globalMapSection .mapa-h{display:none}
+  /* Los controles del mapa bajan para no quedar bajo la cápsula flotante */
+  .wrap.dest-ubicar.gm-shell #globalMapSection .leaflet-top{top:72px}
+  .wrap.dest-ubicar.gm-shell #globalMapSection .map-block-controls-floating{top:78px}
+  .wrap.dest-ubicar.gm-shell #globalMapSection .map-canvas,
+  .wrap.dest-ubicar.gm-shell #globalMapSection .map-canvas-inner,
+  .wrap.dest-ubicar.gm-shell #globalMapSection .map-wrap{height:100%!important;border-radius:0;border:none}
+  /* La cápsula flota sobre el lienzo, como en el kit */
+  /* `.dest-ubicar .ubicar-bar` (0,2,1) gana a `.ubicar-bar` (0,1,0): el relleno
+     de escritorio se colaba y la cápsula medía 84 px en vez de 56. */
+  .wrap.dest-ubicar.gm-shell .ubicar-bar{position:fixed;z-index:1200;margin:0;
+    top:calc(10px + env(safe-area-inset-top, 0px));left:10px;right:10px;
+    padding:6px 6px 6px 8px}
+
+  /* ── HOJA DESLIZABLE (componentes `handle` + `location-card`) ──── */
+  .gm-handle{display:none}
+  .wrap.dest-ubicar.gm-shell .gm-handle{display:block}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado{position:fixed;left:0;right:0;
+    bottom:calc(var(--destbar-h) + env(safe-area-inset-bottom, 0px));
+    /* Tope de altura: la hoja NUNCA debe subir por debajo de la cápsula de
+       búsqueda, o su asa queda tapada y deja de poder arrastrarse. 78px =
+       10 de margen superior + 56 de cápsula + 12 de holgura. */
+    height:calc(100svh - var(--destbar-h) - env(safe-area-inset-bottom, 0px) - 78px);
+    z-index:850;--vis:0px;
+    transform:translateY(calc(100% - var(--vis)));
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
+    background:var(--card);border-radius:18px 18px 0 0;box-shadow:0 -2px 16px rgba(60,64,67,.28);
+    display:flex;flex-direction:column;overflow:hidden;touch-action:none}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado.arrastrando{transition:none}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-panel{flex:1;min-height:0;overflow-y:auto;
+    -webkit-overflow-scrolling:touch;touch-action:pan-y;
+    margin:0;border:none;border-radius:0;box-shadow:none;padding:0 14px 18px}
+  /* Con el mapa detrás, el mini-mapa del resultado sobra: mostraba el
+     mismo punto dos veces y partía la pantalla en dos lienzos. */
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-map,
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-col:has(.ubi-map){display:none}
+  /* Sin el mini-mapa, la rejilla de dos columnas deja una columna con ancho
+     mínimo que se desborda de la hoja. En la hoja el resultado es una sola
+     columna, sin excepción. */
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-grid{display:block}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-col,
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-main,
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-item{min-width:0;max-width:100%}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-cerrar{top:10px;right:12px}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-cabeza{padding-right:34px}
+
   /* ── PILLS (componente `pills`) ───────────────────────────────────
      Los subfiltros ya eran pastillas; se les da la sombra y el blanco
      del kit para que floten sobre el fondo en vez de dibujar borde. */
@@ -2656,6 +2724,17 @@ function renderDashboard(){
      del tablero se retira. No es una categoría del inventario, es una acción. */
   const wrap = document.querySelector('.wrap');
   if(wrap) wrap.classList.toggle('dest-ubicar', state.dest==='UBICAR');
+  /* El caparazón de mapa solo existe con las DOS condiciones: destino Ubicar y
+     ancho de celular. Se evalúa aquí y en `resize`, no en una media query
+     suelta, para que una sola clase gobierne todas las reglas. */
+  const _movil = window.matchMedia('(max-width:760px)').matches;
+  if(wrap) wrap.classList.toggle('gm-shell', state.dest==='UBICAR' && _movil);
+  if(state.dest!=='UBICAR'){
+    if(typeof limpiarUbicacionGlobal === 'function') limpiarUbicacionGlobal();
+    const _hr = document.getElementById('ubicarResultado');
+    if(_hr) _hr.style.removeProperty('--vis');
+    _hojaVis = 0;
+  }
   if(state.dest==='UBICAR'){
     dash.innerHTML = '';
     tblSec.style.display = 'none';
@@ -6688,18 +6767,92 @@ function ubicarPorGPS(){
   }, {enableHighAccuracy:true, timeout:12000, maximumAge:0});
 }
 
+/* ═══ HOJA DESLIZABLE · caparazón de mapa en celular ═══════════════════
+   Tres posiciones, como en Maps: asomada (se ve el encabezado y la primera
+   cobertura), media y completa. Se arrastra por el asa —no por el cuerpo, que
+   necesita su propio desplazamiento— y al soltar cae en la posición más
+   cercana. Arrastrarla por debajo de la asomada la cierra.
+   `--vis` es la altura visible en píxeles; el translate se calcula en CSS. */
+const HOJA_ASOMADA = 215;
+let _hojaVis = 0;
+const _shellActivo = () => !!document.querySelector('.wrap.gm-shell');
+function _hojaAlturas(){
+  const h = document.getElementById('ubicarResultado');
+  const max = h ? Math.round(h.getBoundingClientRect().height) : Math.round(innerHeight*0.86);
+  return [0, Math.min(HOJA_ASOMADA, max), Math.round(max*0.55), max];
+}
+function hojaIr(vis){
+  const h = document.getElementById('ubicarResultado'); if(!h) return;
+  _hojaVis = Math.max(0, vis);
+  h.style.setProperty('--vis', _hojaVis + 'px');
+}
+function hojaSnap(vis){
+  let best = 0;
+  _hojaAlturas().forEach(v => { if(Math.abs(v - vis) < Math.abs(best - vis)) best = v; });
+  hojaIr(best);
+  return best;
+}
+function cerrarHoja(){
+  const sec = document.getElementById('ubicarResultado');
+  hojaIr(0);
+  limpiarUbicacionGlobal();
+  setTimeout(()=>{ if(sec && _hojaVis === 0){ sec.hidden = true; sec.innerHTML = ''; } }, 300);
+}
+/* Arrastre delegado: el asa se vuelve a crear en cada consulta. */
+document.addEventListener('pointerdown', e=>{
+  const asa = e.target && e.target.closest && e.target.closest('#ubicarAsa');
+  if(!asa || !_shellActivo()) return;
+  const h = document.getElementById('ubicarResultado'); if(!h) return;
+  const y0 = e.clientY, v0 = _hojaVis; let movio = false;
+  h.classList.add('arrastrando');
+  const mover = ev => { if(Math.abs(ev.clientY - y0) > 3) movio = true; hojaIr(v0 + (y0 - ev.clientY)); };
+  const soltar = ev => {
+    document.removeEventListener('pointermove', mover);
+    document.removeEventListener('pointerup', soltar);
+    document.removeEventListener('pointercancel', soltar);
+    h.classList.remove('arrastrando');
+    if(!movio){                                   /* toque simple: siguiente posición */
+      const a = _hojaAlturas();
+      const i = a.findIndex(v => v > _hojaVis + 4);
+      hojaIr(i === -1 ? a[1] : a[i]);
+      return;
+    }
+    if(hojaSnap(v0 + (y0 - ev.clientY)) === 0) cerrarHoja();
+  };
+  document.addEventListener('pointermove', mover);
+  document.addEventListener('pointerup', soltar);
+  document.addEventListener('pointercancel', soltar);
+  e.preventDefault();
+});
+
 async function ubicarResolver(latlng, precision, etiqueta){
   const sec = document.getElementById('ubicarResultado');
   if(!sec) return;
+  const shell = _shellActivo();
   sec.hidden = false;
-  sec.innerHTML = '<div class="panel"><div class="ubi-cargando">Consultando capas…</div></div>';
-  sec.scrollIntoView({behavior:'smooth', block:'start'});
+  sec.innerHTML = '<div class="gm-handle" id="ubicarAsa" aria-hidden="true"></div>'
+                + '<div class="panel"><div class="ubi-cargando">Consultando capas…</div></div>';
+  /* En el caparazón la hoja se asoma mientras consulta; desplazar la página
+     no tendría sentido porque el mapa ocupa la pantalla completa. */
+  if(shell) hojaIr(_hojaAlturas()[1]);
+  else sec.scrollIntoView({behavior:'smooth', block:'start'});
   await _cargarCapasCobertura();
   _ubicarOrigen = { lat: latlng.lat, lng: latlng.lng };   // habilita distancias en las sugerencias
   sec.innerHTML = renderUbicarResultado(latlng, precision, etiqueta);
   const cerrar = document.getElementById('ubicarCerrar');
-  if(cerrar) cerrar.addEventListener('click', ()=>{ sec.hidden = true; sec.innerHTML=''; if(ubicarMap){ try{ubicarMap.remove();}catch(e){} ubicarMap=null; } });
-  setTimeout(()=>initUbicarMap(latlng, precision), 60);
+  if(cerrar) cerrar.addEventListener('click', ()=>{
+    if(_shellActivo()){ cerrarHoja(); return; }
+    sec.hidden = true; sec.innerHTML='';
+    if(ubicarMap){ try{ubicarMap.remove();}catch(e){} ubicarMap=null; }
+  });
+  if(shell){
+    /* Un solo lienzo: el punto y sus polígonos se pintan sobre el mapa de
+       fondo. El mini-mapa del resultado queda oculto por CSS. */
+    hojaIr(_hojaAlturas()[2]);
+    pintarUbicacionEnGlobal(latlng, precision);
+  } else {
+    setTimeout(()=>initUbicarMap(latlng, precision), 60);
+  }
 }
 
 function renderUbicarResultado(latlng, precision, etiqueta){
@@ -6829,7 +6982,8 @@ function renderUbicarResultado(latlng, precision, etiqueta){
     }
   }
 
-  return `<div class="panel ubi-panel">
+  return `<div class="gm-handle" id="ubicarAsa" aria-hidden="true"></div>
+  <div class="panel ubi-panel">
     <button type="button" class="ubi-cerrar" id="ubicarCerrar" aria-label="Cerrar resultado">×</button>
     <div class="ubi-cabeza">${esc(cabeza)}</div>
     ${_avisoCapasHTML('ubi-warn')}
@@ -6840,6 +6994,58 @@ function renderUbicarResultado(latlng, precision, etiqueta){
     </div>
     <div class="ubi-ctx">${ctx}</div>
   </div>`;
+}
+
+/* Capa de la ubicación resuelta sobre el mapa global. Vive aparte del resto
+   de capas para poder borrarla entera en cada consulta sin tocar el
+   inventario que ya está pintado. */
+let _capaUbicGlobal = null;
+
+/* Dibuja punto, margen de precisión y polígonos de cobertura en el mapa que se
+   le pase, y devuelve los límites. Antes esto vivía dentro de initUbicarMap y
+   por eso el caparazón de celular no podía reutilizarlo: tenía que crear un
+   segundo mapa para ver lo mismo. */
+function _dibujarUbicacion(map, destino, latlng, precision){
+  const bounds = L.latLngBounds([[latlng.lat, latlng.lng]]);
+  _coberturasEn(latlng).forEach(c=>{
+    let feat = null;
+    try{
+      if(c.ficha.indexOf('inv::')===0) feat = GEOM_INDEX[slugify(c.ficha.slice(5))];
+      else if(c.ficha.indexOf('arcac::')===0) feat = ((ARCAC_GEO&&ARCAC_GEO.features)||[]).find(f=>String(f.properties.no)===c.ficha.slice(7));
+      else if(c.ficha.indexOf('zp::')===0) feat = ((ZP_DESIGNACIONES&&ZP_DESIGNACIONES.features)||[]).find(f=>f.properties.capa===c.ficha.slice(4));
+    }catch(e){}
+    if(!feat) return;
+    const l = L.geoJSON(feat,{style:{color:c.color,weight:2,fillColor:c.color,fillOpacity:0.2}}).addTo(destino);
+    l.bindTooltip(c.nombre,{sticky:true,direction:'top'});
+    try{ bounds.extend(l.getBounds()); }catch(e){}
+  });
+  if(precision){
+    L.circle([latlng.lat,latlng.lng],{radius:precision,color:COL_AZUL_UBIC,weight:1,
+      fillColor:COL_AZUL_UBIC,fillOpacity:.12}).addTo(destino);
+  }
+  L.circleMarker([latlng.lat,latlng.lng],{radius:7,color:'#fff',weight:2,
+    fillColor:COL_AZUL_UBIC,fillOpacity:1}).addTo(destino);
+  return bounds;
+}
+
+/* Caparazón de celular: pinta sobre el mapa global en vez de crear otro, y
+   encuadra dejando libre el alto que ocupa la hoja. */
+function pintarUbicacionEnGlobal(latlng, precision){
+  if(!globalMap || typeof L === 'undefined') return;
+  if(_capaUbicGlobal){ try{ globalMap.removeLayer(_capaUbicGlobal); }catch(e){} }
+  _capaUbicGlobal = L.layerGroup().addTo(globalMap);
+  const bounds = _dibujarUbicacion(globalMap, _capaUbicGlobal, latlng, precision);
+  const hoja = document.getElementById('ubicarResultado');
+  const tapa = hoja ? Math.round(hoja.getBoundingClientRect().height * 0) : 0;
+  const pad  = { paddingTopLeft:[18, 78], paddingBottomRight:[18, _hojaVis + 18 + tapa] };
+  try{
+    if(bounds.isValid()) globalMap.fitBounds(bounds, Object.assign({maxZoom:16}, pad));
+    else globalMap.setView([latlng.lat,latlng.lng], 15);
+  }catch(e){ try{ globalMap.setView([latlng.lat,latlng.lng], 15); }catch(_){} }
+}
+function limpiarUbicacionGlobal(){
+  if(globalMap && _capaUbicGlobal){ try{ globalMap.removeLayer(_capaUbicGlobal); }catch(e){} }
+  _capaUbicGlobal = null;
 }
 
 function initUbicarMap(latlng, precision){
@@ -6854,24 +7060,7 @@ function initUbicarMap(latlng, precision){
   L.tileLayer(TILE_LAYERS.positron.url,{attribution:TILE_LAYERS.positron.attribution,maxZoom:TILE_LAYERS.positron.maxZoom}).addTo(ubicarMap);
   try{ createAlcaldiasLayer({interactive:false}).addTo(ubicarMap); }catch(e){}
 
-  const bounds = L.latLngBounds([[latlng.lat, latlng.lng]]);
-  _coberturasEn(latlng).forEach(c=>{
-    let feat = null;
-    try{
-      if(c.ficha.indexOf('inv::')===0) feat = GEOM_INDEX[slugify(c.ficha.slice(5))];
-      else if(c.ficha.indexOf('arcac::')===0) feat = ((ARCAC_GEO&&ARCAC_GEO.features)||[]).find(f=>String(f.properties.no)===c.ficha.slice(7));
-      else if(c.ficha.indexOf('zp::')===0) feat = ((ZP_DESIGNACIONES&&ZP_DESIGNACIONES.features)||[]).find(f=>f.properties.capa===c.ficha.slice(4));
-    }catch(e){}
-    if(!feat) return;
-    const l = L.geoJSON(feat,{style:{color:c.color,weight:2,fillColor:c.color,fillOpacity:0.2}}).addTo(ubicarMap);
-    l.bindTooltip(c.nombre,{sticky:true,direction:'top'});
-    try{ bounds.extend(l.getBounds()); }catch(e){}
-  });
-
-  if(precision){
-    L.circle([latlng.lat,latlng.lng],{radius:precision,color:COL_AZUL_UBIC,weight:1,fillColor:COL_AZUL_UBIC,fillOpacity:.12}).addTo(ubicarMap);
-  }
-  L.circleMarker([latlng.lat,latlng.lng],{radius:7,color:'#fff',weight:2,fillColor:COL_AZUL_UBIC,fillOpacity:1}).addTo(ubicarMap);
+  const bounds = _dibujarUbicacion(ubicarMap, ubicarMap, latlng, precision);
 
   if(bounds.isValid()){ ubicarMap.fitBounds(bounds,{padding:[24,24],maxZoom:16}); ubicarMap._siaHome = bounds; }
   else ubicarMap.setView([latlng.lat,latlng.lng],15);
@@ -7273,8 +7462,8 @@ window.addEventListener('offline', () => showOfflineNotice('Sin conexión · ope
   .cinta-borrador:hover .txt,.cinta-borrador:focus-visible .txt,.cinta-borrador.abierta .txt{display:inline}
   @media (max-width:760px){ .cinta-borrador{bottom:calc(62px + env(safe-area-inset-bottom, 0px))} }
 </style>
-<button type="button" class="cinta-borrador" title="Versión en revisión · rediseño v38 · sia-v35-2026-09-12b"
-        aria-label="Versión en revisión · rediseño v38 · sia-v35-2026-09-12b"
-        onclick="this.classList.toggle('abierta')"><span class="txt">revisión · sia-v35-2026-09-12b</span></button>
+<button type="button" class="cinta-borrador" title="Versión en revisión · rediseño v38 · sia-v35-2026-09-12c"
+        aria-label="Versión en revisión · rediseño v38 · sia-v35-2026-09-12c"
+        onclick="this.classList.toggle('abierta')"><span class="txt">revisión · sia-v35-2026-09-12c</span></button>
 </body>
 </html>

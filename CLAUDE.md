@@ -154,6 +154,41 @@ Ubicar, los mapas, Zona Patrimonio y ARCAC **siguen funcionando**, que es el uso
 campo. Verificado con tres respuestas simuladas: HTML 200, CSV con encabezados ajenos y CSV
 correcto — en los tres, cero errores de JS y el mapa de Ubicar vivo.
 
+## Kit «Google Maps» en celular · etapas 1 y 2 (11–12 sep 2026)
+
+Se adaptó el UI Kit de Google Maps (Figma, comunidad) que aportó el usuario. Se toma la
+**geometría y la elevación**; **no la paleta**: el turquesa es marca de Google y aquí el color
+de lo activo es el guinda institucional. El bloque va **al final de la hoja de estilos** porque
+varias reglas compiten por orden, no por especificidad.
+
+**Etapa 1 · componentes.** `navbar` (icono sobre etiqueta, pastilla guinda al 11 % detrás del
+icono del destino activo, en vez del bloque saturado) · `search-bar` (la barra «¿Dónde estoy?»
+como cápsula de radio 28 con la lupa dibujada como fondo del input) · `Button /Round` (el GPS
+es un FAB circular guinda, movido a la derecha con `order`) · `Button /Action` (pastilla de 48)
+· `list-item` (filas blancas con sombra, separadas por el fondo) · `pills` · `handle`.
+Tokens nuevos: `--gm-e1/e2/e3` (las tres sombras de Material) y `--gm-tint`.
+
+**Etapa 2 · caparazón de mapa.** En celular + destino Ubicar, `renderDashboard()` pone la clase
+**`gm-shell`** en `.wrap`. Con ella: encabezado y pie ocultos, `#globalMapSection` fijo a toda
+la pantalla (sin tarjeta ni filete: `.panel-mapa` fija su relleno con `!important` y hay que
+vencerlo), cápsula flotando arriba y **hoja deslizable** abajo.
+
+- **Un solo mapa.** El dibujo del punto salió de `initUbicarMap` a `_dibujarUbicacion(map,
+  destino, latlng, precision)`. En el caparazón, `pintarUbicacionEnGlobal()` lo pinta sobre
+  `globalMap` en una `layerGroup` propia (`_capaUbicGlobal`, borrable entera) y encuadra con
+  `paddingBottomRight` igual al alto visible de la hoja. El mini-mapa del resultado se oculta
+  por CSS. En escritorio no cambia nada: siguen siendo dos mapas.
+- **Hoja de tres posiciones** (`--vis` en píxeles, el translate se calcula en CSS): asomada
+  215 px, media 55 %, completa. Se arrastra **solo por el asa** —el cuerpo necesita su propio
+  scroll—; al soltar cae en la más cercana y por debajo de la asomada se cierra. Un toque sin
+  arrastre avanza a la siguiente posición.
+- **La hoja no puede tapar la cápsula**, o su asa deja de ser alcanzable: su alto tope es
+  `100svh − barra inferior − 78px`. Se descubrió porque el arrastre de cierre fallaba en la
+  prueba: el punto del asa devolvía la cápsula en `elementFromPoint`.
+- Los controles de Leaflet bajan a `top:72px` para no quedar bajo la cápsula.
+- El auditor de encimados (`traslapes-ui.mjs`) salta la comprobación de «hueco bajo la barra
+  fija» cuando hay `gm-shell`: ahí nada vive en el flujo normal, así que el hueco no aplica.
+
 ## Barra «¿Dónde estoy?» · flujo principal de campo (v37)
 El uso dominante del tablero es de **personal de SEDEMA**, no público: en celular para ubicarse
 en campo, en escritorio para consultar tablas y estadística. La barra refleja eso.
