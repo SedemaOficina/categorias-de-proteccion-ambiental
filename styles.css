@@ -40,6 +40,8 @@
        sobre el fondo mas oscuro del sistema. */
     --muted:#67696b;
     --marron-900:#8f5610;   /* fondo de insignia con texto crema · 5.86:1 */
+    /* Colores de grupo para TEXTO pequeño (AA ≥ 4.5:1 sobre blanco y crema) */
+    --bu-text:#027a35;  --br-text:#8f5610;  --anpl-text:#a85400;  --anpf-text:#266cb4;
     --magenta-900:#c2277a;  /* idem · 5.32:1 */
     --line:#d9d3c0;
     --line-soft:#eae4cf;
@@ -237,12 +239,18 @@
      Una respuesta grande, lo demás en una lista compacta, contexto en una línea.
      Superficie, decreto y programa de manejo NO están aquí: viven en la ficha. */
   .ubi-panel{position:relative}
-  .ubi-cerrar{position:absolute;top:12px;right:14px;width:32px;height:32px;border:none;background:transparent;
-    font-size:var(--fs-2xl);line-height:1;color:var(--ink-2);cursor:pointer;border-radius:50%}
+  /* El «x» vive en la fila del encabezado, alineado a la derecha, en TODOS
+     los resultados (con cobertura, sin cobertura, Suelo de Conservación):
+     una sola regla, no una posición absoluta que caía en sitios distintos
+     según el alto del primer bloque. */
+  .ubi-cerrar{flex:0 0 auto;width:36px;height:36px;margin:-8px -8px -8px auto;border:none;background:transparent;
+    font-size:var(--fs-2xl);line-height:1;color:var(--ink-2);cursor:pointer;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;padding:0}
   .ubi-cerrar:hover{background:var(--bg-2);color:var(--guinda)}
   .ubi-cargando{padding:32px;text-align:center;color:var(--muted);font-family:'Roboto Mono',monospace;font-size:var(--fs-base)}
-  .ubi-cabeza{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.13em;text-transform:uppercase;
-    color:var(--muted);margin-bottom:14px;padding-right:40px}
+  .ubi-cabeza{display:flex;align-items:center;gap:10px;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.13em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:14px;min-height:24px}
+  .ubi-cabeza-txt{flex:1;min-width:0}
   .ubi-etiqueta{font-size:var(--fs-base);color:var(--ink-2);margin:-8px 0 14px}
   .ubi-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
   .ubi-col{min-width:0}
@@ -500,7 +508,7 @@
   .brecha-card{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:18px 20px;border-left:3px solid var(--card-color, var(--guinda));position:relative}
   .brecha-card-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;gap:10px}
   .brecha-card-grupo{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;color:var(--ink-2);font-weight:500;text-transform:uppercase}
-  .brecha-card-pct{font-family:'Roboto',sans-serif;font-size:var(--fs-lg);font-weight:700;color:var(--card-color, var(--guinda));letter-spacing:-.01em}
+  .brecha-card-pct{font-family:'Roboto',sans-serif;font-size:var(--fs-lg);font-weight:700;color:var(--card-color-text, var(--card-color, var(--guinda)));letter-spacing:-.01em}
   .brecha-card-num{font-family:'Roboto',sans-serif;font-size:var(--fs-mega);line-height:1;color:var(--ink);font-weight:900;letter-spacing:-.02em}
   .brecha-card-lbl{font-size:var(--fs-sm);color:var(--muted);margin-top:4px;font-family:'Roboto',sans-serif}
   .brecha-card-bar{margin-top:14px;height:6px;background:var(--bg-2);border-radius:var(--r-ui);overflow:hidden}
@@ -756,7 +764,7 @@
   .btn-pdf:hover{border-color:var(--guinda);color:var(--guinda);background:#fff}
   .btn-pdf:hover .pdf-badge{background:var(--guinda);color:#fff}
   /* Badge PDF — claramente identificable como un archivo descargable */
-  .btn-pdf .pdf-badge{display:inline-flex;align-items:center;justify-content:center;width:32px;height:24px;background:#d44a3a;color:#fff;border-radius:var(--r-ui);font-family:'Roboto',sans-serif;font-size:var(--fs-micro);font-weight:700;letter-spacing:.04em;flex-shrink:0;transition:background .2s}
+  .btn-pdf .pdf-badge{display:inline-flex;align-items:center;justify-content:center;width:32px;height:24px;background:#c0392b;color:#fff;border-radius:var(--r-ui);font-family:'Roboto',sans-serif;font-size:var(--fs-micro);font-weight:700;letter-spacing:.04em;flex-shrink:0;transition:background .2s}
   .btn-pdf .pdf-arrow{display:inline-flex;align-items:center;color:var(--muted);font-size:var(--fs-md);font-weight:700;line-height:1}
   .btn-pdf:hover .pdf-arrow{color:var(--guinda)}
   .btn-pdf-federal:hover{border-color:var(--azul);color:var(--azul)}
@@ -1078,7 +1086,7 @@
   .drawer .close{position:absolute;top:16px;right:18px;background:transparent;border:none;font-size:var(--fs-2xl);cursor:pointer;color:var(--ink-2);width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;line-height:1}
   .drawer .close:hover{background:var(--bg-2);color:var(--guinda)}
   .drawer .kat{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--guinda);margin-bottom:10px;font-weight:500}
-  .drawer h2{font-family:'Roboto',sans-serif;font-weight:700;font-size:var(--fs-2xl);line-height:1.2;margin-bottom:6px;color:var(--ink);letter-spacing:-.01em}
+  .drawer h2{font-family:var(--font-titulo);font-weight:700;font-size:var(--fs-2xl);line-height:1.2;margin-bottom:6px;color:var(--ink);letter-spacing:-.01em}
   .drawer .subcat{font-size:var(--fs-base);color:var(--muted);margin-bottom:18px;font-style:italic}
   /* Encabezado del drawer con botón Compartir alineado a la derecha */
   .drawer-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:8px;padding-right:44px}
@@ -1314,8 +1322,8 @@
     background:repeating-linear-gradient(45deg,var(--azul) 0 2px,rgba(38,108,180,.15) 2px 5px)}
   #coadminToggle:not(.active) .chip-dot{background:repeating-linear-gradient(45deg,var(--azul) 0 2px,transparent 2px 5px)}
   #coadminToggle.active{border-color:var(--azul);color:var(--azul);font-weight:600;background:rgba(38,108,180,.06)}
-  .map-filter-chip .chip-count{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);color:var(--muted);font-weight:500;letter-spacing:.04em;margin-left:2px}
-  .map-filter-chip.active .chip-count{color:var(--chip-color)}
+  .map-filter-chip .chip-count{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);color:var(--ink-2);font-weight:500;letter-spacing:.04em;margin-left:2px}
+  .map-filter-chip.active .chip-count{color:var(--chip-text,var(--chip-color))}
 
   .global-map-block{margin-top:6px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-soft);background:var(--bg-2)}
   #globalMapCanvas{height:600px;width:100%;background:var(--map-bg)}
@@ -1838,8 +1846,6 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
   .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-col,
   .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-main,
   .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-item{min-width:0;max-width:100%}
-  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-cerrar{top:10px;right:12px}
-  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-cabeza{padding-right:34px}
 
 
   /* ── MARCAS DEL KIT (frame `MARKS`) ───────────────────────────────
@@ -2360,7 +2366,7 @@ html.arranque-campo body > .wrap{visibility:hidden}
   font-size:var(--fs-mini);color:var(--ink-2);line-height:1.3}
 .zonif-leyenda .zl-sw{width:10px;height:10px;border-radius:2px;flex-shrink:0}
 @media (max-width:760px){
-  .zonif-leyenda{left:8px;right:8px;bottom:58px;max-width:none}
+  .zonif-leyenda{left:8px;right:8px;bottom:26px;max-width:none}
 }
 
 /* ═══ PGOEDF · ZONIFICACION DEL SUELO DE CONSERVACION ════════════════ */
@@ -2518,4 +2524,57 @@ html.arranque-campo body > .wrap{visibility:hidden}
 @media (max-width:760px){
   .drawer .field .tag-coadmin{border:none;background:transparent;padding:0;
     font-family:'Roboto',sans-serif;font-size:var(--fs-base);font-weight:500;letter-spacing:0;line-height:1.4}
+}
+/* Bloques derivados intercalados entre campos: se separan del dato que los
+   origina con el mismo filete que usan los campos, para que se lean como
+   parte de la lista y no como un apartado suelto. */
+.zonif-bloque-intercalado{margin:0;padding:14px 0 16px;border-bottom:1px solid var(--line-soft)}
+.zonif-bloque-intercalado:empty{display:none}
+.zonif-bloque-intercalado .zonif-h{margin-bottom:8px}
+/* Interruptor de zonificación dentro del menú de capas de la ficha: renglón
+   de ajuste, igual que Suelo de Conservación; deja de flotar sobre el mapa. */
+.zonif-flotante.en-menu{position:static;left:auto;bottom:auto;z-index:auto}
+.zonif-flotante.en-menu .map-filter-chip,
+.zonif-flotante.en-menu .map-filter-chip.active,
+.zonif-flotante.en-menu .map-filter-chip:hover{
+  display:flex;align-items:center;gap:10px;width:100%;min-height:40px;
+  padding:6px 2px;border:none;border-radius:0;background:transparent;box-shadow:none;
+  font-family:'Roboto',sans-serif;font-size:var(--fs-sm);text-align:left;
+  white-space:normal;line-height:1.25;color:var(--ink);text-transform:none;
+  letter-spacing:0;font-weight:500;opacity:1}
+.zonif-flotante.en-menu .map-filter-chip:not(.active){color:var(--muted)}
+.zonif-flotante.en-menu .map-filter-chip:disabled{opacity:.5;cursor:wait}
+/* La leyenda de zonas se queda sobre el mapa, ahora sin el chip debajo. */
+.zonif-leyenda{bottom:26px}
+
+/* ═══ AUDITORÍA 360 · 12-sep-2026 (noche) ═════════════════════════════ */
+/* El «×» de la ficha conserva su círculo de 34 px, pero el área que responde
+   al dedo es de 44 px: en celular medía 34 y quedaba bajo el mínimo táctil. */
+.drawer .close{position:absolute}
+.drawer .close::after{content:'';position:absolute;inset:-6px;border-radius:50%}
+/* Subpestañas de Zona Patrimonio y buscador de Traslapes: 44 px en táctil. */
+@media (pointer:coarse), (max-width:760px){
+  .zp-subtab{min-height:44px}
+  #trasSearch{min-height:44px;font-size:16px}
+}
+/* Foco visible en el campo de búsqueda: el cambio de color del borde (1 px)
+   no basta como indicador de foco al navegar con teclado. */
+.ubicar-input-wrap input:focus-visible{box-shadow:0 0 0 3px rgba(157,33,72,.22)}
+.wrap.dest-ubicar.gm-shell .ubicar-input-wrap input:focus-visible{box-shadow:inset 0 0 0 2px var(--gm-tint-fuerte),0 0 0 3px rgba(157,33,72,.22)}
+
+/* ═══ CIERRE DE LA AUDITORÍA 360 · pulido aplicado ═══════════════════ */
+/* Pie: el enlace de ayuda gana área táctil sin cambiar de aspecto. */
+.sia-footer-ayuda{padding:12px 0}
+/* Barras de la cronología: el área que responde al dedo y al foco sube a
+   44 px aunque la barra mida 7. El tooltip sigue anclado a la barra. */
+.cron-bar::before,.cron-gob-bar::before{content:'';position:absolute;left:0;right:0;bottom:0;min-height:44px}
+/* Barra de búsqueda de escritorio fuera de «¿Dónde estoy?»: 30 px y 12.5 px
+   quedaban por debajo de la escala del resto de controles. */
+@media (min-width:761px){
+  .ubicar-input-wrap input{height:38px;font-size:var(--fs-base)}
+  .ubicar-go{width:40px;height:38px}
+  .ubicar-input-wrap{--go-w:40px}
+  .dest-ubicar .ubicar-input-wrap input{height:48px;font-size:var(--fs-md)}
+  .dest-ubicar .ubicar-go{width:44px;height:48px}
+  .dest-ubicar .ubicar-input-wrap{--go-w:44px}
 }

@@ -22,3 +22,6 @@ CLAUDE.md
 _borrar
 *.bak
 *.bak[0-9]
+
+# Documentación del repositorio: se lee en GitHub, no forma parte del sitio
+README.md

@@ -1176,7 +1176,7 @@ function renderAnalisisPage(){
      (Local / Federal); para AVA, la clase de área (Bosque Urbano / Barranca). */
   const subtipo = d => String(d.grupo||'').split(' · ')[1] || d.jurisdiccion || '—';
   const celdasTipo = d => `<td><span class="tag tag-${d.tipo}">${d.tipo}</span></td>
-          <td><span class="grp-mini" style="color:${GROUP_COLORS[d.grupo]||'var(--ink-2)'}">${subtipo(d)}</span></td>`;
+          <td><span class="grp-mini" style="color:${colorTextoGrupo(d.grupo)}">${subtipo(d)}</span></td>`;
 
   /* Orden por columna. «Antigüedad» es la fecha del revés —más viejo, más
      años—, así que comparte clave y gira el sentido: sin eso, las dos columnas
@@ -1333,7 +1333,7 @@ function renderAnalisisPage(){
           const falta = arr.filter(d=>d.programa_manejo!=='Sí');
           const p = pct(falta.length, arr.length);
           const color = GROUP_COLORS[g.key];
-          return `<div class="brecha-card" style="--card-color:${color}">
+          return `<div class="brecha-card" style="--card-color:${color};--card-color-text:${colorTextoGrupo(g.key)}">
             <div class="brecha-card-header">
               <span class="brecha-card-grupo">${g.label}</span>
               <span class="brecha-card-pct">${p.toFixed(0)}%</span>
@@ -2627,6 +2627,16 @@ const GROUP_COLORS = {
   'ANP · Local':          'var(--anpl)',
   'ANP · Federal':        'var(--azul)'
 };
+/* Variantes para TEXTO pequeño sobre fondo claro: el naranja de ANP Local
+   (2.65:1) y el marrón de Barranca (4.2:1) no alcanzan AA como texto; como
+   relleno de polígono o filete sí. Auditoría 360, 12-sep-2026. */
+const GROUP_TEXT_COLORS = {
+  'AVA · Bosque Urbano': 'var(--bu-text)',
+  'AVA · Barranca':       'var(--br-text)',
+  'ANP · Local':          'var(--anpl-text)',
+  'ANP · Federal':        'var(--anpf-text)'
+};
+const colorTextoGrupo = g => GROUP_TEXT_COLORS[g] || GROUP_COLORS[g] || 'var(--ink-2)';
 
 /* ANP Federales en coadministración SEMARNAT–CONANP–CDMX (Convenio 2025) */
 /* Nombres deben coincidir EXACTAMENTE con el campo `nombre` del GeoJSON y del Sheet. */
@@ -3402,9 +3412,7 @@ function openZPDrawer(row){
       ${botonCompartirHTML()}
     </div>
 
-    <div class="map-block" id="zpFichaMapBlock">
-      <div class="map-canvas" id="mapCanvas" style="position:relative"></div>
-    </div>
+    ${fichaMapaHTML()}
 
     <div class="big-num">${sup}</div>
     <div class="big-num-lbl">Superficie${row.sup_nota?` · ${row.sup_nota}`:''}</div>
@@ -3435,17 +3443,6 @@ function openZPDrawer(row){
   });
 }
 
-/* Capa base (Mapa/Satélite) del mapa de ficha ZP · aislada del toggle del panel ZP */
-/* Capa base fija (positron) del mini-mapa de ficha ZP. La ficha ya no tiene toggle. */
-function setZPFichaBase(key){
-  if(!activeMap) return;
-  if(activeBaseLayer) activeMap.removeLayer(activeBaseLayer);
-  const cfg = TILE_LAYERS[key] || TILE_LAYERS.positron;
-  activeBaseLayer = L.tileLayer(cfg.url, {attribution:cfg.attribution, maxZoom:cfg.maxZoom}).addTo(activeMap);
-  _marcarBase(activeMap, key);
-  if(activeGeoLayer) activeGeoLayer.bringToFront();
-}
-
 /* Mapa dentro de la ficha lateral de una designación ZP · reutiliza #mapCanvas y helpers de inventario */
 function initZPFichaMap(row){
   const container = document.getElementById('mapCanvas');
@@ -3458,8 +3455,10 @@ function initZPFichaMap(row){
     return;
   }
   container.classList.remove('no-data');
-  activeMap = L.map(container, { zoomControl:true, scrollWheelZoom:false, attributionControl:true });
-  setZPFichaBase('positron');
+  const canvasZP = document.getElementById('mapCanvasMap') || container;
+  canvasZP.innerHTML = '';
+  activeMap = L.map(canvasZP, { zoomControl:true, scrollWheelZoom:false, attributionControl:true });
+  setBaseLayer('positron');
   // Contexto territorial: límites de alcaldía (debajo del polígono)
   try{ createAlcaldiasLayer({interactive:false}).addTo(activeMap); }catch(e){}
   const isCont = !!feat.properties.es_contenedor;
@@ -3477,8 +3476,7 @@ function initZPFichaMap(row){
   activeGeoLayer.bindTooltip(row.nombre, {sticky:true, direction:'top'});
   activeGeoLayer.bringToFront();
   try{ activeMap.fitBounds(activeGeoLayer.getBounds(), {padding:[20,20], maxZoom:15}); activeMap._siaHome = activeGeoLayer.getBounds(); }catch(e){}
-  activeMap.on('click focus', ()=> activeMap.scrollWheelZoom.enable());
-  activeMap.on('mouseout',   ()=> activeMap.scrollWheelZoom.disable());
+  fichaMapaConectar(container);
   addLocateControl(activeMap, ll=>featuresContaining(getZPAllFeatures(), ll), getZPAllFeatures);
   addResetViewControl(activeMap, 'Volver al polígono');
   addSearchMarkerTo(activeMap);
@@ -3855,9 +3853,7 @@ function openARCACFicha(no){
       <h2>${p.nombre}</h2>
       <div class="subcat">${arcacBadge(p.tenencia)}</div>
     </div>${botonCompartirHTML()}</div>
-    <div class="map-block" id="arcacFichaMapBlock">
-      <div class="map-canvas" id="mapCanvas" style="position:relative"></div>
-    </div>
+    ${fichaMapaHTML()}
     <div class="big-num">${fmt(p.sup_ha)}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">ha</span></div>
     <div class="big-num-lbl">Superficie</div>
     <div class="field"><div class="k">Tenencia</div><div class="v">${arcacBadge(p.tenencia)}</div></div>
@@ -3879,15 +3875,16 @@ function initARCACFichaMap(no){
   const feat = ((ARCAC_GEO&&ARCAC_GEO.features)||[]).find(f=>f.properties.no===no);
   if(!feat){ container.classList.add('no-data'); container.innerHTML='<div><b>Polígono no disponible</b></div>'; return; }
   container.classList.remove('no-data');
-  activeMap = L.map(container, { zoomControl:true, scrollWheelZoom:false, attributionControl:true });
-  activeBaseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_32cg_1_639fb69171e990c64b31e73f',{attribution:'© OpenStreetMap © CARTO', maxZoom:19}).addTo(activeMap);
+  const canvasAR = document.getElementById('mapCanvasMap') || container;
+  canvasAR.innerHTML = '';
+  activeMap = L.map(canvasAR, { zoomControl:true, scrollWheelZoom:false, attributionControl:true });
+  setBaseLayer('positron');
   try{ createAlcaldiasLayer({interactive:false}).addTo(activeMap); }catch(e){}
   const col = feat.properties._color || 'var(--arcac-com)';
-  activeGeoLayer = L.geoJSON(feat, {style:{color:col, weight:2, fillColor:col, fillOpacity:0.28}}).addTo(activeMap);
+  activeGeoLayer = L.geoJSON(feat, {style:{color:col, weight:2.5, fillColor:col, fillOpacity:0.14}}).addTo(activeMap);
   activeGeoLayer.bindTooltip(`${feat.properties.nombre} · ${feat.properties.tenencia}`, {sticky:true, direction:'top'});
   try{ activeMap.fitBounds(activeGeoLayer.getBounds(), {padding:[20,20], maxZoom:15}); activeMap._siaHome = activeGeoLayer.getBounds(); }catch(e){}
-  activeMap.on('click focus', ()=> activeMap.scrollWheelZoom.enable());
-  activeMap.on('mouseout', ()=> activeMap.scrollWheelZoom.disable());
+  fichaMapaConectar(container);
   addLocateControl(activeMap, ll=>featuresContaining((ARCAC_GEO&&ARCAC_GEO.features)||[], ll), ()=>(ARCAC_GEO&&ARCAC_GEO.features)||[]);
   addResetViewControl(activeMap, 'Volver al polígono');
   addSearchMarkerTo(activeMap);
@@ -4538,7 +4535,7 @@ function _diagnosticoPlaces(msg){
   const m = String(msg || '');
   if(/referer|referrer/i.test(m))          return 'dominio no autorizado en la llave de Google';
   if(/ApiNotActivated|not activated|API_?KEY_?SERVICE/i.test(m)) return 'la API de Places no está habilitada';
-  if(/quota|OVER_QUERY_LIMIT|RESOURCE_EXHAUSTED/i.test(m))       return 'cuota de Google agotada';
+  if(/quota|OVER_QUERY_LIMIT|RESOURCE_EXHAUSTED/i.test(m))       return 'cuota de Google agotada por ahora; vuelve a intentar en un minuto';
   if(/billing/i.test(m))                   return 'facturación no habilitada en el proyecto';
   if(/InvalidKey|API key|PERMISSION_DENIED|denied/i.test(m))     return 'llave de Google inválida o restringida';
   if(/network|Failed to fetch|load/i.test(m))                    return 'sin conexión con Google';
@@ -4734,7 +4731,7 @@ function renderMapFilters(){
       const count = (GEOMETRIES.features||[]).filter(f=>f.properties.grupo===g.key).length;
       const color = GROUP_COLORS[g.key];
       const isActive = state.mapFilters[g.key] !== false;
-      return `<button class="map-filter-chip${isActive?' active':''}" data-grupo="${g.key}" style="--chip-color:${color}">
+      return `<button class="map-filter-chip${isActive?' active':''}" data-grupo="${g.key}" style="--chip-color:${color};--chip-text:${colorTextoGrupo(g.key)}">
         <span class="chip-dot"></span>${g.label} <span class="chip-count">${count}</span>
       </button>`;
     }).join('') + coadminChip + arcacChip + scChip;
@@ -5450,10 +5447,14 @@ function initUbicarBar(){
     const mio = ++_ubicarSeq;
     const locales = _buscarLocal(q);
     pintarUbicarSug(locales, []);
+    /* Google se consulta desde 3 caracteres y con 350 ms de pausa: cada
+       tecleo cuenta contra la cuota por minuto; el índice local sigue
+       respondiendo desde 2 sin costo. */
+    if(q.length < 3) return;
     _ubicarDebounce = setTimeout(async ()=>{
       const dirs = await siaSugerirDirecciones(q);
       if(mio === _ubicarSeq) pintarUbicarSug(locales, dirs, true);
-    }, 280);
+    }, 350);
   });
 }
 
@@ -6123,8 +6124,8 @@ function renderUbicarResultado(latlng, precision, etiqueta){
 
   return `<div class="gm-handle" id="ubicarAsa" aria-hidden="true"></div>
   <div class="panel ubi-panel">
-    <button type="button" class="ubi-cerrar" id="ubicarCerrar" aria-label="Cerrar resultado">×</button>
-    <div class="ubi-cabeza">${esc(cabeza)}</div>
+    <div class="ubi-cabeza"><span class="ubi-cabeza-txt">${esc(cabeza)}</span>
+      <button type="button" class="ubi-cerrar" id="ubicarCerrar" aria-label="Cerrar resultado">×</button></div>
     ${_avisoCapasHTML('ubi-warn')}
     ${etiqueta ? `<p class="ubi-etiqueta">${esc(etiqueta)}</p>` : ''}
     <div class="ubi-grid">
@@ -6182,18 +6183,24 @@ function montarBotonBase(){
        sección, como los «detalles del mapa» de Maps. Se mueve el mismo nodo,
        no se duplica: conserva su id y todos sus escuchas. */
     const lienzo = cont.parentElement;
+    const seccionCapas = ()=>{
+      let sec = toggle.querySelector('.capa-extra');
+      if(!sec){
+        sec = document.createElement('div'); sec.className = 'capa-extra';
+        const tit = document.createElement('span'); tit.className = 'capa-extra-tit'; tit.textContent = 'Capas';
+        sec.appendChild(tit); toggle.appendChild(sec);
+      }
+      return sec;
+    };
+    /* Orden dentro de «Capas» en la ficha: primero la zonificación del
+       programa de manejo (la capa propia de ESTA área) y debajo Suelo de
+       Conservación (el régimen general). Se mueven los mismos nodos: conservan
+       id y escuchas; si el área no tiene zonificación, montarZonificacionEnMapa
+       retira el interruptor de donde esté. */
+    const zw = lienzo && lienzo.querySelector('.zonif-flotante');
+    if(zw && !toggle.contains(zw)){ zw.classList.add('en-menu'); seccionCapas().appendChild(zw); }
     const sc = lienzo && lienzo.querySelector('.drawer-sc-floating');
-    if(sc && !toggle.querySelector('.capa-extra')){
-      const sec = document.createElement('div');
-      sec.className = 'capa-extra';
-      const tit = document.createElement('span');
-      tit.className = 'capa-extra-tit';
-      tit.textContent = 'Capas';
-      sec.appendChild(tit);
-      sec.appendChild(sc);
-      sc.classList.add('en-menu');
-      toggle.appendChild(sec);
-    }
+    if(sc && !toggle.contains(sc)){ sc.classList.add('en-menu'); seccionCapas().appendChild(sc); }
     /* «Usar mi ubicación» vive SOBRE el mapa, como botón redondo guinda en la
        esquina inferior derecha: es la acción que más se repite en campo y al
        lado del buscador estorbaba (decisión del 12-sep-2026). Dispara el
@@ -6226,14 +6233,8 @@ function montarBotonBase(){
       const panel = cont.closest('.panel-mapa');
       const filtros = panel && panel.querySelector('.map-filters');
       if(filtros && !filtros.classList.contains('map-filters--oculto') && !toggle.contains(filtros)){
-        let sec = toggle.querySelector('.capa-extra');
-        if(!sec){
-          sec = document.createElement('div'); sec.className = 'capa-extra';
-          const tit = document.createElement('span'); tit.className = 'capa-extra-tit'; tit.textContent = 'Capas';
-          sec.appendChild(tit); toggle.appendChild(sec);
-        }
         filtros.classList.add('en-menu');
-        sec.appendChild(filtros);
+        seccionCapas().appendChild(filtros);
       }
     }
   });
@@ -6602,6 +6603,50 @@ function zonaDePunto(nombreArea, latlng){
   }).catch(()=>null);
 }
 
+/* ═══ MINIMAPA DE FICHA · UN SOLO MARCADO PARA LAS TRES FICHAS ═══════
+   Inventario, ARCAC y Zona Patrimonio comparten lienzo, menú de capas
+   (Mapa / Satélite · Capas: zonificación cuando existe, Suelo de Conservación
+   siempre), pantalla completa y controles. Antes cada ficha armaba su propio
+   mapa y dos de ellas salían sin menú ni Suelo de Conservación: distintas
+   fichas para la misma pregunta. `zonif` solo lo pide el inventario. */
+function fichaMapaHTML(opts){
+  const o = opts || {};
+  return `
+    <div class="map-block">
+      <div class="map-canvas" id="mapCanvas" style="position:relative">
+        <div class="map-canvas-inner" id="mapCanvasMap"></div>
+        <div class="map-block-controls map-block-controls-floating">
+          <div class="map-block-toggle">
+            <button data-layer="positron" class="active">Mapa</button>
+            <button data-layer="satelite">Satélite</button>
+          </div>
+          <button class="map-fullscreen-btn" type="button" aria-label="Pantalla completa" title="Pantalla completa">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M21 8V5a2 2 0 0 0-2-2h-3"></path><path d="M3 16v3a2 2 0 0 0 2 2h3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg>
+          </button>
+        </div>
+        <div class="drawer-sc-floating">
+          <button class="map-filter-chip active" id="drawerSCToggle" type="button" style="--chip-color:var(--sc)"><span class="chip-dot"></span>Suelo de Conservación</button>
+        </div>
+        ${o.zonif ? `<div class="zonif-flotante" id="zonifToggleWrap"><button class="map-filter-chip" id="zonifToggle" type="button" aria-pressed="false" style="--chip-color:#1f6b4a"><span class="chip-dot"></span>Zonificación del programa de manejo</button></div>
+        <div class="zonif-leyenda" id="zonifLeyenda" hidden></div>` : ''}
+      </div>
+    </div>
+`;
+}
+/* Lo que todo minimapa de ficha lleva después de crearse: base conmutable,
+   pantalla completa, Suelo de Conservación en el menú y desplazamiento con
+   rueda solo al enfocarlo. */
+function fichaMapaConectar(container){
+  if(!activeMap) return;
+  document.querySelectorAll('#dr .map-block-toggle button').forEach(btn=>{
+    btn.addEventListener('click', ()=>setBaseLayer(btn.dataset.layer));
+  });
+  try{ attachFullscreenBtn(container, activeMap); }catch(e){}
+  try{ attachSCToggle('drawerSCToggle', activeMap, null, activeGeoLayer); }catch(e){}
+  activeMap.on('click focus', ()=> activeMap.scrollWheelZoom.enable());
+  activeMap.on('mouseout', ()=> activeMap.scrollWheelZoom.disable());
+}
+
 const bd=document.getElementById('bd'),dr=document.getElementById('dr'),drIn=document.getElementById('drIn');
 function openDrawer(d){
   const legalParts = getLegalContext(d);
@@ -6642,29 +6687,7 @@ function openDrawer(d){
       </button>
     </div>
 
-    <div class="map-block">
-      <div class="map-canvas" id="mapCanvas" style="position:relative">
-        <div class="map-canvas-inner" id="mapCanvasMap"></div>
-        <div class="map-block-controls map-block-controls-floating">
-          <div class="map-block-toggle">
-            <button data-layer="positron" class="active">Mapa</button>
-            <button data-layer="satelite">Satélite</button>
-          </div>
-          <button class="map-fullscreen-btn" type="button" aria-label="Pantalla completa" title="Pantalla completa">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M21 8V5a2 2 0 0 0-2-2h-3"></path><path d="M3 16v3a2 2 0 0 0 2 2h3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg>
-          </button>
-        </div>
-        <div class="drawer-sc-floating">
-          <button class="map-filter-chip active" id="drawerSCToggle" type="button" style="--chip-color:var(--sc)"><span class="chip-dot"></span>Suelo de Conservación</button>
-        </div>
-        <!-- La zonificación del programa de manejo es la única capa propia de ESTA
-             ficha: va visible sobre el mapa, no guardada en el menú, para que se
-             encuentre. Solo existe en las siete ANP que la tienen publicada. -->
-        <div class="zonif-flotante" id="zonifToggleWrap"><button class="map-filter-chip" id="zonifToggle" type="button" aria-pressed="false" style="--chip-color:#1f6b4a"><span class="chip-dot"></span>Zonificación del programa de manejo</button></div>
-        <div class="zonif-leyenda" id="zonifLeyenda" hidden></div>
-      </div>
-    </div>
-
+    ${fichaMapaHTML({zonif:true})}
     <div class="big-num">${fmt(d.superficie)}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">ha</span></div>
     <div class="big-num-lbl">Superficie decretada</div>
     <div class="field"><div class="k">Tipo</div><div class="v"><span class="tag tag-${d.tipo} tag-full">${d.tipo==='AVA'?'Área de Valor Ambiental':'Área Natural Protegida'}</span></div></div>
@@ -6677,6 +6700,9 @@ function openDrawer(d){
          nunca pudo decir. */
       return `<span class="status-tag status-sc ${SC_CLS[scEstado(d)]}">${scTexto(d)}</span>`;
     })()}</div></div>
+    <!-- Lo que se deriva de caer en Suelo de Conservación va inmediatamente
+         debajo del dato que lo origina: la zona del PGOEDF. -->
+    <div id="fichaPgoedf" class="zonif-bloque zonif-bloque-intercalado"></div>
     ${isCoadmin(d.nombre) ? `
     <div class="field"><div class="k">Coadministración</div><div class="v">
       <span class="tag-coadmin">Convenio Marco SEMARNAT–CONANP–CDMX 2025</span>
@@ -6684,13 +6710,13 @@ function openDrawer(d){
     <div class="field"><div class="k">Fecha decreto</div><div class="v">${d.fecha_decreto}</div></div>
     <div class="field"><div class="k">Programa de manejo</div><div class="v"><span class="status-tag ${d.programa_manejo==='Sí'?'status-tag-si':'status-tag-no'}">${d.programa_manejo==='Sí'?'Publicado':'Sin programa vigente'}</span></div></div>
     <div class="field"><div class="k">Fecha Programa de Manejo</div><div class="v">${d.fecha_pm||'—'}</div></div>
+    <!-- Y lo que se deriva de tener programa de manejo, debajo de él: su zonificación. -->
+    <div id="fichaZonif" class="zonif-bloque zonif-bloque-intercalado"></div>
     <div class="field"><div class="k">DG responsable</div><div class="v">${
       d.dg_responsable === 'DGSANPAVA' ? '<span class="tag-dg tag-dg-dgsanpava" title="Dirección General del Sistema de Áreas Naturales Protegidas y Áreas de Valor Ambiental">DGSANPAVA</span>' :
       d.dg_responsable === 'DGCORENADER' ? '<span class="tag-dg tag-dg-dgcorenader" title="Dirección General de la Comisión de Recursos Naturales y Desarrollo Rural">DGCORENADER</span>' :
       '<span style="color:var(--muted)">Sin asignar</span>'
     }</div></div>
-    <div id="fichaZonif" class="zonif-bloque"></div>
-    <div id="fichaPgoedf" class="zonif-bloque"></div>
     ${renderDocumentosOficiales(d)}
     ${legalParts.length ? `
     <div class="legal-block">
@@ -7114,7 +7140,12 @@ window.addEventListener('hashchange', () => {
 if('serviceWorker' in navigator){
   // Solo registrar si NO estamos en file:// (dev local sin servidor)
   if(location.protocol === 'http:' || location.protocol === 'https:'){
-    window.addEventListener('load', () => {
+    /* Este bloque corre al final del arranque, que es asíncrono (espera el
+       CSV del inventario): para entonces `load` ya disparó y un listener
+       nuevo no se ejecuta nunca. Auditoría 12-sep-2026: en producción el SW
+       no se registraba y no había caché offline. Si el documento ya está
+       completo se registra de inmediato. */
+    const _registrarSW = () => {
       navigator.serviceWorker.register('sw.js')
         .then(reg => {
           // Detectar actualizaciones del SW
@@ -7144,7 +7175,9 @@ if('serviceWorker' in navigator){
         _swRecargando = true;
         setTimeout(() => location.reload(), 600);
       });
-    });
+    };
+    if(document.readyState === 'complete') _registrarSW();
+    else window.addEventListener('load', _registrarSW);
   }
 }
 
