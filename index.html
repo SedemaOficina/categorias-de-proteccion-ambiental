@@ -19,10 +19,10 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Dashboard · Categorías de Protección Ambiental · SEDEMA CDMX">
 <meta property="og:description" content="Sistema institucional de las 66 áreas protegidas de la Ciudad de México: ANP, AVA y ZCEC.">
-<meta property="og:image" content="https://sedemaoficina.github.io/categorias-de-proteccion-ambiental/assets/og-image.png">
+<meta property="og:image" content="https://sia.contactoverde.com/assets/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:url" content="https://sedemaoficina.github.io/categorias-de-proteccion-ambiental/">
+<meta property="og:url" content="https://sia.contactoverde.com/">
 <meta property="og:locale" content="es_MX">
 <meta property="og:site_name" content="SIA · SEDEMA CDMX">
 
@@ -30,9 +30,9 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Dashboard · Categorías de Protección Ambiental · SEDEMA CDMX">
 <meta name="twitter:description" content="Sistema institucional de las 66 áreas protegidas de la Ciudad de México: ANP, AVA y ZCEC.">
-<meta name="twitter:image" content="https://sedemaoficina.github.io/categorias-de-proteccion-ambiental/assets/og-image.png">
+<meta name="twitter:image" content="https://sia.contactoverde.com/assets/og-image.png">
 
-<link rel="canonical" href="https://sedemaoficina.github.io/categorias-de-proteccion-ambiental/">
+<link rel="canonical" href="https://sia.contactoverde.com/">
 
 <!-- Política de seguridad de contenido · defensa en profundidad.
      No mitiga XSS (el sitio es HTML+CSS+JS inline sin build, obliga a unsafe-inline),
@@ -1214,8 +1214,15 @@
   .leaflet-bar a:focus-visible{outline:2px solid var(--guinda); outline-offset:-2px}
   .leaflet-bar a.leaflet-disabled{color:var(--muted); background:var(--bg-2); opacity:.55}
   /* Íconos propios: mismo peso y color que el resto; el color solo aparece al pasar el cursor */
-  .locate-ctrl a, .resetview-ctrl a{color:var(--ink-2) !important}
-  .locate-ctrl a:hover, .resetview-ctrl a:hover{color:var(--guinda) !important}
+  /* «Ubicarme» va en guinda: es la misma acción que el botón redondo de la
+     barra de búsqueda y debe leerse igual. «Vista general» se queda en gris
+     —es una utilidad del mapa, no la acción principal—. El `!important` venía
+     de cuando ambos controles se igualaban; se conserva porque el icono trae
+     color en línea desde el JS de Leaflet. */
+  .resetview-ctrl a{color:var(--ink-2) !important}
+  .locate-ctrl a{color:var(--guinda) !important}
+  .resetview-ctrl a:hover{color:var(--guinda) !important}
+  .locate-ctrl a:hover{color:var(--guinda-900) !important}
   .locate-ctrl a svg, .resetview-ctrl a svg{width:16px; height:16px}
 
   /* ── Vista: capa base + pantalla completa en una sola tarjeta ── */
@@ -1642,6 +1649,29 @@
   margin:2px}
 .gm-mark-pin svg{filter:drop-shadow(0 2px 3px rgba(42,42,42,.4))}
 
+/* ── PANTALLA COMPLETA: FUERA DE LOS CUATRO MAPAS ──────────────────
+   No aportaba nada —en celular el mapa ya ocupa la pantalla y en
+   escritorio la ventana ES la pantalla— y en iOS solo servía para mostrar
+   «Tu navegador no admite el modo pantalla completa». Va sin media query:
+   sobra en todos los anchos. Deja sin efecto a `html.sin-fullscreen`. */
+.map-fullscreen-btn{display:none!important}
+
+/* ── «Ubicarme» en guinda ──────────────────────────────────────────
+   Es la misma acción que el botón redondo de la barra de búsqueda y debía
+   leerse igual. El azul se reserva para el punto que marca dónde estás,
+   que es un dato, no un control. Va en la hoja y no en un estilo en línea
+   porque así se aplica también a los controles que Leaflet recrea. */
+.locate-ctrl a{color:var(--guinda)}
+.locate-ctrl a:hover{color:var(--guinda-900)}
+
+/* ── Tarjeta de capa base · sin el botón de pantalla completa ───────
+   El grupo se angosta y deja de rozar el borde derecho del lienzo. En el
+   mini-mapa de la ficha, el más estrecho de los cuatro, además se reduce
+   el tamaño de las etiquetas. */
+#mapCanvas .map-block-controls-floating{top:10px;right:10px}
+#mapCanvas .map-block-controls-floating .map-block-toggle button{padding:0 10px;
+  font-size:var(--fs-micro)}
+
 /* Asa de arrastre (componente `handle` del kit) */
 .gm-handle{width:34px;height:4px;border-radius:2px;background:#dadce0;margin:8px auto 4px}
 
@@ -1779,9 +1809,6 @@
 
   /* ── HOJA DESLIZABLE (componentes `handle` + `location-card`) ──── */
   .gm-handle{display:none}
-  /* iOS Safari no admite pantalla completa fuera de video: el botón solo
-     servía para mostrar un aviso de error. Se oculta donde no aplica. */
-  html.sin-fullscreen .map-fullscreen-btn{display:none}
   .wrap.dest-ubicar.gm-shell .gm-handle{display:block}
   .wrap.dest-ubicar.gm-shell #ubicarResultado{position:fixed;left:0;right:0;
     bottom:calc(var(--destbar-h) + env(safe-area-inset-bottom, 0px));
@@ -1892,6 +1919,20 @@
     background:no-repeat center/contain;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239D2148' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s7-6.2 7-11.4A7 7 0 0 0 5 10.6C5 15.8 12 22 12 22Z'/><circle cx='12' cy='10.4' r='2.4'/></svg>")}
   #ubicarResultado .ubi-ficha{width:100%;justify-content:center;margin-top:12px}
+
+
+  /* ── LA FICHA-HOJA NO DEBE CORTAR SU PROPIO CONTENIDO ────────────
+     Antes la hoja entera tenía el desplazamiento y el asa iba `sticky`
+     encima: el título pasaba por debajo y se veía rebanado, y el
+     arrastre competía con el scroll —de ahí la sensación pegajosa—.
+     Ahora la hoja es una columna fija: asa arriba, cuerpo con su propio
+     desplazamiento debajo. `overscroll-behavior:contain` impide que al
+     llegar al final el gesto se lo lleve la página de atrás. */
+  .drawer{display:flex;flex-direction:column;overflow:hidden}
+  .drawer .gm-handle{flex:0 0 auto;position:static}
+  .drawer-inner{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;padding-top:4px}
+  .drawer .close{position:absolute;z-index:4}
 
   /* ── PILLS (componente `pills`) ───────────────────────────────────
      Los subfiltros ya eran pastillas; se les da la sombra y el blanco
@@ -4968,7 +5009,10 @@ function addLocateControl(map, getContainment, getFeatures){
       const c = L.DomUtil.create('div','leaflet-bar locate-ctrl');
       const a = L.DomUtil.create('a','',c);
       a.href='#'; a.title='Ubicarme'; a.setAttribute('role','button'); a.setAttribute('aria-label','Ubicarme');
-      a.style.cssText = 'display:flex;align-items:center;justify-content:center;color:' + COL_AZUL_UBIC;
+      /* El color lo fija la hoja de estilos (`.locate-ctrl a`), no aquí: los
+         estilos de Leaflet para `.leaflet-bar a` llevan `!important` y un
+         color en línea quedaba sin efecto —parecía puesto y no lo estaba—. */
+      a.style.cssText = 'display:flex;align-items:center;justify-content:center';
       a.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg>';
       L.DomEvent.on(a,'click',L.DomEvent.stopPropagation).on(a,'click',L.DomEvent.preventDefault)
         .on(a,'click',()=>_doLocate(map,getContainment,a,getFeatures));
@@ -7167,19 +7211,6 @@ function montarBotonCapas(){
     panel.appendChild(b);
   });
 }
-
-/* Safari en iPhone no implementa la API de pantalla completa para elementos
-   —solo para video—, así que el botón únicamente servía para mostrar el aviso
-   «Tu navegador no admite el modo pantalla completa». Se marca el documento una
-   sola vez al arrancar y el CSS oculta el botón en todos los mapas. */
-(function(){
-  try{
-    const hay = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled
-                || document.documentElement.requestFullscreen
-                || document.documentElement.webkitRequestFullscreen);
-    if(!hay) document.documentElement.classList.add('sin-fullscreen');
-  }catch(e){ document.documentElement.classList.add('sin-fullscreen'); }
-})();
 
 /* Capa de la ubicación resuelta sobre el mapa global. Vive aparte del resto
    de capas para poder borrarla entera en cada consulta sin tocar el
