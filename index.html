@@ -1934,6 +1934,17 @@
     overscroll-behavior:contain;padding-top:4px}
   .drawer .close{position:absolute;z-index:4}
 
+  /* ── TOOLTIPS DE LAS CRONOLOGÍAS EN iOS ──────────────────────────
+     El globo se ancla al pie con `position:fixed`, pero en Safari de iPhone
+     un elemento fijo DENTRO de un contenedor con
+     `-webkit-overflow-scrolling:touch` deja de ser fijo respecto a la
+     ventana y pasa a quedar contenido por ese contenedor: por eso salía
+     angosto, encimado sobre la barra y cortado por el borde de la gráfica.
+     Chromium no reproduce la falla, así que solo se ve en el teléfono.
+     Se renuncia al desplazamiento con inercia en esas dos gráficas —siguen
+     desplazándose— a cambio de que el globo quede donde debe. */
+  .cronologia-container{-webkit-overflow-scrolling:auto}
+
   /* ── PILLS (componente `pills`) ───────────────────────────────────
      Los subfiltros ya eran pastillas; se les da la sombra y el blanco
      del kit para que floten sobre el fondo en vez de dibujar borde. */
@@ -4466,6 +4477,23 @@ let ALCALDIAS_EMBEDDED = { type:'FeatureCollection', features:[] };
    donde var(--token) no se resuelve. Una sola fuente de verdad por concepto:
    antes había 3 azules casi idénticos y 4 grises sin relación entre sí. */
 const COL_GRIS_NEUTRO = '#8a8d8f';  /* sin protección · fuera de ámbito */
+
+/* Resuelve `var(--x)` a un color literal.
+   Canvas NO entiende variables CSS: al asignar un valor que no sabe parsear a
+   `fillStyle` lo ignora en silencio y conserva el anterior. Como el primer
+   relleno de la tarjeta compartible es el fondo crema, todo lo que venía
+   después con un `var(...)` —el filete, el badge de categoría, la cifra de
+   superficie y el polígono— se dibujaba crema sobre crema: invisible.
+   GROUP_COLORS pasó a variables CSS en el rediseño de v38 y ahí se rompió. */
+function colorLiteral(c){
+  const s = String(c == null ? '' : c).trim();
+  const m = s.match(/^var\(\s*(--[\w-]+)\s*(?:,\s*([^)]*))?\)$/);
+  if(!m) return s || '#2a2a2a';
+  let v = '';
+  try{ v = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim(); }catch(e){}
+  if(v) return v;
+  return m[2] ? colorLiteral(m[2]) : '#2a2a2a';   /* respeta el valor de reserva */
+}
 const COL_AZUL_UBIC   = '#1971c2';  /* ubicación del usuario · GPS */
 const COL_AZUL_EMB    = '#1864ab';  /* embarcaderos */
 
@@ -6632,7 +6660,7 @@ async function compartirFichaImagen(d, btn){
   try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(_){}
   const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
   const ctx=cv.getContext('2d');
-  const color = (typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[d.grupo]) || 'var(--guinda)';
+  const color = colorLiteral((typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[d.grupo]) || 'var(--guinda)');
 
   ctx.fillStyle='#fffdf0'; ctx.fillRect(0,0,W,H);
 
@@ -6643,7 +6671,7 @@ async function compartirFichaImagen(d, btn){
     const lw=Math.min(600, W-96), lh=lw*logo.naturalHeight/logo.naturalWidth;
     try{ ctx.drawImage(logo,48,y,lw,lh); y+=lh+26; }catch(_){ y+=20; }
   }
-  ctx.fillStyle='var(--guinda)'; ctx.fillRect(48,y,W-96,3); y+=44;
+  ctx.fillStyle=colorLiteral('var(--guinda)'); ctx.fillRect(48,y,W-96,3); y+=44;
 
   /* Badge de categoría */
   ctx.font='600 22px "Roboto Mono", monospace';
@@ -6703,7 +6731,7 @@ async function compartirFichaImagen(d, btn){
 
   /* Pie */
   y=H-58;
-  ctx.fillStyle='var(--guinda)'; ctx.fillRect(0,H-92,W,3);
+  ctx.fillStyle=colorLiteral('var(--guinda)'); ctx.fillRect(0,H-92,W,3);
   ctx.fillStyle='#55585a'; ctx.font='400 19px "Roboto Mono", monospace';
   const hoy=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
   ctx.fillText('Sistema de Información Ambiental · SEDEMA CDMX',48,y);
