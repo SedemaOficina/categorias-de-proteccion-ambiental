@@ -1,0 +1,21 @@
+{
+  // ───────────────────────────────────────────────────────────────────
+  // Despliegue del tablero SIA en Cloudflare Workers (assets estáticos)
+  //
+  // El sitio no tiene build: es HTML, CSS y JS en un solo archivo más la
+  // carpeta data/. Por eso "Build command" va VACÍO en el panel y aquí
+  // solo se declara qué carpeta se publica.
+  //
+  // "directory": "./"  → se sirve el repositorio tal cual, igual que hace
+  // GitHub Pages hoy. Cloudflare excluye por su cuenta .git y node_modules.
+  //
+  // El Service Worker (sw.js) queda en la raíz, que es donde tiene que
+  // estar: su ámbito es la carpeta desde la que se sirve, y moverlo lo
+  // dejaría sin control sobre index.html.
+  // ───────────────────────────────────────────────────────────────────
+  "name": "categorias-de-proteccion-ambiental",
+  "compatibility_date": "2026-09-12",
+  "assets": {
+    "directory": "./"
+  }
+}
