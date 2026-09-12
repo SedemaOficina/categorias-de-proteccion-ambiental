@@ -44,7 +44,7 @@
 <!-- DNS prefetch para CDNs externas -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cabin:wght@500;600;700&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cabin:wght@500;600;700&family=Roboto:ital,wght@0,400;0,500;0,700;0,900;1,400;1,500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <!-- DNS prefetch para CDNs y tiles de mapa -->
 <link rel="preconnect" href="https://unpkg.com" crossorigin>
@@ -59,6 +59,8 @@
     /* Paleta oficial · Gobierno de la Ciudad de México */
     --font-titulo:'Cabin','Roboto',sans-serif;  /* Identidad: Cabin para títulos */
     --guinda:#9d2148;   /* Pantone 7420 C — institucional primario */
+    --guinda-900:#7a1a37;   /* Guinda oscurecido · estados :hover y :active */
+    --guinda-400:#c0426d;   /* Guinda aclarado · degradados y barras de avance */
     --dorado:#b28e5c;   /* Pantone 465 C — institucional primario (uso gráfico) */
     --dorado-text:#7a5d35;  /* Variante oscura para texto (contraste 5.6:1 sobre crema, AA) */
     --naranja:#f08217;
@@ -86,6 +88,20 @@
     --line:#d9d3c0;
     --line-soft:#eae4cf;
     --card:#ffffff;
+
+    /* Paleta de subcategorias · Pantone de referencia entre parentesis.
+       Se tokeniza para que un cambio de identidad no obligue a cazar
+       hex sueltos por toda la hoja. */
+    --sub-bu:#8a5a12;      /* Bosque Urbano · Naranja 158C oscurecido */
+    --sub-zsce:#1c6b85;    /* ZSCE · Azul claro 0821C */
+    --sub-zpe:#8a6a00;     /* ZPE · Amarillo 7548C oscurecido */
+    --sub-zec:#a63a52;     /* ZEC · Rosa 176C oscurecido */
+    --sub-pn:#b5133f;      /* Parque Nacional · Rojo 1925C */
+    --sub-rvs:#5d8a5e;     /* Fallback · Verde oliva */
+    --sub-rb:#8b4513;      /* Fallback · Sienna */
+    --sub-mn:#4a90a4;      /* Fallback · Azul gris */
+    --sub-apff:#7e57c2;    /* Fallback · Purpura */
+    --sub-san:#d35400;     /* Fallback · Naranja oscuro */
 
     /* Colores por grupo */
     --bu:var(--verde);
@@ -361,7 +377,7 @@
     .destbar{padding:3px;gap:2px}
     .dest{height:48px;flex-direction:column;gap:2px;font-size:var(--fs-xs);padding:0 4px}
     .dest .dest-ico{width:19px;height:19px}
-    .subchip{height:40px;padding:0 14px;border-radius:20px;font-size:var(--fs-sm)}
+    .subchip{height:44px;padding:0 15px;border-radius:22px;font-size:var(--fs-sm)}
     .subnav-lbl{display:none}
   }
 
@@ -546,7 +562,7 @@
   .rank-name{font-size:var(--fs-md);font-weight:600;color:var(--ink)}
   .rank-count{font-size:var(--fs-xs);color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.04em;white-space:nowrap}
   .rank-bar{height:5px;background:var(--bg-2);border-radius:var(--r-ui);overflow:hidden}
-  .rank-bar-fill{height:100%;background:linear-gradient(90deg,var(--guinda),#c0426d);transition:width .4s ease}
+  .rank-bar-fill{height:100%;background:linear-gradient(90deg,var(--guinda),var(--guinda-400));transition:width .4s ease}
 
   /* ============================================================
    * CRONOLOGÍA · CSS
@@ -916,7 +932,7 @@
      interfaz, justo en los controles más usados. Se alinea con el resto del sitio. */
   input[type=search]:focus-visible,select:focus-visible{outline:2px solid var(--guinda);outline-offset:1px}
   .btn{background:var(--guinda);color:var(--crema);border:none;border-radius:var(--radius);padding:0 16px;font-family:'Roboto',sans-serif;font-weight:500;font-size:var(--fs-base);letter-spacing:.02em;cursor:pointer;transition:background .15s;height:38px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
-  .btn:hover{background:#7a1a37}
+  .btn:hover{background:var(--guinda-900)}
   .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
   .btn.ghost:hover{background:var(--bg-2);border-color:var(--guinda);color:var(--guinda)}
   .btn-group{display:flex;gap:8px}
@@ -997,24 +1013,24 @@
   /* Variante full: nombre completo dentro del recuadro con su color característico */
   .tag-sub.tag-sub-full{padding:4px 12px;font-size:var(--fs-xs);letter-spacing:.02em;white-space:normal}
   /* AVA */
-  .sub-BU   {background:transparent; color:#8a5a12; border:1px solid rgba(240,130,23,.55)}
+  .sub-BU   {background:transparent; color:var(--sub-bu); border:1px solid rgba(240,130,23,.55)}
   .sub-BR   {background:transparent; color:var(--marron-900); border:1px solid rgba(143,86,16,.45)}
   /* ANP Local */
   .sub-ZCE{background:transparent; color:var(--gris); border:1px solid rgba(85,88,90,.45)}      /* Gris 425C    */
-  .sub-ZSCE{background:transparent; color:#1c6b85; border:1px solid rgba(28,107,133,.45)}        /* Azul cl 0821C */
-  .sub-ZPE{background:transparent; color:#8a6a00; border:1px solid rgba(138,106,0,.45)}        /* Amarillo 7548C */
-  .sub-ZEC{background:transparent; color:#a63a52; border:1px solid rgba(166,58,82,.45)}        /* Rosa 176C    */
+  .sub-ZSCE{background:transparent; color:var(--sub-zsce); border:1px solid rgba(28,107,133,.45)}        /* Azul cl 0821C */
+  .sub-ZPE{background:transparent; color:var(--sub-zpe); border:1px solid rgba(138,106,0,.45)}        /* Amarillo 7548C */
+  .sub-ZEC{background:transparent; color:var(--sub-zec); border:1px solid rgba(166,58,82,.45)}        /* Rosa 176C    */
   .sub-ZPHE{background:transparent; color:var(--magenta-900); border:1px solid rgba(194,39,122,.45)}      /* Magenta 225C oscurecido · AA */
   .sub-REC{background:transparent; color:var(--dorado-text); border:1px solid rgba(122,93,53,.5)}        /* Dorado 465C · texto oscuro por contraste */
   /* ANP Federal */
-  .sub-PN{background:transparent; color:#b5133f; border:1px solid rgba(181,19,63,.45)}      /* Rojo 1925C   */
+  .sub-PN{background:transparent; color:var(--sub-pn); border:1px solid rgba(181,19,63,.45)}      /* Rojo 1925C   */
   .sub-APRN{background:transparent; color:var(--violeta); border:1px solid rgba(143,72,137,.45)}      /* Violeta 258C */
   /* Fallbacks · subcategorías no presentes en inventario actual */
-  .sub-RVS  {background:#5d8a5e;           color:var(--crema)}      /* Verde oliva  */
-  .sub-RB   {background:#8b4513;           color:var(--crema)}      /* Sienna       */
-  .sub-MN   {background:#4a90a4;           color:var(--crema)}      /* Azul gris    */
-  .sub-APFF {background:#7e57c2;           color:var(--crema)}      /* Púrpura      */
-  .sub-SAN  {background:#d35400;           color:var(--crema)}      /* Naranja oscuro */
+  .sub-RVS  {background:var(--sub-rvs);           color:var(--crema)}      /* Verde oliva  */
+  .sub-RB   {background:var(--sub-rb);           color:var(--crema)}      /* Sienna       */
+  .sub-MN   {background:var(--sub-mn);           color:var(--crema)}      /* Azul gris    */
+  .sub-APFF {background:var(--sub-apff);           color:var(--crema)}      /* Púrpura      */
+  .sub-SAN  {background:var(--sub-san);           color:var(--crema)}      /* Naranja oscuro */
 
   .empty{padding:60px 20px;text-align:center;color:var(--muted);font-style:italic}
 
@@ -1054,7 +1070,7 @@
   .meta-t{font-size:var(--fs-sm);color:var(--ink-2);line-height:1.35}
   .meta-rate{font-size:var(--fs-sm);color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:.02em;margin-top:auto;padding-top:10px;border-top:1px dotted var(--line-soft)}
   .meta-rate b{color:var(--ink);font-weight:700}
-  .meta-arrow{display:flex;align-items:center;justify-content:center;font-family:'Roboto',sans-serif;font-size:var(--fs-mega);color:var(--guinda);font-weight:300}
+  .meta-arrow{display:flex;align-items:center;justify-content:center;font-family:'Roboto',sans-serif;font-size:var(--fs-mega);color:var(--guinda);font-weight:400}
 
   .meta-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
   .meta-card{background:var(--bg-2);border:1px solid var(--line-soft);border-radius:var(--radius);padding:16px 18px}
@@ -1538,7 +1554,18 @@
     border:1.6px solid var(--sc)}
   /* Dentro de la ficha el indicador es un dato más: hereda el tamaño del valor y
      se alinea a su línea base, no a la del contenedor flexible. */
-  .field .status-tag{font-size:inherit;align-items:baseline;gap:8px}
+  /* Dentro de la ficha el indicador lleva texto largo —«Parcialmente dentro ·
+     96.0% de su superficie»— y con `nowrap` se salia del renglon y quedaba
+     cortado en el borde derecho. Aqui envuelve; el punto no se separa. */
+  /* Campo de coadministracion · solo aparece en las ocho ANP federales del
+     Convenio Marco 2025. Es informacion de regimen, no una etiqueta mas. */
+  .tag-coadmin{display:inline-block;padding:3px 10px;border-radius:var(--r-chip);
+    border:1px solid var(--azul);color:var(--azul);background:transparent;
+    font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.02em;
+    line-height:1.4;font-weight:500}
+  .coadmin-nota{margin-top:5px;font-size:var(--fs-xs);color:var(--muted);line-height:1.45}
+  .field .status-tag{font-size:inherit;align-items:baseline;gap:8px;
+    white-space:normal;line-height:1.35}
   .field .status-tag::before{position:relative;top:-1px;align-self:center}
   /* En la tabla el punto basta; el texto queda solo para lectores de pantalla. */
   td .status-tag{font-size:0;gap:0}
@@ -1559,7 +1586,7 @@
   .sia-footer-inner{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
   .sia-footer-text{color:var(--guinda);font-weight:600}
   .sia-footer-text-2{color:var(--ink-2);font-weight:400}
-  .sia-footer-sep{color:var(--line);font-weight:300}
+  .sia-footer-sep{color:var(--line);font-weight:400}
   /* Procedencia del dato · exigencia de gobierno digital: fuente, corte, unidad
      responsable, carácter no vinculante y vía de contacto ciudadano. */
   .sia-proc{max-width:900px;margin:0 auto 18px;padding:0 20px;display:flex;flex-direction:column;gap:8px;font-family:'Roboto',sans-serif;font-size:var(--fs-xs);line-height:1.55;color:var(--ink-2);text-align:center}
@@ -1951,8 +1978,15 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
      a lo ancho (tarjetas legales, mini-mapa), la cabecera fija se corría a la
      izquierda y el nombre del área salía cortado. */
   .drawer-inner{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
-    -webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:2px 18px 40px}
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 18px 40px}
+  /* Sin relleno superior: con 2px, `top:0` dejaba una rendija por la que se
+     veia pasar el renglon de texto por encima de la cabecera al desplazar. */
   .drawer-inner > *{max-width:100%}
+  /* La cabecera es la excepcion: sale de los margenes laterales a proposito
+     (margin:0 -18px) para tapar de borde a borde lo que pasa por debajo. El
+     max-width de arriba la encogia al ancho del contenido y dejaba ver el
+     mini-mapa por la derecha, con el tache flotando fuera del bloque. */
+  .drawer-inner > .drawer-header-row{max-width:none}
   /* Con la ficha abierta, la página de atrás no se mueve. `overscroll-behavior`
      por sí solo no basta en iOS: el cuerpo sigue recibiendo el gesto cuando la
      ficha llega a su tope. Se congela el documento mientras la hoja está arriba
@@ -1960,7 +1994,9 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
   html.ficha-abierta, html.ficha-abierta body{overflow:hidden;overscroll-behavior:none}
   /* El tache, como en Maps: círculo gris en la esquina de la cabecera, a la
      altura del título —no flotando en el hueco de arriba—. */
-  .drawer .close{position:absolute;z-index:4;top:32px;right:14px;
+  /* z-index por encima de la cabecera fija (600): desde que la cabecera cubre
+     el ancho completo, un valor menor dejaba el tache tapado por ella. */
+  .drawer .close{position:absolute;z-index:601;top:32px;right:14px;
     width:34px;height:34px;border-radius:50%;background:var(--bg-2);color:var(--ink-2);
     font-size:var(--fs-xl);box-shadow:var(--gm-e1)}
   .drawer .close:active{background:#e6e1d4}
@@ -2064,9 +2100,137 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
   /* ── PILLS (componente `pills`) ───────────────────────────────────
      Los subfiltros ya eran pastillas; se les da la sombra y el blanco
      del kit para que floten sobre el fondo en vez de dibujar borde. */
-  .subchip{border:none;background:var(--card);box-shadow:var(--gm-e1);height:38px;border-radius:19px}
+  .subchip{border:none;background:var(--card);box-shadow:var(--gm-e1);height:44px;border-radius:22px}
   .subchip.active{background:var(--guinda);box-shadow:var(--gm-e2)}
 }
+
+/* ═══ PANTALLA DE AYUDA ═══════════════════════════════════════════════
+   Explica las categorías a quien entra por primera vez. Vive al final de
+   la hoja a propósito: no la sobrescribe ninguna media query anterior. */
+.ayuda-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;
+  border:1px solid var(--line);border-radius:16px;background:var(--card);
+  color:var(--guinda);font-family:'Roboto',sans-serif;font-size:var(--fs-xs);
+  font-weight:600;cursor:pointer;white-space:nowrap;transition:border-color .15s,background .15s}
+.ayuda-btn:hover{border-color:var(--guinda);background:var(--bg-2)}
+.ayuda-btn:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+.ayuda-btn .ay-ico{display:inline-flex;align-items:center;justify-content:center;
+  width:17px;height:17px;border-radius:50%;background:var(--guinda);color:var(--crema);
+  font-size:11px;font-weight:700;line-height:1;flex-shrink:0}
+header.top .meta{display:flex;align-items:center;gap:12px}
+
+/* `hidden` debe ganar: sin esto, el `display:flex` de la regla siguiente lo
+   anula por especificidad y el dialogo sigue ocupando sitio, tabulable y
+   visible para el lector de pantalla aunque este cerrado. */
+.ayuda-bd[hidden], .ayuda-dlg[hidden]{display:none !important}
+.ayuda-bd{position:fixed;inset:0;background:rgba(42,42,42,.55);z-index:var(--z-modal);
+  opacity:0;pointer-events:none;transition:opacity .2s}
+.ayuda-bd.open{opacity:1;pointer-events:auto}
+.ayuda-dlg{position:fixed;z-index:calc(var(--z-modal) + 1);left:50%;top:50%;
+  transform:translate(-50%,-48%);width:min(720px,calc(100vw - 32px));
+  max-height:min(86vh,860px);display:flex;flex-direction:column;
+  background:var(--card);border-radius:12px;box-shadow:0 18px 50px -12px rgba(42,42,42,.45);
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.ayuda-dlg.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.ayuda-head{flex-shrink:0;display:flex;align-items:flex-start;gap:14px;
+  padding:20px 22px 16px;border-bottom:2px solid var(--guinda)}
+.ayuda-head h2{margin:0;font-family:var(--font-titulo);font-size:var(--fs-xl);
+  color:var(--guinda);line-height:1.2;font-weight:700}
+.ayuda-head p{margin:4px 0 0;font-size:var(--fs-xs);color:var(--muted);line-height:1.45}
+.ayuda-cerrar{margin-left:auto;flex-shrink:0;width:34px;height:34px;border:none;
+  border-radius:50%;background:var(--bg-2);color:var(--ink);font-size:22px;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ayuda-cerrar:hover{background:var(--line-soft)}
+.ayuda-cerrar:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+.ayuda-cuerpo{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  padding:18px 22px 26px}
+.ayuda-sec{margin:0 0 22px}
+.ayuda-sec:last-child{margin-bottom:0}
+.ayuda-sec > h3{margin:0 0 8px;font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);
+  letter-spacing:.14em;text-transform:uppercase;color:var(--guinda);font-weight:500}
+.ayuda-sec p{margin:0 0 9px;font-size:var(--fs-sm);line-height:1.55;color:var(--ink)}
+.ayuda-sec p:last-child{margin-bottom:0}
+.ayuda-fam{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 4px}
+.ayuda-fam-card{border:1px solid var(--line-soft);border-left:4px solid var(--guinda);
+  border-radius:var(--radius);padding:12px 14px;background:var(--bg-2)}
+.ayuda-fam-card.ava{border-left-color:var(--verde)}
+.ayuda-fam-card.anp{border-left-color:var(--naranja)}
+.ayuda-fam-card .sig{display:block;font-family:'Roboto Mono',monospace;font-size:var(--fs-sm);
+  font-weight:500;color:var(--ink);letter-spacing:.04em}
+.ayuda-fam-card .nom{display:block;margin-top:2px;font-size:var(--fs-xs);color:var(--muted);line-height:1.35}
+.ayuda-fam-card .cifra{display:block;margin-top:8px;font-family:'Roboto',sans-serif;
+  font-size:var(--fs-2xl);font-weight:900;letter-spacing:-.02em;line-height:1;color:var(--ink)}
+.ayuda-fam-card .desglose{display:block;margin-top:4px;font-size:var(--fs-mini);
+  font-family:'Roboto Mono',monospace;color:var(--muted);line-height:1.4}
+.ayuda-tabla{width:100%;border-collapse:collapse;margin:8px 0 0;font-size:var(--fs-xs)}
+.ayuda-tabla th{text-align:left;padding:6px 8px;background:var(--guinda);color:var(--crema);
+  font-family:'Roboto Mono',monospace;font-weight:500;letter-spacing:.06em;font-size:var(--fs-mini);
+  text-transform:uppercase}
+.ayuda-tabla td{padding:6px 8px;border-bottom:1px solid var(--line-soft);
+  vertical-align:top;line-height:1.4;color:var(--ink)}
+.ayuda-tabla tr:nth-child(even) td{background:var(--bg-2)}
+.ayuda-tabla td:first-child{font-family:'Roboto Mono',monospace;white-space:nowrap;font-weight:500}
+.ayuda-sc{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.ayuda-sc-fila{display:flex;align-items:baseline;gap:10px;font-size:var(--fs-xs);line-height:1.45}
+.ayuda-sc-fila .status-tag{flex-shrink:0}
+.ayuda-lista{margin:6px 0 0;padding-left:18px}
+.ayuda-lista li{font-size:var(--fs-sm);line-height:1.55;margin-bottom:6px;color:var(--ink)}
+.ayuda-lista li:last-child{margin-bottom:0}
+.ayuda-aviso{margin-top:18px;padding:12px 14px;border:1px solid var(--line);
+  border-left:4px solid var(--dorado);border-radius:var(--radius);background:var(--bg-2)}
+.ayuda-aviso p{margin:0;font-size:var(--fs-xs);line-height:1.5;color:var(--gris)}
+.ayuda-aviso b{color:var(--ink)}
+.sia-footer-ayuda{background:none;border:none;padding:0;cursor:pointer;
+  font-family:'Roboto',sans-serif;font-size:inherit;color:var(--guinda);
+  font-weight:600;text-decoration:underline;text-underline-offset:2px}
+@media (max-width:760px){
+  .ayuda-dlg{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;
+    top:0;left:0;transform:none;border-radius:0}
+  .ayuda-dlg.open{transform:none}
+  .ayuda-fam{grid-template-columns:1fr}
+  .ayuda-head{padding:16px 16px 13px}
+  .ayuda-cuerpo{padding:16px 16px calc(30px + env(safe-area-inset-bottom, 0px))}
+  .ayuda-btn{height:40px;border-radius:20px;padding:0 14px;font-size:var(--fs-sm)}
+}
+
+/* ═══ CAJON LATERAL · CIERRE POR GESTO (escritorio) ══════════════════
+   En celular la ficha ya se cierra deslizando el asa. En escritorio solo
+   habia tache, Escape y clic fuera. El tirador de la izquierda se arrastra
+   hacia la derecha para cerrar, que es la direccion en la que el cajon
+   entro. Se posiciona con `fixed` porque el cajon es el contenedor
+   desplazable en escritorio y un `absolute` se iria con el scroll. */
+.drawer-tirador{position:fixed;left:0;top:0;bottom:0;width:15px;z-index:3;
+  display:flex;align-items:center;justify-content:center;padding:0;border:none;
+  background:transparent;cursor:grab;touch-action:none}
+.drawer-tirador::before{content:'';width:4px;height:46px;border-radius:2px;
+  background:var(--line);transition:background .15s,height .15s}
+.drawer-tirador:hover::before{background:var(--guinda);height:64px}
+.drawer-tirador:active{cursor:grabbing}
+.drawer-tirador:focus-visible{outline:2px solid var(--guinda);outline-offset:-3px;border-radius:4px}
+.drawer.arrastrando-x{transition:none}
+.drawer.arrastrando-x .drawer-tirador::before{background:var(--guinda)}
+@media (max-width:760px){ .drawer-tirador{display:none} }
+
+/* ═══ CAPA SUPERPUESTA DENTRO DEL MENU DE CAPAS (celular) ════════════
+   El interruptor de Suelo de Conservacion se movia de la esquina del mapa al
+   menu; aqui pierde el aspecto de chip flotante y toma el de renglon de
+   ajuste. Solo aplica en celular: la clase `en-menu` la pone el JS, que no
+   corre por encima de 760 px. */
+.map-block-controls-floating .map-block-toggle{min-width:232px}
+.map-block-controls-floating .map-block-toggle .capa-extra{
+  border-top:1px solid var(--line-soft);padding:9px 14px 11px;display:block}
+.map-block-controls-floating .map-block-toggle .capa-extra-tit{
+  display:block;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.drawer-sc-floating.en-menu{position:static;z-index:auto;bottom:auto;left:auto}
+.drawer-sc-floating.en-menu .map-filter-chip,
+.drawer-sc-floating.en-menu .map-filter-chip.active{
+  display:flex;align-items:center;gap:10px;width:100%;min-height:40px;
+  padding:6px 2px;border:none;background:transparent;box-shadow:none;
+  font-family:'Roboto',sans-serif;font-size:var(--fs-sm);text-align:left;
+  white-space:nowrap;line-height:1.25;color:var(--ink);text-transform:none;
+  letter-spacing:0;font-weight:500}
+.drawer-sc-floating.en-menu .map-filter-chip:not(.active){color:var(--muted)}
+.drawer-sc-floating.en-menu .map-filter-chip .chip-dot{flex:0 0 auto}
 
 </style>
 </head>
@@ -2082,6 +2246,9 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
     </div>
     <div class="meta">
       <div>REGISTROS · <b id="metaCount">—</b></div>
+      <button type="button" class="ayuda-btn" id="ayudaAbrir" aria-haspopup="dialog">
+        <span class="ay-ico" aria-hidden="true">?</span><span>Guía rápida</span>
+      </button>
     </div>
   </header>
 
@@ -2189,6 +2356,8 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
       <span class="sia-footer-text">Sistema de Información Ambiental · Secretaría del Medio Ambiente</span>
       <span class="sia-footer-sep">·</span>
       <span class="sia-footer-text-2">Gobierno de la Ciudad de México</span>
+      <span class="sia-footer-sep">·</span>
+      <button type="button" class="sia-footer-ayuda" id="ayudaAbrirPie" aria-haspopup="dialog">¿Qué significan estas categorías?</button>
     </div>
   </footer>
 </div>
@@ -2199,9 +2368,139 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
        por eso se iba con el scroll y no servía de agarre. Aquí no se mueve. -->
   <div class="drawer-asa" id="drawerAsa" role="slider" tabindex="0"
        aria-label="Altura de la ficha" aria-valuetext="completa"><span></span></div>
+  <button type="button" class="drawer-tirador" id="drTirador"
+          aria-label="Cerrar ficha · también se puede arrastrar hacia la derecha"></button>
   <button class="close" id="drClose" aria-label="Cerrar ficha">×</button>
   <div class="drawer-inner" id="drIn"></div>
 </aside>
+
+<!-- ═══ PANTALLA DE AYUDA ═══════════════════════════════════════════
+     Contenido estatico: no depende del Sheet ni del inventario cargado,
+     de modo que sigue disponible aunque la fuente de datos falle. -->
+<div class="ayuda-bd" id="ayudaBd" hidden></div>
+<div class="ayuda-dlg" id="ayudaDlg" role="dialog" aria-modal="true"
+     aria-labelledby="ayudaTitulo" tabindex="-1" hidden>
+  <div class="ayuda-head">
+    <div>
+      <h2 id="ayudaTitulo">Guía rápida</h2>
+      <p>Qué protege cada categoría y cómo leer este tablero.</p>
+    </div>
+    <button type="button" class="ayuda-cerrar" id="ayudaCerrar" aria-label="Cerrar la guía">×</button>
+  </div>
+  <div class="ayuda-cuerpo">
+
+    <section class="ayuda-sec">
+      <h3>Qué es este tablero</h3>
+      <p>Reúne en un solo lugar las <b>66 áreas con categoría de protección ambiental</b> de la
+         Ciudad de México: su superficie, su instrumento de creación, su situación respecto al
+         Suelo de Conservación y su ubicación en el territorio. Sirve para responder dos
+         preguntas: <i>qué es y dónde está un área</i>, y <i>qué protección aplica en un punto
+         concreto</i>.</p>
+    </section>
+
+    <section class="ayuda-sec">
+      <h3>Las dos familias</h3>
+      <div class="ayuda-fam">
+        <div class="ayuda-fam-card ava">
+          <span class="sig">AVA</span>
+          <span class="nom">Área de Valor Ambiental</span>
+          <span class="cifra">39</span>
+          <span class="desglose">13 Bosque Urbano · 26 Barranca</span>
+        </div>
+        <div class="ayuda-fam-card anp">
+          <span class="sig">ANP</span>
+          <span class="nom">Área Natural Protegida</span>
+          <span class="cifra">27</span>
+          <span class="desglose">18 de competencia local · 9 federal</span>
+        </div>
+      </div>
+      <p><b>AVA.</b> Superficies dentro del suelo urbano cuyos ecosistemas originales han sido
+         modificados, y que prestan servicios ambientales a la ciudad. Las declara la Jefatura de
+         Gobierno y su administración corresponde a la Secretaría.</p>
+      <p><b>ANP.</b> Zonas donde los ambientes originales no han sido alterados de manera
+         significativa, o que requieren preservarse y restaurarse. Pueden ser de competencia
+         local —declaradas por la Ciudad— o federal, según el instrumento que las crea y la
+         autoridad que las administra.</p>
+      <p>La diferencia práctica es de <b>grado de conservación y de autoridad competente</b>, no
+         de jerarquía: ambas son categorías de protección con efectos jurídicos propios.</p>
+    </section>
+
+    <section class="ayuda-sec">
+      <h3>Subcategorías que aparecen en el inventario</h3>
+      <table class="ayuda-tabla">
+        <thead><tr><th>Clave</th><th>Subcategoría</th><th>Familia</th></tr></thead>
+        <tbody>
+          <tr><td>BU</td><td>Bosque Urbano</td><td>AVA</td></tr>
+          <tr><td>BR</td><td>Barranca</td><td>AVA</td></tr>
+          <tr><td>ZCE</td><td>Zona de Conservación Ecológica</td><td>ANP local</td></tr>
+          <tr><td>ZSCE</td><td>Zona Sujeta a Conservación Ecológica</td><td>ANP local</td></tr>
+          <tr><td>ZPHE</td><td>Zona de Protección Hidrológica y Ecológica</td><td>ANP local</td></tr>
+          <tr><td>ZEC</td><td>Zona Ecológica y Cultural</td><td>ANP local</td></tr>
+          <tr><td>ZPE</td><td>Zona de Protección Especial</td><td>ANP local</td></tr>
+          <tr><td>REC</td><td>Reserva Ecológica Comunitaria</td><td>ANP local</td></tr>
+          <tr><td>PN</td><td>Parque Nacional</td><td>ANP federal</td></tr>
+          <tr><td>APRN</td><td>Área de Protección de Recursos Naturales</td><td>ANP federal</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="ayuda-sec">
+      <h3>Módulos que no cuentan en el inventario</h3>
+      <p>Tres capas se consultan aparte porque <b>no son categorías de protección ambiental</b> y
+         por eso no suman a las 66 áreas, aunque se traslapen con ellas en el territorio:</p>
+      <ul class="ayuda-lista">
+        <li><b>ARCAC</b> — Áreas de Rescate y Conservación Agroecológica Comunitaria. Núcleos
+            agrarios con vocación productiva y de conservación; su lógica es agraria y
+            comunitaria, no declaratoria.</li>
+        <li><b>Zona Patrimonio</b> — el polígono de Xochimilco, Tláhuac y Milpa Alta inscrito en
+            la Lista del Patrimonio Mundial. Es un régimen patrimonial, no ambiental.</li>
+        <li><b>Traslapes</b> — superficies donde dos o más polígonos coinciden. Se muestran para
+            evitar doble contabilidad de superficie, no como un área más.</li>
+      </ul>
+    </section>
+
+    <section class="ayuda-sec">
+      <h3>Suelo de Conservación</h3>
+      <p>Es una <b>clasificación del suelo</b> establecida por el programa de ordenamiento
+         territorial, distinta de las categorías de protección. Un área puede estar protegida y
+         no estar en Suelo de Conservación, y a la inversa. El tablero informa qué proporción de
+         cada polígono cae dentro:</p>
+      <div class="ayuda-sc">
+        <div class="ayuda-sc-fila"><span class="status-tag status-sc status-tag-si">Dentro</span>
+          <span>99.5&nbsp;% o más de la superficie del área.</span></div>
+        <div class="ayuda-sc-fila"><span class="status-tag status-sc status-tag-parcial">Parcial</span>
+          <span>Entre 0.5&nbsp;% y 99.5&nbsp;%. Se muestra el porcentaje exacto junto a la etiqueta.</span></div>
+        <div class="ayuda-sc-fila"><span class="status-tag status-sc status-tag-no">Fuera</span>
+          <span>Menos de 0.5&nbsp;%; en la práctica, área en suelo urbano.</span></div>
+        <div class="ayuda-sc-fila"><span class="status-tag status-sc status-tag-nd">Sin dato</span>
+          <span>El cálculo no está disponible para ese polígono.</span></div>
+      </div>
+    </section>
+
+    <section class="ayuda-sec">
+      <h3>Cómo usarlo</h3>
+      <ul class="ayuda-lista">
+        <li><b>¿Dónde estoy?</b> — Escribe una dirección, unas coordenadas o el nombre de un
+            área, o usa el botón de ubicación. El tablero responde qué instrumentos de
+            protección aplican en ese punto.</li>
+        <li><b>Filtros</b> — La barra inferior cambia de destino; las pastillas acotan por
+            subcategoría. Los contadores se actualizan en vivo.</li>
+        <li><b>Ficha</b> — Un clic en cualquier fila o en un polígono del mapa abre la ficha con
+            superficie, decreto, alcaldías, coadministración y mapa propio.</li>
+        <li><b>Compartir</b> — Cada ficha genera una imagen con sus datos principales, lista
+            para enviarse por mensajería.</li>
+      </ul>
+    </section>
+
+    <div class="ayuda-aviso">
+      <p><b>Carácter informativo.</b> Las superficies y los polígonos provienen de los decretos y
+         de los insumos cartográficos disponibles en la Secretaría. Para cualquier efecto legal
+         prevalece el texto del instrumento de creación publicado en la Gaceta Oficial y el plano
+         oficial correspondiente.</p>
+    </div>
+
+  </div>
+</div>
 
 
 <script>
@@ -4882,10 +5181,10 @@ function openEmbFicha(e){
   const p = e.props || {};
   const col = (typeof EMB_COLORS!=='undefined' && EMB_COLORS[e.tipo]) || COL_AZUL_EMB;
   _marcaFicha(true);
-  /* Abre a media altura, como la tarjeta de lugar de Maps: se lee el nombre y
-     lo esencial sin perder de vista el mapa, y se sube con el asa si hace
-     falta. Antes abría en «completa» y tapaba el territorio. */
-  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[2]), 0);
+  /* Abre en la posición alta: la ficha es el objeto de la consulta y a media
+     altura obligaba a un gesto extra para leer superficie, decreto y suelo de
+     conservación. Las otras dos posiciones siguen a un tirón del asa. */
+  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
   drIn.innerHTML = `
     <div class="drawer-header-row"><div class="drawer-header-left">
       <div class="kat" style="color:${col}">Embarcadero · ${e.tipo}</div>
@@ -5389,10 +5688,10 @@ function openZPDrawer(row){
     ? `${fmt(row.superficie)}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">ha</span>`
     : `<span style="font-size:var(--fs-xl);color:var(--muted)">Por confirmar</span>`;
   _marcaFicha(true);
-  /* Abre a media altura, como la tarjeta de lugar de Maps: se lee el nombre y
-     lo esencial sin perder de vista el mapa, y se sube con el asa si hace
-     falta. Antes abría en «completa» y tapaba el territorio. */
-  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[2]), 0);
+  /* Abre en la posición alta: la ficha es el objeto de la consulta y a media
+     altura obligaba a un gesto extra para leer superficie, decreto y suelo de
+     conservación. Las otras dos posiciones siguen a un tirón del asa. */
+  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
   drIn.innerHTML = `
     <div class="drawer-header-row">
       <div class="drawer-header-left">
@@ -5837,10 +6136,10 @@ function openARCACFicha(no){
   if(!p) return;
   if(typeof destroyMap === 'function'){ try{ destroyMap(); }catch(e){} }
   _marcaFicha(true);
-  /* Abre a media altura, como la tarjeta de lugar de Maps: se lee el nombre y
-     lo esencial sin perder de vista el mapa, y se sube con el asa si hace
-     falta. Antes abría en «completa» y tapaba el territorio. */
-  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[2]), 0);
+  /* Abre en la posición alta: la ficha es el objeto de la consulta y a media
+     altura obligaba a un gesto extra para leer superficie, decreto y suelo de
+     conservación. Las otras dos posiciones siguen a un tirón del asa. */
+  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
   drIn.innerHTML = `
     <div class="drawer-header-row"><div class="drawer-header-left">
       <div class="kat">ARCAC · Núcleo agrario</div>
@@ -6853,33 +7152,141 @@ function _wrapText(ctx, txt, maxW){
   return lines;
 }
 
-function _drawGeoInBox(ctx, geoIn, x, y, w, h, color, punto){
+/* ═══ MAPA BASE DENTRO DE LA IMAGEN COMPARTIBLE ═══════════════════════
+   El recuadro enseñaba el polígono flotando sobre el fondo crema: sin calles
+   ni relieve, la captura no dice DÓNDE está el área. Aquí se dibujan primero
+   las teselas del mismo mapa base del tablero y el polígono encima.
+
+   Dos condiciones que no son negociables:
+   · Las teselas se piden con `crossOrigin`. Sin CORS el lienzo queda
+     contaminado y `toBlob` lanza excepción: no habría imagen, no un mapa feo.
+   · El polígono se proyecta con la MISMA fórmula de Web Mercator que las
+     teselas. Con la proyección aproximada anterior el trazo caía desplazado
+     respecto a las calles. */
+function _proyeccionCaja(geo, x, y, w, h){
+  const polys = geo.type==='Polygon' ? [geo.coordinates]
+              : geo.type==='MultiPolygon' ? geo.coordinates : [];
+  if(!polys.length) return null;
+  let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+  polys.forEach(p=>p.forEach(r=>r.forEach(c=>{
+    if(c[0]<minX)minX=c[0]; if(c[0]>maxX)maxX=c[0];
+    if(c[1]<minY)minY=c[1]; if(c[1]>maxY)maxY=c[1];
+  })));
+  if(!isFinite(minX) || !isFinite(minY)) return null;
+  /* Web Mercator en pixeles de tesela, medido al zoom 0; el zoom entra como
+     factor. Trabajar con zoom FRACCIONARIO es lo que permite que el poligono
+     llene el recuadro: con zoom entero el encuadre salta de golpe al doble y
+     el area quedaba diminuta en el centro. */
+  const MX = lng => (lng+180)/360 * 256;
+  const MY = lat => { const t=Math.max(-85.05,Math.min(85.05,lat));
+    const sn=Math.sin(t*Math.PI/180);
+    return (0.5 - Math.log((1+sn)/(1-sn))/(4*Math.PI)) * 256; };
+  const dw0 = Math.abs(MX(maxX)-MX(minX)), dh0 = Math.abs(MY(minY)-MY(maxY));
+  if(!(dw0 > 0) && !(dh0 > 0)) return null;
+  const esc = Math.min(dw0>0 ? (w*0.86)/dw0 : 1e9, dh0>0 ? (h*0.86)/dh0 : 1e9);
+  let zf = Math.log2(esc);
+  zf = Math.max(8, Math.min(18, zf));
+  const k = Math.pow(2, zf);
+  const cx = (MX(minX)+MX(maxX))/2 * k, cy = (MY(minY)+MY(maxY))/2 * k;
+  return { zf, polys,
+    P: c => [ x + w/2 + (MX(c[0])*k - cx), y + h/2 + (MY(c[1])*k - cy) ],
+    origenX: cx - w/2, origenY: cy - h/2 };
+}
+
+const _cargarTesela = url => new Promise(res=>{
+  let listo = false;
+  const fin = v => { if(!listo){ listo = true; res(v); } };
+  const im = new Image();
+  im.crossOrigin = 'anonymous';
+  im.onload  = () => fin(im);
+  im.onerror = () => fin(null);
+  im.src = url;
+  /* Una tesela lenta no puede dejar al usuario esperando la imagen. */
+  setTimeout(()=>fin(null), 5000);
+});
+
+async function _dibujarBaseEnCaja(ctx, T, x, y, w, h){
+  if(!T) return false;
+  /* Se respeta la capa base elegida en el mapa de la ficha; si no hay ficha
+     abierta —compartir desde la tabla— se usa el mapa de calles, que es el
+     que mejor deja leer un poligono translucido encima. */
+  let capa = 'positron';
+  try{
+    const act = document.querySelector('#dr .map-block-toggle button.active[data-layer]');
+    if(act && act.dataset.layer) capa = act.dataset.layer;
+  }catch(_){}
+  const def = (typeof TILE_LAYERS!=='undefined' && TILE_LAYERS[capa]) ? TILE_LAYERS[capa] : null;
+  if(!def) return false;
+  /* Zoom entero inmediatamente superior al fraccionario y las teselas dibujadas
+     a escala `s` (entre 0.5 y 1): asi el mosaico coincide al pixel con la
+     proyeccion del poligono y nunca se ve pixelado. */
+  const z = Math.max(0, Math.min(def.maxZoom || 18, Math.ceil(T.zf)));
+  const s = Math.pow(2, T.zf - z);            /* 0.5 < s <= 1 */
+  const lado = 256 * s;
+  const ox = T.origenX / s, oy = T.origenY / s;
+  const tx0 = Math.floor(ox/256), tx1 = Math.floor((ox + w/s)/256);
+  const ty0 = Math.floor(oy/256), ty1 = Math.floor((oy + h/s)/256);
+  const total = (tx1-tx0+1) * (ty1-ty0+1);
+  if(!(total > 0) || total > 90) return false;
+  const lim = Math.pow(2, z);
+  const urls = [];
+  for(let tx=tx0; tx<=tx1; tx++) for(let ty=ty0; ty<=ty1; ty++){
+    if(ty < 0 || ty >= lim) continue;
+    const xx = ((tx % lim) + lim) % lim;
+    const u = def.url.replace('{s}','a').replace('{r}','@2x')
+                     .replace('{z}',z).replace('{x}',xx).replace('{y}',ty);
+    urls.push({u, px: x + (tx*256 - ox)*s, py: y + (ty*256 - oy)*s});
+  }
+  const imgs = await Promise.all(urls.map(t=>_cargarTesela(t.u)));
+  if(!imgs.filter(Boolean).length) return false;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip();
+  imgs.forEach((im,i)=>{ if(im) try{ ctx.drawImage(im, urls[i].px, urls[i].py, lado, lado); }catch(_){} });
+  ctx.restore();
+  return true;
+}
+
+function _drawGeoInBox(ctx, geoIn, x, y, w, h, color, punto, T){
   /* findGeometry() devuelve un Feature, no una geometría: hay que desenvolverlo */
   const geo = (geoIn && geoIn.type==='Feature') ? geoIn.geometry : geoIn;
   if(!geo) return;
   const polys = geo.type==='Polygon' ? [geo.coordinates]
               : geo.type==='MultiPolygon' ? geo.coordinates : [];
   if(!polys.length) return;
-  let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
-  polys.forEach(p=>p.forEach(r=>r.forEach(c=>{
-    if(c[0]<minX)minX=c[0]; if(c[0]>maxX)maxX=c[0];
-    if(c[1]<minY)minY=c[1]; if(c[1]>maxY)maxY=c[1];
-  })));
-  const lat0=(minY+maxY)/2, k=Math.cos(lat0*Math.PI/180);
-  const gw=(maxX-minX)*k, gh=(maxY-minY);
-  if(!gw || !gh) return;
-  const sc = Math.min((w-40)/gw, (h-40)/gh);
-  const ox = x + w/2, oy = y + h/2;
-  const P = c => [ ox + (c[0]-(minX+maxX)/2)*k*sc, oy - (c[1]-lat0)*sc ];
+  let P;
+  if(T && T.P){
+    /* Sobre teselas: la proyección tiene que ser la misma que las dibujó. */
+    P = T.P;
+  } else {
+    let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+    polys.forEach(p=>p.forEach(r=>r.forEach(c=>{
+      if(c[0]<minX)minX=c[0]; if(c[0]>maxX)maxX=c[0];
+      if(c[1]<minY)minY=c[1]; if(c[1]>maxY)maxY=c[1];
+    })));
+    const lat0=(minY+maxY)/2, k=Math.cos(lat0*Math.PI/180);
+    const gw=(maxX-minX)*k, gh=(maxY-minY);
+    if(!gw || !gh) return;
+    const sc = Math.min((w-40)/gw, (h-40)/gh);
+    const ox = x + w/2, oy = y + h/2;
+    P = c => [ ox + (c[0]-(minX+maxX)/2)*k*sc, oy - (c[1]-lat0)*sc ];
+  }
+  const sobreMapa = !!(T && T.conBase);
   ctx.save();
+  ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip();
   polys.forEach(poly=>{
     ctx.beginPath();
     poly.forEach(ring=>{
       ring.forEach((c,i)=>{ const [px,py]=P(c); i?ctx.lineTo(px,py):ctx.moveTo(px,py); });
       ctx.closePath();
     });
-    ctx.fillStyle = color + '33'; ctx.fill('evenodd');
-    ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.lineJoin='round'; ctx.stroke();
+    ctx.fillStyle = color + (sobreMapa ? '2b' : '33'); ctx.fill('evenodd');
+    /* Sobre una ortofoto el trazo de color se pierde contra el verde oscuro:
+       un halo blanco por debajo lo despega del fondo sin falsear el límite. */
+    if(sobreMapa){
+      ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 8;
+      ctx.lineJoin='round'; ctx.stroke();
+    }
+    ctx.strokeStyle = color; ctx.lineWidth = sobreMapa ? 4 : 3; ctx.lineJoin='round'; ctx.stroke();
   });
   /* Punto consultado, con la misma proyección del polígono: si se calculara
      aparte quedaría desplazado. Se dibuja aunque caiga fuera del recuadro
@@ -6923,7 +7330,14 @@ function descInventario(d){
       ['PROGRAMA DE MANEJO', d.programa_manejo==='Sí' ? ('Publicado' + (d.fecha_pm ? ' · '+d.fecha_pm : '')) : 'Sin programa vigente'],
       ['SUELO DE CONSERVACIÓN', SC_CORTO(d)],
       ['DG RESPONSABLE', d.dg_responsable||'—']
-    ]
+    ].concat(
+      /* La coadministración solo aparece donde existe: son ocho ANP federales.
+         Añadir la fila vacía en las otras 58 gastaría un renglón para decir
+         «no aplica». */
+      (typeof isCoadmin==='function' && isCoadmin(d.nombre))
+        ? [['COADMINISTRACIÓN', 'Convenio Marco SEMARNAT–CONANP–CDMX 2025']]
+        : []
+    )
   };
 }
 function descArcac(p){
@@ -7031,7 +7445,30 @@ async function compartirFichaImagen(d, btn){
   ctx.fillStyle='#f8f4e0'; ctx.fillRect(48,y,W-96,boxH);
   ctx.strokeStyle='#eae4cf'; ctx.lineWidth=2; ctx.strokeRect(48,y,W-96,boxH);
   const ctxU = _fichaCtxUbic;
-  if(geo) _drawGeoInBox(ctx,geo,48,y,W-96,boxH,color,ctxU);
+  if(geo){
+    const g = (geo && geo.type==='Feature') ? geo.geometry : geo;
+    let T = null;
+    try{
+      T = _proyeccionCaja(g, 48, y, W-96, boxH);
+      if(T) T.conBase = await _dibujarBaseEnCaja(ctx, T, 48, y, W-96, boxH);
+    }catch(_){ T = null; }
+    /* Si las teselas no llegaron —sin red, CORS caído, demasiadas— se dibuja
+       el polígono como siempre sobre el fondo crema. Degradar, no fallar. */
+    _drawGeoInBox(ctx,geo,48,y,W-96,boxH,color,ctxU,T);
+    ctx.strokeStyle='#eae4cf'; ctx.lineWidth=2; ctx.strokeRect(48,y,W-96,boxH);
+    if(T && T.conBase){
+      /* La atribución de las teselas es obligatoria por licencia. */
+      ctx.save();
+      ctx.font='400 15px Roboto, sans-serif';
+      const cred = '© OpenStreetMap · © CARTO / Esri';
+      const cw = ctx.measureText(cred).width;
+      ctx.fillStyle='rgba(255,255,255,.82)';
+      ctx.fillRect(W-48-cw-14, y+boxH-26, cw+14, 26);
+      ctx.fillStyle='#55585a';
+      ctx.fillText(cred, W-48-cw-7, y+boxH-8);
+      ctx.restore();
+    }
+  }
   else{
     ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='400 26px Roboto, sans-serif';
     ctx.fillText('Polígono no disponible',48+30,y+boxH/2);
@@ -7676,17 +8113,41 @@ function montarBotonBase(){
       const ab = cont.classList.toggle('base-abierto');
       b.setAttribute('aria-expanded', ab ? 'true' : 'false');
     });
-    /* Al elegir una capa se cierra, como en Maps: la decisión ya se tomó. */
-    toggle.addEventListener('click', ()=>{
+    /* Al elegir una capa BASE se cierra, como en Maps: la decisión ya se tomó.
+       Los interruptores de capa superpuesta no cierran el panel: se encienden
+       y se apagan sobre la base elegida y a menudo se toca más de uno. */
+    toggle.addEventListener('click', e=>{
+      if(!(e.target.closest && e.target.closest('[data-layer]'))) return;
       cont.classList.remove('base-abierto');
       b.setAttribute('aria-expanded','false');
     });
     cont.appendChild(b);
+
+    /* Suelo de Conservación no es una capa base —puede estar encendida a la vez
+       que Mapa o que Satélite—, así que baja al mismo menú pero en su propia
+       sección, como los «detalles del mapa» de Maps. Se mueve el mismo nodo,
+       no se duplica: conserva su id y todos sus escuchas. */
+    const lienzo = cont.parentElement;
+    const sc = lienzo && lienzo.querySelector('.drawer-sc-floating');
+    if(sc && !toggle.querySelector('.capa-extra')){
+      const sec = document.createElement('div');
+      sec.className = 'capa-extra';
+      const tit = document.createElement('span');
+      tit.className = 'capa-extra-tit';
+      tit.textContent = 'Capas';
+      sec.appendChild(tit);
+      sec.appendChild(sc);
+      sc.classList.add('en-menu');
+      toggle.appendChild(sec);
+    }
   });
 }
-/* Un toque fuera cierra el panel abierto. */
-document.addEventListener('click', ()=>{
+/* Un toque FUERA cierra el panel abierto. Dentro no: ahi vive el interruptor
+   de capa superpuesta, que se enciende y se apaga sin cerrar el menu. */
+document.addEventListener('click', e=>{
+  const dentro = e.target && e.target.closest && e.target.closest('.map-block-controls-floating');
   document.querySelectorAll('.map-block-controls-floating.base-abierto').forEach(c=>{
+    if(dentro === c) return;
     c.classList.remove('base-abierto');
     const b = c.querySelector('.btn-base'); if(b) b.setAttribute('aria-expanded','false');
   });
@@ -7827,10 +8288,10 @@ function openDrawer(d){
     history.replaceState(null, '', newHash);
   }
   _marcaFicha(true);
-  /* Abre a media altura, como la tarjeta de lugar de Maps: se lee el nombre y
-     lo esencial sin perder de vista el mapa, y se sube con el asa si hace
-     falta. Antes abría en «completa» y tapaba el territorio. */
-  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[2]), 0);
+  /* Abre en la posición alta: la ficha es el objeto de la consulta y a media
+     altura obligaba a un gesto extra para leer superficie, decreto y suelo de
+     conservación. Las otras dos posiciones siguen a un tirón del asa. */
+  if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
   drIn.innerHTML = `
     <div class="drawer-header-row">
       <div class="drawer-header-left">
@@ -7874,6 +8335,12 @@ function openDrawer(d){
          nunca pudo decir. */
       return `<span class="status-tag status-sc ${SC_CLS[scEstado(d)]}">${scTexto(d)}</span>`;
     })()}</div></div>
+    ${isCoadmin(d.nombre) ? `
+    <div class="field"><div class="k">Coadministración</div><div class="v">
+      <span class="tag-coadmin">Convenio Marco SEMARNAT–CONANP–CDMX 2025</span>
+      <div class="coadmin-nota">Administración conjunta con la Federación: manejo, gestión y uso
+        racional de recursos, conforme a la Cláusula Segunda del Convenio.</div>
+    </div></div>` : ''}
     <div class="field"><div class="k">Fecha decreto</div><div class="v">${d.fecha_decreto}</div></div>
     <div class="field"><div class="k">Programa de manejo</div><div class="v"><span class="status-tag ${d.programa_manejo==='Sí'?'status-tag-si':'status-tag-no'}">${d.programa_manejo==='Sí'?'Publicado':'Sin programa vigente'}</span></div></div>
     <div class="field"><div class="k">Fecha Programa de Manejo</div><div class="v">${d.fecha_pm||'—'}</div></div>
@@ -8233,6 +8700,119 @@ function showOfflineNotice(msg, type='offline'){
     setTimeout(() => notice.classList.remove('visible'), 3500);
   }
 }
+
+
+
+/* ═══ CIERRE POR GESTO DEL CAJON LATERAL (escritorio) ════════════════
+   Arrastrar el tirador hacia la derecha cierra la ficha; soltarlo antes
+   del umbral la devuelve a su sitio. Un clic sin desplazamiento tambien
+   cierra, asi el tirador es util con teclado y con raton. */
+(function(){
+  const tir = document.getElementById('drTirador');
+  const caj = document.getElementById('dr');
+  if(!tir || !caj) return;
+  const UMBRAL = 110;      /* px arrastrados a partir de los cuales cierra */
+  const VELOCIDAD = 0.55;  /* px/ms de un tiron corto que tambien cierra   */
+
+  tir.addEventListener('pointerdown', e=>{
+    if(_drMovil() || !caj.classList.contains('open')) return;
+    const x0 = e.clientX, t0 = performance.now();
+    let dx = 0, movio = false;
+    caj.classList.add('arrastrando-x');
+    try{ tir.setPointerCapture(e.pointerId); }catch(_){}
+
+    const mover = ev => {
+      dx = Math.max(0, ev.clientX - x0);
+      if(dx > 3) movio = true;
+      caj.style.transform = 'translateX(' + dx + 'px)';
+    };
+    const soltar = ev => {
+      tir.removeEventListener('pointermove', mover);
+      tir.removeEventListener('pointerup', soltar);
+      tir.removeEventListener('pointercancel', soltar);
+      try{ tir.releasePointerCapture(ev.pointerId); }catch(_){}
+      const v = dx / Math.max(1, performance.now() - t0);
+      caj.classList.remove('arrastrando-x');
+      caj.style.removeProperty('transform');
+      /* Sin desplazamiento se comporta como boton; con el, decide el umbral
+         o la velocidad del tiron. */
+      if(!movio || dx > UMBRAL || v > VELOCIDAD) closeDrawer();
+    };
+    tir.addEventListener('pointermove', mover);
+    tir.addEventListener('pointerup', soltar);
+    tir.addEventListener('pointercancel', soltar);
+    e.preventDefault();
+  });
+
+  /* Enter y Espacio llegan como click sintetico sin pointerdown previo. */
+  tir.addEventListener('click', e=>{
+    if(e.detail === 0) closeDrawer();
+  });
+})();
+
+/* ═══ PANTALLA DE AYUDA ═══════════════════════════════════════════════
+   Dialogo estatico. No lee DATA ni el Sheet: si el inventario falla, la
+   guia sigue disponible. Se registra en fase de captura para que Escape
+   cierre la guia sin llegar al cierre de la ficha. */
+(function(){
+  const bd  = document.getElementById('ayudaBd');
+  const dlg = document.getElementById('ayudaDlg');
+  if(!bd || !dlg) return;
+  const btnCerrar = document.getElementById('ayudaCerrar');
+  let devolverFoco = null;
+  const abierta = () => dlg.classList.contains('open');
+
+  function abrirAyuda(origen){
+    if(abierta()) return;
+    devolverFoco = origen || document.activeElement;
+    bd.hidden = false; dlg.hidden = false;
+    /* Dos cuadros: el navegador necesita ver el elemento visible antes de
+       animar la opacidad, o el dialogo aparece de golpe. */
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      bd.classList.add('open'); dlg.classList.add('open');
+    }));
+    document.documentElement.style.overflow = 'hidden';
+    try{ dlg.focus({preventScroll:true}); }catch(_){ dlg.focus(); }
+  }
+
+  function cerrarAyuda(){
+    if(!abierta()) return;
+    bd.classList.remove('open'); dlg.classList.remove('open');
+    document.documentElement.style.overflow = '';
+    setTimeout(()=>{ if(!abierta()){ bd.hidden = true; dlg.hidden = true; } }, 220);
+    if(devolverFoco && document.contains(devolverFoco)){
+      try{ devolverFoco.focus({preventScroll:true}); }catch(_){}
+    }
+    devolverFoco = null;
+    dlg.querySelector('.ayuda-cuerpo').scrollTop = 0;
+  }
+
+  ['ayudaAbrir','ayudaAbrirPie'].forEach(id=>{
+    const b = document.getElementById(id);
+    if(b) b.addEventListener('click', ()=> abrirAyuda(b));
+  });
+  if(btnCerrar) btnCerrar.addEventListener('click', cerrarAyuda);
+  bd.addEventListener('click', cerrarAyuda);
+
+  document.addEventListener('keydown', e=>{
+    if(!abierta()) return;
+    if(e.key === 'Escape'){ e.stopPropagation(); e.preventDefault(); cerrarAyuda(); return; }
+    if(e.key !== 'Tab') return;
+    /* Retencion del foco: mientras el dialogo esta abierto, el tabulador no
+       debe salirse a los controles del tablero que hay debajo. */
+    const foco = dlg.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    const vis = Array.prototype.filter.call(foco, el => el.offsetParent !== null || el === dlg);
+    if(!vis.length) return;
+    const primero = vis[0], ultimo = vis[vis.length-1];
+    if(e.shiftKey && (document.activeElement === primero || document.activeElement === dlg)){
+      e.preventDefault(); ultimo.focus();
+    } else if(!e.shiftKey && document.activeElement === ultimo){
+      e.preventDefault(); primero.focus();
+    }
+  }, true);
+
+  window.abrirAyuda = abrirAyuda;
+})();
 
 window.addEventListener('online', () => showOfflineNotice('Conexión restablecida ✓', 'online'));
 window.addEventListener('offline', () => showOfflineNotice('Sin conexión · operando con datos en caché', 'offline'));
