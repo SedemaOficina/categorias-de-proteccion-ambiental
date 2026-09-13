@@ -4487,6 +4487,28 @@ function attachSCToggle(btnId, mapInstance, groupLayers, alcaldiasLayer){
   });
 }
 
+/* Pantalla completa simulada: portal del lienzo a <body> y regreso.
+   Un marcador oculto guarda el lugar de origen. */
+function _siaFsPortal(canvas, en){
+  try{
+    if(en){
+      if(canvas._siaFsPh || canvas.parentNode === document.body) return;
+      const ph = document.createElement('div'); ph.className = 'sia-fs-ph'; ph.hidden = true;
+      canvas.parentNode.insertBefore(ph, canvas); canvas._siaFsPh = ph;
+      document.body.appendChild(canvas);
+    } else if(canvas._siaFsPh){
+      const ph = canvas._siaFsPh; canvas._siaFsPh = null;
+      if(ph.parentNode) ph.parentNode.insertBefore(canvas, ph);
+      ph.remove();
+    }
+  }catch(_){}
+}
+function siaFsSalirTodo(){
+  try{
+    document.querySelectorAll('.sia-fs').forEach(c => { c.classList.remove('sia-fs'); _siaFsPortal(c, false); });
+    document.documentElement.classList.remove('sia-fs-abierto');
+  }catch(_){}
+}
 function attachFullscreenBtn(canvas, mapInstance){
   // El botón vive como hermano dentro de canvas → buscar el más cercano
   const btn = canvas.querySelector('.map-fullscreen-btn');
@@ -4500,10 +4522,12 @@ function attachFullscreenBtn(canvas, mapInstance){
   const avisarMapa = en => { try{ if(mapInstance && mapInstance._siaEnPantallaCompleta) mapInstance._siaEnPantallaCompleta(en); }catch(_){} };
   const fsSimulado = en => {
     canvas.classList.toggle('sia-fs', en);
+    /* position:fixed no escapa de un ancestro con transform (la hoja #dr lo
+       lleva): el lienzo se saca a <body> mientras dura y vuelve a su sitio al salir. */
+    _siaFsPortal(canvas, en);
     document.documentElement.classList.toggle('sia-fs-abierto', en);
     fresh.setAttribute('aria-label', en ? 'Salir de pantalla completa' : 'Pantalla completa');
     fresh.title = fresh.getAttribute('aria-label');
-    if(en && typeof drIr === 'function' && typeof _drAlturas === 'function' && _drMovil()) drIr(_drAlturas()[3]);
     setTimeout(() => { if(mapInstance) mapInstance.invalidateSize(); }, 80);
     avisarMapa(en);
   };
@@ -7221,7 +7245,7 @@ function _marcaFicha(abierta){
 function closeDrawer(){
   _marcaFicha(false);
   /* Si la ficha se cierra con el mapa en pantalla completa simulada, se sale de ella. */
-  try{ document.querySelectorAll('.sia-fs').forEach(c=>c.classList.remove('sia-fs')); document.documentElement.classList.remove('sia-fs-abierto'); }catch(e){}
+  siaFsSalirTodo();
   try{ _drVis = 0; document.getElementById('dr').style.removeProperty('--dvis'); }catch(e){}
   bd.classList.remove('open');
   dr.classList.remove('open');
