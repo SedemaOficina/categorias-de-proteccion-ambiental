@@ -2,12 +2,21 @@
 # Auditoría 360 del 12-sep-2026: producción no enviaba ninguna.
 # La Content-Security-Policy es la MISMA que index.html lleva en <meta>
 # desde agosto y que ya opera en producción; aquí se envía además como
-# cabecera (más robusta, y es donde puede vivir frame-ancestors cuando se
-# decida si el tablero se incrusta en algún portal).
+# cabecera (más robusta, y es la única vía para frame-ancestors: en <meta>
+# el navegador lo ignora). 13-sep-2026: frame-ancestors 'self' — el tablero
+# no se incrusta en ningún portal; si algún día se decide, agregar aquí el
+# origen del portal (p. ej. https://www.sedema.cdmx.gob.mx).
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Cross-Origin-Opener-Policy: same-origin-allow-popups
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://docs.google.com https://googleusercontent.com https://*.googleusercontent.com https://maps.googleapis.com https://places.googleapis.com https://nominatim.openstreetmap.org https://*.basemaps.cartocdn.com https://cartodb-basemaps-a.global.ssl.fastly.net https://server.arcgisonline.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://docs.google.com https://googleusercontent.com https://*.googleusercontent.com https://maps.googleapis.com https://places.googleapis.com https://nominatim.openstreetmap.org https://*.basemaps.cartocdn.com https://cartodb-basemaps-a.global.ssl.fastly.net https://server.arcgisonline.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'
+
+# Charset explícito en código y estilos (evita acentos rotos si el
+# proxy omite el charset).
+/*.js
+  Content-Type: text/javascript; charset=utf-8
+/*.css
+  Content-Type: text/css; charset=utf-8
