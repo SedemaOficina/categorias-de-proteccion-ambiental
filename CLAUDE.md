@@ -28,7 +28,7 @@ Tablero público de las 66 áreas de protección ambiental de la CDMX. Público 
 ## Datos geoespaciales
 - Todo GeoJSON en EPSG:4326 y 2D. Insumos en UTM 14N (32614) o LCC México (6372) → reproyectar antes de integrar. Validar con `buffer(0)` (los siete rasgos inválidos históricos se repararon el 12-sep-2026).
 - `findGeometry(d)` devuelve un **Feature**; desenvolver con `.geometry` si se necesita la geometría cruda.
-- Derivados: `tools/traslapes.py` regenera `traslapes.geojson`; `pgoedf_areas.json` se recalcula con shapely en 6372 cuando cambien geometrías o PGOEDF.
+- Derivados: `tools/traslapes.py` regenera `traslapes.geojson` (solo la parte poligonal de cada intersección: nunca `GeometryCollection`, que Leaflet pinta como marcadores y líneas); `pgoedf_areas.json` se recalcula con shapely en 6372 cuando cambien geometrías o PGOEDF. Los GeoJSON de `data/zonificacion/` también se validan con `buffer(0)` y sin rasgos de área cero; `index.json` se recalcula al tocarlos (v70: `la-loma.geojson`).
 
 ## Reglas de despliegue (obligatorias en cada entrega)
 1. `node --check app.js` (y `sw.js` si cambió). CSS: 0 errores de sintaxis.

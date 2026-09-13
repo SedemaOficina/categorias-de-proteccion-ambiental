@@ -26,6 +26,8 @@ Criterios
 · Umbral de 0.5 ha: por debajo son roces de digitalización, no traslapes.
 · Superficies en proyección plana local (equirectangular a 19.35° N).
   Error < 0.1 % a escala CDMX.
+· Solo se conserva la parte poligonal de cada intersección (sin líneas ni
+  puntos de frontera compartida).
 """
 import json, math, itertools, os, sys, datetime
 
@@ -48,6 +50,21 @@ def proj(x, y, z=None):
 
 def ha(g):
     return transform(proj, g).area / 10000
+
+def solo_poligonos(g):
+    """Se queda con la parte con área de una intersección. Dos polígonos que
+    comparten un tramo de frontera devuelven una GeometryCollection con
+    líneas y puntos además de los polígonos; Leaflet dibujaba esas líneas
+    como trazos y los puntos como marcadores azules sin nombre (auditoría
+    13-sep-2026, D1-06)."""
+    if g.is_empty:
+        return g
+    if g.geom_type in ('Polygon', 'MultiPolygon'):
+        return g
+    if g.geom_type == 'GeometryCollection':
+        partes = [x for x in g.geoms if x.geom_type in ('Polygon', 'MultiPolygon')]
+        return unary_union(partes) if partes else g.__class__()
+    return g.__class__()   # línea o punto: sin área
 
 def cargar(ruta, nombre_fn, sub_fn, filtro=None):
     with open(ruta, encoding='utf-8') as fh:
@@ -74,7 +91,7 @@ def cruzar(A, B, etiqueta, mismo=False):
         b = (A if mismo else B)[j]
         if not a['g'].intersects(b['g']):
             continue
-        inter = a['g'].intersection(b['g'])
+        inter = solo_poligonos(a['g'].intersection(b['g']))
         if inter.is_empty:
             continue
         h = ha(inter)
@@ -90,7 +107,7 @@ def cruzar(A, B, etiqueta, mismo=False):
                 'pct_a': round(100 * h / ha(a['g']), 1),
                 'pct_b': round(100 * h / ha(b['g']), 1),
             },
-            'geometry': mapping(inter.simplify(SIMPLIFY_GR, preserve_topology=True)),
+            'geometry': mapping(solo_poligonos(inter.simplify(SIMPLIFY_GR, preserve_topology=True))),
         })
     return feats
 

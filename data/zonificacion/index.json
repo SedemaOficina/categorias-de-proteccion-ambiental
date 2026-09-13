@@ -37,12 +37,12 @@
     "zona": "Zona de Restauracion Ecologica",
     "k": "restauracion ecologica",
     "ha": 52.38,
-    "n": 65
+    "n": 59
    },
    {
     "zona": "Zona de Proteccion Estricta",
     "k": "proteccion estricta",
-    "ha": 19.29,
+    "ha": 19.28,
     "n": 27
    },
    {
@@ -55,17 +55,17 @@
     "zona": "Zona de Uso Especial",
     "k": "uso especial",
     "ha": 1.71,
-    "n": 9
+    "n": 8
    },
    {
     "zona": "Zona de Uso Público Extensivo",
     "k": "uso publico extensivo",
     "ha": 1.34,
-    "n": 17
+    "n": 16
    }
   ],
   "total_ha": 76.91,
-  "poligonos": 127
+  "poligonos": 119
  },
  "Sierra de Santa Catarina (ZCE)": {
   "archivo": "sierra-de-santa-catarina.geojson",

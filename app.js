@@ -4384,8 +4384,10 @@ function renderTrasTabla(){
   if(nota) nota.innerHTML = `<b>Metodología.</b> ${esc(fc.nota||'')}
     Superficies calculadas en proyección plana local (error &lt;0.1% a escala CDMX).
     <b>Cálculo generado el ${esc(fc.generado||'—')}</b> sobre las geometrías vigentes en esa fecha;
-    si se actualiza algún GeoJSON hay que regenerarlo. Suma de superficies individuales del inventario:
-    ${fmt(fc.suma_individual_ha||0)} ha · unión real del territorio: ${fmt(fc.union_ha||0)} ha.`;
+    si se actualiza algún GeoJSON hay que regenerarlo. Suma de las poligonales cartográficas de las 66 áreas:
+    ${fmt(fc.suma_individual_ha||0)} ha · unión real del territorio: ${fmt(fc.union_ha||0)} ha.
+    Estas cifras salen de la cartografía y no coinciden con la suma de superficies decretadas del inventario
+    (${typeof DATA !== 'undefined' ? fmt(sum(DATA,'superficie')) : '—'} ha): en nueve áreas la poligonal difiere de la superficie del decreto en más del 5 %.`;
 }
 
 function exportTraslapesCSV(){
