@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-09-12zk';
+const CACHE_VERSION = 'sia-v35-2026-09-13c';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
@@ -27,6 +27,8 @@ const CORE_ASSETS = [
   './config.js',
   './assets/logo-sedema.png',
   './assets/favicon.png',
+  './manifest.json',
+  './assets/icon-192.png',
   /* Respaldo del inventario: pesa 23 KB y es la diferencia entre un tablero
      sin datos y uno con el último corte cuando el Sheet no responde. */
   './data/inventario.csv',
@@ -165,7 +167,11 @@ async function cacheFirst(req, cacheName){
      anteriores por falta de red, sirven de respaldo. El orden importa: sin él
      una caché vieja puede eclipsar al index.html nuevo. */
   const cache = await caches.open(cacheName);
-  const cached = (await cache.match(req)) || (await caches.match(req));
+  /* ignoreSearch: una navegación con query (?fuente=pwa, ?utm…) debe
+     encontrar el index.html cacheado; sin esto la app instalada arrancaba en
+     503 sin red. Para navegaciones, el último recurso es index.html. */
+  const cached = (await cache.match(req, {ignoreSearch:true})) || (await caches.match(req, {ignoreSearch:true}))
+              || (req.mode === 'navigate' ? (await cache.match('./index.html')) : null);
   if(cached) return cached;
   try {
     const response = await fetch(req);

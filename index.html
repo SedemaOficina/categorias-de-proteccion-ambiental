@@ -14,6 +14,11 @@
 <!-- Favicon institucional -->
 <link rel="icon" type="image/png" href="./assets/favicon.png">
 <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
+<!-- Instalable como app (PWA): manifiesto + metadatos de iOS -->
+<link rel="manifest" href="./manifest.json">
+<meta name="apple-mobile-web-app-title" content="SIA CDMX">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 
 <!-- Open Graph (vista previa al compartir) -->
 <meta property="og:type" content="website">
@@ -84,8 +89,8 @@ try{
     </div>
     <div class="meta">
       <div>REGISTROS · <b id="metaCount">—</b></div>
-      <button type="button" class="ayuda-btn" id="ayudaAbrir" aria-haspopup="dialog">
-        <span class="ay-ico" aria-hidden="true">?</span><span>Guía rápida</span>
+      <button type="button" class="ayuda-btn" id="ayudaAbrir" aria-haspopup="dialog" aria-label="Guía rápida" title="Guía rápida">
+        <span class="ay-ico" aria-hidden="true">?</span>
       </button>
     </div>
   </header>

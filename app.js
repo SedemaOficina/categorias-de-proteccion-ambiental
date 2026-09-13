@@ -799,9 +799,33 @@ function buildTabs(){
       state.tab = b.dataset.id;
       limpiarFiltros();
       buildTabs(); populateFilters(); renderDashboard(); render();
-      window.scrollTo({top:0,behavior:'smooth'});
+      _trasElegirSubconjunto();
     });
   });
+}
+/* Qué pasa después de tocar un chip de subconjunto (flujo natural):
+   1) el chip se acaba de volver a pintar, así que el foco se le devuelve al
+      chip activo —sin desplazar—; el contador «Mostrando N de M» es
+      aria-live y anuncia el resultado a quien no ve la pantalla;
+   2) en celular, el resultado (resumen + mapa) queda debajo de la tira de
+      chips: se desplaza hasta que la tira toque el borde superior, donde se
+      queda fija, y el mapa entra en pantalla;
+   3) en escritorio no se mueve nada si los chips están a la vista —mapa y
+      tabla ya se actualizaron a su lado—; solo si el usuario venía de muy
+      abajo en la tabla se vuelve a la tira de chips. */
+function _trasElegirSubconjunto(){
+  try{
+    const activo = document.querySelector('.subchip.active');
+    if(activo) activo.focus({preventScroll:true});
+    const sub = document.querySelector('.subnav'); if(!sub) return;
+    const movil = window.matchMedia('(max-width:760px)').matches;
+    const r = sub.getBoundingClientRect();
+    if(movil){
+      window.scrollTo({ top: r.top + window.scrollY - 4, behavior:'smooth' });
+    } else if(r.top < 0){
+      window.scrollTo({ top: r.top + window.scrollY - 12, behavior:'smooth' });
+    }
+  }catch(_){}
 }
 
 /* Cambiar de destino o de subconjunto reinicia los filtros de la tabla:
@@ -3233,9 +3257,12 @@ function _ubicarEnFicha(map, latlng, opts){
         if(!z) return;
         _ctx.zona = z.zona;
         _ctx.etiqueta = 'Tu ubicación · ' + z.zona;
+        _pintarPuntoEnBloque('zonif');
         siaToast('Zona del programa de manejo en ese punto: ' + z.zona + '.');
       }).catch(()=>{});
     }
+    if(dentro) _resolverPgoedfDelPunto(_fichaCtxUbic);
+    else _pintarPuntoEnBloque('zonif'), _pintarPuntoEnBloque('pgoedf');
 
     const bArea = opts.getBounds ? opts.getBounds() : null;
     if(dentro){
@@ -3671,7 +3698,11 @@ async function initZPMap(){
   const embCountEl = document.getElementById('zpEmbCount');
   if(embCountEl) embCountEl.innerHTML = `<b>${embFeats.length}</b> embarcaderos · ${nPro} productivos · ${nTur} turísticos. Clic en una fila para ver la ficha y hacer zoom en el mapa.`;
   const embBtn = document.querySelector('.zp-subtab[data-zpsub="emb"]');
-  if(embBtn) embBtn.textContent = `Embarcaderos (${embFeats.length})`;
+  /* Sin embarcaderos capturados la subpestaña no se ofrece: el archivo de
+     datos traía dos puntos de EJEMPLO que llegaron a producción (auditoría
+     del repositorio, 13-sep-2026). Cuando exista el padrón real, basta con
+     poblar data/embarcaderos.geojson. */
+  if(embBtn){ embBtn.textContent = `Embarcaderos (${embFeats.length})`; embBtn.hidden = embFeats.length === 0; }
   const embTbody = document.querySelector('#zpEmbTable tbody');
   if(embTbody){
     zpEmb = {};
@@ -5041,6 +5072,39 @@ async function _dibujarBaseEnCaja(ctx, T, x, y, w, h){
   return true;
 }
 
+/* Traza una colección de rasgos con la MISMA proyección de la caja. Sirve
+   para las capas que el usuario dejó encendidas en el minimapa (Suelo de
+   Conservación, zonificación del programa de manejo): la imagen compartible
+   enseña lo mismo que la pantalla. `estilo(props)` devuelve {fill, fillAlpha,
+   stroke, width, dash}. */
+function _trazarCapaEnCaja(ctx, fc, P, x, y, w, h, estilo){
+  if(!fc || !fc.features || !P) return 0;
+  let n = 0;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip();
+  fc.features.forEach(f=>{
+    const g = f.geometry; if(!g) return;
+    const polys = g.type==='Polygon' ? [g.coordinates] : g.type==='MultiPolygon' ? g.coordinates : [];
+    if(!polys.length) return;
+    const st = estilo(f.properties || {}) || {};
+    polys.forEach(poly=>{
+      ctx.beginPath();
+      poly.forEach(ring=>{ ring.forEach((c,i)=>{ const [px,py]=P(c); i?ctx.lineTo(px,py):ctx.moveTo(px,py); }); ctx.closePath(); });
+      if(st.fill && st.fillAlpha){ ctx.globalAlpha = st.fillAlpha; ctx.fillStyle = st.fill; ctx.fill('evenodd'); ctx.globalAlpha = 1; }
+      if(st.stroke){ ctx.strokeStyle = st.stroke; ctx.lineWidth = st.width || 2; ctx.setLineDash(st.dash || []); ctx.lineJoin='round'; ctx.stroke(); ctx.setLineDash([]); }
+    });
+    n++;
+  });
+  ctx.restore();
+  return n;
+}
+/* Qué capas están encendidas en el minimapa de la ficha, con su GeoJSON. */
+function _capasActivasFicha(){
+  const out = [];
+  try{ if(activeMap && activeMap._scLayer) out.push({ id:'sc', fc: activeMap._scLayer.toGeoJSON() }); }catch(_){}
+  try{ if(typeof _zonifCapa !== 'undefined' && _zonifCapa && activeMap && activeMap.hasLayer(_zonifCapa)) out.push({ id:'zonif', fc: _zonifCapa.toGeoJSON() }); }catch(_){}
+  return out;
+}
 function _drawGeoInBox(ctx, geoIn, x, y, w, h, color, punto, T){
   /* findGeometry() devuelve un Feature, no una geometría: hay que desenvolverlo */
   const geo = (geoIn && geoIn.type==='Feature') ? geoIn.geometry : geoIn;
@@ -5068,13 +5132,13 @@ function _drawGeoInBox(ctx, geoIn, x, y, w, h, color, punto, T){
   const sobreMapa = !!(T && T.conBase);
   ctx.save();
   ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip();
-  polys.forEach(poly=>{
+  if(!(T && T.soloPunto)) polys.forEach(poly=>{
     ctx.beginPath();
     poly.forEach(ring=>{
       ring.forEach((c,i)=>{ const [px,py]=P(c); i?ctx.lineTo(px,py):ctx.moveTo(px,py); });
       ctx.closePath();
     });
-    ctx.fillStyle = color + (sobreMapa ? '2b' : '33'); ctx.fill('evenodd');
+    if(!(T && T.sinRelleno)){ ctx.fillStyle = color + (sobreMapa ? '2b' : '33'); ctx.fill('evenodd'); }
     /* Sobre una ortofoto el trazo de color se pierde contra el verde oscuro:
        un halo blanco por debajo lo despega del fondo sin falsear el límite. */
     if(sobreMapa){
@@ -5122,6 +5186,7 @@ function descInventario(d){
        Conservación (PGOEDF) va debajo de ese dato; lo que se deriva del
        programa de manejo (zonificación), debajo de él. */
     filas: [
+      ['DG RESPONSABLE', d.dg_responsable||'Sin asignar'],
       ['TIPO',         d.tipo==='AVA' ? 'Área de Valor Ambiental' : 'Área Natural Protegida'],
       ['JURISDICCIÓN', d.jurisdiccion||'—'],
       ['SUBCATEGORÍA', d.categoria||'—'],
@@ -5134,9 +5199,7 @@ function descInventario(d){
       ['PROGRAMA DE MANEJO', d.programa_manejo==='Sí' ? ('Publicado' + (d.fecha_pm ? ' · '+d.fecha_pm : '')) : 'Sin programa vigente']
     ]).concat(
       _filaZonifResumen(d)
-    ).concat([
-      ['DG RESPONSABLE', d.dg_responsable||'—']
-    ]).concat(
+    ).concat(
       /* La coadministración solo aparece donde existe: son ocho ANP federales. */
       (typeof isCoadmin==='function' && isCoadmin(d.nombre))
         ? [['COADMINISTRACIÓN', 'Convenio Marco SEMARNAT–CONANP–CDMX 2025']]
@@ -5145,7 +5208,11 @@ function descInventario(d){
       /* Solo cuando hay un punto consultado Y cae dentro de una zona: es el
          dato que convierte la captura en una constancia de campo. */
       (_fichaCtxUbic && _fichaCtxUbic.zona)
-        ? [['ZONA DEL PUNTO', _fichaCtxUbic.zona]]
+        ? [['ZONA PM DEL PUNTO', _fichaCtxUbic.zona]]
+        : []
+    ).concat(
+      (_fichaCtxUbic && _fichaCtxUbic.pgoedf)
+        ? [['PGOEDF DEL PUNTO', _fichaCtxUbic.pgoedf]]
         : []
     )
   };
@@ -5244,7 +5311,7 @@ function conectarCompartir(descOrFn){
     if(t) t.textContent = 'Generando…';
     b.disabled = true;
     try{ await compartirFichaImagen(desc, b); }
-    catch(err){ siaToast('No se pudo generar la imagen de la ficha.'); }
+    catch(err){ console.warn('[Compartir] no se pudo generar la imagen:', err); siaToast('No se pudo generar la imagen de la ficha.'); }
     finally{ if(t) t.textContent = original; b.disabled = false; }
   });
 }
@@ -5285,7 +5352,11 @@ async function compartirFichaImagen(d, btn){
 
   /* Polígono */
   const geo = d.geo || null;
-  const boxH=430;
+  /* La caja del mapa cede alto cuando hay muchas filas: con doce renglones
+     (ficha abierta desde una ubicación, con zonificación y PGOEDF) el paso
+     entre filas bajaba a 25 px y los filetes cortaban el texto. */
+  const nFilas = (d.filas || []).length;
+  const boxH = nFilas > 11 ? 340 : nFilas > 9 ? 380 : 430;
   ctx.fillStyle='#f8f4e0'; ctx.fillRect(48,y,W-96,boxH);
   ctx.strokeStyle='#eae4cf'; ctx.lineWidth=2; ctx.strokeRect(48,y,W-96,boxH);
   const ctxU = _fichaCtxUbic;
@@ -5296,9 +5367,49 @@ async function compartirFichaImagen(d, btn){
       T = _proyeccionCaja(g, 48, y, W-96, boxH, ctxU);
       if(T) T.conBase = await _dibujarBaseEnCaja(ctx, T, 48, y, W-96, boxH);
     }catch(_){ T = null; }
+    /* Capas encendidas en el minimapa: van DEBAJO del polígono del área, con
+       la misma jerarquía que en pantalla (SC tenue y discontinuo; zonificación
+       con bordes blancos y el área como marco sin relleno). */
+    const capas = Array.isArray(d.capas) ? d.capas : (d.capas === false ? [] : _capasActivasFicha());
+    const leyenda = [];
+    if(T && T.P && capas.length){
+      const colSC = colorLiteral('var(--sc)'), colSC9 = colorLiteral('var(--sc-900)');
+      capas.forEach(c=>{
+        if(c.id === 'sc'){
+          _trazarCapaEnCaja(ctx, c.fc, T.P, 48, y, W-96, boxH, ()=>({ fill: colSC, fillAlpha: .10, stroke: colSC9, width: 2.5, dash: [8,6] }));
+          leyenda.push({ txt:'Suelo de Conservación', col: colSC9, dash:true });
+        }
+        if(c.id === 'extra' && c.fc){
+          _trazarCapaEnCaja(ctx, c.fc, T.P, 48, y, W-96, boxH, ()=>c.estilo);
+          if(c.leyenda) leyenda.push({ txt:c.leyenda, col:c.estilo.stroke || c.estilo.fill, dash: !!c.estilo.dash });
+        }
+        if(c.id === 'zonif'){
+          const fams = new Map();
+          _trazarCapaEnCaja(ctx, c.fc, T.P, 48, y, W-96, boxH, pr => { const f = zonifFamilia(pr.zona_k); fams.set(f.lbl, f.color); return { fill: f.color, fillAlpha: .45, stroke: '#ffffff', width: 2.5 }; });
+          fams.forEach((col,lbl)=>leyenda.push({ txt: lbl, col }));
+          T.sinRelleno = true;
+        }
+      });
+    }
     /* Si las teselas no llegaron —sin red, CORS caído, demasiadas— se dibuja
        el polígono como siempre sobre el fondo crema. Degradar, no fallar. */
+    if(T && d.soloPunto) T.soloPunto = true;
     _drawGeoInBox(ctx,geo,48,y,W-96,boxH,color,ctxU,T);
+    if(leyenda.length){
+      /* Leyenda de capas dentro del recuadro, arriba a la izquierda. */
+      ctx.save();
+      ctx.font='500 17px Roboto, sans-serif';
+      let lx = 48+12, ly = y+12;
+      const anchoTotal = leyenda.reduce((a,l)=>a + 28 + ctx.measureText(l.txt).width + 18, 0);
+      ctx.fillStyle='rgba(255,255,255,.88)'; ctx.fillRect(lx-6, ly-4, Math.min(anchoTotal+6, W-96-12), 30);
+      leyenda.forEach(l=>{
+        if(l.dash){ ctx.strokeStyle=l.col; ctx.lineWidth=3; ctx.setLineDash([6,4]); ctx.beginPath(); ctx.moveTo(lx, ly+11); ctx.lineTo(lx+20, ly+11); ctx.stroke(); ctx.setLineDash([]); }
+        else { ctx.fillStyle=l.col; ctx.fillRect(lx+2, ly+3, 16, 16); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.strokeRect(lx+2, ly+3, 16, 16); }
+        ctx.fillStyle='#2a2a2a'; ctx.fillText(l.txt, lx+28, ly+17);
+        lx += 28 + ctx.measureText(l.txt).width + 18;
+      });
+      ctx.restore();
+    }
     ctx.strokeStyle='#eae4cf'; ctx.lineWidth=2; ctx.strokeRect(48,y,W-96,boxH);
     if(ctxU && T && !T.puntoEnCuadro){
       /* Decirlo es obligatorio: la imagen se usa como constancia y callar que
@@ -5336,17 +5447,22 @@ async function compartirFichaImagen(d, btn){
   }
   y+=boxH+78;   /* +28: la cifra quedaba pegada al borde del recuadro */
 
-  /* Superficie */
+  /* Cifra grande: superficie en las fichas; en la constancia de campo, la
+     coordenada (d.grande / d.grandeLabel). */
   ctx.fillStyle=color; ctx.font='900 70px Roboto, sans-serif';
-  const supTxt = (d.superficie == null || d.superficie === '') ? 'Por confirmar' : fmt(d.superficie);
-  if(d.superficie == null || d.superficie === '') ctx.font='700 44px Roboto, sans-serif';
+  let supTxt;
+  if(d.grande != null){ supTxt = String(d.grande); ctx.font='700 46px "Roboto Mono", monospace'; }
+  else {
+    supTxt = (d.superficie == null || d.superficie === '') ? 'Por confirmar' : fmt(d.superficie);
+    if(d.superficie == null || d.superficie === '') ctx.font='700 44px Roboto, sans-serif';
+  }
   ctx.fillText(supTxt,48,y);
   const sw=ctx.measureText(supTxt).width;
   ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='400 30px Roboto, sans-serif';
-  if(d.superficie != null && d.superficie !== '') ctx.fillText(' ha',48+sw+10,y);
+  if(d.grande == null && d.superficie != null && d.superficie !== '') ctx.fillText(' ha',48+sw+10,y);
   y+=34;
   ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='500 20px "Roboto Mono", monospace';
-  ctx.fillText(d.supLabel || 'SUPERFICIE',48,y); y+=64;
+  ctx.fillText(d.grandeLabel || d.supLabel || 'SUPERFICIE',48,y); y+=64;
 
   /* Datos duros */
   const filas = d.filas || [];
@@ -5390,7 +5506,7 @@ async function compartirFichaImagen(d, btn){
   }
 
   /* Compartir o descargar */
-  const nombreArchivo = 'SIA_' + slugify(d.nombre||'ficha') + '.png';
+  const nombreArchivo = (d.grande != null ? 'SIA_constancia_' : 'SIA_') + slugify(d.nombre||'ficha') + '.png';
   return new Promise(res=>{
     cv.toBlob(async blob=>{
       if(!blob){ siaToast('No se pudo generar la imagen.'); return res(false); }
@@ -5862,6 +5978,13 @@ async function ubicarResolver(latlng, precision, etiqueta){
   _ubicarOrigen = { lat: latlng.lat, lng: latlng.lng };   // habilita distancias en las sugerencias
   _ubicarEtiqueta = etiqueta || (precision != null ? 'Ubicación por GPS' : 'Punto consultado');
   sec.innerHTML = renderUbicarResultado(latlng, precision, etiqueta);
+  /* Contexto del último resultado: lo usa la constancia de campo. La zona
+     del PM y el PGOEDF se agregan cuando resuelven. */
+  _ubiUltimo = { latlng:{lat:latlng.lat, lng:latlng.lng}, precision, etiqueta:_ubicarEtiqueta,
+                 covs:_coberturasEn(latlng), sc:_enSueloConservacion(latlng), alc:_alcaldiaEn(latlng),
+                 ent:_entidadEn(latlng), zonaPM:null, zonaPMEstado:null, pgoedf:null, cuando:new Date() };
+  const btnConst = document.getElementById('ubiCompartir');
+  if(btnConst) btnConst.addEventListener('click', ()=>compartirConstancia(btnConst));
   /* Zonificación del PGOEDF: solo si el punto cayó en Suelo de Conservación
      (el contenedor existe únicamente en ese caso). enANP decide el mensaje
      cuando el Programa no cubre el punto. */
@@ -5881,10 +6004,12 @@ async function ubicarResolver(latlng, precision, etiqueta){
         zonifDe(nombreArea).then(e => {
           if(!document.getElementById('ubiZonaPM')) return;
           if(!e){
+            if(_ubiUltimo) _ubiUltimo.zonaPMEstado = 'nd';
             zp.innerHTML = '<span class="ubi-zona-nd">Zonificación del programa de manejo aún no disponible en formato geoespacial.</span>';
             return;
           }
           return zonaDePunto(nombreArea, latlng).then(z => {
+            if(_ubiUltimo){ _ubiUltimo.zonaPM = z ? z.zona : null; _ubiUltimo.zonaPMEstado = z ? 'ok' : 'fuera'; }
             if(!document.getElementById('ubiZonaPM')) return;
             zp.innerHTML = z
               ? '<span class="ubi-zona-k">Zona del programa de manejo en este punto</span>'
@@ -5911,6 +6036,98 @@ async function ubicarResolver(latlng, precision, etiqueta){
   }
 }
 
+
+/* ═══ CONSTANCIA DE CAMPO ═════════════════════════════════════════════
+   Imagen compartible del resultado de «¿Dónde estoy?», sin abrir ficha:
+   coordenada, fecha y hora, precisión, coberturas por jerarquía, régimen de
+   Suelo de Conservación, zona del programa de manejo y del PGOEDF en el punto,
+   alcaldía y área más cercana. Reutiliza el generador de las fichas. */
+let _ubiUltimo = null;
+function _geoDeCobertura(c){
+  try{
+    if(!c || !c.ficha) return null;
+    const [tipo, ref] = c.ficha.split('::');
+    if(tipo === 'inv')   return ((GEOMETRIES && GEOMETRIES.features) || []).find(f => f.properties.nombre === ref) || null;
+    if(tipo === 'arcac') return ((ARCAC_GEO && ARCAC_GEO.features) || []).find(f => String(f.properties.no) === String(ref)) || null;
+    if(tipo === 'zp')    return ((ZP_DESIGNACIONES && ZP_DESIGNACIONES.features) || []).find(f => f.properties && f.properties.capa === ref) || null;
+  }catch(_){}
+  return null;
+}
+function _marcoAlrededor(latlng, m){
+  const dLat = m / 111320, dLng = m / (111320 * Math.cos(latlng.lat * Math.PI / 180));
+  return { type:'Polygon', coordinates:[[[latlng.lng-dLng, latlng.lat-dLat],[latlng.lng+dLng, latlng.lat-dLat],[latlng.lng+dLng, latlng.lat+dLat],[latlng.lng-dLng, latlng.lat+dLat],[latlng.lng-dLng, latlng.lat-dLat]]] };
+}
+function descConstancia(u, scFC){
+  const covs = u.covs || [];
+  const principal = covs[0] || null;
+  const dInv = principal && principal.ficha && principal.ficha.indexOf('inv::') === 0
+    ? DATA.find(x => x.nombre === principal.nombre) : null;
+  const fecha = u.cuando || new Date();
+  const fechaTxt = fecha.toLocaleDateString('es-MX', {day:'2-digit', month:'long', year:'numeric'})
+                 + ' · ' + fecha.toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
+  const coord = u.latlng.lat.toFixed(6) + ', ' + u.latlng.lng.toFixed(6);
+  const enCDMX = u.ent === 'CDMX';
+  const color = principal ? colorLiteral(principal.color)
+              : (u.sc === true ? colorLiteral('var(--sc)') : COL_GRIS_NEUTRO);
+  const geoP = principal ? _geoDeCobertura(principal) : null;
+  /* Capas de contexto: Suelo de Conservación siempre que exista la capa, y
+     las demás coberturas del punto como contornos en su color. */
+  const capas = [];
+  /* SC solo si alguno de sus polígonos toca el encuadre (bbox del área
+     principal o del marco alrededor del punto): si no, la leyenda prometería
+     una capa que no se ve. */
+  const bboxDe = g => { const c = JSON.stringify(g.coordinates).match(/-?\d+\.?\d*(?:e-?\d+)?/g).map(Number); let w=1e9,e=-1e9,s2=1e9,n=-1e9; for(let i=0;i<c.length;i+=2){ if(c[i]<w)w=c[i]; if(c[i]>e)e=c[i]; if(c[i+1]<s2)s2=c[i+1]; if(c[i+1]>n)n=c[i+1]; } return {w,e,s:s2,n}; };
+  const bb = bboxDe(geoP ? geoP.geometry : _marcoAlrededor(u.latlng, 900));
+  const tocaBB = f => { try{ const b2 = bboxDe(f.geometry); return !(b2.e<bb.w||b2.w>bb.e||b2.n<bb.s||b2.s>bb.n); }catch(_){ return true; } };
+  const scCerca = (scFC && scFC.features) ? scFC.features.filter(tocaBB) : [];
+  if(scCerca.length)
+    capas.push({ id:'extra', fc:{type:'FeatureCollection', features:scCerca}, estilo:{ fill:colorLiteral('var(--sc)'), fillAlpha:.10, stroke:colorLiteral('var(--sc-900)'), width:2.5, dash:[8,6] }, leyenda:'Suelo de Conservación' });
+  covs.slice(1).forEach(c => { const g = _geoDeCobertura(c); if(g) capas.push({ id:'extra', fc:{type:'FeatureCollection', features:[g]}, estilo:{ fill:colorLiteral(c.color), fillAlpha:.12, stroke:colorLiteral(c.color), width:3 }, leyenda:c.nombre }); });
+  const filas = [];
+  filas.push(['FECHA Y HORA', fechaTxt]);
+  filas.push(['ORIGEN', (u.etiqueta || 'Punto consultado') + (u.precision ? ' · ±' + Math.round(u.precision) + ' m' : '')]);
+  filas.push(['ALCALDÍA', enCDMX ? (u.alc || 'Ciudad de México') : ('Fuera de la CDMX · ' + (u.ent || ''))]);
+  if(principal){
+    filas.push([covs.length > 1 ? 'ÁREA PRINCIPAL' : 'ÁREA', principal.nombre + (principal.tag ? ' · ' + principal.tag : '')]);
+    covs.slice(1, 4).forEach(c => filas.push(['TAMBIÉN EN', c.nombre + (c.tag ? ' · ' + c.tag : '')]));
+  } else {
+    filas.push(['COBERTURA', u.sc === true ? 'Suelo de Conservación, sin área decretada' : 'Ninguna AVA, ANP, ARCAC ni Suelo de Conservación']);
+  }
+  if(dInv){
+    filas.push(['PROGRAMA DE MANEJO', dInv.programa_manejo === 'Sí' ? ('Publicado' + (dInv.fecha_pm ? ' · ' + dInv.fecha_pm : '')) : 'Sin programa vigente']);
+    if(typeof isCoadmin === 'function' && isCoadmin(dInv.nombre)) filas.push(['COADMINISTRACIÓN', 'Convenio Marco SEMARNAT–CONANP–CDMX 2025']);
+    if(u.zonaPM) filas.push(['ZONA PM DEL PUNTO', u.zonaPM]);
+    else if(u.zonaPMEstado === 'nd' && dInv.programa_manejo === 'Sí') filas.push(['ZONA PM DEL PUNTO', 'Zonificación aún no disponible en formato geoespacial']);
+    filas.push(['DG RESPONSABLE', dInv.dg_responsable || 'Sin asignar']);
+  }
+  filas.push(['SUELO DE CONSERVACIÓN', u.sc === true ? 'Dentro' : 'Fuera']);
+  if(u.pgoedf) filas.push(['PGOEDF', u.pgoedf]);
+  if(!principal && enCDMX){
+    try{ const cer = _masCercana(u.latlng, (GEOMETRIES && GEOMETRIES.features) || []); if(cer) filas.push(['ÁREA MÁS CERCANA', cer.nombre + ' · a ' + _fmtKm(cer.d)]); }catch(_){}
+  }
+  return {
+    nombre: principal ? principal.nombre : (u.sc === true ? 'Suelo de Conservación' : (enCDMX ? 'Sin área decretada' : 'Fuera del ámbito de la CDMX')),
+    badge: 'Constancia de ubicación',
+    subtitulo: principal ? (principal.sub || principal.tag || '') : 'Diagnóstico por punto · SIA',
+    color,
+    geo: geoP || _marcoAlrededor(u.latlng, 650),
+    soloPunto: !geoP,
+    grande: coord, grandeLabel: 'COORDENADA · WGS84',
+    capas, filas
+  };
+}
+async function compartirConstancia(btn){
+  const u = _ubiUltimo; if(!u) return;
+  const t = btn && btn.querySelector('.ubi-compartir-txt'); const orig = t ? t.textContent : '';
+  if(btn){ btn.disabled = true; if(t) t.textContent = 'Generando…'; }
+  const prev = _fichaCtxUbic;
+  try{
+    let scFC = null; try{ scFC = await loadSueloConservacion(); }catch(_){}
+    _fichaCtxUbic = { lat:u.latlng.lat, lng:u.latlng.lng, etiqueta:u.etiqueta || 'Punto consultado' };
+    await compartirFichaImagen(descConstancia(u, scFC), btn);
+  }catch(err){ console.warn('[Constancia] no se pudo generar:', err); siaToast('No se pudo generar la constancia.'); }
+  finally{ _fichaCtxUbic = prev; if(btn){ btn.disabled = false; if(t) t.textContent = orig; } }
+}
 
 /* ═══ PGOEDF · ZONIFICACIÓN DEL SUELO DE CONSERVACIÓN ══════════════════
    El Programa General de Ordenamiento Ecológico del Distrito Federal (2000)
@@ -5991,6 +6208,7 @@ function pintarPgoedf(latlng, enANP){
     if(!document.getElementById('ubiPgoedf')) return;   /* el resultado ya se cerró */
     if(!ok){ cont.innerHTML = '<div class="pg-vacio">La zonificación del PGOEDF no está disponible en este momento.</div>'; return; }
     const z = pgoedfEn(latlng);
+    if(_ubiUltimo) _ubiUltimo.pgoedf = z ? (pgoedfNombre(z.zona) + (z.clave !== 'PDU' ? ' (' + z.clave + ')' : '')) : (enANP ? 'No aplica dentro de ANP' : null);
     if(!z){
       cont.innerHTML = enANP
         ? '<div class="pg-vacio"><b>PGOEDF · no aplica en este punto.</b> Dentro de un Área Natural Protegida rige la zonificación de su programa de manejo, no la del Programa de Ordenamiento.</div>'
@@ -6166,6 +6384,10 @@ function renderUbicarResultado(latlng, precision, etiqueta){
   return `<div class="gm-handle" id="ubicarAsa" aria-hidden="true"></div>
   <div class="panel ubi-panel">
     <div class="ubi-cabeza"><span class="ubi-cabeza-txt">${esc(cabeza)}</span>
+      <button type="button" class="ubi-compartir" id="ubiCompartir" aria-label="Compartir constancia de ubicación" title="Compartir constancia de ubicación">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        <span class="ubi-compartir-txt">Constancia</span>
+      </button>
       <button type="button" class="ubi-cerrar" id="ubicarCerrar" aria-label="Cerrar resultado">×</button></div>
     ${_avisoCapasHTML('ubi-warn')}
     ${etiqueta ? `<p class="ubi-etiqueta">${esc(etiqueta)}</p>` : ''}
@@ -6491,7 +6713,40 @@ function pintarZonificacion(d){
       + '<p class="zonif-pie">' + e.poligonos + ' polígonos · fuente: programa de manejo '
       + 'publicado. La superficie zonificada no coincide al decimal con la decretada: la primera '
       + 'se calcula sobre la cartografía del programa y la segunda proviene del decreto.</p>';
+    _pintarPuntoEnBloque('zonif');
   });
+}
+
+/* ── El punto consultado, dentro de los bloques de la ficha ───────────
+   Cuando la ficha se abre desde «¿Dónde estoy?» (o se usa «ubicarme» en su
+   minimapa), los bloques de zonificación y de PGOEDF dicen además en qué
+   zona cae ESE punto. Misma información que lleva la imagen compartible:
+   lo que se ve es lo que se comparte. */
+function _resolverPgoedfDelPunto(ctxU){
+  try{
+    if(!ctxU || !isFinite(ctxU.lat)) return;
+    if(typeof _enSueloConservacion === 'function' && _enSueloConservacion(ctxU) !== true){ _pintarPuntoEnBloque('pgoedf'); return; }
+    cargarPgoedf().then(ok => {
+      if(!ok) return;
+      const z = pgoedfEn(ctxU);
+      if(z) ctxU.pgoedf = pgoedfNombre(z.zona) + (z.clave !== 'PDU' ? ' (' + z.clave + ')' : '');
+      _pintarPuntoEnBloque('pgoedf');
+    });
+  }catch(_){}
+}
+function _pintarPuntoEnBloque(tipo){
+  try{
+    const cont = document.getElementById(tipo === 'zonif' ? 'fichaZonif' : 'fichaPgoedf');
+    if(!cont) return;
+    const prev = cont.querySelector('.zonif-punto'); if(prev) prev.remove();
+    const ctxU = _fichaCtxUbic; if(!ctxU) return;
+    const val = tipo === 'zonif' ? ctxU.zona : ctxU.pgoedf;
+    if(!val || !cont.innerHTML.trim()) return;
+    const p = document.createElement('p'); p.className = 'zonif-punto';
+    p.innerHTML = '<span class="zonif-punto-dot"></span><b>Punto consultado:</b> ' + esc(val);
+    const pie = cont.querySelector('.zonif-pie');
+    if(pie) cont.insertBefore(p, pie); else cont.appendChild(p);
+  }catch(_){}
 }
 
 /* ── PGOEDF en la ficha ──────────────────────────────────────────────
@@ -6533,7 +6788,7 @@ function pintarPgoedfFicha(d){
     const e = areas[d.nombre] || null;
     const cob = e ? e.pct : 0;
     const esANP = d.tipo === 'ANP';
-    const intro = '<p class="zonif-nota">Por estar en Suelo de Conservación'
+    const intro = '<p class="zonif-intro">Por estar en Suelo de Conservación'
       + (scp != null && scp < 99.5 ? ' (' + scp.toFixed(scp < 10 ? 2 : 1) + '% de su superficie)' : '')
       + ', esta área queda en el ámbito del Programa General de Ordenamiento Ecológico del Distrito Federal (PGOEDF, 2000).</p>';
     let cuerpo = '';
@@ -6572,6 +6827,7 @@ function pintarPgoedfFicha(d){
     cont.innerHTML = '<div class="zonif-h">Ordenamiento ecológico · PGOEDF</div>' + intro + cuerpo
       + '<p class="zonif-pie">Fuente: cartografía del PGOEDF (GODF 01/08/2000), cruce geométrico con la poligonal decretada. '
       + 'Las actividades permitidas y prohibidas por zona se consultan por punto en «¿Dónde estoy?».</p>';
+    _pintarPuntoEnBloque('pgoedf');
   });
 }
 
@@ -6701,7 +6957,8 @@ function openDrawer(d){
      —que se dibuja de golpe y no puede esperar— ya lo tenga a mano. */
   if(_fichaCtxUbic && typeof zonaDePunto === 'function'){
     const _ctx = _fichaCtxUbic;
-    zonaDePunto(d.nombre, _ctx).then(z=>{ if(z) _ctx.zona = z.zona; }).catch(()=>{});
+    zonaDePunto(d.nombre, _ctx).then(z=>{ if(z){ _ctx.zona = z.zona; _pintarPuntoEnBloque('zonif'); } }).catch(()=>{});
+    _resolverPgoedfDelPunto(_ctx);
   }
   destroyMap();
   // Actualizar URL con slug del área (sin recargar página)
@@ -6731,6 +6988,11 @@ function openDrawer(d){
     ${fichaMapaHTML({zonif:true})}
     <div class="big-num">${fmt(d.superficie)}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:6px;font-weight:500">ha</span></div>
     <div class="big-num-lbl">Superficie decretada</div>
+    <div class="field"><div class="k">DG responsable</div><div class="v">${
+      d.dg_responsable === 'DGSANPAVA' ? '<span class="tag-dg tag-dg-dgsanpava" title="Dirección General del Sistema de Áreas Naturales Protegidas y Áreas de Valor Ambiental">DGSANPAVA</span>' :
+      d.dg_responsable === 'DGCORENADER' ? '<span class="tag-dg tag-dg-dgcorenader" title="Dirección General de la Comisión de Recursos Naturales y Desarrollo Rural">DGCORENADER</span>' :
+      '<span style="color:var(--muted)">Sin asignar</span>'
+    }</div></div>
     <div class="field"><div class="k">Tipo</div><div class="v"><span class="tag tag-${d.tipo} tag-full">${d.tipo==='AVA'?'Área de Valor Ambiental':'Área Natural Protegida'}</span></div></div>
     <div class="field"><div class="k">Jurisdicción</div><div class="v"><span class="tag tag-jur-${d.jurisdiccion}">${d.jurisdiccion}</span></div></div>
     <div class="field"><div class="k">Subcategoría</div><div class="v"><span class="tag-sub sub-${subCode(d.categoria)} tag-sub-full">${d.categoria}</span></div></div>
@@ -6745,7 +7007,7 @@ function openDrawer(d){
          debajo del dato que lo origina: la zona del PGOEDF. -->
     <div id="fichaPgoedf" class="zonif-bloque zonif-bloque-intercalado"></div>
     ${isCoadmin(d.nombre) ? `
-    <div class="field"><div class="k">Coadministración</div><div class="v">
+    <div class="field"><div class="k">Coadminis&shy;tración</div><div class="v">
       <span class="tag-coadmin">Convenio Marco SEMARNAT–CONANP–CDMX 2025</span>
     </div></div>` : ''}
     <div class="field"><div class="k">Fecha decreto</div><div class="v">${d.fecha_decreto}</div></div>
@@ -6753,11 +7015,6 @@ function openDrawer(d){
     <div class="field"><div class="k">Fecha Programa de Manejo</div><div class="v">${d.fecha_pm||'—'}</div></div>
     <!-- Y lo que se deriva de tener programa de manejo, debajo de él: su zonificación. -->
     <div id="fichaZonif" class="zonif-bloque zonif-bloque-intercalado"></div>
-    <div class="field"><div class="k">DG responsable</div><div class="v">${
-      d.dg_responsable === 'DGSANPAVA' ? '<span class="tag-dg tag-dg-dgsanpava" title="Dirección General del Sistema de Áreas Naturales Protegidas y Áreas de Valor Ambiental">DGSANPAVA</span>' :
-      d.dg_responsable === 'DGCORENADER' ? '<span class="tag-dg tag-dg-dgcorenader" title="Dirección General de la Comisión de Recursos Naturales y Desarrollo Rural">DGCORENADER</span>' :
-      '<span style="color:var(--muted)">Sin asignar</span>'
-    }</div></div>
     ${renderDocumentosOficiales(d)}
     ${legalParts.length ? `
     <div class="legal-block">
