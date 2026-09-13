@@ -4929,6 +4929,7 @@ function initMapForArea(d){
   // Habilita scroll-wheel solo después de clic en el mapa (mejor UX)
   activeMap.on('click focus', ()=>activeMap.scrollWheelZoom.enable());
   activeMap.on('mouseout', ()=>activeMap.scrollWheelZoom.disable());
+  _gestosTactilesMinimapa(activeMap);
 
   // Toggle Suelo de Conservación en mapa de ficha · ACTIVO POR DEFAULT
   // Función reutilizable que también se usa en el mapa global y mapas de grupo
@@ -6933,8 +6934,42 @@ function fichaMapaHTML(opts){
 /* Lo que todo minimapa de ficha lleva después de crearse: base conmutable,
    pantalla completa, Suelo de Conservación en el menú y desplazamiento con
    rueda solo al enfocarlo. */
+/* Gestos táctiles del minimapa de ficha. En celular el mapa ocupa la mitad
+   de la hoja y Leaflet se queda con el arrastre de un dedo: quien intenta
+   desplazar la ficha tocando el mapa no consigue nada («no puedo hacer
+   scroll en las fichas»). Como con la rueda en escritorio, el arrastre se
+   activa al tocar el mapa y se devuelve a la hoja en cuanto ésta se desplaza.
+   Pellizcar para acercar sigue funcionando siempre. */
+let _avisoGestoMapa = false;
+function _gestosTactilesMinimapa(mapa){
+  try{
+    if(!mapa || !window.matchMedia('(pointer:coarse)').matches) return;
+    mapa.dragging.disable();
+    const cont = mapa.getContainer();
+    cont.classList.add('mapa-en-reposo');
+    mapa.on('click', ()=>{
+      if(mapa.dragging.enabled()) return;
+      mapa.dragging.enable(); cont.classList.remove('mapa-en-reposo');
+      if(!_avisoGestoMapa){ _avisoGestoMapa = true; siaToast('Mapa activo: arrastra con un dedo. Toca fuera del mapa para volver a desplazar la ficha.', 3500); }
+    });
+    const inn = document.getElementById('drIn');
+    if(inn){
+      /* Solo un toque del usuario FUERA del mapa lo devuelve al reposo. No se escucha
+         `scroll`: el foco que Leaflet da al lienzo al tocarlo desplaza la ficha y ese
+         desplazamiento programático volvía a dormir el mapa en el mismo gesto que lo
+         activaba. Un solo listener delegado por ficha: cada apertura lo reemplaza. */
+      if(inn._siaReposo) inn.removeEventListener('touchstart', inn._siaReposo);
+      inn._siaReposo = e=>{
+        if(cont.contains(e.target)) return;
+        if(mapa.dragging && mapa.dragging.enabled()){ mapa.dragging.disable(); cont.classList.add('mapa-en-reposo'); }
+      };
+      inn.addEventListener('touchstart', inn._siaReposo, {passive:true});
+    }
+  }catch(_){}
+}
 function fichaMapaConectar(container){
   if(!activeMap) return;
+  _gestosTactilesMinimapa(activeMap);
   document.querySelectorAll('#dr .map-block-toggle button').forEach(btn=>{
     btn.addEventListener('click', ()=>setBaseLayer(btn.dataset.layer));
   });
@@ -7240,6 +7275,27 @@ closeDrawer = function(){
   _focoPrevio = null;
   return r;
 };
+/* Red de seguridad: las fichas de ARCAC, Zona Patrimonio y embarcaderos abren el
+   cajón con dr.classList.add('open') sin pasar por openDrawer, así que el inert
+   puesto al cerrar se quedaba y el cajón completo dejaba de recibir toques
+   (sin scroll en celular: el que recibía el gesto era el fondo #bd). Se observa la
+   clase `open` y se aplica el mismo contrato para cualquier abridor. */
+if(_drEl && window.MutationObserver){
+  new MutationObserver(()=>{
+    const abierto = _drEl.classList.contains('open');
+    if(abierto && _drEl.hasAttribute('inert')){
+      if(!_focoPrevio) _focoPrevio = document.activeElement;
+      _drEl.removeAttribute('inert');
+      _drEl.setAttribute('aria-modal','true');
+      if(_wrapEl) _wrapEl.setAttribute('inert','');
+      setTimeout(()=>{ const b = document.getElementById('drClose'); if(b && _drEl.classList.contains('open')) b.focus(); }, 80);
+    }else if(!abierto && !_drEl.hasAttribute('inert')){
+      _drEl.removeAttribute('aria-modal');
+      if(_wrapEl) _wrapEl.removeAttribute('inert');
+      _drEl.setAttribute('inert','');
+    }
+  }).observe(_drEl, {attributes:true, attributeFilter:['class']});
+}
 /* El tabulador no debe salirse de la ficha mientras esta abierta */
 document.addEventListener('keydown', e=>{
   if(e.key !== 'Tab') return;

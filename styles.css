@@ -2605,3 +2605,13 @@ html.arranque-campo body > .wrap{visibility:hidden}
 .ubi-compartir:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
 .ubi-cabeza .ubi-cerrar{margin-left:0}
 @media (max-width:760px){ .ubi-compartir{height:36px;padding:0 12px} }
+/* Minimapa en reposo (celular): el arrastre vertical lo recibe la hoja. Un
+   toque activa el mapa. La pista visual es discreta: cursor/etiqueta solo en
+   táctil. */
+@media (pointer:coarse){
+  .drawer .leaflet-container.mapa-en-reposo{touch-action:pan-y !important}
+  .drawer .map-canvas{position:relative}
+  .drawer .leaflet-container.mapa-en-reposo::after{content:'Toca el mapa para moverlo';position:absolute;left:50%;top:12px;transform:translateX(-50%);
+    z-index:500;pointer-events:none;background:rgba(42,42,42,.62);color:#fff;font-family:'Roboto',sans-serif;font-size:var(--fs-mini);
+    padding:4px 10px;border-radius:12px;white-space:nowrap}
+}
