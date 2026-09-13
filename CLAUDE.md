@@ -70,4 +70,4 @@ Suelo urbano → chip «Suelo urbano» + área más cercana · Suelo de Conserva
 Arnés Playwright (Chromium) con doble de Leaflet, teselas sintéticas y CSV de 66 filas: `traslapes-ui` (0 pares encimados en 393 y 1500 px), `integ` (invariante y escenarios de borrado/renombre), `flujos` (4 casos), `zon`, `limpiar`, `fichas-uniformes` (misma huella en las tres fichas), `aud360` (cuatro perfiles: iPhone, Pixel, laptop, escritorio). Lo que el arnés no ve —teselas reales, fuentes, Google Places, SW en producción— se comprueba en el navegador real tras la purga.
 
 ## Pendientes y decisiones
-Lista viva en el Proyecto de Claude: `claude/pendientes.md`. No duplicarla aquí.
+Lista viva en **dos copias idénticas**: `pendientes/pendientes.md` (repo; carpeta versionada pero excluida del sitio por `.assetsignore`) y `claude/pendientes.md` (Proyecto de Claude). Se actualizan las dos en cada entrega. Los cortes de verificación y hallazgos (cruces con Gacetas, revisión de ligas, análisis puntuales) van en la misma carpeta con fecha en el nombre. No duplicar la lista aquí.

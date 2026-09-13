@@ -25,3 +25,7 @@ _borrar
 
 # Documentación del repositorio: se lee en GitHub, no forma parte del sitio
 README.md
+
+# Seguimiento de trabajo (pendientes, verificaciones, hallazgos): se versiona
+# en el repositorio pero NO se publica en el sitio
+pendientes
