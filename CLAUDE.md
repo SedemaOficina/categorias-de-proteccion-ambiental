@@ -19,6 +19,7 @@ Tablero público de las 66 áreas de protección ambiental de la CDMX. Público 
 - Join Sheet ↔ geometría por `nombre` **exacto** (Set / igualdad estricta, nunca `includes()`). Nombre canónico: «Tempiluli».
 - Módulos complementarios —Zona Patrimonio, SIPAM, embarcaderos, ARCAC, zonificación, PGOEDF— viven en sus propios archivos y **nunca** entran a `DATA` ni a `GEOMETRIES` ni a contadores o filtros. Excepción de lectura: `_coberturasEn()` los consulta como lectura espacial pura.
 - **Regla de la zonificación:** puede haber área con programa de manejo sin archivo de zonificación; nunca archivo de zonificación para un área sin programa. `_alertasZonificacion` lo vigila.
+- **Tolerancia cartográfica de Suelo de Conservación:** `SC_TOLERANCIA_PCT = 5`. Debajo de 5 % el área se lee «Fuera» y la ficha añade «colinda con él»; el Sheet conserva el porcentaje real. Fundamento: las tres áreas bajo ese umbral (Atzoyapan, Pachuquilla, Magdalena Eslava) traslapan franjas de 1–18 m pegadas al límite del SC; el primer caso sustantivo (Lomas de Padierna, 11.83 %) penetra ~400 m. Ver `claude/sc-parciales-b5.md`.
 - El PGOEDF solo aplica **fuera de ANP**; dentro rige el programa de manejo. La cartografía `pgoedf.geojson` trae las ANP anteriores al Programa como zona propia sin ordenamiento: por eso esas áreas salen con cobertura ~0 y la ficha lo dice así.
 
 ## Datos geoespaciales
@@ -40,6 +41,8 @@ Tablero público de las 66 áreas de protección ambiental de la CDMX. Público 
 - Ediciones quirúrgicas; nunca reescribir un archivo completo.
 - Elementos con `hidden` cuya clase declara `display:flex|grid`: añadir `.clase[hidden]{display:none !important}` (ya pasó tres veces).
 - El Service Worker se registra al final del arranque asíncrono: si `document.readyState === 'complete'` se registra de inmediato; nunca depender solo del evento `load`.
+- **Cajón de ficha (`#dr`) e `inert`:** cerrado lleva `inert`; un `MutationObserver` sobre la clase `open` lo retira, pone `aria-modal`, aísla `.wrap` y enfoca `#drClose` para **cualquier** abridor (inventario, ARCAC, Zona Patrimonio, embarcaderos). No abrir el cajón por otra vía que `classList.add('open')`; no gestionar `inert` a mano en los abridores.
+- **Minimapa en táctil:** nace dormido (`.mapa-en-reposo`, `touch-action: pan-y`) para que la ficha se desplace; un toque lo activa (arrastre) y un toque fuera del mapa lo duerme de nuevo. No escuchar `scroll` para dormirlo: el foco que Leaflet da al lienzo desplaza la ficha y anularía el mismo gesto.
 
 ## Identidad y simbología
 - Paleta: guinda `#9d2148`, dorado `#b28e5c`, gris `#55585a`. Cabin para títulos (también `.drawer h2`), Roboto para cuerpo, Roboto Mono para etiquetas y cifras. Piso tipográfico 11 px.

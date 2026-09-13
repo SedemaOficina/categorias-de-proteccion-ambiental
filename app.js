@@ -2333,7 +2333,7 @@ function render(){
              «parcial»—: un punto lleno no distingue 100% de 99.5%, y quien
              consulta Suelo de Conservación necesita el dato, no el matiz.
              En «fuera» se omite: un 0% en 42 renglones es ruido. */
-          return (p !== null && p >= 0.5)
+          return (p !== null && e !== 'fuera')
             ? pin + `<span class="sc-pct" title="${scTexto(d)}">${p >= 99.5 ? 100 : Math.round(p)}%</span>`
             : pin;
         })()}</td>
@@ -2618,11 +2618,23 @@ const COL_AZUL_EMB    = '#1864ab';  /* embarcaderos */
    inventario caen ahí. Los cortes son los del cruce geométrico de agosto.
    Los núcleos ARCAC no tienen este dato: caen en «sindato», no en «fuera». */
 const scPct = d => (d && typeof d.suelo_conservacion_pct === 'number') ? d.suelo_conservacion_pct : null;
+/* Tolerancia cartográfica (13-sep-2026). Las tres barrancas con menos de 5%
+   —Atzoyapan 1.29, Pachuquilla 1.32, Magdalena Eslava 3.83— no están «en
+   parte» dentro del Suelo de Conservación: su traslape son franjas de 2 a
+   18 m de ancho pegadas al límite del SC (penetración máxima 18 m; en
+   Pachuquilla, 1.3 km de largo por 2 m de ancho), producto de dos
+   digitalizaciones distintas de la misma línea. Sus decretos (GODF 1491,
+   28-nov-2012; PM Pachuquilla GODF 03-dic-2012) las sitúan en suelo urbano y
+   no mencionan el SC. El siguiente caso real —Lomas de Padierna, 11.83%—
+   penetra casi 400 m. Debajo de la tolerancia el área se lee «fuera», pero
+   la ficha conserva el dato: colinda con el SC. */
+const SC_TOLERANCIA_PCT = 5;
+const scColinda = d => { const p = scPct(d); return p !== null && p >= 0.5 && p < SC_TOLERANCIA_PCT; };
 const scEstado = d => {
   const p = scPct(d);
   if(p === null) return 'sindato';
   if(p >= 99.5) return 'dentro';
-  if(p < 0.5)   return 'fuera';
+  if(p < SC_TOLERANCIA_PCT) return 'fuera';
   return 'parcial';
 };
 const scTexto = d => {
@@ -2631,6 +2643,7 @@ const scTexto = d => {
   if(e === 'dentro')  return 'Dentro del Suelo de Conservación' + (p !== null && p < 100 ? pp : '');
   if(e === 'parcial') return 'Parcialmente dentro' + pp;
   if(e === 'sindato') return 'Sin dato de Suelo de Conservación';
+  if(scColinda(d)) return 'Fuera del Suelo de Conservación · colinda con él (traslape cartográfico marginal de ' + p.toFixed(2) + '%, no sustantivo)';
   return 'Fuera del Suelo de Conservación';
 };
 /* Clase del punto y etiqueta corta. Un solo mapa: si mañana se agrega un
