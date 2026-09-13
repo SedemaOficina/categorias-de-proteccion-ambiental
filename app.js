@@ -823,6 +823,16 @@ function _trasElegirSubconjunto(){
     if(activo) activo.focus({preventScroll:true});
     const sub = document.querySelector('.subnav'); if(!sub) return;
     const movil = window.matchMedia('(max-width:760px)').matches;
+    /* La tira se vuelve a pintar al elegir y su desplazamiento horizontal
+       regresa a cero: el chip elegido quedaba fuera de pantalla y se veían
+       los de la izquierda como si nada hubiera cambiado. Se centra el activo
+       en la tira (solo eje horizontal; el vertical lo maneja scrollTo abajo). */
+    if(activo && sub.scrollWidth > sub.clientWidth + 4){
+      const rs = sub.getBoundingClientRect(), rc = activo.getBoundingClientRect();
+      const destino = sub.scrollLeft + (rc.left - rs.left) - (sub.clientWidth - rc.width) / 2;
+      const maximo = sub.scrollWidth - sub.clientWidth;
+      sub.scrollTo({ left: Math.max(0, Math.min(maximo, destino)), behavior:'smooth' });
+    }
     const r = sub.getBoundingClientRect();
     if(movil){
       window.scrollTo({ top: r.top + window.scrollY - 4, behavior:'smooth' });
@@ -5526,7 +5536,7 @@ async function compartirFichaImagen(d, btn){
   }
 
   /* Compartir o descargar */
-  const nombreArchivo = (d.grande != null ? 'SIA_constancia_' : 'SIA_') + slugify(d.nombre||'ficha') + '.png';
+  const nombreArchivo = (d.grande != null ? 'SIA_ubicacion_' : 'SIA_') + slugify(d.nombre||'ficha') + '.png';
   return new Promise(res=>{
     cv.toBlob(async blob=>{
       if(!blob){ siaToast('No se pudo generar la imagen.'); return res(false); }
@@ -6118,8 +6128,9 @@ function descConstancia(u, scFC){
   }
   return {
     nombre: principal ? principal.nombre : (u.sc === true ? 'Suelo de Conservación' : (enCDMX ? 'Sin área decretada' : 'Fuera del ámbito de la CDMX')),
-    badge: 'Constancia de ubicación',
-    subtitulo: principal ? (principal.sub || principal.tag || '') : 'Diagnóstico por punto · SIA',
+    badge: 'Consulta de ubicación',
+    /* Nunca «constancia»: la imagen es informativa y no tiene efectos legales. */
+    subtitulo: (principal ? (principal.sub || principal.tag || '') + ' · ' : '') + 'Consulta informativa · sin validez legal',
     color,
     geo: geoP || _marcoAlrededor(u.latlng, 650),
     soloPunto: !geoP,
@@ -6136,7 +6147,7 @@ async function compartirConstancia(btn){
     let scFC = null; try{ scFC = await loadSueloConservacion(); }catch(_){}
     _fichaCtxUbic = { lat:u.latlng.lat, lng:u.latlng.lng, etiqueta:u.etiqueta || 'Punto consultado' };
     await compartirFichaImagen(descConstancia(u, scFC), btn);
-  }catch(err){ console.warn('[Constancia] no se pudo generar:', err); siaToast('No se pudo generar la constancia.'); }
+  }catch(err){ console.warn('[Ubicación] no se pudo generar la imagen:', err); siaToast('No se pudo generar la imagen.'); }
   finally{ _fichaCtxUbic = prev; if(btn){ btn.disabled = false; if(t) t.textContent = orig; } }
 }
 
@@ -6356,14 +6367,14 @@ function renderUbicarResultado(latlng, precision, etiqueta){
       cuerpo += `<div class="ubi-lista">
         <div class="ubi-item" style="--c:${esc((typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[limc.grupo])||'#b28e5c')}">
           <span class="ubi-dot"></span>
-          <span class="ubi-item-txt"><b>${esc(limc.nombre)}</b><span>Limítrofe · a ${_fmtDist(limc.d)} · ${limc.lim.ha_fuera} ha en ${esc(limc.lim.entidad||'esta entidad')}</span></span>
+          <span class="ubi-item-txt"><span class="ubi-item-pre">Área limítrofe · a ${_fmtDist(limc.d)}</span><b>${esc(limc.nombre)}</b><span>${limc.lim.ha_fuera} ha en ${esc(limc.lim.entidad||'esta entidad')}</span></span>
           <button type="button" class="ubi-mini" data-ficha="inv::${esc(limc.nombre)}" aria-label="Ver ficha">→</button>
         </div></div>`;
     } else if(cer){
       cuerpo += `<div class="ubi-lista">
         <div class="ubi-item" style="--c:${esc((typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[cer.grupo])||COL_GRIS_NEUTRO)}">
           <span class="ubi-dot"></span>
-          <span class="ubi-item-txt"><b>${esc(cer.nombre)}</b><span>Más cercana · ${esc(cer.grupo||'')} · a ${_fmtDist(cer.d)}</span></span>
+          <span class="ubi-item-txt"><span class="ubi-item-pre">Área más cercana · a ${_fmtDist(cer.d)}</span><b>${esc(cer.nombre)}</b><span>${esc(cer.grupo||'')}</span></span>
           <button type="button" class="ubi-mini" data-ficha="inv::${esc(cer.nombre)}" aria-label="Ver ficha">→</button>
         </div></div>`;
     }
@@ -6386,7 +6397,7 @@ function renderUbicarResultado(latlng, precision, etiqueta){
       cuerpo += `<div class="ubi-lista">
         <div class="ubi-item" style="--c:${esc((typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[cer.grupo])||COL_GRIS_NEUTRO)}">
           <span class="ubi-dot"></span>
-          <span class="ubi-item-txt"><b>${esc(cer.nombre)}</b><span>Más cercana · ${esc(cer.grupo||'')} · a ${_fmtDist(cer.d)}</span></span>
+          <span class="ubi-item-txt"><span class="ubi-item-pre">Área más cercana · a ${_fmtDist(cer.d)}</span><b>${esc(cer.nombre)}</b><span>${esc(cer.grupo||'')}</span></span>
           <button type="button" class="ubi-mini" data-ficha="inv::${esc(cer.nombre)}" aria-label="Ver ficha">→</button>
         </div></div>`;
     }
@@ -6395,9 +6406,9 @@ function renderUbicarResultado(latlng, precision, etiqueta){
   return `<div class="gm-handle" id="ubicarAsa" aria-hidden="true"></div>
   <div class="panel ubi-panel">
     <div class="ubi-cabeza"><span class="ubi-cabeza-txt">${esc(cabeza)}</span>
-      <button type="button" class="ubi-compartir" id="ubiCompartir" aria-label="Compartir constancia de ubicación" title="Compartir constancia de ubicación">
+      <button type="button" class="ubi-compartir" id="ubiCompartir" aria-label="Compartir imagen de esta consulta" title="Compartir imagen de esta consulta">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-        <span class="ubi-compartir-txt">Constancia</span>
+        <span class="ubi-compartir-txt">Compartir</span>
       </button>
       <button type="button" class="ubi-cerrar" id="ubicarCerrar" aria-label="Cerrar resultado">×</button></div>
     ${_avisoCapasHTML('ubi-warn')}

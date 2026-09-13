@@ -14,7 +14,7 @@
 - **Capas complementarias**, aisladas del inventario y de sus conteos: Zona Patrimonio (UNESCO, Ramsar 1363, AICA 37, SIPAM FAO), ARCAC (30 núcleos agrarios), traslapes precalculados.
 - **Analítica.** Cronología de decretos, cobertura de programas de manejo, brechas por grupo, comparativo por administración, marco jurídico con PDFs.
 - **Imagen compartible** de cada ficha (PNG 1080×1440 generado en el navegador) con mapa base, capas encendidas, punto consultado y datos duros.
-- **Constancia de campo**: imagen compartible del diagnóstico por punto (coordenada, fecha y hora, coberturas, régimen, zonas PM y PGOEDF).
+- **Imagen de la consulta de ubicación**: imagen compartible del diagnóstico por punto (coordenada, fecha y hora, coberturas, régimen, zonas PM y PGOEDF). Es informativa, sin validez legal, y así lo dice la propia imagen.
 - **Instalable como app** (PWA) en iPhone y Android, con operación offline mediante Service Worker con caché versionada.
 
 Público objetivo: personal de la Secretaría en campo (celular) y en oficina (escritorio). El sitio es público; no requiere autenticación.

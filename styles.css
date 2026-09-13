@@ -276,6 +276,9 @@
   .ubi-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line-soft)}
   .ubi-item-txt{flex:1;min-width:0;line-height:1.3}
   .ubi-item-txt b{display:block;font-size:var(--fs-md);font-weight:700;color:var(--ink)}
+  /* Etiqueta ANTES del nombre: «Área más cercana» debe leerse primero, si no el
+     nombre se confunde con una cobertura del punto. */
+  .ubi-item-txt .ubi-item-pre{display:block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.06em;text-transform:uppercase;color:var(--guinda);font-weight:500;margin:0 0 2px}
   .ubi-item-txt span{display:block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.06em;
     text-transform:uppercase;color:var(--muted);margin-top:2px}
   .ubi-mini{flex-shrink:0;width:30px;height:30px;border:1px solid var(--c);color:var(--c);background:transparent;
