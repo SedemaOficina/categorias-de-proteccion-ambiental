@@ -7574,6 +7574,42 @@ if('serviceWorker' in navigator){
     };
     if(document.readyState === 'complete') _registrarSW();
     else window.addEventListener('load', _registrarSW);
+
+    /* ── Sesión de Cloudflare Access (desde 13-sep-2026) ──
+       El sitio vive detrás de un inicio de sesión de 30 días. Como el tablero
+       arranca desde la caché del SW, una sesión expirada no se nota hasta que
+       falla una petición al propio sitio. Dos vías de detección, un solo
+       destino:
+       · Sondeo: al arrancar y al volver a la pestaña se pide `sw.js?sesion=`
+         con redirect:'manual' (el SW la deja pasar a la red). Si Access
+         redirige al login, la respuesta es `opaqueredirect`.
+       · Aviso del SW: si una capa bajo demanda obtiene esa misma redirección,
+         el SW manda `{tipo:'sesion-expirada'}` a las pestañas.
+       En ambos casos se navega a `./?entrar=…`, que el SW sirve desde la red:
+       el navegador sigue la redirección al login y regresa autenticado.
+       Sin red, el sondeo falla y no se hace nada: quien ya se autenticó en el
+       aparato conserva el tablero sin conexión (decisión del 13-sep-2026). */
+    let _reentrando = false;
+    const _reentrar = () => {
+      if(_reentrando) return; _reentrando = true;
+      try{ siaToast('Tu sesión expiró. Te llevamos a entrar de nuevo…', 2500); }catch(_){}
+      setTimeout(() => { location.replace('./?entrar=' + Date.now()); }, 900);
+    };
+    const _verificarSesion = async () => {
+      if(!navigator.onLine) return;
+      try{
+        const r = await fetch('./sw.js?sesion=' + Date.now(), {cache:'no-store', redirect:'manual', credentials:'include'});
+        if(r.type === 'opaqueredirect') _reentrar();
+      }catch(_){ /* sin red: modo sin conexión */ }
+    };
+    setTimeout(_verificarSesion, 1500);
+    document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') _verificarSesion(); });
+    navigator.serviceWorker.addEventListener('message', e => {
+      if(e.data && e.data.tipo === 'sesion-expirada') _reentrar();
+    });
+    /* La navegación de reentrada trae `?entrar=`: se limpia de la barra para
+       que la liga que se copie o comparta no la arrastre. */
+    try{ if(new URL(location.href).searchParams.has('entrar')){ const u = new URL(location.href); u.searchParams.delete('entrar'); history.replaceState(null, '', u.pathname + (u.search || '') + u.hash); } }catch(_){}
   }
 }
 

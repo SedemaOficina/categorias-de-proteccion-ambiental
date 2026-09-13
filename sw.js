@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-09-13k';
+const CACHE_VERSION = 'sia-v35-2026-09-13l';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
@@ -142,6 +142,25 @@ self.addEventListener('fetch', event => {
 
   // 3. Recursos del propio sitio: cache-first
   if(url.origin === location.origin){
+    /* ── Cloudflare Access (desde 13-sep-2026) ──
+       El sitio está detrás de un inicio de sesión. Dos peticiones deben ir a
+       la red SIN pasar por la caché:
+       · `?sesion=` — sondeo que hace app.js al arrancar y al volver a la app:
+         la página lo pide con redirect:'manual'; si Access contesta con una
+         redirección (opaqueredirect) la sesión expiró y la página lleva al
+         usuario a entrar de nuevo.
+       · `?entrar=` — navegación forzada tras esa detección: no debe servirse
+         index.html cacheado (sería un bucle), sino dejar que el navegador
+         siga la redirección al login. Si no hay red, se cae a la caché para
+         no dejar sin tablero a quien ya se había autenticado en el aparato. */
+    if(url.searchParams.has('sesion')){
+      event.respondWith(fetch(req).catch(() => new Response('', {status: 503})));
+      return;
+    }
+    if(req.mode === 'navigate' && url.searchParams.has('entrar')){
+      event.respondWith(fetch(req).catch(async () => (await caches.match('./index.html')) || new Response('Sin conexión', {status: 503})));
+      return;
+    }
     event.respondWith(cacheFirst(req, CACHE_VERSION));
     return;
   }
@@ -174,7 +193,16 @@ async function cacheFirst(req, cacheName){
               || (req.mode === 'navigate' ? (await cache.match('./index.html')) : null);
   if(cached) return cached;
   try {
-    const response = await fetch(req);
+    /* redirect:'manual' en los recursos del propio sitio: si Access redirige
+       al login (sesión expirada), la respuesta llega como opaqueredirect en
+       vez de fallar como error de red. Se avisa a las pestañas abiertas y se
+       devuelve 401 para que la app no confunda «sin sesión» con «sin red». */
+    const propio = new URL(req.url).origin === location.origin;
+    const response = await fetch(propio && req.mode !== 'navigate' ? new Request(req, {redirect:'manual'}) : req);
+    if(propio && response && response.type === 'opaqueredirect'){
+      avisarSesionExpirada();
+      return new Response('Sesión expirada', {status: 401, statusText: 'Unauthorized'});
+    }
     if(response && response.status === 200){
       cache.put(req, response.clone());
     }
@@ -183,6 +211,19 @@ async function cacheFirst(req, cacheName){
     console.warn('[SW] Sin red y sin caché para:', req.url);
     return new Response('Recurso no disponible offline', {status: 503, statusText: 'Service Unavailable'});
   }
+}
+
+/* Cloudflare Access devolvió una redirección al login para un recurso del
+   sitio: todas las pestañas reciben el aviso y app.js decide (reentrar). */
+let _ultimoAvisoSesion = 0;
+async function avisarSesionExpirada(){
+  const ahora = Date.now();
+  if(ahora - _ultimoAvisoSesion < 10000) return;
+  _ultimoAvisoSesion = ahora;
+  try{
+    const clientes = await self.clients.matchAll({type:'window', includeUncontrolled:true});
+    clientes.forEach(c => c.postMessage({tipo:'sesion-expirada'}));
+  }catch(e){}
 }
 
 /* === Estrategia: network-first === */

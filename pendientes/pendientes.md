@@ -1,6 +1,6 @@
 # Pendientes · SIA Dashboard
 
-Última revisión: 13 de septiembre de 2026 (noche). **Producción (Cloudflare): `sia-v35-2026-09-13i`. Repositorio local: v63 (`…13k`).**
+Última revisión: 13 de septiembre de 2026 (noche). **Producción (Cloudflare): `sia-v35-2026-09-13i`. Repositorio local: v64 (`…13l`).**
 
 Criterio: solo entra lo que **yo no puedo resolver** —requiere tu cuenta, tu firma o una definición institucional—. Lo resuelto se borra de aquí; el historial vive en `claude/auditoria-*.md` del Proyecto y en `CLAUDE.md` del repo. Este archivo se mantiene idéntico en `pendientes/pendientes.md` (repo, no publicado) y `claude/pendientes.md` (Proyecto de Claude).
 
@@ -8,8 +8,8 @@ Criterio: solo entra lo que **yo no puedo resolver** —requiere tu cuenta, tu f
 
 ## A · Acciones tuyas (no hay que decidir nada)
 
-### A1 · Publicar v63 🔴
-Commit único desde GitHub Desktop: `app.js`, `styles.css`, `sw.js`, `index.html`, `CLAUDE.md`, `README.md`, `assets/logo-sedema.png`, `.assetsignore`, carpeta `pendientes/` (más lo que quedara sin subir de v51–v55: `_headers`, `.assetsignore`, `manifest.json`, `assets/icon-*.png`, `data/*.geojson`, `data/pgoedf_areas.json`). Luego «Purge Everything» en Cloudflare y comprobar que `sw.js` diga `sia-v35-2026-09-13k`.
+### A1 · Publicar v64 🔴
+Commit único desde GitHub Desktop: `app.js`, `styles.css`, `sw.js`, `index.html`, `CLAUDE.md`, `README.md`, `assets/logo-sedema.png`, `.assetsignore`, carpeta `pendientes/` (más lo que quedara sin subir de v51–v55: `_headers`, `.assetsignore`, `manifest.json`, `assets/icon-*.png`, `data/*.geojson`, `data/pgoedf_areas.json`). Luego «Purge Everything» en Cloudflare y comprobar que `sw.js` diga `sia-v35-2026-09-13l`.
 
 **Probar en tu iPhone tras la purga (lo que el arnés no puede reproducir):**
 1. Ficha: un dedo desplaza la ficha aunque pase por el mapa; dos dedos mueven el mapa; «Ampliar» (bajo el botón de capas) da el mapa completo con un dedo; la página de atrás ya no se mueve.
@@ -27,8 +27,8 @@ Ninguna liga del inventario está rota, pero 31 archivos de Drive —38 ligas en
 
 ## B · Decisiones institucionales y trabajos en curso
 
-### B1 · Control de acceso 🟠 a medio camino
-**Hecho:** Zero Trust Free activo (team `misty-frog-3a89`); política «Personal autorizado» (Allow · Emails: liber.sedema@, oficinasecretaria.sedema@, rm.cristian.sedema@gmail.com). **Falta:** (1) crear/abrir la aplicación self-hosted `sia.contactoverde.com` y **asociarle la política** (hoy «Used by applications: --», el sitio sigue abierto); (2) probar en el celular en ventana privada; (3) avisarme para entregar `_headers`/CSP y Service Worker ajustados al login; (4) después, agregar Google como método de entrada (Integrations → Identity providers). Registros de acceso: Logs → Access, 24 h en el plan gratuito.
+### B1 · Control de acceso 🟢 activo · cierre
+**Hecho (13-sep):** Zero Trust Free, team `sedema-sia`; aplicación `sia.contactoverde.com` con política «Personal autorizado» (3 correos) y One-time PIN; verificado desde fuera que todo redirige al login. v64 (`13l`) trae la detección de sesión expirada en app.js/sw.js. **Falta:** (1) subir v64; (2) probar en el celular: pestaña privada → correo → código; correo no autorizado rechazado; Safari normal con la copia cacheada debe llevarte al login solo; (3) personalizar la pantalla (Reusable components → Custom pages → Login page) y el nombre de la aplicación (Applications → sia → Details → Name); (4) Google como método de entrada, más adelante (Integrations → Identity providers; pasos en el chat del 13-sep). Registros: Insights & Logs → Access, 24 h en el plan gratuito.
 
 ### B2 · Segundo propietario institucional 🟠
 El Google Sheet del inventario, el proyecto de Google Cloud y la cuenta de Cloudflare cuelgan de cuentas personales. **Decidir qué cuenta institucional se designa copropietaria** de los tres.
