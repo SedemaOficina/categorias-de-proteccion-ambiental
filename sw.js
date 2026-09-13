@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-09-13p';
+const CACHE_VERSION = 'sia-v35-2026-09-13q';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
@@ -171,6 +171,16 @@ self.addEventListener('activate', event => {
     }
     await self.clients.claim();
   })());
+});
+
+/* La página pregunta su versión (auditoría 13-sep-2026, D4-02): con la
+   reparación en caliente de la caché, personal en campo puede estar en una
+   versión anterior sin saberlo; el pie la muestra y así se puede reportar. */
+self.addEventListener('message', event => {
+  const d = event.data || {};
+  if(d.tipo === 'version?' && event.source){
+    try{ event.source.postMessage({tipo:'version', version: CACHE_VERSION}); }catch(e){}
+  }
 });
 
 /* === FETCH: estrategia mixta === */

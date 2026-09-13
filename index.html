@@ -123,7 +123,7 @@ try{
     </div>
   </section>
 
-  <section id="ubicarResultado" hidden></section>
+  <section id="ubicarResultado" hidden role="region" aria-live="polite" aria-label="Resultado de la consulta de ubicación"></section>
 
   <nav class="nav2" id="tabs" aria-label="Navegación principal"></nav>
   <section id="dashboard"></section>
@@ -158,22 +158,22 @@ try{
       <span id="counterLive" aria-live="polite" aria-atomic="true">Mostrando <b id="showCount">0</b> de <b id="totalCount">0</b> registros · Suma filtrada: <b id="sumFiltered">0</b> ha</span>
       <span id="sortInfo">Orden · Nombre ↑</span>
     </div>
-    <p class="tabla-hint">El filete de color indica la categoría · clic en un encabezado para ordenar · clic en una fila para abrir la ficha</p>
+    <p class="tabla-hint">El filete de color indica la categoría · clic o Enter en un encabezado para ordenar · clic en una fila para abrir la ficha</p>
     <div class="table-wrap"><div class="table-scroll">
       <table class="t">
         <caption class="sr-only">Inventario de áreas protegidas de la Ciudad de México · filtrable por tipo, jurisdicción, subcategoría, alcaldía, programa de manejo, suelo de conservación y dirección general responsable</caption>
         <thead class="t-head"><tr>
-          <th scope="col" data-k="nombre">Nombre <span class="arrow">▲</span></th>
-          <th scope="col" data-k="tipo">Tipo <span class="arrow">▲</span></th>
-          <th scope="col" data-k="jurisdiccion" title="Jurisdicción">Jur. <span class="arrow">▲</span></th>
-          <th scope="col" data-k="categoria" title="Subcategoría">Subcat. <span class="arrow">▲</span></th>
-          <th scope="col" data-k="alcaldia">Alcaldía <span class="arrow">▲</span></th>
-          <th scope="col" data-k="fecha_decreto_iso" style="text-align:right">Decreto <span class="arrow">▲</span></th>
-          <th scope="col" data-k="superficie" style="text-align:right">Sup. (ha) <span class="arrow">▲</span></th>
-          <th scope="col" data-k="programa_manejo" title="Programa de Manejo">PM <span class="arrow">▲</span></th>
-          <th scope="col" data-k="fecha_pm_iso" style="text-align:right" title="Fecha del Programa de Manejo">Fecha PM <span class="arrow">▲</span></th>
-          <th scope="col" data-k="suelo_conservacion_pct" title="Suelo de Conservación · ordena por porcentaje">SC <span class="arrow">▲</span></th>
-          <th scope="col" data-k="dg_responsable" title="Dirección General responsable">DG resp. <span class="arrow">▲</span></th>
+          <th scope="col" tabindex="0" aria-sort="ascending" data-k="nombre">Nombre <span class="arrow">▲</span></th>
+          <th scope="col" tabindex="0" aria-sort="none" data-k="tipo">Tipo <span class="arrow">▲</span></th>
+          <th scope="col" tabindex="0" aria-sort="none" data-k="jurisdiccion" title="Jurisdicción">Jur. <span class="arrow">▲</span></th>
+          <th scope="col" tabindex="0" aria-sort="none" data-k="categoria" title="Subcategoría">Subcat. <span class="arrow">▲</span></th>
+          <th scope="col" tabindex="0" aria-sort="none" data-k="alcaldia">Alcaldía <span class="arrow">▲</span></th>
+          <th scope="col" tabindex="0" aria-sort="none" data-k="fecha_decreto_iso" style="text-align:right">Decreto <span class="arrow">▲</span></th>
+          <th scope="col" tabindex="0" aria-sort="none" data-k="superficie" style="text-align:right">Sup. (ha) <span class="arrow">▲</span></th>
+          <th scope="col" tabindex="0" aria-sort="none" data-k="programa_manejo" title="Programa de Manejo">PM <span class="arrow">▲</span></th>
+          <th scope="col" tabindex="0" aria-sort="none" data-k="fecha_pm_iso" style="text-align:right" title="Fecha del Programa de Manejo">Fecha PM <span class="arrow">▲</span></th>
+          <th scope="col" tabindex="0" aria-sort="none" data-k="suelo_conservacion_pct" title="Suelo de Conservación · ordena por porcentaje">SC <span class="arrow">▲</span></th>
+          <th scope="col" tabindex="0" aria-sort="none" data-k="dg_responsable" title="Dirección General responsable">DG resp. <span class="arrow">▲</span></th>
         </tr></thead>
         <tbody class="t-body" id="tb"></tbody>
       </table>
@@ -189,7 +189,8 @@ try{
       <p><b>Fuente:</b> Secretaría del Medio Ambiente (SEDEMA), Gobierno de la Ciudad de México ·
          <b>Unidad responsable:</b> Dirección General del Sistema de Áreas Naturales Protegidas y
          Áreas de Valor Ambiental (DGSANPAVA) ·
-         <b>Última consulta al inventario:</b> <span id="footerCorte">—</span></p>
+         <b>Última consulta al inventario:</b> <span id="footerCorte">—</span> ·
+         <b>Versión del tablero:</b> <span id="footerVersion" title="Versión de la copia instalada en este navegador">—</span></p>
       <p class="sia-proc-aviso">Los límites, superficies y demás datos que se muestran tienen fines
          informativos y de consulta; no constituyen deslinde catastral ni sustituyen los decretos,
          programas de manejo u otros instrumentos jurídicos vigentes, que prevalecen en caso de
@@ -210,8 +211,8 @@ try{
 <aside class="drawer" id="dr" role="dialog" aria-label="Ficha del área" tabindex="-1">
   <!-- Cabecera fija de la hoja: el asa vivía dentro del cuerpo desplazable y
        por eso se iba con el scroll y no servía de agarre. Aquí no se mueve. -->
-  <div class="drawer-asa" id="drawerAsa" role="slider" tabindex="0"
-       aria-label="Altura de la ficha" aria-valuetext="completa"><span></span></div>
+  <div class="drawer-asa" id="drawerAsa" role="slider" tabindex="0" aria-orientation="vertical"
+       aria-label="Altura de la ficha" aria-valuemin="0" aria-valuemax="2" aria-valuenow="2" aria-valuetext="completa"><span></span></div>
   <button type="button" class="drawer-tirador" id="drTirador"
           aria-label="Cerrar ficha · también se puede arrastrar hacia la derecha"></button>
   <button class="close" id="drClose" aria-label="Cerrar ficha">×</button>

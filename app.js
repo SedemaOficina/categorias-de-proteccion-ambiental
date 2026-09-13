@@ -666,6 +666,10 @@ const anioDecreto = d => {
 };
 /* esc() ahora se define antes de la construccion de DATA (buscar "defensa XSS en la fuente") */
 /* Aviso visual no bloqueante (reemplaza alert nativo) */
+/* Desplazamiento animado solo si la persona no pidió menos movimiento
+   (auditoría 13-sep-2026, D5-06): el CSS ya respeta prefers-reduced-motion,
+   los scrollTo/scrollIntoView de JS no lo hacían. */
+const _suave = () => { try{ return matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'; }catch(_){ return 'smooth'; } };
 function siaToast(msg, duracion){
   let t=document.getElementById('siaToast');
   if(!t){ t=document.createElement('div'); t.id='siaToast';
@@ -847,7 +851,7 @@ function buildTabs(){
       if(d && d.sub.length && !d.sub.includes(state.tab)) state.tab = d.sub[0];
       limpiarFiltros();
       buildTabs(); populateFilters(); renderDashboard(); render();
-      window.scrollTo({top:0,behavior:'smooth'});
+      window.scrollTo({top:0,behavior:_suave()});
     });
   });
 
@@ -884,13 +888,13 @@ function _trasElegirSubconjunto(){
       const rs = sub.getBoundingClientRect(), rc = activo.getBoundingClientRect();
       const destino = sub.scrollLeft + (rc.left - rs.left) - (sub.clientWidth - rc.width) / 2;
       const maximo = sub.scrollWidth - sub.clientWidth;
-      sub.scrollTo({ left: Math.max(0, Math.min(maximo, destino)), behavior:'smooth' });
+      sub.scrollTo({ left: Math.max(0, Math.min(maximo, destino)), behavior:_suave() });
     }
     const r = sub.getBoundingClientRect();
     if(movil){
-      window.scrollTo({ top: r.top + window.scrollY - 4, behavior:'smooth' });
+      window.scrollTo({ top: r.top + window.scrollY - 4, behavior:_suave() });
     } else if(r.top < 0){
-      window.scrollTo({ top: r.top + window.scrollY - 12, behavior:'smooth' });
+      window.scrollTo({ top: r.top + window.scrollY - 12, behavior:_suave() });
     }
   }catch(_){}
 }
@@ -1580,7 +1584,9 @@ function renderAnalisisPage(){
             <div class="alc-track" style="width:${pct(s.sup,maxAlcSup)}%">
               ${segs.map(x=>{
                 const p = pct(x.n, s.total);
-                return `<div class="alc-seg" style="width:${p}%;background:${x.color}" title="${k} · ${x.label}: ${x.n}">${p>=16?`<span class="alc-seg-num">${x.n}</span>`:''}</div>`;
+                /* Texto oscuro sobre el naranja de ANP Local: el blanco no alcanza AA (D5-04). */
+                const oscuro = x.color === GROUP_COLORS['ANP · Local'] ? ' alc-seg-num-oscuro' : '';
+                return `<div class="alc-seg" style="width:${p}%;background:${x.color}" title="${k} · ${x.label}: ${x.n}">${p>=16?`<span class="alc-seg-num${oscuro}">${x.n}</span>`:''}</div>`;
               }).join('')}
             </div>
             <span class="alc-total">${fmt(s.sup)} ha · ${s.total}</span>
@@ -2396,7 +2402,7 @@ function render(){
   } else {
     tb.innerHTML = rows.map(d=>`
       <tr ${d._arcacNo!=null ? `data-no="${d._arcacNo}" data-ten="${d.categoria==='Ejido'?'ejido':'comunidad'}"` : `data-i="${DATA.indexOf(d)}"`} data-g="${GRUPO_CLS[d.grupo]||'arcac'}">
-        <td class="name">${d.nombre}<span class="name-sub">${
+        <td class="name" title="${d.nombre}">${d.nombre}<span class="name-sub">${
           /* Segunda línea en celular: tipo, subcategoría y alcaldía —lo que
              identifica el territorio—. Año de decreto y DG quedan en la ficha:
              con ellos la fila crecía a tres renglones. ARCAC omite la tenencia
@@ -2447,21 +2453,28 @@ function render(){
   document.querySelectorAll('thead.t-head th').forEach(th=>{
     th.classList.remove('sort-asc','sort-desc');
     const a=th.querySelector('.arrow'); if(a) a.textContent='▲';
+    th.setAttribute('aria-sort', 'none');
     if(th.dataset.k===state.sortKey){
       th.classList.add(state.sortDir===1?'sort-asc':'sort-desc');
       if(a) a.textContent = state.sortDir===1?'▲':'▼';
+      th.setAttribute('aria-sort', state.sortDir===1 ? 'ascending' : 'descending');
     }
   });
   const thActive = document.querySelector(`thead.t-head th[data-k="${state.sortKey}"]`);
   document.getElementById('sortInfo').textContent = `Orden · ${thActive?thActive.textContent.replace(/[▲▼]/g,'').trim():''} ${state.sortDir===1?'↑':'↓'}`;
 }
 
+/* Orden de la tabla principal por clic y por teclado (auditoría 13-sep-2026,
+   D5-01): los <th> son enfocables (tabindex en index.html) y anuncian
+   `aria-sort`; Enter o Espacio hacen lo mismo que el clic. */
 document.querySelectorAll('thead.t-head th').forEach(th=>{
-  th.addEventListener('click',()=>{
+  const ordenar = ()=>{
     const k=th.dataset.k;
     if(state.sortKey===k) state.sortDir*=-1; else { state.sortKey=k; state.sortDir=1; }
     render();
-  });
+  };
+  th.addEventListener('click', ordenar);
+  th.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); ordenar(); } });
 });
 document.getElementById('q').addEventListener('input',e=>{ state.q=e.target.value; render(); });
 /* Cada cambio repuebla los desplegables antes de repintar: son dependientes
@@ -5055,6 +5068,30 @@ const TILE_LAYERS = {
    guarda; con CORS (CARTO, Esri y OSM lo permiten) las teselas entran a la
    caché runtime y no vuelven a pedirse a la red en campo. La imagen
    compartible ya las cargaba así (crossOrigin='anonymous'). */
+/* Trazos de Leaflet fuera del orden de tabulación (auditoría 13-sep-2026,
+   D5-02): Chromium mete cada polígono interactivo en el orden de tabulación
+   y el tabulador recorría 66 + 16 rutas sin nombre antes de llegar a la tabla,
+   que es la vía accesible. Un gancho de inicialización de L.Map lo corrige
+   para todos los mapas. Leaflet se carga con `defer`, así que se instala
+   cuando el script termina de cargar. */
+(function(){
+  const instalar = () => {
+    try{
+      if(typeof L === 'undefined' || !L.Map || L.Map._siaSinTab) return;
+      L.Map._siaSinTab = true;
+      L.Map.addInitHook(function(){
+        this.on('layeradd', e => {
+          try{ const el = e.layer && e.layer.getElement && e.layer.getElement();
+               /* Chromium incluye los <path> interactivos en el orden de tabulación
+                  aunque no lleven tabindex; -1 explícito los saca sin perder el clic. */
+               if(el && el.getAttribute('tabindex') !== '-1'){ el.setAttribute('tabindex', '-1'); el.setAttribute('focusable', 'false'); } }catch(_){}
+        });
+      });
+    }catch(_){}
+  };
+  instalar();
+  try{ document.querySelectorAll('script[src*="leaflet"]').forEach(sc => sc.addEventListener('load', instalar)); }catch(_){}
+})();
 function _opcionesTeselas(cfg){
   return { attribution: cfg.attribution, maxZoom: cfg.maxZoom, crossOrigin: 'anonymous' };
 }
@@ -5090,7 +5127,9 @@ function setBaseLayer(key){
   _marcarBase(activeMap, key);
   // Reordena geo layer encima
   if(activeGeoLayer){ activeGeoLayer.bringToFront(); }
-  document.querySelectorAll('.map-block-toggle button').forEach(b=>{
+  /* Solo los botones del minimapa de la ficha: el toggle del mapa global
+     refleja su propia base (D2-02). */
+  document.querySelectorAll('#dr .map-block-toggle button').forEach(b=>{
     b.classList.toggle('active', b.dataset.layer===key);
   });
 }
@@ -6073,7 +6112,7 @@ function ubicarPorGPS(){
     b.hidden = y < UMBRAL;
   }
   b.addEventListener('click', ()=>{
-    const suave = { top:0, behavior:'smooth' };
+    const suave = { top:0, behavior:_suave() };
     if(fichaAbierta()) drEl.scrollTo(suave); else window.scrollTo(suave);
   });
   let tic = false;
@@ -6157,7 +6196,7 @@ async function ubicarResolver(latlng, precision, etiqueta){
   /* En el caparazón la hoja se asoma mientras consulta; desplazar la página
      no tendría sentido porque el mapa ocupa la pantalla completa. */
   if(shell) hojaIr(_hojaAlturas()[1]);
-  else sec.scrollIntoView({behavior:'smooth', block:'start'});
+  else sec.scrollIntoView({behavior:_suave(), block:'start'});
   await _cargarCapasCobertura();
   _ubicarOrigen = { lat: latlng.lat, lng: latlng.lng };   // habilita distancias en las sugerencias
   _ubicarEtiqueta = etiqueta || (precision != null ? 'Ubicación por GPS' : 'Punto consultado');
@@ -7274,8 +7313,10 @@ function openDrawer(d){
   // Carga e inicializa el mapa después de renderizar el contenido
   loadGeometries().then(()=>{
     initMapForArea(d);
-    // Listeners de los toggles de capa base
-    document.querySelectorAll('.map-block-toggle button').forEach(btn=>{
+    /* Toggles de capa base SOLO de la ficha (auditoría 13-sep-2026, D2-02):
+       la consulta global enganchaba también los botones del mapa general y
+       acumulaba una escucha por ficha abierta. */
+    document.querySelectorAll('#dr .map-block-toggle button').forEach(btn=>{
       btn.addEventListener('click', ()=>setBaseLayer(btn.dataset.layer));
     });
   });
@@ -7307,9 +7348,26 @@ function drIr(vis){
   d.style.setProperty('--dvis', _drVis + 'px');
   const a = document.getElementById('drawerAsa');
   if(a){ const al = _drAlturas();
-    a.setAttribute('aria-valuetext', _drVis >= al[3]-2 ? 'completa'
-                                   : _drVis >= al[2]-2 ? 'media' : 'asomada'); }
+    const pos = _drVis >= al[3]-2 ? 2 : _drVis >= al[2]-2 ? 1 : 0;
+    a.setAttribute('aria-valuetext', ['asomada','media','completa'][pos]);
+    a.setAttribute('aria-valuenow', String(pos)); }
 }
+/* Teclado del asa (D5-05): flechas arriba/derecha suben una posición,
+   abajo/izquierda bajan; Inicio = asomada, Fin = completa. Solo en celular,
+   que es donde la hoja tiene posiciones. */
+document.addEventListener('keydown', e=>{
+  const asa = e.target && e.target.id === 'drawerAsa';
+  if(!asa || !_drMovil()) return;
+  const al = _drAlturas(); const pos = [al[1], al[2], al[3]];
+  let i = pos.findIndex(v => Math.abs(v - _drVis) < 3); if(i < 0) i = 2;
+  let j = i;
+  if(e.key === 'ArrowUp' || e.key === 'ArrowRight') j = Math.min(2, i + 1);
+  else if(e.key === 'ArrowDown' || e.key === 'ArrowLeft') j = Math.max(0, i - 1);
+  else if(e.key === 'Home') j = 0;
+  else if(e.key === 'End') j = 2;
+  else return;
+  e.preventDefault(); drIr(pos[j]);
+});
 function drSnap(vis){
   let best = 0;
   _drAlturas().forEach(v => { if(Math.abs(v - vis) < Math.abs(best - vis)) best = v; });
@@ -7834,7 +7892,14 @@ if('serviceWorker' in navigator){
       /* El SW completó en caliente la caché de una versión que se activó sin
          red (D7-01): la pestaña sigue con el código anterior hasta recargar. */
       if(e.data.tipo === 'cache-reparada') showOfflineNotice('Nueva versión disponible. Recarga la página para actualizar.', 'update');
+      if(e.data.tipo === 'version'){ const v = document.getElementById('footerVersion'); if(v) v.textContent = String(e.data.version || '—').replace(/^sia-v35-/, ''); }
     });
+    /* Versión instalada, para el pie (D4-02). Se pregunta al SW que controla
+       la página; si aún no controla (primera visita), se pregunta al quedar
+       listo. */
+    const _pedirVersion = () => { try{ navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage({tipo:'version?'}); }catch(_){} };
+    if(navigator.serviceWorker.controller) _pedirVersion();
+    else navigator.serviceWorker.ready.then(()=> setTimeout(_pedirVersion, 500)).catch(()=>{});
     /* Con addEventListener los mensajes que el SW envió antes de esta línea
        quedan en cola hasta que se pide entregarlos. */
     try{ navigator.serviceWorker.startMessages(); }catch(_){}
