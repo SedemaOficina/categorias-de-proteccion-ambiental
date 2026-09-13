@@ -632,6 +632,10 @@ const explode = (arr,k) => arr.flatMap(d => d[k].split(/,\s*/).map(s=>s.trim()))
 /* Mapeo subcategoría → código de color y abreviatura */
 const SUBCAT = {
   "Bosque Urbano":                              {code:"BU",   short:"Bosque Urbano"},
+  /* Tenencia de la tierra (ARCAC). Sin estas dos entradas subCode caía en "BU"
+     y la tenencia se pintaba con el estilo de Bosque Urbano. */
+  "Comunidad":                                  {code:"COM",  short:"Comunidad"},
+  "Ejido":                                      {code:"EJI",  short:"Ejido"},
   "Barranca":                                   {code:"BR",   short:"Barranca"},
   "Zona de Conservación Ecológica":             {code:"ZCE",  short:"ZCE"},
   "Zona de Protección Hidrológica y Ecológica": {code:"ZPHE", short:"ZPHE"},
@@ -951,6 +955,8 @@ function populateFilters(){
        cuando quedan siete o menos. */
     const vivas = [1,2,4,5,7,8,10,11].filter(n=>!tabla.classList.contains('oc-'+n)).length;
     tabla.classList.toggle('con-decreto', vivas <= 7);
+    /* En celular la tabla de ARCAC muestra la tenencia como columna propia. */
+    tabla.classList.toggle('arcac', state.tab === 'ARCAC');
   }
 
   /* Si ningun filtro avanzado aporta algo, el boton que los despliega tampoco. */
@@ -1156,8 +1162,8 @@ function resumenArcacHTML(){
       </div>
       <div class="res-blk res-pm">
         <div class="res-pm-top"><span class="res-k">Tenencia de la tierra</span>
-          <span class="mono" style="font-size:var(--fs-sm)">${com} comunidad · ${eji} ejido</span></div>
-        <div class="res-bar"><span style="width:${p.toFixed(1)}%;background:var(--arcac-com)"></span></div>
+          <span class="mono" style="font-size:var(--fs-sm)"><span style="color:var(--arcac-com)">■</span> ${com} comunidad · <span style="color:var(--arcac-eji)">■</span> ${eji} ejido</span></div>
+        <div class="res-bar" style="background:var(--arcac-eji)"><span style="width:${p.toFixed(1)}%;background:var(--arcac-com)"></span></div>
         <span class="res-s">Capa complementaria: no forma parte de las 66 áreas del inventario</span>
       </div>
     </div>`;
@@ -2301,13 +2307,13 @@ function render(){
       : `<tr><td colspan="11" class="empty">Sin resultados para los filtros actuales.</td></tr>`;
   } else {
     tb.innerHTML = rows.map(d=>`
-      <tr ${d._arcacNo!=null ? `data-no="${d._arcacNo}"` : `data-i="${DATA.indexOf(d)}"`} data-g="${GRUPO_CLS[d.grupo]||'arcac'}">
+      <tr ${d._arcacNo!=null ? `data-no="${d._arcacNo}" data-ten="${d.categoria==='Ejido'?'ejido':'comunidad'}"` : `data-i="${DATA.indexOf(d)}"`} data-g="${GRUPO_CLS[d.grupo]||'arcac'}">
         <td class="name">${d.nombre}<span class="name-sub">${
-          /* Segunda línea en celular: solo los campos que ese registro tiene.
-             Los núcleos agrarios no tienen decreto ni DG, y un «—» suelto
-             sobra. */
-          [d.tipo, subShort(d.categoria), d.alcaldia,
-           d._arcacNo!=null ? '' : anioDecreto(d), d.dg_responsable]
+          /* Segunda línea en celular: tipo, subcategoría y alcaldía —lo que
+             identifica el territorio—. Año de decreto y DG quedan en la ficha:
+             con ellos la fila crecía a tres renglones. ARCAC omite la tenencia
+             porque ahí es columna propia. */
+          [d.tipo, d._arcacNo!=null ? '' : subShort(d.categoria), d.alcaldia]
             .filter(v=>v && v!=='—').join(' · ')
         }</span></td>
         <td><span class="tag tag-${d.tipo}">${d.tipo}</span></td>
@@ -3843,7 +3849,7 @@ function renderZonaPatrimonioPage(){
  * No toca DATA ni el inventario. Fuente propia: data/arcac.geojson
  * ============================================================ */
 let ARCAC_GEO = null, globalArcacLayer = null, arcacByNo = {};
-const ARCAC_COLORS = { 'Comunidad':'var(--arcac-com)', 'Ejido':'#B3321A' };   // color de TENENCIA (badges/filtros)
+const ARCAC_COLORS = { 'Comunidad':'var(--arcac-com)', 'Ejido':'var(--arcac-eji)' };   // color de TENENCIA (badges/filtros)
 
 /* Badge de tenencia (color) para tabla y ficha */
 function arcacBadge(ten){
@@ -5588,15 +5594,6 @@ function initUbicarBar(){
   document.addEventListener('click', e=>{
     if(!e.target.closest('#ubicarBar')) sug.hidden = true;
   });
-  /* Ctrl+K / Cmd+K enfoca la franja: en escritorio es la unica via de entrada */
-  document.addEventListener('keydown', e=>{
-    if((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')){
-      e.preventDefault();
-      inp.focus(); inp.select();
-      try{ document.getElementById('ubicarBar').scrollIntoView({block:'nearest'}); }catch(_){}
-    }
-  });
-
   inp.addEventListener('input', ()=>{
     const q = inp.value.trim();
     clearTimeout(_ubicarDebounce);
@@ -7337,8 +7334,7 @@ document.getElementById('metaCount').textContent = fmtInt(DATA.length);
    ASISTENTE · Motor de consultas semánticas en lenguaje natural
    ===================================================================== */
 
-/* ═══ VISTAS COMPARTIBLES Y ATAJOS DE TECLADO ════════════════════════
-   Dos huecos que la auditoría dejó abiertos.
+/* ═══ VISTAS COMPARTIBLES ═══════════════════════════════════════════
 
    · Vista guardable. El estado del tablero —destino, subfiltro, orden,
      búsqueda y los siete filtros— vivía solo en memoria: quien armaba una
@@ -7346,9 +7342,7 @@ document.getElementById('metaCount').textContent = fmtInt(DATA.length);
      al fragmento de la URL, no a `localStorage`, porque una vista sirve
      justamente para compartirse y el almacenamiento del navegador no sale del
      equipo. Convive con `#area=`: son dos prefijos distintos del mismo
-     fragmento y nunca se pisan.
-
-   · Atajos. El escritorio es donde rinden; hasta hoy solo existía Ctrl/⌘+K. */
+     fragmento y nunca se pisan. Sin atajos de teclado por decisión del proyecto. */
 const VISTA_CAMPOS = ['dest','tab','sortKey','sortDir','q','fJur','fCat','fAlc','fPM','fTipo','fSC','fDG'];
 
 function vistaAURL(){
@@ -7408,46 +7402,6 @@ function conectarVistaCompartible(){
     }
   });
 }
-
-/* Atajos. Regla: una tecla suelta NUNCA actúa mientras se escribe en un campo
-   ni con un diálogo abierto; los modificadores del sistema tampoco se pisan. */
-function _tecleando(e){
-  const t = e.target;
-  if(!t) return false;
-  if(t.isContentEditable) return true;
-  const n = (t.tagName || '').toUpperCase();
-  return n === 'INPUT' || n === 'TEXTAREA' || n === 'SELECT';
-}
-const ATAJOS = [
-  ['Ctrl/⌘ + K  ·  /', 'Ir al buscador de ubicación'],
-  ['1 · 2 · 3',        'Ubicar · Inventario · Análisis'],
-  ['B',                'Buscar dentro de la tabla'],
-  ['C',                'Copiar la liga de esta vista'],
-  ['?',                'Abrir esta guía'],
-  ['Esc',              'Cerrar la ficha o la guía'],
-];
-document.addEventListener('keydown', e=>{
-  if(e.altKey || e.metaKey || e.ctrlKey) return;    /* Ctrl/⌘+K se atiende aparte */
-  if(_tecleando(e)) return;
-  const ayudaAbierta = (()=>{ const d = document.getElementById('ayudaDlg');
-    return !!(d && d.classList.contains('open')); })();
-  if(ayudaAbierta) return;
-  const k = e.key;
-  if(k === '/'){ e.preventDefault();
-    const i = document.getElementById('ubicarInput');
-    if(i){ i.focus(); i.select(); } return; }
-  if(k === '?'){ e.preventDefault();
-    if(typeof window.abrirAyuda === 'function') window.abrirAyuda(); return; }
-  if(k === 'b' || k === 'B'){ e.preventDefault();
-    const q = document.getElementById('q'); if(q){ q.focus(); q.select(); } return; }
-  if(k === 'c' || k === 'C'){ const b = document.getElementById('btnVista');
-    if(b && b.offsetParent !== null){ e.preventDefault(); b.click(); } return; }
-  if(k === '1' || k === '2' || k === '3'){
-    const destino = {'1':'UBICAR','2':'INVENTARIO','3':'ANALITICA'}[k];
-    const el = document.querySelector('.dest[data-dest="' + destino + '"]');
-    if(el){ e.preventDefault(); el.click(); }
-  }
-});
 
 /* Campo primero: en celular el uso dominante es ubicarse, no consultar tablas.
    En escritorio el uso dominante es lo contrario, y la entrada es el inventario. */

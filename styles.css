@@ -100,6 +100,7 @@
 
     --guinda-900:#7d1839;   /* hover del guinda */
     --arcac-com:#7048e8;    /* ARCAC · Comunidad */
+    --arcac-eji:#b3321a;    /* ARCAC · Ejido */
     --acento-mapa:#f4c842;
     --sc:#00838f;  --sc-900:#006064;
     --warn-bg:#fff8e1;  --alert-bg:#fdf0f3;  --alert-text:#8a2242;
@@ -409,13 +410,21 @@
        con la misma especificidad. El bloque móvil llevaba tiempo sin aplicar y
        las columnas se repartían por normalización de los porcentajes base
        (57/14/12/17 en lugar de 52/24/10/14), que es lo que cortaba «6,000». */
-    body table.t th:nth-child(1), body table.t td:nth-child(1){width:48%}
-    body table.t th:nth-child(7), body table.t td:nth-child(7){width:22%}
+    body table.t th:nth-child(1), body table.t td:nth-child(1){width:54%}
+    body table.t th:nth-child(7), body table.t td:nth-child(7){width:18%}
     body table.t th:nth-child(8), body table.t td:nth-child(8){width:10%}
-    body table.t th:nth-child(10),body table.t td:nth-child(10){width:20%}
+    body table.t th:nth-child(10),body table.t td:nth-child(10){width:18%}
     tbody.t-body td{padding:12px 6px;white-space:normal}
-    tbody.t-body td.name{white-space:normal;line-height:1.3;font-size:var(--fs-md)}
-    .name-sub{display:block;font-size:var(--fs-xs);color:var(--muted);font-weight:400;margin-top:3px}
+    /* `body` por especificidad: la regla base de td.name (nowrap + ellipsis) está
+       declarada después y truncaba los nombres en celular en lugar de partirlos. */
+    body tbody.t-body td.name{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.3;font-size:var(--fs-md)}
+    /* Con más especificidad que el `.name-sub{display:none}` base, que está
+       declarado después en la hoja y ganaba: la segunda línea nunca se veía. */
+    tbody.t-body td.name .name-sub{display:block;white-space:normal;overflow-wrap:anywhere;font-size:var(--fs-xs);color:var(--muted);font-weight:400;margin-top:3px;line-height:1.35}
+    /* ARCAC: la tenencia (Comunidad / Ejido) es columna propia también en celular. */
+    body table.t.arcac th:nth-child(4), body table.t.arcac td:nth-child(4){display:table-cell;width:28%}
+    body table.t.arcac th:nth-child(1), body table.t.arcac td:nth-child(1){width:50%}
+    body table.t.arcac th:nth-child(7), body table.t.arcac td:nth-child(7){width:22%}
     thead.t-head th{padding:9px 6px}
     /* Objetivo tactil de 44 px en toda accion de la barra de ubicacion */
     .ubicar-gps{height:52px}
@@ -951,6 +960,7 @@
   tbody.t-body tr[data-g="anpl"] td:first-child::before{background:var(--anpl)}
   tbody.t-body tr[data-g="anpf"] td:first-child::before{background:var(--anpf)}
   tbody.t-body tr[data-g="arcac"] td:first-child::before{background:var(--arcac-com)}
+  tbody.t-body tr[data-g="arcac"][data-ten="ejido"] td:first-child::before{background:var(--arcac-eji)}
   tbody.t-body td{padding:10px 8px;font-size:var(--fs-base);color:var(--ink-2);vertical-align:top;font-weight:400;position:relative;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   tbody.t-body td.name{color:var(--ink);font-weight:500;padding-left:18px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
   /* En celular la fila se lee como ficha: la categoria y la alcaldia bajan
@@ -989,6 +999,9 @@
   /* AVA */
   .sub-BU   {background:transparent; color:var(--sub-bu); border:1px solid rgba(240,130,23,.55)}
   .sub-BR   {background:transparent; color:var(--marron-900); border:1px solid rgba(143,86,16,.45)}
+  /* ARCAC · tenencia de la tierra (mismos colores que el mapa y la ficha) */
+  .sub-COM  {background:transparent; color:var(--arcac-com); border:1px solid rgba(112,72,232,.5)}
+  .sub-EJI  {background:transparent; color:var(--arcac-eji); border:1px solid rgba(179,50,26,.5)}
   /* ANP Local */
   .sub-ZCE{background:transparent; color:var(--gris); border:1px solid rgba(85,88,90,.45)}      /* Gris 425C    */
   .sub-ZSCE{background:transparent; color:var(--sub-zsce); border:1px solid rgba(28,107,133,.45)}        /* Azul cl 0821C */
