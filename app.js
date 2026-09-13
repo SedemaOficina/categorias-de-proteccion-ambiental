@@ -1124,6 +1124,10 @@ function resumenHTML(arr, titulo){
   const conPM   = arr.filter(d=>d.programa_manejo==='Sí').length;
   const sinPM   = total - conPM;
   const p       = total ? (conPM/total)*100 : 0;
+  /* La barra toma el color del subconjunto (mismo que el chip y los polígonos);
+     con grupos mezclados («Todas») usa el guinda de marca. */
+  const grupos  = new Set(arr.map(d=>d.grupo));
+  const colBar  = (grupos.size === 1 && GROUP_COLORS[[...grupos][0]]) || 'var(--guinda)';
   return `
     <div class="resumen">
       <div class="res-blk">
@@ -1141,10 +1145,10 @@ function resumenHTML(arr, titulo){
           <span class="res-pm-n">${conPM} / ${total}</span>
         </div>
         <div class="res-bar" role="img" aria-label="${conPM} de ${total} áreas con programa de manejo">
-          <span class="res-bar-si" style="width:${p.toFixed(1)}%"></span>
+          <span class="res-bar-si" style="width:${p.toFixed(1)}%;background:${colBar}"></span>
         </div>
         <span class="res-s${sinPM?' res-alerta':''}">${sinPM
-          ? `${sinPM} ${sinPM===1?'área':'áreas'} sin programa de manejo vigente`
+          ? `${sinPM} ${sinPM===1?'área':'áreas'} sin programa de manejo`
           : 'Todas las áreas cuentan con programa de manejo'}</span>
       </div>
     </div>`;
@@ -5246,7 +5250,7 @@ function descInventario(d){
       _filaPgoedfResumen(d)
     ).concat([
       ['DECRETO',      d.fecha_decreto||'—'],
-      ['PROGRAMA DE MANEJO', d.programa_manejo==='Sí' ? ('Publicado' + (d.fecha_pm ? ' · '+d.fecha_pm : '')) : 'Sin programa vigente']
+      ['PROGRAMA DE MANEJO', d.programa_manejo==='Sí' ? ('Publicado' + (d.fecha_pm ? ' · '+d.fecha_pm : '')) : 'Sin programa de manejo']
     ]).concat(
       _filaZonifResumen(d)
     ).concat(
@@ -6135,7 +6139,7 @@ function descConstancia(u, scFC){
     filas.push(['COBERTURA', u.sc === true ? 'Suelo de Conservación, sin área decretada' : 'Ninguna AVA, ANP, ARCAC ni Suelo de Conservación']);
   }
   if(dInv){
-    filas.push(['PROGRAMA DE MANEJO', dInv.programa_manejo === 'Sí' ? ('Publicado' + (dInv.fecha_pm ? ' · ' + dInv.fecha_pm : '')) : 'Sin programa vigente']);
+    filas.push(['PROGRAMA DE MANEJO', dInv.programa_manejo === 'Sí' ? ('Publicado' + (dInv.fecha_pm ? ' · ' + dInv.fecha_pm : '')) : 'Sin programa de manejo']);
     if(typeof isCoadmin === 'function' && isCoadmin(dInv.nombre)) filas.push(['COADMINISTRACIÓN', 'Convenio Marco SEMARNAT–CONANP–CDMX 2025']);
     if(u.zonaPM) filas.push(['ZONA PM DEL PUNTO', u.zonaPM]);
     else if(u.zonaPMEstado === 'nd' && dInv.programa_manejo === 'Sí') filas.push(['ZONA PM DEL PUNTO', 'Zonificación aún no disponible en formato geoespacial']);
@@ -6336,7 +6340,7 @@ function renderUbicarResultado(latlng, precision, etiqueta){
         + (coad ? '<span class="ubi-chip ubi-chip-coadmin" title="Convenio Marco SEMARNAT–CONANP–CDMX 2025">Coadministración con la Federación</span>' : '')
         + `<span class="ubi-chip ${pm ? 'ubi-chip-pm' : 'ubi-chip-nopm'}">${pm
             ? 'Programa de manejo publicado' + (dInv.fecha_pm ? ' · ' + esc(dInv.fecha_pm) : '')
-            : 'Sin programa de manejo vigente'}</span>`
+            : 'Sin programa de manejo'}</span>`
         + (sc === false ? '<span class="ubi-chip ubi-chip-urbano">Suelo urbano</span>' : '')
         + '</div>'
         + (pm ? '<div class="ubi-zona-pm" id="ubiZonaPM"></div>' : '');
@@ -7114,7 +7118,7 @@ function openDrawer(d){
       <span class="tag-coadmin">Convenio Marco SEMARNAT–CONANP–CDMX 2025</span>
     </div></div>` : ''}
     <div class="field"><div class="k">Fecha decreto</div><div class="v">${d.fecha_decreto}</div></div>
-    <div class="field"><div class="k">Programa de manejo</div><div class="v"><span class="status-tag ${d.programa_manejo==='Sí'?'status-tag-si':'status-tag-no'}">${d.programa_manejo==='Sí'?'Publicado':'Sin programa vigente'}</span></div></div>
+    <div class="field"><div class="k">Programa de manejo</div><div class="v"><span class="status-tag ${d.programa_manejo==='Sí'?'status-tag-si':'status-tag-no'}">${d.programa_manejo==='Sí'?'Publicado':'Sin programa de manejo'}</span></div></div>
     <div class="field"><div class="k">Fecha Programa de Manejo</div><div class="v">${d.fecha_pm||'—'}</div></div>
     <!-- Y lo que se deriva de tener programa de manejo, debajo de él: su zonificación. -->
     <div id="fichaZonif" class="zonif-bloque zonif-bloque-intercalado"></div>
