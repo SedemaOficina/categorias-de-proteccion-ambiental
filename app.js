@@ -993,6 +993,8 @@ function renderDashboard(){
      suelta, para que una sola clase gobierne todas las reglas. */
   const _movil = window.matchMedia('(max-width:760px)').matches;
   if(wrap) wrap.classList.toggle('gm-shell', state.dest==='UBICAR' && _movil);
+  /* En el caparazón nada de la página debe desplazarse: mapa y hoja son fijos. */
+  siaBloquearPagina(state.dest==='UBICAR' && _movil, 'shell');
   if(state.dest!=='UBICAR'){
     if(typeof limpiarUbicacionGlobal === 'function') limpiarUbicacionGlobal();
     const _hr = document.getElementById('ubicarResultado');
@@ -5923,32 +5925,11 @@ function ubicarPorGPS(){
   document.addEventListener('click', ()=>setTimeout(refrescar, 350));
 })();
 
-/* ═══ CÁPSULA QUE SE APARTA AL BAJAR ══════════════════════════════════
-   Fuera del caparazón la barra es pegajosa: se queda arriba y el contenido
-   pasa por debajo, que es lo que se ve cortado al desplazarse. Como en Maps,
-   se aparta al bajar y vuelve al subir —o al llegar arriba del todo—. Solo en
-   celular: en escritorio no estorba y la referencia constante sirve. */
-(function(){
-  let ultimo = 0, pendiente = false;
-  const UMBRAL = 8;
-  function evaluar(){
-    pendiente = false;
-    const wrap = document.querySelector('.wrap');
-    if(!wrap || !window.matchMedia('(max-width:760px)').matches
-       || wrap.classList.contains('gm-shell')){
-      if(wrap) wrap.classList.remove('barra-oculta');
-      ultimo = window.scrollY; return;
-    }
-    const y = window.scrollY;
-    if(y < 60){ wrap.classList.remove('barra-oculta'); ultimo = y; return; }
-    if(Math.abs(y - ultimo) < UMBRAL) return;
-    wrap.classList.toggle('barra-oculta', y > ultimo);
-    ultimo = y;
-  }
-  window.addEventListener('scroll', ()=>{
-    if(!pendiente){ pendiente = true; requestAnimationFrame(evaluar); }
-  }, {passive:true});
-})();
+/* (13-sep-2026) Se retiró la «cápsula que se aparta al bajar»: en celular la
+   cápsula ya no es pegajosa fuera del caparazón (ver styles.css), así que no
+   hay nada que apartar. Con dos elementos pegajosos en top:0 —cápsula y tira
+   de chips— el regreso animado de la cápsula se encimaba sobre los chips y en
+   el rebote de iOS parpadeaban uno sobre otro. */
 
 /* ═══ HOJA DESLIZABLE · caparazón de mapa en celular ═══════════════════
    Tres posiciones, como en Maps: asomada (se ve el encabezado y la primera
@@ -7205,8 +7186,36 @@ document.addEventListener('pointerdown', e=>{
   e.preventDefault();
 });
 
+/* ═══ BLOQUEO DE LA PÁGINA DE FONDO · una sola implementación ═══════════
+   `overflow:hidden` en html/body no detiene el desplazamiento táctil en iOS:
+   con la ficha abierta, el gesto que llegaba al tope de la hoja seguía
+   moviendo la página de atrás («hace scroll por detrás de la ficha»). Lo
+   único fiable es fijar el body (position:fixed) conservando la posición y
+   devolverla al liberar. Varias piezas pueden pedirlo a la vez (ficha, guía,
+   caparazón de «¿Dónde estoy?»): se cuenta por clave. */
+const _bloqueosPagina = new Set();
+let _scrollBloqueado = 0;
+function siaBloquearPagina(on, clave){
+  try{
+    if(on) _bloqueosPagina.add(clave || 'x'); else _bloqueosPagina.delete(clave || 'x');
+    const html = document.documentElement, body = document.body;
+    const debe = _bloqueosPagina.size > 0, esta = html.classList.contains('pagina-bloqueada');
+    if(debe && !esta){
+      _scrollBloqueado = window.scrollY || window.pageYOffset || 0;
+      body.style.top = (-_scrollBloqueado) + 'px';
+      html.classList.add('pagina-bloqueada');
+    } else if(!debe && esta){
+      html.classList.remove('pagina-bloqueada');
+      body.style.top = '';
+      window.scrollTo({ top: _scrollBloqueado, left: 0, behavior: 'instant' });
+    }
+  }catch(e){}
+}
 function _marcaFicha(abierta){
   try{ document.documentElement.classList.toggle('ficha-abierta', !!abierta); }catch(e){}
+  /* En celular la ficha es una hoja sobre la página: la página se congela.
+     En escritorio es un cajón lateral y la página sigue disponible. */
+  siaBloquearPagina(!!abierta && _drMovil(), 'ficha');
 }
 
 function closeDrawer(){
@@ -7657,14 +7666,14 @@ function showOfflineNotice(msg, type='offline'){
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       bd.classList.add('open'); dlg.classList.add('open');
     }));
-    document.documentElement.style.overflow = 'hidden';
+    siaBloquearPagina(true, 'ayuda');
     try{ dlg.focus({preventScroll:true}); }catch(_){ dlg.focus(); }
   }
 
   function cerrarAyuda(){
     if(!abierta()) return;
     bd.classList.remove('open'); dlg.classList.remove('open');
-    document.documentElement.style.overflow = '';
+    siaBloquearPagina(false, 'ayuda');
     setTimeout(()=>{ if(!abierta()){ bd.hidden = true; dlg.hidden = true; } }, 220);
     if(devolverFoco && document.contains(devolverFoco)){
       try{ devolverFoco.focus({preventScroll:true}); }catch(_){}

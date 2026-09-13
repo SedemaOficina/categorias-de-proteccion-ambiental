@@ -171,7 +171,7 @@
   .ubicar-go:hover{color:var(--guinda)}
   .ubicar-sugerencias{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);
     border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--sh-3);
-    max-height:300px;overflow-y:auto;z-index:var(--z-sticky)}
+    max-height:300px;overflow-y:auto;overscroll-behavior:contain;z-index:var(--z-sticky)}
   .ubicar-sugerencias .res-group{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.11em;
     text-transform:uppercase;color:var(--muted);padding:8px 12px 5px;background:var(--bg-2);
     border-bottom:1px solid var(--line-soft);position:sticky;top:0;z-index:2}
@@ -393,7 +393,7 @@
       margin:0;border-radius:0;border:none;border-top:1px solid var(--line);
       padding:2px 4px calc(4px + env(safe-area-inset-bottom, 0px));
       box-shadow:0 -2px 14px rgba(42,42,42,.12)}
-    .subnav{margin-bottom:12px;overflow-x:auto;flex-wrap:nowrap;
+    .subnav{margin-bottom:12px;overflow-x:auto;overscroll-behavior-x:contain;flex-wrap:nowrap;
       -webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
     .subnav::-webkit-scrollbar{display:none}
     .subchip{flex-shrink:0}
@@ -1856,7 +1856,7 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
     display:flex;flex-direction:column;overflow:hidden;touch-action:none}
   .wrap.dest-ubicar.gm-shell #ubicarResultado.arrastrando{transition:none}
   .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-panel{flex:1;min-height:0;overflow-y:auto;
-    -webkit-overflow-scrolling:touch;touch-action:pan-y;
+    -webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;
     margin:0;border:none;border-radius:0;box-shadow:none;padding:0 14px 18px}
   /* Con el mapa detrás, el mini-mapa del resultado sobra: mostraba el
      mismo punto dos veces y partía la pantalla en dos lienzos. */
@@ -1894,8 +1894,8 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
   .aviso-integridad:hover{background:#F2D6DF}
   .aviso-integridad:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
 
-  /* ── CÁPSULA QUE SE APARTA AL BAJAR ──────────────────────────────── */
-  .wrap.barra-oculta .ubicar-bar{transform:translateY(-135%)}
+  /* (La «cápsula que se aparta al bajar» se retiró el 13-sep-2026: en celular
+     la cápsula ya no es pegajosa fuera del caparazón.) */
   .ubicar-bar{transition:transform .26s cubic-bezier(.2,.8,.2,1)}
 
   /* ── BOTÓN DE CAPAS (patrón `layers` del kit) ────────────────────── */
@@ -2006,6 +2006,8 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
      por sí solo no basta en iOS: el cuerpo sigue recibiendo el gesto cuando la
      ficha llega a su tope. Se congela el documento mientras la hoja está arriba
      y se libera al cerrarla. */
+  /* (El bloqueo real lo hace html.pagina-bloqueada, más abajo; esta regla queda
+     como refuerzo en navegadores que sí respetan overflow:hidden.) */
   html.ficha-abierta, html.ficha-abierta body{overflow:hidden;overscroll-behavior:none}
   /* El tache, como en Maps: círculo gris en la esquina de la cabecera, a la
      altura del título —no flotando en el hueco de arriba—. */
@@ -2207,7 +2209,7 @@ header.top .meta{display:flex;align-items:center;gap:12px}
 /* El menú crece con las capas: en celular no debe salirse del lienzo. */
 @media (max-width:760px){
   .map-block-controls-floating .map-block-toggle{max-height:calc(var(--lienzo-h,100dvh) - 66px);overflow-y:auto;
-    -webkit-overflow-scrolling:touch}
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
   .map-filters.en-menu .map-filter-chip,.map-filters.en-menu .map-filter-chip.active{min-height:38px;padding:4px 2px}
 }
 .drawer-sc-floating.en-menu .map-filter-chip .chip-dot{flex:0 0 auto}
@@ -2616,6 +2618,11 @@ html.arranque-campo body > .wrap{visibility:hidden}
      recorrido porque su padre mide lo mismo que ella. */
   .nav2{position:sticky;top:0;z-index:calc(var(--z-sticky) - 1);background:var(--bg);
     margin-left:-12px;margin-right:-12px;padding:8px 12px 0}
+  /* Un solo elemento pegajoso arriba en celular: la tira de chips. La cápsula
+     de búsqueda se desplaza con la página (el destino «Ubicar» es el lugar de
+     la búsqueda; en Inventario la búsqueda propia es la del filtro). Dos
+     pegajosos en top:0 se encimaban. */
+  .wrap:not(.dest-ubicar) .ubicar-bar{position:static;box-shadow:none}
   .subnav{margin-bottom:8px}
   .wrap.dest-ubicar .nav2{position:static;margin:0;padding:0}
 }
@@ -2663,3 +2670,9 @@ html.sia-fs-abierto{overflow:hidden}
   :has(> .map-block-controls-floating.base-abierto) > .btn-ampliar{opacity:0;pointer-events:none}
 }
 
+
+/* ── Bloqueo de la página de fondo (siaBloquearPagina) ─────────────────
+   body fijo conservando el desplazamiento; lo piden la ficha en celular, la
+   guía y el caparazón de «¿Dónde estoy?». */
+html.pagina-bloqueada{overflow:hidden;overscroll-behavior:none}
+html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hidden;overscroll-behavior:none}
