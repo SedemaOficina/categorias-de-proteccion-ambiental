@@ -3598,6 +3598,7 @@ async function initZPMap(){
   const zp = await loadZonaPatrimonio();
 
   zpMap = L.map(canvas, { zoomControl:true, scrollWheelZoom:false });
+  _gestosTactilesIncrustado(zpMap);
   setZPBaseLayer('positron');
 
   const bounds = L.latLngBounds([]);
@@ -4080,6 +4081,7 @@ function initTraslapesMap(){
   if(!cont || typeof L === 'undefined') return;
   if(traslapesMap){ try{ traslapesMap.remove(); }catch(e){} traslapesMap=null; }
   traslapesMap = L.map(cont, { zoomControl:true, scrollWheelZoom:false, attributionControl:true });
+  _gestosTactilesIncrustado(traslapesMap);
   traslapesMap._activeBase = L.tileLayer(TILE_LAYERS.positron.url,
       {attribution:TILE_LAYERS.positron.attribution, maxZoom:TILE_LAYERS.positron.maxZoom}).addTo(traslapesMap);
   try{ createAlcaldiasLayer({interactive:false}).addTo(traslapesMap); }catch(e){}
@@ -4284,6 +4286,9 @@ async function initGlobalMap(){
      pocos píxeles cae un nivel completo y desperdicia media pantalla. Le pasaba
      a ARCAC, cuya extensión queda justo por encima del nivel 11. */
   globalMap = L.map(canvas, { zoomControl:true, scrollWheelZoom:false, zoomSnap:0.25 });
+  /* En el caparazón de «¿Dónde estoy?» el mapa llena la pantalla: gesto completo
+     con un dedo. Incrustado en Inventario, la regla de dos dedos. */
+  _gestosTactilesIncrustado(globalMap, { total: !!document.querySelector('.wrap.gm-shell') });
   /* Vista provisional ANTES de agregar capas: Leaflet falla en _clipPoints si
      dibuja vectores sin vista establecida. Pasaba en la pestaña ARCAC, donde
      ningún grupo del inventario aporta bounds y el mapa quedaba en blanco.
@@ -4484,14 +4489,27 @@ function attachFullscreenBtn(canvas, mapInstance){
   const fresh = btn.cloneNode(true);
   btn.parentNode.replaceChild(fresh, btn);
 
+  /* iPhone no tiene Fullscreen API para elementos: se simula con una clase
+     que fija el lienzo sobre la hoja. Misma salida (el propio botón). */
+  const avisarMapa = en => { try{ if(mapInstance && mapInstance._siaEnPantallaCompleta) mapInstance._siaEnPantallaCompleta(en); }catch(_){} };
+  const fsSimulado = en => {
+    canvas.classList.toggle('sia-fs', en);
+    document.documentElement.classList.toggle('sia-fs-abierto', en);
+    fresh.setAttribute('aria-label', en ? 'Salir de pantalla completa' : 'Pantalla completa');
+    fresh.title = fresh.getAttribute('aria-label');
+    if(en && typeof drIr === 'function' && typeof _drAlturas === 'function' && _drMovil()) drIr(_drAlturas()[3]);
+    setTimeout(() => { if(mapInstance) mapInstance.invalidateSize(); }, 80);
+    avisarMapa(en);
+  };
   fresh.addEventListener('click', () => {
+    if(canvas.classList.contains('sia-fs')){ fsSimulado(false); return; }
     const isFs = document.fullscreenElement || document.webkitFullscreenElement;
     if(isFs){
       (document.exitFullscreen || document.webkitExitFullscreen).call(document);
     } else {
       const req = canvas.requestFullscreen || canvas.webkitRequestFullscreen;
-      if(req) req.call(canvas);
-      else siaToast('Tu navegador no admite el modo pantalla completa.');
+      if(req){ try{ const p = req.call(canvas); if(p && p.catch) p.catch(()=>fsSimulado(true)); }catch(_){ fsSimulado(true); } }
+      else fsSimulado(true);
     }
   });
 
@@ -4503,6 +4521,8 @@ function attachFullscreenBtn(canvas, mapInstance){
     document.removeEventListener('webkitfullscreenchange', attachFullscreenBtn._onChange);
   }
   const onChange = () => {
+    const el = document.fullscreenElement || document.webkitFullscreenElement;
+    avisarMapa(!!(el && (el === canvas || el.contains(canvas))));
     setTimeout(() => { if(mapInstance) mapInstance.invalidateSize(); }, 100);
   };
   attachFullscreenBtn._onChange = onChange;
@@ -6619,6 +6639,7 @@ function initUbicarMap(latlng, precision){
      o los vectores fallan en _clipPoints al no existir aún los pixelBounds. */
   ubicarMap = L.map(cont, {zoomControl:true, scrollWheelZoom:false, attributionControl:true})
                 .setView([latlng.lat, latlng.lng], 14);
+  _gestosTactilesIncrustado(ubicarMap);
   try{ ubicarMap.invalidateSize(); }catch(e){}
   L.tileLayer(TILE_LAYERS.positron.url,{attribution:TILE_LAYERS.positron.attribution,maxZoom:TILE_LAYERS.positron.maxZoom}).addTo(ubicarMap);
   try{ createAlcaldiasLayer({interactive:false}).addTo(ubicarMap); }catch(e){}
@@ -6955,39 +6976,65 @@ function fichaMapaHTML(opts){
 /* Lo que todo minimapa de ficha lleva después de crearse: base conmutable,
    pantalla completa, Suelo de Conservación en el menú y desplazamiento con
    rueda solo al enfocarlo. */
-/* Gestos táctiles del minimapa de ficha. En celular el mapa ocupa la mitad
-   de la hoja y Leaflet se queda con el arrastre de un dedo: quien intenta
-   desplazar la ficha tocando el mapa no consigue nada («no puedo hacer
-   scroll en las fichas»). Como con la rueda en escritorio, el arrastre se
-   activa al tocar el mapa y se devuelve a la hoja en cuanto ésta se desplaza.
-   Pellizcar para acercar sigue funcionando siempre. */
-let _avisoGestoMapa = false;
-function _gestosTactilesMinimapa(mapa){
+/* Gestos táctiles de los mapas INCRUSTADOS en una página o ficha que se
+   desplaza (celular). Regla única y sin estados ocultos, la misma que usan
+   los mapas incrustados de Google:
+     · un dedo  → desplaza la página/hoja (el mapa nunca se lo queda;
+                  touch-action pan-x pan-y para que ningún ángulo se «trabe»);
+     · dos dedos → mueven y acercan el mapa (touchZoom de Leaflet: pellizco y
+                  paneo a la vez);
+     · pantalla completa → el mapa toma la pantalla y un dedo arrastra.
+   El mapa de «¿Dónde estoy?» en celular NO es incrustado: llena la pantalla
+   (gm-shell) y conserva el gesto completo (`mapa-gesto-total`).
+   Se retiró el «toca para activar»: dependía de que el toque llegara como
+   click, en iOS no siempre llegaba y dejaba al usuario sin saber en qué
+   modo estaba. La etiqueta desaparece con el primer gesto de dos dedos. */
+function _gestosTactilesIncrustado(mapa, opts){
   try{
     if(!mapa || !window.matchMedia('(pointer:coarse)').matches) return;
-    mapa.dragging.disable();
     const cont = mapa.getContainer();
-    cont.classList.add('mapa-en-reposo');
-    mapa.on('click', ()=>{
-      if(mapa.dragging.enabled()) return;
-      mapa.dragging.enable(); cont.classList.remove('mapa-en-reposo');
-      if(!_avisoGestoMapa){ _avisoGestoMapa = true; siaToast('Mapa activo: arrastra con un dedo. Toca fuera del mapa para volver a desplazar la ficha.', 3500); }
-    });
-    const inn = document.getElementById('drIn');
-    if(inn){
-      /* Solo un toque del usuario FUERA del mapa lo devuelve al reposo. No se escucha
-         `scroll`: el foco que Leaflet da al lienzo al tocarlo desplaza la ficha y ese
-         desplazamiento programático volvía a dormir el mapa en el mismo gesto que lo
-         activaba. Un solo listener delegado por ficha: cada apertura lo reemplaza. */
-      if(inn._siaReposo) inn.removeEventListener('touchstart', inn._siaReposo);
-      inn._siaReposo = e=>{
-        if(cont.contains(e.target)) return;
-        if(mapa.dragging && mapa.dragging.enabled()){ mapa.dragging.disable(); cont.classList.add('mapa-en-reposo'); }
-      };
-      inn.addEventListener('touchstart', inn._siaReposo, {passive:true});
+    const total = !!(opts && opts.total);
+    const reposo = en => {
+      if(en){ mapa.dragging.disable(); cont.classList.add('mapa-en-reposo'); cont.classList.remove('mapa-gesto-total'); }
+      else  { mapa.dragging.enable();  cont.classList.remove('mapa-en-reposo'); cont.classList.add('mapa-gesto-total'); }
+    };
+    reposo(!total);
+    /* Botón «Ampliar» (solo mapas incrustados en táctil): es la vía para
+       arrastrar con un dedo. Reutiliza el botón de pantalla completa, que
+       está oculto por CSS, y vive bajo el botón de capas. */
+    if(!total){
+      let canvas = cont, n = 0;
+      while(canvas && n < 4 && !canvas.querySelector('.map-fullscreen-btn')){ canvas = canvas.parentElement; n++; }
+      const fsBtn = canvas && canvas.querySelector('.map-fullscreen-btn');
+      if(fsBtn && !canvas.querySelector('.btn-ampliar')){
+        const ctrl = fsBtn.closest('.map-block-controls-floating');
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'btn-ampliar';
+        b.setAttribute('aria-label', 'Ampliar el mapa'); b.title = 'Ampliar el mapa';
+        b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                    + '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+        if(ctrl) b.style.top = (ctrl.offsetTop + 52) + 'px';
+        /* Se resuelve al hacer clic: attachFullscreenBtn clona el botón después. */
+        b.addEventListener('click', e=>{ e.stopPropagation(); const f = canvas.querySelector('.map-fullscreen-btn'); if(f) f.click(); });
+        if(typeof L !== 'undefined' && L.DomEvent){ L.DomEvent.disableClickPropagation(b); }
+        canvas.appendChild(b);
+        cont._siaBtnAmpliar = b;
+      }
     }
+    /* La etiqueta se retira con el primer gesto de dos dedos del usuario, no
+       con movimientos programáticos (fitBounds, setView). */
+    cont.addEventListener('touchstart', e=>{ if(e.touches && e.touches.length >= 2) cont.classList.add('mapa-usado'); }, {passive:true});
+    /* En pantalla completa (nativa o simulada) el conflicto desaparece y el
+       arrastre con un dedo se devuelve al mapa; al salir, vuelve al reposo
+       salvo que el mapa sea de gesto total. */
+    mapa._siaEnPantallaCompleta = en => {
+      reposo(!en && !total);
+      const b = cont._siaBtnAmpliar;
+      if(b){ b.classList.toggle('activo', !!en); b.setAttribute('aria-label', en ? 'Cerrar el mapa ampliado' : 'Ampliar el mapa'); b.title = b.getAttribute('aria-label'); }
+    };
   }catch(_){}
 }
+const _gestosTactilesMinimapa = mapa => _gestosTactilesIncrustado(mapa);
 function fichaMapaConectar(container){
   if(!activeMap) return;
   _gestosTactilesMinimapa(activeMap);
@@ -7137,12 +7184,14 @@ document.addEventListener('pointerdown', e=>{
     document.removeEventListener('pointerup', soltar);
     document.removeEventListener('pointercancel', soltar);
     dr.classList.remove('arrastrando');
-    if(!movio){                       /* toque simple: baja a la siguiente */
+    if(!movio){
+      /* Toque simple: SUBE a la siguiente posición; desde la completa vuelve a
+         la media. Antes bajaba y, por debajo de la asomada, cerraba: un roce
+         en el asa al leer hundía la ficha («a veces baja sola»). Cerrar es
+         solo arrastrando hacia abajo o con el ×. */
       const al = _drAlturas();
-      for(let i = al.length - 1; i >= 0; i--){
-        if(al[i] < _drVis - 4){ if(al[i] === 0) closeDrawer(); else drIr(al[i]); return; }
-      }
-      closeDrawer(); return;
+      const sig = al.find(v => v > _drVis + 4);
+      drIr(sig != null ? sig : al[2]); return;
     }
     if(drSnap(v0 + (y0 - ev.clientY)) === 0) closeDrawer();
   };
@@ -7158,6 +7207,8 @@ function _marcaFicha(abierta){
 
 function closeDrawer(){
   _marcaFicha(false);
+  /* Si la ficha se cierra con el mapa en pantalla completa simulada, se sale de ella. */
+  try{ document.querySelectorAll('.sia-fs').forEach(c=>c.classList.remove('sia-fs')); document.documentElement.classList.remove('sia-fs-abierto'); }catch(e){}
   try{ _drVis = 0; document.getElementById('dr').style.removeProperty('--dvis'); }catch(e){}
   bd.classList.remove('open');
   dr.classList.remove('open');

@@ -1277,7 +1277,14 @@
     .leaflet-container,
     .leaflet-container.leaflet-touch-drag,
     .leaflet-container.leaflet-touch-zoom,
-    .leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{touch-action:pan-y !important}
+    .leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{touch-action:pan-x pan-y !important}
+    /* Excepciones con gesto completo (un dedo arrastra el mapa): el caparazón
+       de «¿Dónde estoy?», la pantalla completa nativa y la simulada. Antes el
+       pan-y de arriba alcanzaba también a estos mapas y en celular solo se
+       podían mover en horizontal o con dos dedos: la sensación de «trabado». */
+    /* La clase se repite para superar la especificidad (0,3,0) de la regla
+       de arriba; la pone el JS (caparazón y pantalla completa, nativa o simulada). */
+    .leaflet-container.mapa-gesto-total.mapa-gesto-total.mapa-gesto-total{touch-action:none !important}
 
     .leaflet-top.leaflet-left{top:10px}
     .map-block-controls-floating{top:10px; right:10px}
@@ -2621,13 +2628,38 @@ html.arranque-campo body > .wrap{visibility:hidden}
 .ubi-compartir:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
 .ubi-cabeza .ubi-cerrar{margin-left:0}
 @media (max-width:760px){ .ubi-compartir{height:36px;padding:0 12px} }
-/* Minimapa en reposo (celular): el arrastre vertical lo recibe la hoja. Un
-   toque activa el mapa. La pista visual es discreta: cursor/etiqueta solo en
-   táctil. */
+/* Minimapa en reposo (celular): un dedo desplaza la hoja en cualquier ángulo
+   (pan-x pan-y: si solo se permite pan-y, un gesto diagonal no mueve nada y se
+   siente trabado); dos dedos mueven el mapa. La etiqueta se va al primer uso. */
 @media (pointer:coarse){
-  .drawer .leaflet-container.mapa-en-reposo{touch-action:pan-y !important}
-  .drawer .map-canvas{position:relative}
-  .drawer .leaflet-container.mapa-en-reposo::after{content:'Toca el mapa para moverlo';position:absolute;left:50%;top:12px;transform:translateX(-50%);
+  .leaflet-container.mapa-en-reposo{touch-action:pan-x pan-y !important}
+  .map-canvas{position:relative}
+  .leaflet-container.mapa-en-reposo::after{content:'Dos dedos mueven el mapa';position:absolute;left:50%;top:12px;transform:translateX(-50%);
     z-index:500;pointer-events:none;background:rgba(42,42,42,.62);color:#fff;font-family:'Roboto',sans-serif;font-size:var(--fs-mini);
     padding:4px 10px;border-radius:12px;white-space:nowrap}
+  .leaflet-container.mapa-en-reposo.mapa-usado::after{display:none}
+  .leaflet-container.mapa-gesto-total::after{display:none}
 }
+/* Pantalla completa simulada (iPhone no tiene Fullscreen API para elementos):
+   el lienzo se fija sobre la hoja —su bloque contenedor es #dr, que lleva
+   transform— y el mapa recupera el arrastre con un dedo. */
+.sia-fs{position:fixed !important;inset:0 !important;z-index:1200 !important;width:auto !important;height:auto !important;min-height:0 !important;
+  max-width:none !important;margin:0 !important;border-radius:0 !important;background:var(--card)}
+.sia-fs .leaflet-container,.sia-fs .map-canvas-inner{height:100% !important;min-height:0 !important;border-radius:0 !important}
+html.sia-fs-abierto{overflow:hidden}
+/* Botón «Ampliar» de los mapas incrustados (solo táctil; lo crea el JS). Mismo
+   lenguaje que el botón de capas; se esconde mientras el menú de capas está
+   abierto porque ese menú cae sobre él. En modo ampliado se vuelve guinda y
+   su icono se interpreta como «cerrar». */
+.btn-ampliar{display:none}
+@media (pointer:coarse){
+  .btn-ampliar{position:absolute;right:10px;top:62px;z-index:var(--z-flotante);width:44px;height:44px;border-radius:50%;border:none;
+    background:var(--card);color:var(--ink-2);box-shadow:var(--gm-e2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+  .btn-ampliar svg{width:21px;height:21px}
+  .btn-ampliar:active{transform:scale(.95)}
+  .btn-ampliar.activo{background:var(--guinda);color:var(--crema)}
+  .btn-ampliar.activo svg{transform:rotate(180deg)}
+  .map-block-controls-floating.base-abierto ~ .btn-ampliar,
+  :has(> .map-block-controls-floating.base-abierto) > .btn-ampliar{opacity:0;pointer-events:none}
+}
+
