@@ -66,6 +66,12 @@ const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'
 /* ^ Escape de texto libre antes de insertarlo con innerHTML (defensa XSS).
      Se declara aqui, y no junto al resto de helpers, porque es un const (no se
      iza) y DATA lo necesita unas lineas mas abajo. */
+/* Llave del join Sheet ↔ geometría ↔ índices (auditoría 13-sep-2026, D1-01 y
+   D1-02): el nombre CRUDO del Sheet, normalizado a NFC y sin espacios en los
+   extremos. Exacto por regla del proyecto: ni acentos tolerados ni `includes`.
+   `DATA[i]._clave` la guarda antes del escape HTML, porque `nombre` (escapado
+   para pintar) no puede ser llave: «'» se vuelve «&#39;» y ya no casa. */
+const nombreClave = s => String(s==null?'':s).normalize('NFC').trim();
 
 /* Aviso en el cuerpo de la tabla mientras el inventario no llega. Sin esto,
    una respuesta lenta del Sheet se ve como una pagina rota: el cascaron se
@@ -117,14 +123,35 @@ async function loadInventarioCSV(){
   const rows = parseCSV(text);
   if(!rows.length) throw new Error('El inventario de Google Sheets está vacío o mal formado.');
 
-  /* El join con la geometría es por `nombre` exacto y el agrupamiento por
-     `grupo`: sin esas dos columnas no hay inventario, solo 66 registros
-     vacíos. Más vale un error legible que una tabla en blanco. */
-  const faltan = ['nombre','grupo'].filter(k => !(k in rows[0]));
-  if(faltan.length) throw new Error('El CSV no trae la columna «' + faltan.join('», «')
-                  + '». Revisa que la liga publicada apunte a la hoja del inventario.');
+  /* ── Contrato de columnas (auditoría 13-sep-2026, D12-01) ──────────────
+     El Sheet lo editan personas sin acceso al repo; renombrar una columna
+     tumbaba el tablero (`superficie`) o cambiaba los datos en silencio
+     (`suelo_conservacion_pct` → todo «Sin dato»; `programa_manejo` → todo
+     «Sin programa»). Se comparan las cabeceras con la lista del README:
+     · falta una columna CRÍTICA → error legible y se sirve el respaldo;
+     · falta una columna no crítica → se avisa en el botón de integridad y en
+       consola, y esa columna se lee vacía;
+     · columnas de más → se ignoran (no es error: permiten trabajar en el Sheet). */
+  const faltan = COLUMNAS_ESPERADAS.filter(k => !(k in rows[0]));
+  const criticas = faltan.filter(k => COLUMNAS_CRITICAS.includes(k));
+  if(criticas.length){
+    const e = new Error('el Sheet no trae la columna «' + criticas.join('», «')
+                  + '» (¿se renombró?). Se necesita tal cual para el inventario.');
+    e.contratoColumnas = true;
+    throw e;
+  }
+  COLUMNAS_FALTANTES = faltan;
+  if(faltan.length) console.warn('[Inventario] el Sheet no trae la(s) columna(s): ' + faltan.join(', ') + ' — se leen vacías');
   return rows;
 }
+/* Columnas del Sheet «Inventario» (mismas que documenta README.md § Datos). */
+const COLUMNAS_ESPERADAS = ['id','nombre','grupo','categoria','alcaldia','fecha_decreto','fecha_decreto_iso',
+  'superficie','programa_manejo','fecha_pm','fecha_pm_iso','suelo_conservacion_pct','dg_responsable',
+  'url_pdf_decreto','url_gaceta_decreto','url_pdf_pm','url_gaceta_pm'];
+/* Sin estas no hay inventario: join (nombre), contadores (grupo), suma y
+   orden (superficie), cobertura de programas de manejo (programa_manejo). */
+const COLUMNAS_CRITICAS = ['nombre','grupo','superficie','programa_manejo'];
+let COLUMNAS_FALTANTES = [];
 
 /* Respaldo del inventario dentro del repositorio.
    El Sheet es la fuente autoritativa, pero es UNA fuente: el 11-sep-2026 su
@@ -146,6 +173,7 @@ async function cargarRespaldoCSV(){
    campo, que es el uso dominante. */
 let INVENTARIO_ERROR = '';
 let INVENTARIO_RESPALDO = false;
+let INVENTARIO_RESPALDO_MOTIVO = '';
 let DATA_RAW = [];
 try{
   DATA_RAW = await loadInventarioCSV();
@@ -156,8 +184,11 @@ try{
   try{
     DATA_RAW = await cargarRespaldoCSV();
     INVENTARIO_RESPALDO = true;
-    console.warn('[Inventario] sirviendo el respaldo del repositorio');
-    setTimeout(()=>{ try{ siaToast('Inventario servido desde la copia local: el Sheet no respondió.'); }catch(_){} }, 1200);
+    INVENTARIO_RESPALDO_MOTIVO = (err && err.contratoColumnas) ? 'columnas' : 'red';
+    console.warn('[Inventario] sirviendo el respaldo del repositorio (' + INVENTARIO_RESPALDO_MOTIVO + ')');
+    setTimeout(()=>{ try{ siaToast(INVENTARIO_RESPALDO_MOTIVO === 'columnas'
+      ? 'Inventario servido desde la copia local: ' + motivo
+      : 'Inventario servido desde la copia local: el Sheet no respondió.', INVENTARIO_RESPALDO_MOTIVO === 'columnas' ? 9000 : undefined); }catch(_){} }, 1200);
   }catch(err2){
     INVENTARIO_ERROR = motivo;
     _estadoTabla('No se pudo cargar el inventario. ' + motivo);
@@ -167,8 +198,15 @@ try{
 
 // Cargar polígonos de Suelo de Conservación (capa overlay)
 let SUELO_CONSERVACION = null;
+/* Los tres cargadores de capas complementarias (SC, ARCAC, Zona Patrimonio)
+   resuelven SIEMPRE con una colección —el resto del código no distingue—,
+   pero cuando la descarga falla la marcan con `_fallo = true` y NO la dejan
+   cacheada: la siguiente llamada reintenta (auditoría 13-sep-2026, D2-08).
+   Antes un fallo en el arranque dejaba una colección vacía y «cargada» para
+   toda la sesión, y el aviso «Resultado incompleto» nunca podía aparecer. */
+const _capaFallida = () => ({type:'FeatureCollection', features:[], _fallo:true});
 async function loadSueloConservacion(){
-  if(SUELO_CONSERVACION) return SUELO_CONSERVACION;
+  if(SUELO_CONSERVACION && !SUELO_CONSERVACION._fallo) return SUELO_CONSERVACION;
   try {
     const r = await fetch('data/suelo_conservacion.geojson');
     if(!r.ok) throw new Error('HTTP ' + r.status);
@@ -176,7 +214,7 @@ async function loadSueloConservacion(){
     return SUELO_CONSERVACION;
   } catch(err){
     console.warn('[SC] No se pudo cargar Suelo de Conservación:', err.message);
-    SUELO_CONSERVACION = {type:'FeatureCollection', features:[]};
+    SUELO_CONSERVACION = _capaFallida();
     return SUELO_CONSERVACION;
   }
 }
@@ -242,6 +280,7 @@ const DATA = DATA_RAW.map(d => {
   return {
     ...d,
     ...limpio,
+    _clave: nombreClave(d.nombre),
     tipo: grupo.startsWith('AVA') ? 'AVA' : 'ANP',
     jurisdiccion: grupo.includes('Federal') ? 'Federal' : 'Local',
     dg_responsable: dg,
@@ -267,6 +306,16 @@ const DATA = DATA_RAW.map(d => {
     url_gaceta_pm:      cleanUrl(d.url_gaceta_pm)
   };
 });
+
+/* Único punto de cruce nombre → registro del inventario. Acepta el nombre
+   crudo (geometrías, índices, Sheet) y el escapado (lo que ya está pintado):
+   ambos exactos. Todo `DATA.find(x => x.nombre === …)` pasa por aquí. */
+function areaPorNombre(n){
+  if(n == null || typeof DATA === 'undefined') return null;
+  const k = nombreClave(n);
+  return DATA.find(x => x._clave === k || x.nombre === n) || null;
+}
+const _claveDe = d => (d && d._clave != null) ? d._clave : nombreClave(d && d.nombre);
 
 /* ═══ INTEGRIDAD DEL INVENTARIO ═══════════════════════════════════════
    El respaldo del repositorio cubre que el Sheet SE CAIGA. Esto cubre lo
@@ -314,8 +363,8 @@ async function _alertasContraRespaldo(){
   if(INVENTARIO_RESPALDO) return [];
   let filas;
   try{ filas = await cargarRespaldoCSV(); }catch(_){ return []; }
-  const enRespaldo = new Set(filas.map(r => String(r.nombre || '').trim()).filter(Boolean));
-  const enSheet    = new Set(DATA.map(d => String(d.nombre || '').trim()).filter(Boolean));
+  const enRespaldo = new Set(filas.map(r => nombreClave(r.nombre)).filter(Boolean));
+  const enSheet    = new Set(DATA.map(d => d._clave).filter(Boolean));
   const faltan = [...enRespaldo].filter(n => !enSheet.has(n));
   const nuevas = [...enSheet].filter(n => !enRespaldo.has(n));
   const out = [];
@@ -333,7 +382,7 @@ async function _alertasZonificacion(){
   let ix; try{ ix = await zonifIndice(); }catch(_){ return []; }
   const out = [];
   Object.keys(ix || {}).forEach(nombre => {
-    const d = DATA.find(x => x.nombre === nombre);
+    const d = areaPorNombre(nombre);
     if(!d){ out.push('zonificación publicada para un nombre que no está en el inventario: ' + nombre); return; }
     if(d.programa_manejo !== 'Sí') out.push('zonificación publicada para un área SIN programa de manejo: ' + nombre);
   });
@@ -367,6 +416,10 @@ function _pintarAlertasInventario(){
 async function verificarInventario(fase){
   const previas = INVENTARIO_ALERTAS.slice();
   const lista = _alertasInvariante();
+  /* Contrato de columnas (D12-01): una columna no crítica ausente se lee
+     vacía; se dice aquí para que no pase por un dato real. */
+  if(COLUMNAS_FALTANTES.length)
+    lista.push('el Sheet no trae la columna ' + COLUMNAS_FALTANTES.map(c => '«' + c + '»').join(', ') + ' (se lee vacía; ¿se renombró?)');
   if(fase !== 'geometrias'){
     (await _alertasContraRespaldo()).forEach(x => lista.push(x));
     (await _alertasZonificacion()).forEach(x => lista.push(x));
@@ -1058,8 +1111,10 @@ function renderDashboard(){
       /* Una sola tentativa. Sin este cerrojo, un arcac.geojson que no responde
          —o que responde vacío— deja a renderDashboard llamándose a sí mismo. */
       dash.innerHTML = '';
+      /* Tras un fallo se reintenta en cada visita al subconjunto (D2-05/D2-08). */
+      if(_arcacTablaEstado === 'fallo') _arcacTablaEstado = 'sin-cargar';
       if(_arcacTablaEstado === 'listo'){
-        _estadoTabla('No se pudieron cargar los núcleos agrarios. Revisa la conexión y recarga.');
+        _estadoTabla('No se pudieron cargar los núcleos agrarios. Revisa la conexión y vuelve a intentar.');
         if(mapSec){ mapSec.style.display='none'; mapSec.innerHTML=''; }
         return;
       }
@@ -1069,7 +1124,10 @@ function renderDashboard(){
       loadARCAC().then(fc=>{
         construirDatosArcac(fc);
         _arcacTablaEstado = 'listo';
-        if(state.tab === 'ARCAC'){ populateFilters(); renderDashboard(); render(); }
+        /* render() solo con datos: si no hay, pisaría el aviso de fallo con
+           «Sin resultados para los filtros actuales» (D2-05). */
+        if(state.tab === 'ARCAC'){ populateFilters(); renderDashboard(); if(DATA_ARCAC.length) render(); }
+        if(fc && fc._fallo){ _arcacTablaEstado = 'fallo'; try{ siaToast('No se pudieron cargar los núcleos agrarios (ARCAC). Revisa la conexión.'); }catch(_){} }
       }).catch(()=>{
         _arcacTablaEstado = 'listo';
         if(state.tab === 'ARCAC') renderDashboard();
@@ -1887,7 +1945,7 @@ function renderMetaComparable(){
             <div class="meta-stat"><div class="meta-n meta-actual">${pmActLoc}</div><div class="meta-t">Programas de Manejo publicados</div></div>
           </div>
           <div class="meta-rate">
-            <span>Meta mínima: <b>superar 12 decretos y 3 PM</b> en el sexenio</span>
+            <span>Meta mínima: <b>superar ${decAntLoc} decretos y ${pmAntLoc} PM</b> en el sexenio</span>
           </div>
         </div>
       </div>
@@ -1951,6 +2009,31 @@ function legalList(items, variant=''){
   const cls = variant ? `legal-list legal-list-${variant}` : 'legal-list';
   return `<div class="${cls}"><ul>${items.map(i=>`<li><span class="lbl">${i.lbl}</span><span class="ref">${i.ref}</span></li>`).join('')}</ul></div>`;
 }
+/* Filas de la tabla del Convenio Marco (auditoría 13-sep-2026, D1-05): antes
+   iban escritas a mano y ya divergían del Sheet (superficies y fechas). Se
+   leen del inventario por nombre canónico (COADMIN_AREAS); si un área no
+   estuviera en el inventario, la fila lo dice en vez de inventar cifras. */
+const _MESES_LARGOS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function _fechaLarga(iso){
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!m) return '—';
+  return `${Number(m[3])} de ${_MESES_LARGOS[Number(m[2]) - 1] || '—'} de ${m[1]}`;
+}
+function _filasConvenioHTML(){
+  let total = 0, filas = '';
+  COADMIN_AREAS.forEach((nombre, i) => {
+    const d = (typeof areaPorNombre === 'function') ? areaPorNombre(nombre) : null;
+    const sup = d && Number.isFinite(Number(d.superficie)) ? Number(d.superficie) : null;
+    if(sup != null) total += sup;
+    filas += `<tr><td style="text-align:center">${i + 1}</td><td><b>${d ? d.nombre : esc(nombre)}</b></td>`
+           + `<td>${d ? _fechaLarga(d.fecha_decreto_iso) : 'No está en el inventario'}</td>`
+           + `<td style="text-align:right">${sup != null ? fmt(sup) : '—'}</td></tr>`;
+  });
+  filas += `<tr style="background:var(--bg-2);font-weight:600"><td colspan="3" style="text-align:right;padding-right:14px">Superficie total acumulada</td>`
+         + `<td style="text-align:right">${fmt(total)} ha</td></tr>`;
+  return filas;
+}
+
 function renderLegalDashboard(){
   const defCards = LEGAL.definiciones.map(d=>`
     <div class="legal-card">
@@ -2195,7 +2278,7 @@ function renderLegalDashboard(){
 
         <div class="norma-subsec" style="border-top-color:rgba(38,108,180,.15)">
           <span class="norma-subsec-title">Convenio Marco · Áreas en coadministración</span>
-          <p style="color:var(--muted);font-size:var(--fs-base);margin:0 0 12px">Ocho ANP de competencia federal ubicadas dentro de la circunscripción territorial de la Ciudad de México.</p>
+          <p style="color:var(--muted);font-size:var(--fs-base);margin:0 0 12px">Ocho ANP de competencia federal ubicadas dentro de la circunscripción territorial de la Ciudad de México. Nombres, fechas de decreto y superficies según el inventario del SIA (misma fuente que el resto del tablero).</p>
           <div class="comp-scroll">
             <table class="comp convenio-table">
               <thead>
@@ -2207,18 +2290,7 @@ function renderLegalDashboard(){
                 </tr>
               </thead>
               <tbody>
-                <tr><td style="text-align:center">1</td><td><b>Desierto de los Leones</b></td><td>27 de noviembre de 1917</td><td style="text-align:right">1,529.00</td></tr>
-                <tr><td style="text-align:center">2</td><td><b>Cumbres del Ajusco</b></td><td>23 de septiembre de 1936</td><td style="text-align:right">920.00</td></tr>
-                <tr><td style="text-align:center">3</td><td><b>Fuentes Brotantes de Tlalpan</b></td><td>28 de septiembre de 1936</td><td style="text-align:right">129.00</td></tr>
-                <tr><td style="text-align:center">4</td><td><b>Insurgentes Miguel Hidalgo y Costilla</b></td><td>18 de septiembre de 1936</td><td style="text-align:right">1,889.96</td></tr>
-                <tr><td style="text-align:center">5</td><td><b>El Tepeyac</b></td><td>18 de febrero de 1937</td><td style="text-align:right">1,500.00</td></tr>
-                <tr><td style="text-align:center">6</td><td><b>Lomas de Padierna</b></td><td>22 de abril de 1938</td><td style="text-align:right">1,161.21</td></tr>
-                <tr><td style="text-align:center">7</td><td><b>Cerro de la Estrella</b></td><td>24 de agosto de 1938</td><td style="text-align:right">1,183.33</td></tr>
-                <tr><td style="text-align:center">8</td><td><b>Tláhuac–Xico</b></td><td>8 de enero de 2024</td><td style="text-align:right">3,545.40</td></tr>
-                <tr style="background:var(--bg-2);font-weight:600">
-                  <td colspan="3" style="text-align:right;padding-right:14px">Superficie total acumulada</td>
-                  <td style="text-align:right">11,857.90 ha</td>
-                </tr>
+                ${_filasConvenioHTML()}
               </tbody>
             </table>
           </div>
@@ -2571,7 +2643,10 @@ async function loadGeometries(){
       GEOM_INDEX = {};
       GEOMETRIES.features.forEach(f => {
         const p = f.properties||{};
-        if(p.nombre) GEOM_INDEX[slugify(p.nombre)] = f;
+        /* Llave exacta (D1-01): antes era el slug, que toleraba acentos y
+           mayúsculas y dejaba pasar renombres que el resto del código no
+           tolera. `id_match` se conserva como segunda llave. */
+        if(p.nombre) GEOM_INDEX[nombreClave(p.nombre)] = f;
         if(p.id_match) GEOM_INDEX[p.id_match] = f;
       });
       /* Con las geometrías ya en memoria se puede comprobar el cruce por
@@ -2824,7 +2899,7 @@ const ZP_INVENTARIO = new Set([
 /* Dataset autocontenido de la sección ZP (tabla + ficha). No toca DATA ni el inventario.
    Miembros (es_designacion=false) → abren la ficha completa openDrawer(DATA).
    Designaciones (es_designacion=true) → abren openZPDrawer(row). */
-const ZP_DATA = [
+const ZP_DATA_BASE = [
   {key:'INV::Bosque de Nativitas', nombre:'Bosque de Nativitas', grupo:'AVA · Bosque Urbano', categoria:'Bosque Urbano', alcaldia:'Xochimilco', fecha_decreto:'10/06/2010', superficie:19.28, fecha_pm:'12/08/2014', color:'var(--verde)', es_designacion:false},
   {key:'INV::Bosque de San Luis Tlaxialtemalco', nombre:'Bosque de San Luis Tlaxialtemalco', grupo:'AVA · Bosque Urbano', categoria:'Bosque Urbano', alcaldia:'Xochimilco', fecha_decreto:'04/08/2008', superficie:3.83, fecha_pm:'23/07/2014', color:'var(--verde)', es_designacion:false},
   {key:'INV::Canal Nacional', nombre:'Canal Nacional', grupo:'AVA · Bosque Urbano', categoria:'Bosque Urbano', alcaldia:'Coyoacán, Iztapalapa, Xochimilco', fecha_decreto:'15/06/2022', superficie:32.32, fecha_pm:'23/01/2025', color:'var(--verde)', es_designacion:false},
@@ -2837,6 +2912,22 @@ const ZP_DATA = [
   {key:'AICA_37', nombre:'AICA No. 37 · Ciénega de Tláhuac', grupo:'Internacional', ambito:'Internacional', categoria:'Área de Importancia para la Conservación de las Aves (CONABIO–CIPAMEX)', alcaldia:'Tláhuac', fecha_decreto:'1999', superficie:2860.32, sup_nota:'oficial CONABIO', fecha_pm:'—', notas:'Clave AICA-037. Superficie oficial 2,860.32 ha (CONABIO). Sitio reconocido por diversidad ornitológica del humedal de la Ciénega de Tláhuac.', color:'#d9a400', es_designacion:true},
   {key:'SIPAM_FAO', nombre:'SIPAM FAO · Sistema Agrícola Chinampero', grupo:'Internacional', ambito:'Internacional', categoria:'Sistema Importante del Patrimonio Agrícola Mundial (FAO–GIAHS)', alcaldia:'Xochimilco, Tláhuac, Milpa Alta', fecha_decreto:'07/2017', superficie:1875.65, sup_nota:'6 zonas chinamperas · SIG', fecha_pm:'—', notas:'Designación FAO (julio 2017). 6 zonas chinamperas, incluida Tetelco recuperada: Xochimilco 931.2 · Mixquic 316.4 · San Gregorio 241.4 · Tetelco 151.3 · San Pedro Tláhuac 147.1 · San Luis Tlaxialtemalco 88.2 ha.', color:'#6B7A2F', es_designacion:true}
 ];
+/* Las siete filas del inventario (`INV::…`) toman grupo, categoría, alcaldía,
+   fecha de decreto, superficie y fecha de PM del Sheet (auditoría 13-sep-2026,
+   D1-05): la copia a mano coincidía hoy pero divergiría con la A7. Los valores
+   escritos arriba quedan solo como respaldo si el área no está en el inventario. */
+const ZP_DATA = ZP_DATA_BASE.map(r => {
+  if(!r.key || r.key.indexOf('INV::') !== 0 || typeof areaPorNombre !== 'function') return r;
+  const d = areaPorNombre(r.key.slice(5));
+  if(!d) return r;
+  return Object.assign({}, r, {
+    nombre: d.nombre, grupo: d.grupo || r.grupo, categoria: d.categoria || r.categoria,
+    alcaldia: d.alcaldia || r.alcaldia,
+    fecha_decreto: d.fecha_decreto || r.fecha_decreto,
+    superficie: Number.isFinite(Number(d.superficie)) ? Number(d.superficie) : r.superficie,
+    fecha_pm: (d.programa_manejo === 'Sí' && d.fecha_pm) ? d.fecha_pm : '—'
+  });
+});
 
 /* Abre la ficha correcta según el tipo de fila */
 let zpEmb = {};
@@ -2846,7 +2937,7 @@ function openZPFicha(key){
   if(!row) return;
   zoomZP(key);   // zoom al elemento (solo vista; no altera capas)
   if(!row.es_designacion && typeof DATA !== 'undefined'){
-    const area = DATA.find(d => d.nombre === row.nombre);
+    const area = areaPorNombre(row.nombre);
     if(area && typeof openDrawer === 'function'){ openDrawer(area); return; }
   }
   openZPDrawer(row);
@@ -2898,7 +2989,7 @@ function openEmbFicha(e){
 /* Zoom del mapa global (inventario) al polígono de un área. Solo vista; no toca capas. */
 function zoomGlobalToArea(d){
   if(!d || typeof globalMap==='undefined' || !globalMap || !GEOMETRIES) return;
-  const feat = (GEOMETRIES.features||[]).find(f => f.properties.nombre === d.nombre);
+  const feat = findGeometry(d);
   if(!feat) return;
   try{
     const b = L.geoJSON(feat).getBounds();
@@ -3012,22 +3103,32 @@ function _alcaldiaEn(latlng){
    de alcaldias. Fuera, se infiere por posicion: Morelos solo colinda al sur.
    PENDIENTE: sustituir la inferencia por data/entidades.geojson del Marco
    Geoestadistico del INEGI para que la atribucion sea citable. */
-const _ENT_SIGLA = { 'CDMX':'CDMX', 'Estado de México':'MÉX', 'Morelos':'MOR' };
+const _ENT_SIGLA = { 'CDMX':'CDMX', 'Estado de México':'MÉX', 'Morelos':'MOR', 'Fuera del ámbito':'—' };
+const ENT_FUERA = 'Fuera del ámbito';
+/* Entidad del punto. Sin cartografía estatal en el tablero, fuera de la CDMX
+   se resuelve por cajas: Morelos al sur, Estado de México en el resto del
+   ámbito (CDMX y colindantes, `_AMBITO_BOUNDS`). Fuera de ese ámbito NO se
+   atribuye entidad (auditoría 13-sep-2026, D2-04: Madrid salía «Estado de
+   México»). Mejora pendiente: `data/entidades.geojson` del INEGI. */
 function _entidadEn(latlng){
   if(_alcaldiaEn(latlng)) return 'CDMX';
+  const B = (typeof _AMBITO_BOUNDS !== 'undefined') ? _AMBITO_BOUNDS : null;
+  if(B && (latlng.lat < B.south || latlng.lat > B.north || latlng.lng < B.west || latlng.lng > B.east)) return ENT_FUERA;
   if(latlng.lat < 19.13 && latlng.lng > -99.40 && latlng.lng < -98.90) return 'Morelos';
   return 'Estado de México';
 }
 function _entChip(ent){
-  const k = ent === 'CDMX' ? 'cdmx' : (ent === 'Morelos' ? 'mor' : 'mex');
+  const k = ent === 'CDMX' ? 'cdmx' : (ent === 'Morelos' ? 'mor' : (ent === ENT_FUERA ? 'fuera' : 'mex'));
   return `<span class="ent e-${k}">${esc(_ENT_SIGLA[ent] || ent)}</span>`;
 }
+const _entTexto = ent => ent === ENT_FUERA ? 'fuera del ámbito del tablero (CDMX y entidades colindantes)' : 'en ' + esc(ent);
 /* Metadato precalculado en data/geometrias.geojson (campo limitrofe).
    Se precalcula fuera del navegador: el cruce contra la frontera es pesado. */
 function _limitrofeDe(nombre){
   try{
     const fs = (typeof GEOMETRIES!=='undefined' && GEOMETRIES && GEOMETRIES.features) || [];
-    const f = fs.find(x=>x.properties && x.properties.nombre === nombre);
+    const k = nombreClave(nombre);
+    const f = fs.find(x=>x.properties && (nombreClave(x.properties.nombre) === k || x.properties.nombre === nombre));
     return (f && f.properties.limitrofe) || null;
   }catch(_){ return null; }
 }
@@ -3064,13 +3165,14 @@ const _COV_ORDEN = ['ANP · Federal','ANP · Local','AVA · Bosque Urbano','AVA 
 let _capasFallidas = [];
 async function _cargarCapasCobertura(){
   const t = [];
-  try{ if(typeof loadSueloConservacion==='function' && !SUELO_CONSERVACION) t.push(['Suelo de Conservación', loadSueloConservacion()]); }catch(_){}
-  try{ if(typeof loadARCAC==='function' && !ARCAC_GEO) t.push(['ARCAC', loadARCAC()]); }catch(_){}
-  try{ if(typeof loadZonaPatrimonio==='function' && !ZP_DESIGNACIONES) t.push(['Zona Patrimonio', loadZonaPatrimonio()]); }catch(_){}
+  const pendiente = c => !c || c._fallo;   /* nunca cargada, o cargada con fallo: se reintenta */
+  try{ if(typeof loadSueloConservacion==='function' && pendiente(SUELO_CONSERVACION)) t.push(['Suelo de Conservación', loadSueloConservacion()]); }catch(_){}
+  try{ if(typeof loadARCAC==='function' && pendiente(ARCAC_GEO)) t.push(['ARCAC', loadARCAC()]); }catch(_){}
+  try{ if(typeof loadZonaPatrimonio==='function' && pendiente(ZP_DESIGNACIONES)) t.push(['Zona Patrimonio', loadZonaPatrimonio()]); }catch(_){}
   _capasFallidas = [];
   if(t.length){
     const r = await Promise.allSettled(t.map(x=>x[1]));
-    r.forEach((res,i)=>{ if(res.status === 'rejected') _capasFallidas.push(t[i][0]); });
+    r.forEach((res,i)=>{ if(res.status === 'rejected' || (res.value && res.value._fallo)) _capasFallidas.push(t[i][0]); });
     if(_capasFallidas.length)
       console.warn('[Cobertura] Capas que no cargaron:', _capasFallidas.join(', '));
   }
@@ -3100,7 +3202,7 @@ function _coberturasEn(latlng){
   ((typeof GEOMETRIES!=='undefined' && GEOMETRIES && GEOMETRIES.features)||[]).forEach(f=>{
     if(!dentro(f.geometry)) return;
     const nom = f.properties.nombre;
-    const d = (typeof DATA!=='undefined') ? DATA.find(x=>x.nombre===nom) : null;
+    const d = areaPorNombre(nom);
     out.push({
       orden: f.properties.grupo,
       color: (typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[f.properties.grupo]) || '#666',
@@ -3445,7 +3547,7 @@ document.addEventListener('click', ev=>{
     const i = raw.indexOf('::');
     const tipo = raw.slice(0, i), ref = raw.slice(i+2);
     try{
-      if(tipo==='inv'){ const a = DATA.find(d=>d.nombre===ref); if(a) openDrawer(a); }
+      if(tipo==='inv'){ const a = areaPorNombre(ref); if(a) openDrawer(a); }
       else if(tipo==='arcac' && ref !== ''){ openARCACFicha(Number(ref)); }
       else if(tipo==='zp'){ openZPFicha(ref); }
     }catch(err){ siaToast('No se pudo abrir la ficha de esta área.'); }
@@ -3571,14 +3673,15 @@ async function loadEmbarcaderos(){
 }
 
 async function loadZonaPatrimonio(){
-  if(ZP_DESIGNACIONES) return ZP_DESIGNACIONES;
+  if(ZP_DESIGNACIONES && !ZP_DESIGNACIONES._fallo) return ZP_DESIGNACIONES;
   try{
     const r = await fetch('data/zona_patrimonio.geojson');
     if(!r.ok) throw new Error('HTTP ' + r.status);
     ZP_DESIGNACIONES = await r.json();
   }catch(err){
     console.warn('[ZP] No se pudo cargar zona_patrimonio.geojson:', err.message);
-    ZP_DESIGNACIONES = { type:'FeatureCollection', features:[] };
+    ZP_DESIGNACIONES = _capaFallida();
+    return ZP_DESIGNACIONES;   /* sin designaciones no tiene sentido fusionar SIPAM */
   }
   // SIPAM vive en archivo propio (por su peso) y se fusiona en caliente
   try{
@@ -3594,9 +3697,23 @@ async function loadZonaPatrimonio(){
 /* Registro de capas ZP para toggles independientes (key → {layer, color, label}) */
 let zpLayers = {};
 
+/* Leaflet no cargó (CDN caído, SRI fallido, primera visita sin red): el
+   lienzo lo dice en vez de quedarse en «Cargando…» y se avisa una sola vez
+   (auditoría 13-sep-2026, D2-06). Tablas y fichas siguen funcionando. */
+let _avisoLeafletDado = false;
+function _sinLeaflet(cont, idsTexto){
+  try{
+    if(cont && !cont.querySelector('.mapa-no-disponible'))
+      cont.innerHTML = '<div class="mapa-no-disponible">Mapa no disponible sin conexión: no se pudo cargar la biblioteca de mapas.</div>';
+    (idsTexto || []).forEach(id => { const el = document.getElementById(id); if(el && /Cargando/.test(el.textContent)) el.textContent = 'Mapa no disponible sin conexión.'; });
+    if(!_avisoLeafletDado){ _avisoLeafletDado = true; siaToast('El mapa no pudo cargarse (sin conexión con la biblioteca de mapas). Tablas y fichas siguen disponibles.', 6000); }
+  }catch(_){}
+}
+
 async function initZPMap(){
   const canvas = document.getElementById('zpMapCanvas');
-  if(!canvas || typeof L === 'undefined') return;
+  if(!canvas) return;
+  if(typeof L === 'undefined'){ _sinLeaflet(canvas, ['zpEmbCount']); return; }
   if(zpMap){ zpMap.remove(); zpMap = null; }
   zpLayers = {};
 
@@ -3888,7 +4005,7 @@ function arcacBadge(ten){
 }
 
 async function loadARCAC(){
-  if(ARCAC_GEO) return ARCAC_GEO;
+  if(ARCAC_GEO && !ARCAC_GEO._fallo) return ARCAC_GEO;
   try{
     const r = await fetch('data/arcac.geojson');
     if(!r.ok) throw new Error('HTTP '+r.status);
@@ -3900,7 +4017,7 @@ async function loadARCAC(){
      matices del módulo anterior competía con la paleta institucional y no
      codificaba ningún dato. */
   feats.forEach(f=>{ f.properties._color = ARCAC_COLORS[f.properties.tenencia] || 'var(--arcac-com)'; arcacByNo[f.properties.no]=f.properties; });
-  }catch(err){ console.warn('[ARCAC] no disponible:', err.message); ARCAC_GEO = {type:'FeatureCollection',features:[]}; }
+  }catch(err){ console.warn('[ARCAC] no disponible:', err.message); ARCAC_GEO = _capaFallida(); }
   return ARCAC_GEO;
 }
 
@@ -4084,7 +4201,8 @@ function renderTraslapesPage(){
 
 function initTraslapesMap(){
   const cont = document.getElementById('trasMapCanvas');
-  if(!cont || typeof L === 'undefined') return;
+  if(!cont) return;
+  if(typeof L === 'undefined'){ _sinLeaflet(cont, ['trasCount']); return; }
   if(traslapesMap){ try{ traslapesMap.remove(); }catch(e){} traslapesMap=null; }
   traslapesMap = L.map(cont, { zoomControl:true, scrollWheelZoom:false, attributionControl:true });
   _gestosTactilesIncrustado(traslapesMap);
@@ -4239,7 +4357,7 @@ function renderTrasTabla(){
   tb.querySelectorAll('tr[data-a]').forEach(tr=>{
     tr.addEventListener('click', ()=>{
       const nombre = tr.dataset.a;
-      const area = (typeof DATA!=='undefined') ? DATA.find(x=>x.nombre===nombre) : null;
+      const area = areaPorNombre(nombre);
       if(area){ openDrawer(area); return; }
       const f = (TRASLAPES_GEO.features||[]).find(x=>x.properties.a===nombre);
       if(f && traslapesMap){ try{ traslapesMap.fitBounds(L.geoJSON(f).getBounds(),{padding:[30,30],maxZoom:15}); }catch(e){} }
@@ -4277,7 +4395,8 @@ function exportTraslapesCSV(){
 
 async function initGlobalMap(){
   const canvas = document.getElementById('globalMapCanvas');
-  if(!canvas || typeof L==='undefined') return;
+  if(!canvas) return;
+  if(typeof L==='undefined'){ _sinLeaflet(canvas); return; }
   destroyGlobalMap();
   
   // Asegura que las geometrías estén cargadas ANTES de continuar
@@ -4321,7 +4440,7 @@ async function initGlobalMap(){
       onEachFeature: (feat, lyr) => {
         lyr.bindTooltip(feat.properties.nombre, {sticky:true, direction:'top'});
         lyr.on('click', () => {
-          const area = DATA.find(d => d.nombre === feat.properties.nombre);
+          const area = areaPorNombre(feat.properties.nombre);
           if(area) openDrawer(area);
         });
         lyr.on('mouseover', () => lyr.setStyle({weight:3, fillOpacity:0.38}));
@@ -4903,8 +5022,13 @@ function renderMapFilters(){
 }
 
 function findGeometry(d){
-  if(!GEOM_INDEX) return null;
-  return GEOM_INDEX[slugify(d.nombre)] || GEOM_INDEX[d.id] || null;
+  if(!GEOM_INDEX || !d) return null;
+  return GEOM_INDEX[_claveDe(d)] || (d.id != null ? GEOM_INDEX[d.id] : null) || null;
+}
+/* Geometría por nombre crudo (coberturas, referencias `inv::nombre`). */
+function geometriaPorNombre(n){
+  if(!GEOM_INDEX || n == null) return null;
+  return GEOM_INDEX[nombreClave(n)] || null;
 }
 
 const TILE_LAYERS = {
@@ -4973,8 +5097,9 @@ function setBaseLayer(key){
 
 function initMapForArea(d){
   const container = document.getElementById('mapCanvas');
-  if(!container || typeof L === 'undefined') return;
+  if(!container) return;
   const canvas = document.getElementById('mapCanvasMap') || container;
+  if(typeof L === 'undefined'){ _sinLeaflet(canvas); return; }
   const geo = findGeometry(d);
   if(!geo){
     container.classList.add('no-data');
@@ -5312,7 +5437,7 @@ function descInventario(d){
    por superficie; PGOEDF: las dos zonas mayores. */
 function _filaZonifResumen(d){
   try{
-    const e = _zonifIndice && _zonifIndice[d.nombre];
+    const e = _zonifIndice && (_zonifIndice[_claveDe(d)] || _zonifIndice[d.nombre]);
     if(!e || !e.zonas || !e.zonas.length || !e.total_ha) return [];
     const porFam = {};
     e.zonas.forEach(z => { const f = zonifFamilia(z.k); porFam[f.lbl] = (porFam[f.lbl] || 0) + z.ha; });
@@ -5325,7 +5450,7 @@ function _filaPgoedfResumen(d){
   try{
     const est = scEstado(d);
     if(est === 'fuera' || est === 'sindato' || !_pgoedfAreas) return [];
-    const e = _pgoedfAreas[d.nombre];
+    const e = _pgoedfAreas[_claveDe(d)] || _pgoedfAreas[d.nombre];
     if(e && e.pct >= 2){
       const orden = e.zonas.slice().sort((a,b)=>b.pct-a.pct);
       const top = orden.filter((z,i) => i === 0 || z.pct >= 1).slice(0,2)
@@ -5790,7 +5915,7 @@ function pintarUbicarSug(locales, direcciones, yaConsultado){
       document.getElementById('ubicarInput').value = x.nombre;
       recienteGuardar({t:x.t, ref:x.ref, titulo:x.nombre, sub:x.sub||''});
       try{
-        if(x.t==='inv'){ const a=DATA.find(d=>d.nombre===x.ref); if(a) return openDrawer(a); }
+        if(x.t==='inv'){ const a=areaPorNombre(x.ref); if(a) return openDrawer(a); }
         if(x.t==='arcac') return openARCACFicha(Number(x.ref));
         if(x.t==='zp')    return openZPFicha(x.ref);
       }catch(err){ siaToast('No se pudo abrir esa área.'); }
@@ -5871,7 +5996,7 @@ function pintarRecientes(){
       const inp = document.getElementById('ubicarInput');
       if(inp) inp.value = r.titulo;
       try{
-        if(r.t==='inv'){ const a=DATA.find(d=>d.nombre===r.ref); if(a) return openDrawer(a); }
+        if(r.t==='inv'){ const a=areaPorNombre(r.ref); if(a) return openDrawer(a); }
         if(r.t==='arcac') return openARCACFicha(Number(r.ref));
         if(r.t==='zp')    return openZPFicha(r.ref);
         if(r.t==='coord' && r.lat != null) return ubicarResolver({lat:r.lat,lng:r.lng}, null, r.titulo);
@@ -5896,7 +6021,7 @@ function ubicarDesdeTexto(txt){
   if(loc.length){
     const x = loc[0];
     try{
-      if(x.t==='inv'){ const a=DATA.find(d=>d.nombre===x.ref); if(a) return openDrawer(a); }
+      if(x.t==='inv'){ const a=areaPorNombre(x.ref); if(a) return openDrawer(a); }
       if(x.t==='arcac') return openARCACFicha(Number(x.ref));
       if(x.t==='zp')    return openZPFicha(x.ref);
     }catch(err){}
@@ -6106,7 +6231,7 @@ function _geoDeCobertura(c){
   try{
     if(!c || !c.ficha) return null;
     const [tipo, ref] = c.ficha.split('::');
-    if(tipo === 'inv')   return ((GEOMETRIES && GEOMETRIES.features) || []).find(f => f.properties.nombre === ref) || null;
+    if(tipo === 'inv')   return geometriaPorNombre(ref);
     if(tipo === 'arcac') return ((ARCAC_GEO && ARCAC_GEO.features) || []).find(f => String(f.properties.no) === String(ref)) || null;
     if(tipo === 'zp')    return ((ZP_DESIGNACIONES && ZP_DESIGNACIONES.features) || []).find(f => f.properties && f.properties.capa === ref) || null;
   }catch(_){}
@@ -6120,7 +6245,7 @@ function descConstancia(u, scFC){
   const covs = u.covs || [];
   const principal = covs[0] || null;
   const dInv = principal && principal.ficha && principal.ficha.indexOf('inv::') === 0
-    ? DATA.find(x => x.nombre === principal.nombre) : null;
+    ? areaPorNombre(principal.nombre) : null;
   const fecha = u.cuando || new Date();
   const fechaTxt = fecha.toLocaleDateString('es-MX', {day:'2-digit', month:'long', year:'numeric'})
                  + ' · ' + fecha.toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
@@ -6145,12 +6270,12 @@ function descConstancia(u, scFC){
   const filas = [];
   filas.push(['FECHA Y HORA', fechaTxt]);
   filas.push(['ORIGEN', (u.etiqueta || 'Punto consultado') + (u.precision ? ' · ±' + Math.round(u.precision) + ' m' : '')]);
-  filas.push(['ALCALDÍA', enCDMX ? (u.alc || 'Ciudad de México') : ('Fuera de la CDMX · ' + (u.ent || ''))]);
+  filas.push(['ALCALDÍA', enCDMX ? (u.alc || 'Ciudad de México') : (u.ent === ENT_FUERA ? 'Fuera del ámbito del tablero' : 'Fuera de la CDMX · ' + (u.ent || ''))]);
   if(principal){
     filas.push([covs.length > 1 ? 'ÁREA PRINCIPAL' : 'ÁREA', principal.nombre + (principal.tag ? ' · ' + principal.tag : '')]);
     covs.slice(1, 4).forEach(c => filas.push(['TAMBIÉN EN', c.nombre + (c.tag ? ' · ' + c.tag : '')]));
   } else {
-    filas.push(['COBERTURA', u.sc === true ? 'Suelo de Conservación, sin área decretada' : 'Ninguna AVA, ANP, ARCAC ni Suelo de Conservación']);
+    filas.push(['COBERTURA', u.sc === true ? 'Suelo de Conservación, sin área decretada' : u.sc === false ? 'Ninguna AVA, ANP, ARCAC ni Suelo de Conservación' : 'Ninguna AVA, ANP ni ARCAC · Suelo de Conservación sin dato']);
   }
   if(dInv){
     filas.push(['PROGRAMA DE MANEJO', dInv.programa_manejo === 'Sí' ? ('Publicado' + (dInv.fecha_pm ? ' · ' + dInv.fecha_pm : '')) : 'Sin programa de manejo']);
@@ -6159,7 +6284,7 @@ function descConstancia(u, scFC){
     else if(u.zonaPMEstado === 'nd' && dInv.programa_manejo === 'Sí') filas.push(['ZONA PM DEL PUNTO', 'Zonificación aún no disponible en formato geoespacial']);
     filas.push(['DG RESPONSABLE', dInv.dg_responsable || 'Sin asignar']);
   }
-  filas.push(['SUELO DE CONSERVACIÓN', u.sc === true ? 'Dentro' : 'Fuera']);
+  filas.push(['SUELO DE CONSERVACIÓN', u.sc === true ? 'Dentro' : u.sc === false ? 'Fuera' : 'Sin dato (capa no disponible)']);
   if(u.pgoedf) filas.push(['PGOEDF', u.pgoedf]);
   if(!principal && enCDMX){
     try{ const cer = _masCercana(u.latlng, (GEOMETRIES && GEOMETRIES.features) || []); if(cer) filas.push(['ÁREA MÁS CERCANA', cer.nombre + ' · a ' + _fmtKm(cer.d)]); }catch(_){}
@@ -6345,7 +6470,7 @@ function renderUbicarResultado(latlng, precision, etiqueta){
        zonificación— en qué zona cae el punto. Antes había que ir a la ficha
        para saberlo, y la zona ni siquiera estaba ahí para el punto. */
     const dInv = (c.ficha && c.ficha.indexOf('inv::') === 0 && typeof DATA !== 'undefined')
-      ? DATA.find(x => x.nombre === c.nombre) : null;
+      ? areaPorNombre(c.nombre) : null;
     let regimen = '';
     if(dInv){
       const pm = dInv.programa_manejo === 'Sí';
@@ -6396,8 +6521,8 @@ function renderUbicarResultado(latlng, precision, etiqueta){
     const cer  = _masCercana(latlng, GF);
     cabeza = 'Fuera del ámbito de la CDMX';
     cuerpo += `<div class="ubi-main ubi-vacio" style="--c:${COL_GRIS_NEUTRO}">
-      <div class="ubi-main-cat"><span class="ubi-dot"></span>Otra entidad federativa</div>
-      <div class="ubi-main-nom">El punto está en ${esc(ent)}</div>
+      <div class="ubi-main-cat"><span class="ubi-dot"></span>${ent === ENT_FUERA ? 'Fuera del ámbito del tablero' : 'Otra entidad federativa'}</div>
+      <div class="ubi-main-nom">El punto está ${_entTexto(ent)}</div>
       <div class="ubi-warn">La competencia de la Secretaría no alcanza este punto. Verifica con la autoridad estatal.</div>
     </div>`;
     if(limc){
@@ -6593,7 +6718,7 @@ function _dibujarUbicacion(map, destino, latlng, precision){
   _coberturasEn(latlng).forEach(c=>{
     let feat = null;
     try{
-      if(c.ficha.indexOf('inv::')===0) feat = GEOM_INDEX[slugify(c.ficha.slice(5))];
+      if(c.ficha.indexOf('inv::')===0) feat = geometriaPorNombre(c.ficha.slice(5));
       else if(c.ficha.indexOf('arcac::')===0) feat = ((ARCAC_GEO&&ARCAC_GEO.features)||[]).find(f=>String(f.properties.no)===c.ficha.slice(7));
       else if(c.ficha.indexOf('zp::')===0) feat = ((ZP_DESIGNACIONES&&ZP_DESIGNACIONES.features)||[]).find(f=>f.properties.capa===c.ficha.slice(4));
     }catch(e){}
@@ -6651,7 +6776,8 @@ function limpiarUbicacionGlobal(){
 
 function initUbicarMap(latlng, precision){
   const cont = document.getElementById('ubicarMapCanvas');
-  if(!cont || typeof L === 'undefined') return;
+  if(!cont) return;
+  if(typeof L === 'undefined'){ _sinLeaflet(cont); return; }
   if(ubicarMap){ try{ ubicarMap.remove(); }catch(e){} ubicarMap = null; }
   /* setView antes de agregar capas: Leaflet necesita una vista establecida
      o los vectores fallan en _clipPoints al no existir aún los pixelBounds. */
@@ -6701,7 +6827,8 @@ function zonifIndice(){
   return _zonifIndicePromesa;
 }
 function zonifDe(nombre){
-  return zonifIndice().then(ix => (ix && ix[nombre]) || null);
+  /* El índice va por nombre crudo del Sheet; se acepta también el escapado. */
+  return zonifIndice().then(ix => (ix && (ix[nombreClave(nombre)] || ix[nombre])) || null);
 }
 function zonifGeo(entrada){
   if(!entrada) return Promise.resolve(null);
@@ -6735,7 +6862,7 @@ function zonifFamilia(k){
 function pintarZonificacion(d){
   const cont = document.getElementById('fichaZonif');
   if(!cont || !d) return;
-  zonifDe(d.nombre).then(e=>{
+  zonifDe(_claveDe(d)).then(e=>{
     if(!e){
       /* Regla del dato: puede haber programa de manejo sin archivo de
          zonificación, nunca al revés. Los dos casos se dicen distinto. */
@@ -6829,8 +6956,8 @@ function pgoedfAreas(){
     .then(j => {
       const a = (j && j.areas) || {};
       try{
-        const inv = new Set((DATA || []).map(d => d.nombre));
-        const sueltos = Object.keys(a).filter(n => !inv.has(n));
+        const inv = new Set((DATA || []).map(d => d._clave));
+        const sueltos = Object.keys(a).filter(n => !inv.has(nombreClave(n)));
         if(sueltos.length) console.warn('[PGOEDF] nombres sin área en el inventario:', sueltos.join(', '));
       }catch(_){}
       return (_pgoedfAreas = a);
@@ -6846,7 +6973,7 @@ function pintarPgoedfFicha(d){
   const scp = scPct(d);
   pgoedfAreas().then(areas => {
     if(!document.getElementById('fichaPgoedf')) return;
-    const e = areas[d.nombre] || null;
+    const e = areas[_claveDe(d)] || areas[d.nombre] || null;
     const cob = e ? e.pct : 0;
     const esANP = d.tipo === 'ANP';
     const intro = '<p class="zonif-intro">Por estar en Suelo de Conservación'
@@ -6896,7 +7023,7 @@ function pintarPgoedfFicha(d){
 let _zonifCapa = null;
 function montarZonificacionEnMapa(mapa, d){
   if(!mapa || !d) return;
-  zonifDe(d.nombre).then(e=>{
+  zonifDe(_claveDe(d)).then(e=>{
     const cont = document.getElementById('zonifToggleWrap');
     if(!e){ if(cont) cont.remove(); return; }
     if(!cont) return;
@@ -7078,7 +7205,7 @@ function openDrawer(d){
      —que se dibuja de golpe y no puede esperar— ya lo tenga a mano. */
   if(_fichaCtxUbic && typeof zonaDePunto === 'function'){
     const _ctx = _fichaCtxUbic;
-    zonaDePunto(d.nombre, _ctx).then(z=>{ if(z){ _ctx.zona = z.zona; _pintarPuntoEnBloque('zonif'); } }).catch(()=>{});
+    zonaDePunto(_claveDe(d), _ctx).then(z=>{ if(z){ _ctx.zona = z.zona; _pintarPuntoEnBloque('zonif'); } }).catch(()=>{});
     _resolverPgoedfDelPunto(_ctx);
   }
   destroyMap();

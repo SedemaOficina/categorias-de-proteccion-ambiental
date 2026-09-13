@@ -193,6 +193,7 @@
   .e-cdmx{background:var(--guinda)}
   .e-mex{background:var(--azul)}
   .e-mor{background:var(--verde)}
+  .e-fuera{background:var(--gris,#55585a)}
   /* Distintivo de area cuyo poligono cruza el limite estatal */
   .lim{display:inline-flex;align-items:center;gap:4px;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);
     letter-spacing:.09em;font-weight:700;text-transform:uppercase;background:var(--dorado);color:var(--ink);
@@ -2068,6 +2069,11 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
 .aviso-integridad::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--guinda)}
 .aviso-integridad:hover{background:#F2D6DF}
 .aviso-integridad:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+
+/* Lienzo de mapa sin Leaflet (D2-06): texto centrado, sin fingir un mapa. */
+.mapa-no-disponible{display:flex;align-items:center;justify-content:center;min-height:180px;height:100%;
+  padding:18px;text-align:center;color:var(--gris,#55585a);background:#f3f1ec;border-radius:8px;
+  font-family:'Roboto',sans-serif;font-size:var(--fs-base)}
 
 /* ═══ PANTALLA DE AYUDA ═══════════════════════════════════════════════
    Explica las categorías a quien entra por primera vez. Vive al final de
