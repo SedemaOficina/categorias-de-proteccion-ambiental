@@ -3766,7 +3766,7 @@ function setZPBaseLayer(key){
   if(!zpMap) return;
   if(zpMap._activeBase) zpMap.removeLayer(zpMap._activeBase);
   const cfg = TILE_LAYERS[key] || TILE_LAYERS.positron;
-  zpMap._activeBase = L.tileLayer(cfg.url, {attribution:cfg.attribution, maxZoom:cfg.maxZoom}).addTo(zpMap);
+  zpMap._activeBase = L.tileLayer(cfg.url, _opcionesTeselas(cfg)).addTo(zpMap);
   _marcarBase(zpMap, key);
   // Mantener polígonos y puntos (LayerGroup) por encima de la capa base
   Object.values(zpLayers).forEach(it=>{ try{
@@ -4088,8 +4088,7 @@ function initTraslapesMap(){
   if(traslapesMap){ try{ traslapesMap.remove(); }catch(e){} traslapesMap=null; }
   traslapesMap = L.map(cont, { zoomControl:true, scrollWheelZoom:false, attributionControl:true });
   _gestosTactilesIncrustado(traslapesMap);
-  traslapesMap._activeBase = L.tileLayer(TILE_LAYERS.positron.url,
-      {attribution:TILE_LAYERS.positron.attribution, maxZoom:TILE_LAYERS.positron.maxZoom}).addTo(traslapesMap);
+  traslapesMap._activeBase = L.tileLayer(TILE_LAYERS.positron.url, _opcionesTeselas(TILE_LAYERS.positron)).addTo(traslapesMap);
   try{ createAlcaldiasLayer({interactive:false}).addTo(traslapesMap); }catch(e){}
   traslapesMap.on('click focus', ()=> traslapesMap.scrollWheelZoom.enable());
   traslapesMap.on('mouseout',    ()=> traslapesMap.scrollWheelZoom.disable());
@@ -4100,7 +4099,7 @@ function initTraslapesMap(){
       const key = fresh.dataset.layer;
       if(traslapesMap._activeBase) traslapesMap.removeLayer(traslapesMap._activeBase);
       const cfg = TILE_LAYERS[key] || TILE_LAYERS.positron;
-      traslapesMap._activeBase = L.tileLayer(cfg.url,{attribution:cfg.attribution,maxZoom:cfg.maxZoom}).addTo(traslapesMap);
+      traslapesMap._activeBase = L.tileLayer(cfg.url, _opcionesTeselas(cfg)).addTo(traslapesMap);
       _marcarBase(traslapesMap, key);
       Object.values(traslapesLayers).forEach(o=>{ try{ o.layer.bringToFront(); }catch(e){} });
       document.querySelectorAll('#trasLayerToggle button').forEach(b=>b.classList.toggle('active', b.dataset.layer===key));
@@ -4805,7 +4804,7 @@ function setGlobalBaseLayer(key){
   if(!globalMap) return;
   if(globalMap._activeBase) globalMap.removeLayer(globalMap._activeBase);
   const cfg = TILE_LAYERS[key] || TILE_LAYERS.positron;
-  globalMap._activeBase = L.tileLayer(cfg.url, {attribution:cfg.attribution, maxZoom:cfg.maxZoom}).addTo(globalMap);
+  globalMap._activeBase = L.tileLayer(cfg.url, _opcionesTeselas(cfg)).addTo(globalMap);
   _marcarBase(globalMap, key);
   // Reordena overlays para que queden encima
   if(globalAlcaldiasLayer) globalAlcaldiasLayer.bringToFront();
@@ -4926,6 +4925,16 @@ const TILE_LAYERS = {
   }
 };
 
+/* Opciones comunes de toda capa de teselas. `crossOrigin` importa para la
+   caché sin conexión (auditoría 13-sep-2026, D7-02): sin él la petición es
+   no-cors y el Service Worker recibe respuestas opacas (status 0) que no
+   guarda; con CORS (CARTO, Esri y OSM lo permiten) las teselas entran a la
+   caché runtime y no vuelven a pedirse a la red en campo. La imagen
+   compartible ya las cargaba así (crossOrigin='anonymous'). */
+function _opcionesTeselas(cfg){
+  return { attribution: cfg.attribution, maxZoom: cfg.maxZoom, crossOrigin: 'anonymous' };
+}
+
 let activeMap = null;
 let activeBaseLayer = null;
 let activeGeoLayer = null;
@@ -4953,7 +4962,7 @@ function setBaseLayer(key){
   if(!activeMap) return;
   if(activeBaseLayer){ activeMap.removeLayer(activeBaseLayer); }
   const cfg = TILE_LAYERS[key] || TILE_LAYERS.positron;
-  activeBaseLayer = L.tileLayer(cfg.url, {attribution: cfg.attribution, maxZoom: cfg.maxZoom}).addTo(activeMap);
+  activeBaseLayer = L.tileLayer(cfg.url, _opcionesTeselas(cfg)).addTo(activeMap);
   _marcarBase(activeMap, key);
   // Reordena geo layer encima
   if(activeGeoLayer){ activeGeoLayer.bringToFront(); }
@@ -6650,7 +6659,7 @@ function initUbicarMap(latlng, precision){
                 .setView([latlng.lat, latlng.lng], 14);
   _gestosTactilesIncrustado(ubicarMap);
   try{ ubicarMap.invalidateSize(); }catch(e){}
-  L.tileLayer(TILE_LAYERS.positron.url,{attribution:TILE_LAYERS.positron.attribution,maxZoom:TILE_LAYERS.positron.maxZoom}).addTo(ubicarMap);
+  L.tileLayer(TILE_LAYERS.positron.url, _opcionesTeselas(TILE_LAYERS.positron)).addTo(ubicarMap);
   try{ createAlcaldiasLayer({interactive:false}).addTo(ubicarMap); }catch(e){}
 
   const bounds = _dibujarUbicacion(ubicarMap, ubicarMap, latlng, precision);
@@ -7242,6 +7251,48 @@ function _marcaFicha(abierta){
   siaBloquearPagina(!!abierta && _drMovil(), 'ficha');
 }
 
+/* ═══ CAMBIO DE MEDIO (rotación del teléfono, ventana que cruza los 760 px) ═══
+   Auditoría 13-sep-2026 (D3-01, D3-02, D3-05). El caparazón de «¿Dónde
+   estoy?», el bloqueo de la página y la posición de la hoja de ficha se
+   deciden en JS con la misma consulta de medio que el CSS; nadie los
+   recalculaba al rotar. Un solo manejador, sobre `matchMedia('change')`
+   (no `resize`: solo interesa cruzar el umbral):
+   · Ficha abierta → vertical: la hoja vuelve a su altura completa (`--dvis`
+     estaba en 0 y la mandaba fuera de pantalla, con fondo oscuro e inerte).
+     → horizontal: se retira `--dvis` y se libera la página.
+   · Destino Ubicar: `renderDashboard()` rehace caparazón, bloqueo y mapa; si
+     había un resultado, se vuelve a resolver el mismo punto en el modo nuevo
+     (hoja sobre el mapa global en vertical; resultado en página con su propio
+     mapa en horizontal). */
+(function(){
+  let mq; try{ mq = window.matchMedia('(max-width:760px)'); }catch(_){ return; }
+  const alCambiar = () => {
+    const movil = mq.matches;
+    try{
+      const dr = document.getElementById('dr');
+      if(dr && dr.classList.contains('open')){
+        if(movil) setTimeout(()=>drIr(_drAlturas()[3]), 0);
+        else { _drVis = 0; dr.style.removeProperty('--dvis'); }
+        _marcaFicha(true);
+      }
+    }catch(_){}
+    try{
+      if(state.dest === 'UBICAR'){
+        const sec = document.getElementById('ubicarResultado');
+        const u = _ubiUltimo;
+        const habiaResultado = !!(sec && !sec.hidden && u);
+        if(!movil && sec){ sec.style.removeProperty('--vis'); _hojaVis = 0; }
+        renderDashboard();
+        /* initGlobalMap corre 100 ms después de renderDashboard; el punto se
+           vuelve a pintar cuando el mapa ya existe. */
+        if(habiaResultado) setTimeout(()=>{ try{ ubicarResolver(u.latlng, u.precision, u.etiqueta).catch(()=>{}); }catch(_){} }, 350);
+      }
+    }catch(_){}
+  };
+  if(mq.addEventListener) mq.addEventListener('change', alCambiar);
+  else if(mq.addListener) mq.addListener(alCambiar);
+})();
+
 function closeDrawer(){
   _marcaFicha(false);
   /* Si la ficha se cierra con el mapa en pantalla completa simulada, se sale de ella. */
@@ -7301,9 +7352,15 @@ new MutationObserver(muts=>{
   if(!hayFilas) return;
   _navPend = true;
   requestAnimationFrame(()=>{ _navPend = false; _marcarNavegables(); });
+}).observe(document.body, {childList:true, subtree:true});
+_marcarNavegables();
+
 /* Orden de las tablas de brechas. Delegado en document porque
    renderAnalisisPage() rehace su propio HTML en cada clic: un listener puesto
-   sobre los <th> moriría con el primer reordenamiento. */
+   sobre los <th> moriría con el primer reordenamiento.
+   Auditoría 13-sep-2026 (D6-01): este bloque estaba DENTRO del callback del
+   MutationObserver de arriba y registraba un par de escuchas globales por cada
+   repintado de tabla; ahora se registra una sola vez. */
 function _ordenarBrecha(th){
   const tabla = th.closest('table[data-tabla]');
   const est = tabla && ORD_ANALISIS[tabla.dataset.tabla];
@@ -7325,8 +7382,6 @@ document.addEventListener('keydown', e=>{
   const th = e.target.closest && e.target.closest('#dashboard th[data-ord]');
   if(th){ e.preventDefault(); _ordenarBrecha(th); }
 });
-}).observe(document.body, {childList:true, subtree:true});
-_marcarNavegables();
 
 document.addEventListener('keydown', e=>{
   /* Flechas dentro de una lista de sugerencias abierta */
@@ -7477,13 +7532,31 @@ function aplicarVistaDeURL(){
   if(!h.startsWith('#v?')) return false;
   const qs = new URLSearchParams(h.slice(3));
   let algo = false;
+  /* Auditoría 13-sep-2026 (D2-03): los valores que eligen código —destino,
+     subconjunto y columna de orden— se validan contra sus catálogos; una liga
+     malformada (`tab=XYZ`, `sortKey=x"]`) tumbaba el tablero completo. Los
+     filtros de texto siguen entrando tal cual: solo se comparan con valores. */
+  const destinosValidos = new Set(DESTINOS.map(d => d.id));
+  const tabsValidos = new Set(DESTINOS.flatMap(d => d.sub));
+  const ordenValido = new Set([...document.querySelectorAll('thead.t-head th[data-k]')].map(th => th.dataset.k));
   VISTA_CAMPOS.forEach(k=>{
     if(!qs.has(k)) return;
     const v = qs.get(k);
+    if(k === 'dest'    && !destinosValidos.has(v)) return;
+    if(k === 'tab'     && !tabsValidos.has(v)) return;
+    if(k === 'sortKey' && !ordenValido.has(v)) return;
     state[k] = (k === 'sortDir') ? (Number(v) === -1 ? -1 : 1) : v;
     algo = true;
   });
   if(!algo) return false;
+  /* D2-01: la liga se genera sin `dest` cuando es Inventario (valor por
+     omisión en escritorio), pero en celular el destino por omisión es Ubicar y
+     la vista llegaba con la tabla oculta. Si la liga no trae destino, manda el
+     subconjunto: el destino es el que lo contiene. */
+  if(!qs.has('dest') || !destinosValidos.has(qs.get('dest'))){
+    const duenio = DESTINOS.find(d => d.sub.includes(state.tab));
+    state.dest = duenio ? duenio.id : 'INVENTARIO';
+  }
   /* Los campos del formulario tienen que reflejar el estado o el usuario ve
      una tabla filtrada con los filtros en blanco. */
   const espejo = { q:'q', fJur:'fJur', fCat:'fCat', fAlc:'fAlc', fPM:'fPM',
@@ -7629,8 +7702,15 @@ if('serviceWorker' in navigator){
     setTimeout(_verificarSesion, 1500);
     document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') _verificarSesion(); });
     navigator.serviceWorker.addEventListener('message', e => {
-      if(e.data && e.data.tipo === 'sesion-expirada') _reentrar();
+      if(!e.data) return;
+      if(e.data.tipo === 'sesion-expirada') _reentrar();
+      /* El SW completó en caliente la caché de una versión que se activó sin
+         red (D7-01): la pestaña sigue con el código anterior hasta recargar. */
+      if(e.data.tipo === 'cache-reparada') showOfflineNotice('Nueva versión disponible. Recarga la página para actualizar.', 'update');
     });
+    /* Con addEventListener los mensajes que el SW envió antes de esta línea
+       quedan en cola hasta que se pide entregarlos. */
+    try{ navigator.serviceWorker.startMessages(); }catch(_){}
     /* La navegación de reentrada trae `?entrar=`: se limpia de la barra para
        que la liga que se copie o comparta no la arrastre. */
     try{ if(new URL(location.href).searchParams.has('entrar')){ const u = new URL(location.href); u.searchParams.delete('entrar'); history.replaceState(null, '', u.pathname + (u.search || '') + u.hash); } }catch(_){}

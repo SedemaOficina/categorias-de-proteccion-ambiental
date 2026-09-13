@@ -1871,29 +1871,6 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
   .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-item{min-width:0;max-width:100%}
 
 
-  /* ── MARCAS DEL KIT (frame `MARKS`) ───────────────────────────────
-     Fuera de la media query: la marca es la misma en celular y en
-     escritorio, porque describe un hecho del territorio, no un tamaño
-     de pantalla. */
-
-  /* Aviso de respaldo: ámbar, junto al contador, sin tapar nada. */
-  .aviso-respaldo{display:inline-flex;align-items:center;gap:6px;margin-left:10px;
-    padding:3px 10px;border-radius:11px;background:#FDF0D5;color:#8a5a12;
-    font-family:'Roboto',sans-serif;font-size:var(--fs-mini);font-weight:600;
-    letter-spacing:.01em;text-transform:none}
-  .aviso-respaldo::before{content:'';width:7px;height:7px;border-radius:50%;background:#b8860b}
-  /* Aviso de integridad del inventario: mismo sitio y misma familia visual que
-     el de copia local, pero en guinda porque no es una degradacion del canal
-     sino un dato que no cuadra. Es un boton: al pulsarlo se lee el detalle. */
-  .aviso-integridad{display:inline-flex;align-items:center;gap:6px;margin-left:10px;
-    padding:3px 10px;border-radius:11px;border:none;cursor:pointer;
-    background:#F8E6EC;color:var(--guinda);
-    font-family:'Roboto',sans-serif;font-size:var(--fs-mini);font-weight:600;
-    letter-spacing:.01em;text-transform:none}
-  .aviso-integridad::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--guinda)}
-  .aviso-integridad:hover{background:#F2D6DF}
-  .aviso-integridad:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
-
   /* (La «cápsula que se aparta al bajar» se retiró el 13-sep-2026: en celular
      la cápsula ya no es pegajosa fuera del caparazón.) */
   .ubicar-bar{transition:transform .26s cubic-bezier(.2,.8,.2,1)}
@@ -2067,6 +2044,30 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
   .subchip{border:none;background:var(--card);box-shadow:var(--gm-e1);height:44px;border-radius:22px}
   .subchip.active{background:var(--guinda);box-shadow:var(--gm-e2)}
 }
+
+/* ── MARCAS DEL KIT (frame `MARKS`) ─────────────────────────────────
+   Fuera de la media query: la marca es la misma en celular y en
+   escritorio, porque describe un hecho del territorio, no un tamaño de
+   pantalla. (Auditoría 13-sep-2026, D4-01: el bloque estaba dentro de
+   `@media (max-width:760px)` y en escritorio los avisos salían sin estilo.) */
+
+/* Aviso de respaldo: ámbar, junto al contador, sin tapar nada. */
+.aviso-respaldo{display:inline-flex;align-items:center;gap:6px;margin-left:10px;
+  padding:3px 10px;border-radius:11px;background:#FDF0D5;color:#8a5a12;
+  font-family:'Roboto',sans-serif;font-size:var(--fs-mini);font-weight:600;
+  letter-spacing:.01em;text-transform:none}
+.aviso-respaldo::before{content:'';width:7px;height:7px;border-radius:50%;background:#b8860b}
+/* Aviso de integridad del inventario: mismo sitio y misma familia visual que
+   el de copia local, pero en guinda porque no es una degradacion del canal
+   sino un dato que no cuadra. Es un boton: al pulsarlo se lee el detalle. */
+.aviso-integridad{display:inline-flex;align-items:center;gap:6px;margin-left:10px;
+  padding:3px 10px;border-radius:11px;border:none;cursor:pointer;
+  background:#F8E6EC;color:var(--guinda);
+  font-family:'Roboto',sans-serif;font-size:var(--fs-mini);font-weight:600;
+  letter-spacing:.01em;text-transform:none}
+.aviso-integridad::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--guinda)}
+.aviso-integridad:hover{background:#F2D6DF}
+.aviso-integridad:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
 
 /* ═══ PANTALLA DE AYUDA ═══════════════════════════════════════════════
    Explica las categorías a quien entra por primera vez. Vive al final de

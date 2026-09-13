@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-09-13n';
+const CACHE_VERSION = 'sia-v35-2026-09-13o';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
@@ -98,6 +98,62 @@ async function cacheUtilizable(){
   return piezas.every(Boolean);
 }
 
+/* Borra las cachés de versiones anteriores. Solo se llama con reemplazo verificado. */
+async function purgarAnteriores(){
+  const keys = await caches.keys();
+  await Promise.all(
+    keys.filter(k => k !== CACHE_VERSION && k !== CACHE_RUNTIME && k !== CACHE_DATA)
+        .map(k => caches.delete(k))
+  );
+}
+
+/* Reparación en caliente (auditoría 13-sep-2026, D7-01). Si esta versión se
+   activó sin red, su caché quedó vacía y `cacheFirst` sirve la anterior; antes
+   nada volvía a intentar la descarga hasta el siguiente bump, así que el usuario
+   quedaba atado a la versión vieja aunque la red regresara. Ahora cada
+   navegación dispara un intento (nunca dos a la vez) y cada recurso que sale
+   de una caché de respaldo dispara otro acotado a uno cada 30 s: completa la
+   caché y, solo si ya alcanza para arrancar, purga las anteriores y avisa a
+   las pestañas para que ofrezcan recargar. Con la caché completa cuesta cinco
+   `cache.match` y nada más. */
+let _reparando = null, _ultimoIntentoReparacion = 0, _avisoReparacionPendiente = false;
+function entregarAvisoReparacion(event){
+  if(!_avisoReparacionPendiente || !event.clientId) return;
+  _avisoReparacionPendiente = false;
+  self.clients.get(event.clientId).then(c => { if(c) c.postMessage({tipo:'cache-reparada', version: CACHE_VERSION}); }).catch(()=>{});
+}
+function repararSiIncompleta(esNavegacion){
+  if(_reparando) return _reparando;
+  const ahora = Date.now();
+  if(!esNavegacion && ahora - _ultimoIntentoReparacion < 30000) return Promise.resolve();
+  _ultimoIntentoReparacion = ahora;
+  _reparando = (async () => {
+    try{
+      if(await cacheUtilizable()) return;
+      await repararCore();
+      if(await cacheUtilizable()){
+        await purgarAnteriores();
+        precacheDiferido();
+        console.info('[SW] Caché de', CACHE_VERSION, 'completada tras recuperar la red.');
+        /* Aviso a las pestañas. La que provocó la reparación puede no tener
+           aún su escucha de mensajes (app.js la instala al final del arranque),
+           así que además se deja pendiente y se entrega con su siguiente
+           petición propia (el sondeo `?sesion=` a 1.5 s). */
+        _avisoReparacionPendiente = true;
+        try{
+          const clientes = await self.clients.matchAll({type:'window', includeUncontrolled:true});
+          clientes.forEach(c => c.postMessage({tipo:'cache-reparada', version: CACHE_VERSION}));
+        }catch(e){}
+      }
+    }catch(e){
+      console.warn('[SW] Reparación de caché pospuesta:', e);
+    }finally{
+      _reparando = null;
+    }
+  })();
+  return _reparando;
+}
+
 /* === ACTIVATE: limpiar caches viejos, pero NUNCA a ciegas ===
    El install traga los errores de red en silencio. Si el usuario recibe una
    versión nueva estando en una red que no alcanza el origen (caso real: datos
@@ -109,13 +165,9 @@ self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     await repararCore();
     if(await cacheUtilizable()){
-      const keys = await caches.keys();
-      await Promise.all(
-        keys.filter(k => k !== CACHE_VERSION && k !== CACHE_RUNTIME && k !== CACHE_DATA)
-            .map(k => caches.delete(k))
-      );
+      await purgarAnteriores();
     } else {
-      console.warn('[SW] Caché nueva incompleta (sin acceso al origen). Se conservan las anteriores.');
+      console.warn('[SW] Caché nueva incompleta (sin acceso al origen). Se conservan las anteriores; se reintenta en cada navegación (repararSiIncompleta).');
     }
     await self.clients.claim();
   })());
@@ -134,8 +186,11 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 2. Tiles de mapa (CartoDB, ArcGIS): cache-first runtime
-  if(/(?:cartodb|arcgisonline|fastly)/.test(url.hostname)){
+  // 2. Teselas de mapa (CARTO basemaps.cartocdn.com, ArcGIS World Imagery):
+  //    cache-first runtime. Auditoría 13-sep-2026 (D7-02): la regla anterior
+  //    buscaba «cartodb» y no coincidía con cartocdn, así que cada tesela
+  //    volvía a la red aunque estuviera cacheada.
+  if(/(?:cartocdn|arcgisonline)/.test(url.hostname)){
     event.respondWith(cacheFirst(req, CACHE_RUNTIME));
     return;
   }
@@ -154,6 +209,7 @@ self.addEventListener('fetch', event => {
          siga la redirección al login. Si no hay red, se cae a la caché para
          no dejar sin tablero a quien ya se había autenticado en el aparato. */
     if(url.searchParams.has('sesion')){
+      entregarAvisoReparacion(event);
       event.respondWith(fetch(req).catch(() => new Response('', {status: 503})));
       return;
     }
@@ -161,7 +217,13 @@ self.addEventListener('fetch', event => {
       event.respondWith(fetch(req).catch(async () => (await caches.match('./index.html')) || new Response('Sin conexión', {status: 503})));
       return;
     }
-    event.respondWith(cacheFirst(req, CACHE_VERSION));
+    /* Cada navegación intenta completar la caché de esta versión si quedó
+       incompleta (D7-01); con la caché sana no cuesta nada. */
+    if(req.mode === 'navigate'){
+      _avisoReparacionPendiente = false; /* la página que nace ya recibe la caché completa */
+      event.waitUntil(repararSiIncompleta(true));
+    }
+    event.respondWith(cacheFirst(req, CACHE_VERSION, event));
     return;
   }
 
@@ -181,7 +243,7 @@ self.addEventListener('fetch', event => {
 });
 
 /* === Estrategia: cache-first === */
-async function cacheFirst(req, cacheName){
+async function cacheFirst(req, cacheName, event){
   /* Primero la caché de la versión vigente; si activate conservó cachés
      anteriores por falta de red, sirven de respaldo. El orden importa: sin él
      una caché vieja puede eclipsar al index.html nuevo. */
@@ -189,9 +251,19 @@ async function cacheFirst(req, cacheName){
   /* ignoreSearch: una navegación con query (?fuente=pwa, ?utm…) debe
      encontrar el index.html cacheado; sin esto la app instalada arrancaba en
      503 sin red. Para navegaciones, el último recurso es index.html. */
-  const cached = (await cache.match(req, {ignoreSearch:true})) || (await caches.match(req, {ignoreSearch:true}))
-              || (req.mode === 'navigate' ? (await cache.match('./index.html')) : null);
-  if(cached) return cached;
+  const propioVigente = (await cache.match(req, {ignoreSearch:true}))
+                     || (req.mode === 'navigate' ? (await cache.match('./index.html')) : null);
+  if(propioVigente) return propioVigente;
+  const respaldo = await caches.match(req, {ignoreSearch:true});
+  if(respaldo){
+    /* Salió de una caché de respaldo (versión anterior): la de esta versión
+       está incompleta. Se intenta completarla en segundo plano (D7-01). */
+    if(cacheName === CACHE_VERSION){
+      const p = repararSiIncompleta();
+      if(event) event.waitUntil(p);
+    }
+    return respaldo;
+  }
   try {
     /* redirect:'manual' en los recursos del propio sitio: si Access redirige
        al login (sesión expirada), la respuesta llega como opaqueredirect en
@@ -204,13 +276,32 @@ async function cacheFirst(req, cacheName){
       return new Response('Sesión expirada', {status: 401, statusText: 'Unauthorized'});
     }
     if(response && response.status === 200){
-      cache.put(req, response.clone());
+      cache.put(req, response.clone()).then(() => { if(cacheName === CACHE_RUNTIME) recortarRuntime(); }).catch(()=>{});
     }
     return response;
   } catch(err) {
     console.warn('[SW] Sin red y sin caché para:', req.url);
     return new Response('Recurso no disponible offline', {status: 503, statusText: 'Service Unavailable'});
   }
+}
+
+/* Tope de la caché runtime (teselas, Leaflet, fuentes). Desde que las teselas
+   se piden con CORS sí se guardan (D7-02), así que crecería sin límite en
+   campo. Se revisa cada 25 altas y se borran las más antiguas (la Cache API
+   conserva el orden de inserción) por encima de RUNTIME_MAX entradas:
+   ~600 teselas ≈ 10-25 MB según la base. */
+const RUNTIME_MAX = 600;
+let _altasRuntime = 0, _recortando = false;
+async function recortarRuntime(){
+  if(++_altasRuntime % 25 !== 0 || _recortando) return;
+  _recortando = true;
+  try{
+    const cache = await caches.open(CACHE_RUNTIME);
+    const keys = await cache.keys();
+    const sobran = keys.length - RUNTIME_MAX;
+    if(sobran > 0) await Promise.all(keys.slice(0, sobran).map(k => cache.delete(k)));
+  }catch(e){}
+  finally{ _recortando = false; }
 }
 
 /* Cloudflare Access devolvió una redirección al login para un recurso del

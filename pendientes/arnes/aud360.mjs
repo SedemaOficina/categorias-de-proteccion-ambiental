@@ -25,7 +25,7 @@ for(const P of PERFILES){
   if(u.includes('leaflet.js'))return r.fulfill({contentType:'application/javascript',body:LEAF});
   if(u.includes('leaflet.css'))return r.fulfill({contentType:'text/css',body:LCSS});
   if(u.includes('docs.google.com'))return r.fulfill({contentType:'text/csv',body:F('inventario_v39.csv')});
-  if(u.includes('basemaps.cartocdn')||u.includes('arcgisonline'))return r.fulfill({contentType:'image/png',body:TILE});
+  if(u.includes('basemaps.cartocdn')||u.includes('arcgisonline'))return r.fulfill({contentType:'image/png',headers:{'Access-Control-Allow-Origin':'*'},body:TILE});
   for(const k in D) if(D[k] && u.includes(k+'.geojson')) return r.fulfill({contentType:'application/json',body:D[k]});
   if(u.endsWith('.geojson'))return r.fulfill({contentType:'application/json',body:'{"type":"FeatureCollection","features":[]}'});
   return r.abort();});
