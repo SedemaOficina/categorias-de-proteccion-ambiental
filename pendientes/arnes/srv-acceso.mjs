@@ -7,6 +7,9 @@ http.createServer((req,res)=>{
   if(exp && (u.searchParams.has('sesion')||u.searchParams.has('entrar')||/pgoedf\.geojson/.test(u.pathname))){
     res.writeHead(302,{Location:'https://sedema-sia.cloudflareaccess.com/cdn-cgi/access/login/localhost?redirect_url=/'}); return res.end();
   }
+  /* Retorno del login de Access: fija la cookie de sesión y redirige a la app.
+     Con el SW instalado, esta navegación debe llegar a la red (A11, 14-sep-2026). */
+  if(u.pathname==='/cdn-cgi/access/authorized'){ res.writeHead(302,{'Set-Cookie':'CF_Authorization=ok; Path=/','Location':'/?entrada=ok','Cache-Control':'no-store'}); return res.end(); }
   let p=path.join(root, decodeURIComponent(u.pathname)); if(u.pathname==='/') p=path.join(root,'index.html');
   fs.readFile(p,(e,d)=>{ if(e){res.writeHead(404);return res.end('404');} res.writeHead(200,{'Content-Type':types[path.extname(p)]||'application/octet-stream','Cache-Control':'no-store'}); res.end(d); });
 }).listen(8898);

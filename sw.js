@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-09-14c';
+const CACHE_VERSION = 'sia-v35-2026-09-14d';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
@@ -223,6 +223,15 @@ self.addEventListener('fetch', event => {
          index.html cacheado (sería un bucle), sino dejar que el navegador
          siga la redirección al login. Si no hay red, se cae a la caché para
          no dejar sin tablero a quien ya se había autenticado en el aparato. */
+    /* ── /cdn-cgi/ es de Cloudflare, no del tablero (14-sep-2026, A11) ──
+       Ahí viven el login, el logout y el RETORNO del login de Access
+       (/cdn-cgi/access/authorized?nonce=…&state=…), que es la navegación que
+       fija la cookie de sesión. El SW la trataba como una página más y le
+       respondía el index.html cacheado: la cookie nunca se fijaba, el sondeo
+       ?sesion= volvía a mandar al login y Chrome terminaba en ERR_FAILED en
+       todo navegador con el SW ya instalado (en incógnito o en Edge, sin SW,
+       entraba). Nada de /cdn-cgi/ pasa por aquí: va directo a la red. */
+    if(url.pathname.startsWith('/cdn-cgi/')) return;
     if(url.searchParams.has('sesion')){
       entregarAvisoReparacion(event);
       event.respondWith(fetch(req).catch(() => new Response('', {status: 503})));
@@ -266,8 +275,11 @@ async function cacheFirst(req, cacheName, event){
   /* ignoreSearch: una navegación con query (?fuente=pwa, ?utm…) debe
      encontrar el index.html cacheado; sin esto la app instalada arrancaba en
      503 sin red. Para navegaciones, el último recurso es index.html. */
+  /* El index.html cacheado solo sustituye navegaciones a la propia app
+     (raíz o index.html), nunca a otras rutas del dominio. */
+  const esApp = req.mode === 'navigate' && /^\/(?:index\.html)?$/.test(new URL(req.url).pathname);
   const propioVigente = (await cache.match(req, {ignoreSearch:true}))
-                     || (req.mode === 'navigate' ? (await cache.match('./index.html')) : null);
+                     || (esApp ? (await cache.match('./index.html')) : null);
   if(propioVigente) return propioVigente;
   const respaldo = await caches.match(req, {ignoreSearch:true});
   if(respaldo){

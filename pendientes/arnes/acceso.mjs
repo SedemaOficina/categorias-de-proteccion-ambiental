@@ -38,4 +38,9 @@ const r2=await pg2.evaluate(async()=>{ try{ const r=await fetch('data/pgoedf.geo
 await pg2.waitForTimeout(2500);
 console.log('capa bajo demanda con sesión expirada → status', r2, '| url ahora', pg2.url().slice(0,70), '| navegó a Access:', navs.length>0, '| errores', errs);
 fs.unlinkSync(FLAG);
+// 4. retorno del login (/cdn-cgi/access/authorized) con el SW ya instalado: debe ir a la red,
+//    fijar la cookie y volver a la app; si el SW lo intercepta, la URL se queda en /cdn-cgi/… sin cookie (A11)
+let err4=null; try{ await pg2.goto('http://localhost:8898/cdn-cgi/access/authorized?nonce=abc&state=xyz',{waitUntil:'load',timeout:15000}); }catch(e){ err4=String(e).slice(0,120); }
+const r4=await pg2.evaluate(()=>({ url: location.pathname+location.search, cookie: document.cookie }));
+console.log('retorno de Access con SW:', JSON.stringify({ error: err4, ...r4 }), r4.cookie.includes('CF_Authorization') && r4.url.startsWith('/?entrada') ? '→ OK' : '→ FALLA (el SW se interpuso)');
 await b.close();
