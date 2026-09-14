@@ -6,7 +6,8 @@ name: Validar entrega SIA
 # solo corría en pull_request, cuando el flujo real es push directo a main):
 #   1. que app.js, sw.js y config.js sean sintácticamente válidos
 #   2. que el JavaScript inline de index.html sea válido
-#   3. que styles.css no tenga errores de sintaxis
+#   3. que styles.css no tenga errores de sintaxis y que el hash del script
+#      inline de index.html coincida con el declarado en la CSP de _headers
 #   4. que CACHE_VERSION se haya bumpeado cuando cambie CUALQUIERA de los
 #      archivos que el Service Worker sirve desde caché (index.html, styles.css,
 #      app.js, config.js, sw.js, manifest.json, data/**): sin el bump el
@@ -50,6 +51,22 @@ jobs:
           "
           node --check /tmp/sia_inline.js
           echo "JavaScript inline válido"
+
+      - name: Hash del script inline en la CSP de _headers
+        run: |
+          node -e "
+            const fs = require('fs'), crypto = require('crypto');
+            const h = fs.readFileSync('index.html');
+            const m = h.toString('latin1').match(/<script>([\s\S]*?)<\/script>/);
+            if (!m) { console.log('sin <script> inline: nada que comprobar'); process.exit(0); }
+            // bytes exactos entre las etiquetas (los navegadores hashean eso, no el texto normalizado)
+            const ini = h.indexOf(Buffer.from('<script>')) + 8, fin = h.indexOf(Buffer.from('</script>'), ini);
+            const hash = 'sha256-' + crypto.createHash('sha256').update(h.subarray(ini, fin)).digest('base64');
+            const headers = fs.readFileSync('_headers', 'utf8');
+            const declarados = [...headers.matchAll(/script-src[^;]*?'(sha256-[A-Za-z0-9+/=]+)'/g)].map(x => x[1]);
+            console.log('hash del inline:', hash, '· en _headers:', declarados.join(', ') || '(ninguno)');
+            if (declarados.length && !declarados.includes(hash)) { console.error('::error::El script inline de index.html cambió y su hash ya no coincide con el de _headers (' + declarados.join(', ') + '). Actualiza el hash o la CSP bloqueará el arranque en celular.'); process.exit(1); }
+          "
 
       - name: Sintaxis de styles.css
         run: |
