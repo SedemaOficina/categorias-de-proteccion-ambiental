@@ -2449,7 +2449,7 @@ function render(){
   }
   document.getElementById('showCount').textContent = fmtInt(rows.length);
   document.getElementById('totalCount').textContent = fmtInt(base.length);
-  document.getElementById('sumFiltered').textContent = fmt(sum(rows,'superficie'));
+  { const sf = document.getElementById('sumFiltered'); if(sf) sf.textContent = fmt(sum(rows,'superficie')); }
   document.querySelectorAll('thead.t-head th').forEach(th=>{
     th.classList.remove('sort-asc','sort-desc');
     const a=th.querySelector('.arrow'); if(a) a.textContent='▲';
@@ -2461,7 +2461,7 @@ function render(){
     }
   });
   const thActive = document.querySelector(`thead.t-head th[data-k="${state.sortKey}"]`);
-  document.getElementById('sortInfo').textContent = `Orden · ${thActive?thActive.textContent.replace(/[▲▼]/g,'').trim():''} ${state.sortDir===1?'↑':'↓'}`;
+  document.getElementById('sortInfo').textContent = `Orden · ${thActive?(thActive.getAttribute('aria-label')||thActive.textContent.replace(/[▲▼]/g,'').trim()):''} ${state.sortDir===1?'↑':'↓'}`;
 }
 
 /* Orden de la tabla principal por clic y por teclado (auditoría 13-sep-2026,
@@ -3832,7 +3832,7 @@ async function initZPMap(){
   addLocateControl(zpMap, ll=>featuresContaining(getZPAllFeatures(), ll), getZPAllFeatures);
 
   // Toggle de capa base Mapa/Satélite — clone-and-replace para evitar listeners duplicados al re-inicializar
-  document.querySelectorAll('#zpLayerToggle button').forEach(btn=>{
+  document.querySelectorAll('#zpLayerToggle button[data-layer]').forEach(btn=>{
     const fresh = btn.cloneNode(true);
     btn.parentNode.replaceChild(fresh, btn);
     fresh.addEventListener('click', ()=> setZPBaseLayer(fresh.dataset.layer));
@@ -3904,7 +3904,7 @@ function setZPBaseLayer(key){
     if(typeof it.layer.bringToFront === 'function') it.layer.bringToFront();
     else if(typeof it.layer.eachLayer === 'function') it.layer.eachLayer(l=>{ if(l.bringToFront) l.bringToFront(); });
   }catch(e){} });
-  document.querySelectorAll('#zpLayerToggle button').forEach(b=>{
+  document.querySelectorAll('#zpLayerToggle button[data-layer]').forEach(b=>{
     b.classList.toggle('active', b.dataset.layer===key);
   });
 }
@@ -4224,7 +4224,7 @@ function initTraslapesMap(){
   traslapesMap.on('click focus', ()=> traslapesMap.scrollWheelZoom.enable());
   traslapesMap.on('mouseout',    ()=> traslapesMap.scrollWheelZoom.disable());
 
-  document.querySelectorAll('#trasLayerToggle button').forEach(btn=>{
+  document.querySelectorAll('#trasLayerToggle button[data-layer]').forEach(btn=>{
     const fresh = btn.cloneNode(true); btn.parentNode.replaceChild(fresh, btn);
     fresh.addEventListener('click', ()=>{
       const key = fresh.dataset.layer;
@@ -4233,7 +4233,7 @@ function initTraslapesMap(){
       traslapesMap._activeBase = L.tileLayer(cfg.url, _opcionesTeselas(cfg)).addTo(traslapesMap);
       _marcarBase(traslapesMap, key);
       Object.values(traslapesLayers).forEach(o=>{ try{ o.layer.bringToFront(); }catch(e){} });
-      document.querySelectorAll('#trasLayerToggle button').forEach(b=>b.classList.toggle('active', b.dataset.layer===key));
+      document.querySelectorAll('#trasLayerToggle button[data-layer]').forEach(b=>b.classList.toggle('active', b.dataset.layer===key));
     });
   });
   attachFullscreenBtn(cont, traslapesMap);
@@ -4479,7 +4479,7 @@ async function initGlobalMap(){
   renderMapFilters();
 
   // Toggle de capa base — clone-and-replace para evitar listeners duplicados al re-inicializar
-  document.querySelectorAll('#globalLayerToggle button').forEach(btn => {
+  document.querySelectorAll('#globalLayerToggle button[data-layer]').forEach(btn => {
     const fresh = btn.cloneNode(true);
     btn.parentNode.replaceChild(fresh, btn);
     fresh.addEventListener('click', () => setGlobalBaseLayer(fresh.dataset.layer));
@@ -4957,7 +4957,7 @@ function setGlobalBaseLayer(key){
   // Reordena overlays para que queden encima
   if(globalAlcaldiasLayer) globalAlcaldiasLayer.bringToFront();
   Object.values(globalGroupLayers).forEach(l=>l.bringToFront());
-  document.querySelectorAll('#globalLayerToggle button').forEach(b=>{
+  document.querySelectorAll('#globalLayerToggle button[data-layer]').forEach(b=>{
     b.classList.toggle('active', b.dataset.layer===key);
   });
 }
@@ -5096,6 +5096,9 @@ const TILE_LAYERS = {
       if(typeof L === 'undefined' || !L.Map || L.Map._siaSinTab) return;
       L.Map._siaSinTab = true;
       L.Map.addInitHook(function(){
+        /* Registro lienzo → mapa: el menú de capas (montarBotonBase) encuentra
+           así la instancia del mapa sobre el que está montado (v75, PGOEDF). */
+        try{ this.getContainer()._siaMapa = this; }catch(_){}
         this.on('layeradd', e => {
           try{ const el = e.layer && e.layer.getElement && e.layer.getElement();
                /* Chromium incluye los <path> interactivos en el orden de tabulación
@@ -5145,7 +5148,7 @@ function setBaseLayer(key){
   if(activeGeoLayer){ activeGeoLayer.bringToFront(); }
   /* Solo los botones del minimapa de la ficha: el toggle del mapa global
      refleja su propia base (D2-02). */
-  document.querySelectorAll('#dr .map-block-toggle button').forEach(b=>{
+  document.querySelectorAll('#dr .map-block-toggle button[data-layer]').forEach(b=>{
     b.classList.toggle('active', b.dataset.layer===key);
   });
 }
@@ -6406,6 +6409,21 @@ const PGOEDF_NOMBRE = {
   'Programas Parciales':'Programas Parciales', 'Zona Urbana':'Zona Urbana'
 };
 const pgoedfNombre = z => PGOEDF_NOMBRE[z] || z || '';
+/* Leyenda compacta de la capa PGOEDF (v75): una fila por clave, en el orden
+   de la jerarquía de conservación; las «Especial» comparten tono más claro. */
+const PGOEDF_LEYENDA = [
+  ['FC','FCE','Forestal de Conservación'], ['FP','FPE','Forestal de Protección'],
+  ['AF','AFE','Agroforestal'], ['AE','AEE','Agroecológico'],
+  ['PDU',null,'Poblados, equipamiento y programas parciales']
+];
+function _pgoedfLeyendaHTML(){
+  /* Cinco renglones: la variante «Especial» comparte renglón con un segundo
+     punto, más claro; el título del punto dice cuál es cuál. */
+  return PGOEDF_LEYENDA.map(([k, ke, n]) =>
+    '<span class="pgoedf-ley-item"><span class="pg-dot" style="--c:' + PGOEDF_COLOR[k] + '" title="' + esc(n) + ' (' + k + ')"></span>'
+    + (ke ? '<span class="pg-dot" style="--c:' + PGOEDF_COLOR[ke] + '" title="' + esc(n) + ' Especial (' + ke + ')"></span>' : '<span class="pg-dot pg-dot-vacio"></span>')
+    + esc(n) + (ke ? ' <small>· Especial</small>' : '') + '</span>').join('');
+}
 const PGOEDF_COLOR = {
   FC:'#1f6b4a', FCE:'#3f8f6a', FP:'#1c6b85', FPE:'#4a8fa8',
   AF:'#5d8a5e', AFE:'#86a36a', AE:'#b28e5c', AEE:'#c9a878', PDU:'#8a8d8f'
@@ -6726,6 +6744,52 @@ function montarBotonBase(){
       }
       lienzo.appendChild(fab);
     }
+    /* Zonificación del PGOEDF como capa superpuesta en TODOS los mapas
+       (v75, 14-sep-2026): mapa general, minimapas de ficha y traslapes.
+       Apagada de inicio; la cartografía (≈1 MB) se pide al encenderla y
+       queda en memoria. Se dibuja debajo del inventario y encima de Suelo
+       de Conservación; la leyenda por clave aparece bajo el interruptor. */
+    if(lienzo && !toggle.querySelector('.pgoedf-toggle')){
+      const wrap = document.createElement('div'); wrap.className = 'pgoedf-flotante en-menu';
+      const chip = document.createElement('button');
+      chip.type = 'button'; chip.className = 'map-filter-chip pgoedf-toggle';
+      chip.setAttribute('aria-pressed', 'false');
+      chip.title = 'Zonificación del Programa General de Ordenamiento Ecológico (PGOEDF): aplica en Suelo de Conservación fuera de ANP';
+      chip.innerHTML = '<span class="chip-dot"></span>Zonificación PGOEDF';
+      const ley = document.createElement('div'); ley.className = 'pgoedf-leyenda'; ley.hidden = true;
+      ley.innerHTML = _pgoedfLeyendaHTML();
+      wrap.appendChild(chip); wrap.appendChild(ley);
+      seccionCapas().appendChild(wrap);
+      const mapaDe = () => { const c = lienzo.classList.contains('leaflet-container') ? lienzo : lienzo.querySelector('.leaflet-container'); return c && c._siaMapa; };
+      chip.addEventListener('click', async e => {
+        e.stopPropagation();
+        const mapa = mapaDe(); if(!mapa) return;
+        if(mapa._pgoedfLayer){
+          try{ mapa.removeLayer(mapa._pgoedfLayer); }catch(_){}
+          mapa._pgoedfLayer = null;
+          chip.classList.remove('active'); chip.setAttribute('aria-pressed','false'); ley.hidden = true;
+          return;
+        }
+        chip.classList.add('cargando');
+        const ok = await cargarPgoedf();
+        chip.classList.remove('cargando');
+        if(!ok || !_pgoedfGeo){ siaToast('La zonificación del PGOEDF no está disponible ahora.'); return; }
+        if(mapaDe() !== mapa) return; /* el mapa se recreó mientras cargaba */
+        mapa._pgoedfLayer = L.geoJSON(_pgoedfGeo, {
+          style: f => { const c = PGOEDF_COLOR[(f.properties||{}).clave] || '#8a8d8f';
+                        return { color:c, weight:0.8, fillColor:c, fillOpacity:0.26 }; },
+          onEachFeature: (f, l) => { const pr = f.properties || {};
+            l.bindTooltip(pgoedfNombre(pr.zona) + (pr.clave && pr.clave !== 'PDU' ? ' (' + pr.clave + ')' : ''), { sticky:true, direction:'top' }); }
+        }).addTo(mapa);
+        /* Orden: SC al fondo, PGOEDF encima, todo lo demás (alcaldías, inventario,
+           ARCAC, zonificación, área de la ficha) encima de PGOEDF. */
+        mapa._pgoedfLayer.bringToBack();
+        try{ if(mapa._scLayer) mapa._scLayer.bringToBack(); }catch(_){}
+        try{ mapa.eachLayer(l => { if(l !== mapa._pgoedfLayer && l !== mapa._scLayer && l.bringToFront && !(l instanceof L.TileLayer)) l.bringToFront(); }); }catch(_){}
+        chip.classList.add('active'); chip.setAttribute('aria-pressed','true'); ley.hidden = false;
+      });
+      if(typeof L !== 'undefined' && L.DomEvent){ L.DomEvent.disableClickPropagation(wrap); }
+    }
     /* En celular, los chips de categoría (inventario, coadministración, ARCAC,
        Suelo de Conservación) entran al MISMO menú. Antes tenían un segundo
        botón con el mismo icono en la esquina opuesta: dos controles iguales
@@ -6923,12 +6987,8 @@ function pintarZonificacion(d){
          zonificación, nunca al revés. Los dos casos se dicen distinto. */
       const tienePM = d.programa_manejo === 'Sí';
       cont.innerHTML = '<div class="zonif-h">Zonificación del programa de manejo</div>' + (tienePM
-        ? '<div class="zonif-vacio"><b>Cuenta con programa de manejo'
-          + (d.fecha_pm ? ' (' + esc(d.fecha_pm) + ')' : '') + '</b>, pero su zonificación aún no está '
-          + 'disponible en formato geoespacial en este tablero. Siete ANP la tienen hoy; '
-          + 'cuando se cargue la de esta área aparecerá aquí y en el mapa.</div>'
-        : '<div class="zonif-vacio"><b>Sin programa de manejo publicado.</b> No hay zonificación que mostrar: '
-          + 'la zonificación es un contenido del programa de manejo.</div>');
+        ? '<div class="zonif-vacio">Zonificación del programa de manejo no disponible en el tablero.</div>'
+        : '<div class="zonif-vacio">Sin programa de manejo publicado; no hay zonificación.</div>');
       return;
     }
     const sup = parseFloat(String(d.superficie || '').replace(/,/g,'')) || null;
@@ -7067,9 +7127,7 @@ function pintarPgoedfFicha(d){
       cuerpo = '<div class="zonif-vacio"><b>Sin zona del PGOEDF asignada.</b> La porción de esta área dentro del Suelo de Conservación es marginal'
         + (scp != null ? ' (' + scp.toFixed(2) + '%)' : '') + ' y la cartografía del Programa no la cubre.</div>';
     }
-    cont.innerHTML = '<div class="zonif-h">Ordenamiento ecológico · PGOEDF</div>' + intro + cuerpo
-      + '<p class="zonif-pie">Fuente: cartografía del PGOEDF (GODF 01/08/2000), cruce geométrico con la poligonal decretada. '
-      + 'Las actividades permitidas y prohibidas por zona se consultan por punto en «¿Dónde estoy?».</p>';
+    cont.innerHTML = '<div class="zonif-h">Ordenamiento ecológico · PGOEDF</div>' + intro + cuerpo;
     _pintarPuntoEnBloque('pgoedf');
   });
 }
@@ -7127,6 +7185,9 @@ function montarZonificacionEnMapa(mapa, d){
         ley.hidden = false;
       }
     });
+    /* Encendida de inicio (v75): si el área tiene zonificación, el minimapa la
+       muestra al abrir la ficha; el mismo interruptor la apaga. */
+    try{ btn.click(); }catch(_){}
   });
 }
 
@@ -7238,7 +7299,7 @@ const _gestosTactilesMinimapa = mapa => _gestosTactilesIncrustado(mapa);
 function fichaMapaConectar(container){
   if(!activeMap) return;
   _gestosTactilesMinimapa(activeMap);
-  document.querySelectorAll('#dr .map-block-toggle button').forEach(btn=>{
+  document.querySelectorAll('#dr .map-block-toggle button[data-layer]').forEach(btn=>{
     btn.addEventListener('click', ()=>setBaseLayer(btn.dataset.layer));
   });
   try{ attachFullscreenBtn(container, activeMap); }catch(e){}
@@ -7332,7 +7393,7 @@ function openDrawer(d){
     /* Toggles de capa base SOLO de la ficha (auditoría 13-sep-2026, D2-02):
        la consulta global enganchaba también los botones del mapa general y
        acumulaba una escucha por ficha abierta. */
-    document.querySelectorAll('#dr .map-block-toggle button').forEach(btn=>{
+    document.querySelectorAll('#dr .map-block-toggle button[data-layer]').forEach(btn=>{
       btn.addEventListener('click', ()=>setBaseLayer(btn.dataset.layer));
     });
   });

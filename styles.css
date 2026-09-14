@@ -1706,9 +1706,11 @@
 #mapCanvas .map-block-controls-floating .map-block-toggle button{padding:0 10px;
   font-size:var(--fs-micro)}
 
-/* «Sup. (ha)» no cabe en su columna desde que se redujo al redondear los
-   valores: se le permite partir en dos renglones, como en celular. */
-thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
+/* Encabezado de superficie (14-sep-2026): «Sup. (ha)» partía en dos renglones
+   en la columna de 6-10 % y se veía descuadrado frente a los demás. Ahora es
+   «Ha» (título y aria-label dicen «Superficie en hectáreas»): un renglón,
+   alineado a la derecha como sus cifras. */
+thead.t-head th:nth-child(7){white-space:nowrap}
 
 /* El asa de la ficha solo existe cuando la ficha es hoja (celular). En
    escritorio la ficha es un cajón lateral y no hay nada que arrastrar. */
@@ -2228,10 +2230,31 @@ header.top .meta{display:flex;align-items:center;gap:12px}
 .drawer-sc-floating.en-menu .map-filter-chip:not(.active),
 .map-filters.en-menu .map-filter-chip:not(.active){color:var(--muted);opacity:1}
 .map-filters.en-menu .map-filter-chip .chip-count{margin-left:auto}
-/* El menú crece con las capas: en celular no debe salirse del lienzo. */
+/* Capa PGOEDF en el menú (v75): mismo renglón que Suelo de Conservación y,
+   encendida, una leyenda compacta por clave debajo. En todos los anchos. */
+.pgoedf-flotante.en-menu{position:static}
+.pgoedf-flotante.en-menu .map-filter-chip,.pgoedf-flotante.en-menu .map-filter-chip.active{
+  display:flex;align-items:center;gap:10px;width:100%;min-height:40px;
+  padding:6px 2px;border:none;background:transparent;box-shadow:none;
+  font-family:'Roboto',sans-serif;font-size:var(--fs-sm);text-align:left;
+  white-space:nowrap;line-height:1.25;color:var(--ink);text-transform:none;
+  letter-spacing:0;font-weight:500;--chip-color:#3f8f6a}
+.pgoedf-flotante.en-menu .map-filter-chip:not(.active){color:var(--muted);opacity:1}
+.pgoedf-flotante.en-menu .map-filter-chip:not(.active) .chip-dot{background:transparent;box-shadow:inset 0 0 0 1.5px var(--muted)}
+.pgoedf-flotante.en-menu .map-filter-chip.cargando{opacity:.6;cursor:progress}
+.pgoedf-leyenda{display:grid;grid-template-columns:1fr;gap:3px;padding:2px 2px 4px 4px;
+  font-family:'Roboto',sans-serif;font-size:var(--fs-mini);color:var(--ink-2);line-height:1.3}
+.pgoedf-leyenda[hidden]{display:none !important}
+.pgoedf-ley-item{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.pgoedf-ley-item .pg-dot{width:10px;height:10px}
+.pgoedf-ley-item .pg-dot+.pg-dot{margin-left:-3px}
+.pgoedf-ley-item .pg-dot-vacio{visibility:hidden}
+.pgoedf-ley-item small{font-size:var(--fs-micro);color:var(--muted)}
+/* El menú crece con las capas (y con la leyenda del PGOEDF): en ningún ancho
+   debe salirse del lienzo; el JS le pasa el alto del mapa en --lienzo-h. */
+.map-block-controls-floating .map-block-toggle{max-height:calc(var(--lienzo-h,100dvh) - 66px);overflow-y:auto;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 @media (max-width:760px){
-  .map-block-controls-floating .map-block-toggle{max-height:calc(var(--lienzo-h,100dvh) - 66px);overflow-y:auto;
-    -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
   .map-filters.en-menu .map-filter-chip,.map-filters.en-menu .map-filter-chip.active{min-height:38px;padding:4px 2px}
 }
 .drawer-sc-floating.en-menu .map-filter-chip .chip-dot{flex:0 0 auto}
@@ -2605,6 +2628,16 @@ html.arranque-campo body > .wrap{visibility:hidden}
 /* Foco visible en el campo de búsqueda: el cambio de color del borde (1 px)
    no basta como indicador de foco al navegar con teclado. */
 .ubicar-input-wrap input:focus-visible{box-shadow:0 0 0 3px rgba(157,33,72,.22)}
+/* Escritorio (14-sep-2026): campo y lupa son un solo objeto. Con el foco, el
+   borde guinda y el halo abarcan los dos segmentos; antes el campo se ponía
+   guinda y la lupa seguía gris, como un botón suelto pegado al lado. */
+@media (min-width:761px){
+  .ubicar-input-wrap:focus-within{border-radius:var(--radius);box-shadow:0 0 0 3px rgba(157,33,72,.22)}
+  .ubicar-input-wrap:focus-within input{border-color:var(--guinda)}
+  .ubicar-input-wrap:focus-within .ubicar-go{border-color:var(--guinda);color:var(--guinda)}
+  .ubicar-input-wrap input:focus-visible{box-shadow:none}
+  .ubicar-go:focus-visible{outline:2px solid var(--guinda);outline-offset:-2px}
+}
 .wrap.dest-ubicar.gm-shell .ubicar-input-wrap input:focus-visible{box-shadow:inset 0 0 0 2px var(--gm-tint-fuerte),0 0 0 3px rgba(157,33,72,.22)}
 
 /* ═══ CIERRE DE LA AUDITORÍA 360 · pulido aplicado ═══════════════════ */
