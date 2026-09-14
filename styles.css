@@ -2780,3 +2780,80 @@ html.sia-fs-hoja-abierta .drawer-inner{overflow:hidden !important}
    guía y el caparazón de «¿Dónde estoy?». */
 html.pagina-bloqueada{overflow:hidden;overscroll-behavior:none}
 html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hidden;overscroll-behavior:none}
+
+/* ═══ MENÚ DE CAPAS · v76 (14-sep-2026) ══════════════════════════════
+   Rediseño del panel que cuelga del botón de capas, en todos los mapas y
+   anchos. Antes: renglones pegados entre sí y al borde del lienzo, base
+   como barra guinda, zonas del PGOEDF al mismo nivel que su interruptor.
+   Ahora, como un panel de ajustes: secciones con título («Mapa base»,
+   «Capas»), base con radio, capas con interruptor a la derecha, y las
+   zonas del PGOEDF sangradas bajo su capa madre con guía a la izquierda. */
+.map-block-controls-floating{top:12px;right:12px}
+#mapCanvas .map-block-controls-floating{top:12px;right:12px}
+.map-block-controls-floating .map-block-toggle{min-width:320px;top:54px;padding:6px 0 8px;
+  max-height:min(calc(var(--lienzo-h,100dvh) - 72px), calc(100dvh - 140px))}
+@media (max-width:760px){
+  .map-block-controls-floating .map-block-toggle{min-width:300px;max-width:calc(100vw - 36px)}
+}
+/* Títulos de sección (el de «Mapa base» lo inserta montarBotonBase). */
+/* El menú es una columna flex con tope de alto: sin flex-shrink:0 los
+   renglones se aplastaban para caber en vez de desplazarse. */
+.map-block-controls-floating .map-block-toggle .capa-extra-tit{
+  flex:0 0 auto;padding:8px 18px 4px;margin:0;line-height:1.3}
+.map-block-controls-floating .map-block-toggle .capa-extra{
+  flex:0 0 auto;margin-top:6px;padding:4px 0 2px;border-top:1px solid var(--line-soft)}
+/* Base: renglón con radio, ya no barra guinda. */
+.map-block-controls-floating .map-block-toggle > button[data-layer],
+#mapCanvas .map-block-controls-floating .map-block-toggle > button[data-layer]{
+  height:42px;flex:0 0 auto;padding:0 18px;display:flex;align-items:center;gap:12px;
+  font-family:'Roboto',sans-serif;font-size:var(--fs-sm);font-weight:500;letter-spacing:0;
+  text-transform:none;color:var(--ink);background:transparent;border:none;border-radius:0}
+.map-block-controls-floating .map-block-toggle > button[data-layer]::before{
+  content:'';width:16px;height:16px;border-radius:50%;border:2px solid #b9b3a3;
+  box-sizing:border-box;flex:0 0 auto;transition:border-color .15s,background .15s}
+.map-block-controls-floating .map-block-toggle > button[data-layer]:hover{background:var(--bg-2);color:var(--guinda)}
+.map-block-controls-floating .map-block-toggle > button[data-layer].active,
+#mapCanvas .map-block-controls-floating .map-block-toggle > button[data-layer].active{
+  background:transparent;color:var(--guinda);font-weight:600}
+.map-block-controls-floating .map-block-toggle > button[data-layer].active::before{
+  border-color:var(--guinda);background:radial-gradient(circle,var(--guinda) 4px,transparent 4.6px)}
+.map-block-controls-floating .map-block-toggle > button[data-layer] + button[data-layer]{border-top:none}
+/* Capas: renglón con punto de color, etiqueta e interruptor a la derecha.
+   El interruptor es un ::after (píldora + botón dibujado con un degradado
+   radial): no toca el marcado ni los escuchas de los chips. */
+.map-block-controls-floating .map-block-toggle .en-menu .map-filter-chip,
+.map-block-controls-floating .map-block-toggle .en-menu .map-filter-chip.active,
+.map-block-controls-floating .map-block-toggle .en-menu .map-filter-chip:hover{
+  height:auto;min-height:42px;padding:6px 18px;gap:12px;border-radius:0;white-space:normal;line-height:1.25;
+  font-size:var(--fs-sm);letter-spacing:0;text-transform:none}
+.map-block-controls-floating .map-block-toggle .en-menu .map-filter-chip:hover{background:var(--bg-2)}
+.map-block-controls-floating .map-block-toggle .en-menu .map-filter-chip::after{
+  content:'';margin-left:auto;flex:0 0 auto;width:34px;height:20px;border-radius:10px;
+  background:#cbc5b5 radial-gradient(circle at 10px 50%,#fff 7px,transparent 7.6px);
+  transition:background-color .18s}
+.map-block-controls-floating .map-block-toggle .en-menu .map-filter-chip.active::after{
+  background:var(--guinda) radial-gradient(circle at 24px 50%,#fff 7px,transparent 7.6px)}
+.map-block-controls-floating .map-block-toggle .en-menu .map-filter-chip .chip-count{margin-left:auto;padding-left:6px}
+.map-block-controls-floating .map-block-toggle .en-menu .map-filter-chip:has(.chip-count)::after{margin-left:10px}
+.map-block-controls-floating .map-block-toggle .en-menu .map-filter-chip .chip-dot{flex:0 0 auto}
+/* Zonas del PGOEDF: sangradas bajo su capa madre, con guía vertical. */
+.map-block-controls-floating .map-block-toggle .pgoedf-leyenda{margin:0 14px 8px 24px;padding:2px 0 2px 10px;
+  border-left:2px solid var(--line-soft);gap:0}
+.map-block-controls-floating .map-block-toggle .pgoedf-ley-cap{display:block;padding:4px 8px 2px;font-family:'Roboto Mono',monospace;
+  font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.map-block-controls-floating .map-block-toggle .pgoedf-ley-item,.map-block-controls-floating .map-block-toggle .pgoedf-ley-item:hover,
+.map-block-controls-floating .map-block-toggle .pgoedf-ley-item + .pgoedf-ley-item{
+  height:auto;min-height:34px;padding:4px 6px 4px 8px;gap:9px;font-size:var(--fs-xs);white-space:normal;line-height:1.25;border-top:none}
+.map-block-controls-floating .map-block-toggle .pgoedf-ley-item .pg-dot{width:10px;height:10px}
+.map-block-controls-floating .map-block-toggle .pgoedf-ley-item::after{
+  content:'';margin-left:auto;flex:0 0 auto;width:28px;height:16px;border-radius:8px;
+  background:#cbc5b5 radial-gradient(circle at 8px 50%,#fff 5.5px,transparent 6px);
+  transition:background-color .18s}
+.map-block-controls-floating .map-block-toggle .pgoedf-ley-item.activo::after{
+  background:var(--guinda) radial-gradient(circle at 20px 50%,#fff 5.5px,transparent 6px)}
+.map-block-controls-floating .map-block-toggle .pgoedf-ley-vacio{display:block;padding:6px 8px 4px;line-height:1.35}
+@media (pointer:coarse){ .map-block-controls-floating .map-block-toggle .pgoedf-ley-item{min-height:40px} }
+/* Abierto, el menú va por encima de los controles de Leaflet (zoom, ubicar,
+   z 1000): en el mapa del inventario en celular, de 328 px de ancho, el panel
+   quedaba debajo de ellos. Cerrado vuelve a su capa. */
+.map-block-controls-floating.base-abierto{z-index:1100}

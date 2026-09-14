@@ -6741,6 +6741,9 @@ function _montarPgoedfEnMenu(lienzo, toggle, seccionCapas){
   /* Filas de la leyenda: una por zona presente, cada una es un interruptor. */
   const pintarLeyenda = (mapa, presentes) => {
     ley.innerHTML = '';
+    const cap = document.createElement('span'); cap.className = 'pgoedf-ley-cap';
+    cap.textContent = enFicha ? 'Zonas dentro del área' : 'Zonas';
+    ley.appendChild(cap);
     PGOEDF_ZONAS.filter(([k]) => presentes.has(k)).forEach(([k, n]) => {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'pgoedf-ley-item activo'; b.dataset.clave = k;
@@ -6756,7 +6759,7 @@ function _montarPgoedfEnMenu(lienzo, toggle, seccionCapas){
       });
       ley.appendChild(b);
     });
-    if(!ley.children.length){ ley.innerHTML = '<span class="pgoedf-ley-vacio">Sin zonas del PGOEDF en esta área.</span>'; }
+    if(!ley.querySelector('.pgoedf-ley-item')){ ley.innerHTML = '<span class="pgoedf-ley-vacio">Sin zonas del PGOEDF en esta área.</span>'; }
   };
   chip.addEventListener('click', async e => {
     e.stopPropagation();
@@ -6836,6 +6839,12 @@ function montarBotonBase(){
       b.setAttribute('aria-expanded','false');
     });
     cont.appendChild(b);
+    /* Título de la sección de base (v76): el menú se lee como un panel de
+       ajustes con dos apartados, «Mapa base» y «Capas». */
+    if(!toggle.querySelector('.menu-tit-base')){
+      const tb = document.createElement('span'); tb.className = 'capa-extra-tit menu-tit-base'; tb.textContent = 'Mapa base';
+      toggle.insertBefore(tb, toggle.firstChild);
+    }
 
     /* Suelo de Conservación no es una capa base —puede estar encendida a la vez
        que Mapa o que Satélite—, así que baja al mismo menú pero en su propia
