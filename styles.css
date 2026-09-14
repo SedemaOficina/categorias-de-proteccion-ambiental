@@ -1870,7 +1870,7 @@ thead.t-head th:nth-child(7){white-space:nowrap}
        10 de margen superior + 56 de cápsula + 12 de holgura. */
     height:calc(100svh - var(--destbar-h) - env(safe-area-inset-bottom, 0px) - 78px);
     z-index:850;--vis:0px;
-    transform:translateY(calc(100% - var(--vis)));
+    transform:translateY(max(0px, calc(100% - var(--vis))));
     transition:transform .28s cubic-bezier(.2,.8,.2,1);
     background:var(--card);border-radius:18px 18px 0 0;box-shadow:0 -2px 16px rgba(60,64,67,.28);
     display:flex;flex-direction:column;overflow:hidden;touch-action:none}
@@ -1978,7 +1978,10 @@ thead.t-head th:nth-child(7){white-space:nowrap}
      desplazamiento se calcula aquí, igual que en la hoja de «Ubicar». */
   .drawer{display:flex;flex-direction:column;overflow:hidden;
     --dvis:0px;transform:translateY(100%)}
-  .drawer.open{transform:translateY(calc(100% - var(--dvis)))}
+  /* `max(0px, …)`: si el elemento encoge (la barra del navegador aparece) y
+     `--dvis` se queda con el tope anterior, la resta da negativo y la hoja sube
+     dejando ver la página debajo. Nunca por encima del borde inferior. */
+  .drawer.open{transform:translateY(max(0px, calc(100% - var(--dvis))))}
   .drawer.arrastrando{transition:none}
   .drawer-asa{flex:0 0 auto;display:flex;align-items:center;justify-content:center;
     height:26px;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent}
@@ -2864,3 +2867,22 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
    z 1000): en el mapa del inventario en celular, de 328 px de ancho, el panel
    quedaba debajo de ellos. Cerrado vuelve a su capa. */
 .map-block-controls-floating.base-abierto{z-index:1100}
+
+/* ═══ CAMPO DE BÚSQUEDA · v78 (14-sep-2026) ══════════════════════════
+   La cápsula era blanca sobre fondo crema y sin filete: no se leía como
+   un campo donde se escribe, sobre todo en celular. Un filete sutil la
+   delimita y al enfocar toma el guinda, como cualquier campo del tablero. */
+.ubicar-bar{border:1px solid var(--line)}
+.dest-ubicar .ubicar-bar{border:1px solid var(--line)}
+.ubicar-bar:focus-within{border-color:var(--guinda);
+  box-shadow:var(--gm-e2), 0 0 0 3px rgba(157,33,72,.16)}
+@media (max-width:760px){
+  /* Dentro de la cápsula el campo ya no necesita su propio anillo al
+     enfocar: lo da la cápsula. */
+  .ubicar-input-wrap input:focus{box-shadow:none}
+}
+/* Nota de cobertura bajo las zonas del PGOEDF en la ficha: dentro de un ANP
+   el Programa no asigna zona y lo que se pinta es una franja marginal. */
+.map-block-controls-floating .map-block-toggle .pgoedf-ley-nota{
+  display:block;padding:6px 8px 2px;font-size:var(--fs-mini);line-height:1.35;
+  color:var(--muted);white-space:normal}

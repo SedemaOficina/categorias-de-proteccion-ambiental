@@ -6733,12 +6733,21 @@ function _montarPgoedfEnMenu(lienzo, toggle, seccionCapas){
     if(mapa._pgoedfClip){ try{ mapa.removeLayer(mapa._pgoedfClip.poligono); mapa._pgoedfClip.defs.remove(); }catch(_){} }
     mapa._pgoedfLayer = null; mapa._pgoedfSub = null; mapa._pgoedfClip = null;
   };
+  /* Orden de atrás hacia adelante: Suelo de Conservación · zonificación del
+     programa de manejo · PGOEDF · todo lo demás (contorno del área, inventario).
+     La zonificación del PM también es un relleno de TODA el área: con el PGOEDF
+     debajo, encenderlo no cambiaba nada en pantalla y parecía averiado
+     (reportado el 14-sep-2026 en Ejidos de Xochimilco). */
   const reordenar = mapa => {
     try{ mapa._pgoedfLayer.bringToBack(); }catch(_){}
+    try{ if(enFicha && typeof _zonifCapa !== 'undefined' && _zonifCapa && mapa.hasLayer(_zonifCapa)) _zonifCapa.bringToBack(); }catch(_){}
     try{ if(mapa._scLayer) mapa._scLayer.bringToBack(); }catch(_){}
-    try{ mapa.eachLayer(l => { if(l !== mapa._pgoedfLayer && l !== mapa._scLayer && l.bringToFront && !(l instanceof L.TileLayer) && !(mapa._pgoedfClip && l === mapa._pgoedfClip.poligono)) l.bringToFront(); }); }catch(_){}
+    try{ mapa.eachLayer(l => { if(l !== mapa._pgoedfLayer && l !== mapa._scLayer && l.bringToFront && !(l instanceof L.TileLayer)
+        && !(typeof _zonifCapa !== 'undefined' && l === _zonifCapa)
+        && !(mapa._pgoedfClip && l === mapa._pgoedfClip.poligono)) l.bringToFront(); }); }catch(_){}
   };
   /* Filas de la leyenda: una por zona presente, cada una es un interruptor. */
+  let nombreArea = null;
   const pintarLeyenda = (mapa, presentes) => {
     ley.innerHTML = '';
     const cap = document.createElement('span'); cap.className = 'pgoedf-ley-cap';
@@ -6760,6 +6769,21 @@ function _montarPgoedfEnMenu(lienzo, toggle, seccionCapas){
       ley.appendChild(b);
     });
     if(!ley.querySelector('.pgoedf-ley-item')){ ley.innerHTML = '<span class="pgoedf-ley-vacio">Sin zonas del PGOEDF en esta área.</span>'; }
+    /* Cuántas hectáreas del área tienen zona del PGOEDF. Dentro de un ANP casi
+       siempre es una franja marginal —el Programa no ordena las ANP—, y sin
+       decirlo la capa parece no encender. Cifra del cruce ya calculado. */
+    if(enFicha && nombreArea){
+      pgoedfAreas().then(as => {
+        if(!ley.isConnected) return;
+        const e = as[nombreArea] || as[nombreClave(nombreArea)] || null;
+        const n = document.createElement('span'); n.className = 'pgoedf-ley-nota';
+        n.textContent = e
+          ? 'Cubre ' + (e.pct < 0.1 ? 'menos del 0.1' : e.pct.toFixed(1)) + '% del área ('
+            + fmt(Math.round(e.cubierto_ha)) + ' ha). El PGOEDF no asigna zona dentro de las áreas naturales protegidas.'
+          : 'El PGOEDF no asigna zona dentro de las áreas naturales protegidas.';
+        ley.appendChild(n);
+      }).catch(()=>{});
+    }
   };
   chip.addEventListener('click', async e => {
     e.stopPropagation();
@@ -6775,6 +6799,7 @@ function _montarPgoedfEnMenu(lienzo, toggle, seccionCapas){
     if(enFicha && typeof activeGeoLayer !== 'undefined' && activeGeoLayer){
       try{ const fc = activeGeoLayer.toGeoJSON(); area = fc.type === 'FeatureCollection' ? fc.features[0] : fc; }catch(_){ area = null; }
       if(area && area.geometry) feats = feats.filter(f => f.geometry && _pgoedfTocaArea(f, area));
+      try{ nombreArea = area && area.properties ? area.properties.nombre : null; }catch(_){ nombreArea = null; }
     }
     const presentes = new Set(feats.map(f => (f.properties||{}).clave).filter(Boolean));
     const sub = {};
@@ -7547,10 +7572,12 @@ function openDrawer(d){
    la ficha sigue siendo un cajón lateral. */
 const DR_ASOMADA = 230;
 let _drVis = 0;
+let _drMaxPrevio = 0;     /* último tope medido: lo usa el ajuste por cambio de alto */
 const _drMovil = () => window.matchMedia('(max-width:760px)').matches;
 function _drAlturas(){
   const d = document.getElementById('dr');
   const max = d ? Math.round(d.getBoundingClientRect().height) : Math.round(innerHeight*0.85);
+  _drMaxPrevio = max;
   return [0, Math.min(DR_ASOMADA, max), Math.round(max*0.55), max];
 }
 function drIr(vis){
@@ -7687,6 +7714,38 @@ function _marcaFicha(abierta){
   };
   if(mq.addEventListener) mq.addEventListener('change', alCambiar);
   else if(mq.addListener) mq.addListener(alCambiar);
+})();
+
+/* ═══ CAMBIO DE ALTO DEL VIEWPORT (barra del navegador, teclado) ═══════
+   Reportado el 14-sep-2026: al abrir una ficha en el iPhone quedaba una
+   franja del color de la página debajo de la hoja. Las dos hojas guardan su
+   altura visible en píxeles (`--dvis`, `--vis`) y el CSS la resta del 100 %
+   del elemento; el elemento mide `100svh − …`, así que cuando la barra del
+   navegador aparece o se esconde el elemento encoge pero el valor guardado
+   no: la hoja sube y descubre la página. Aquí se vuelve a fijar al tope
+   nuevo —conservando la posición si el usuario la había bajado—; el
+   `max(0px, …)` del CSS es la red de seguridad para el instante previo. */
+(function(){
+  let t = null;
+  const ajustar = () => {
+    try{
+      const dr = document.getElementById('dr');
+      if(dr && dr.classList.contains('open') && _drMovil() && _drVis > 0){
+        const previo = _drMaxPrevio, max = _drAlturas()[3];
+        drIr(_drVis >= previo - 4 ? max : Math.min(_drVis, max));
+      }
+    }catch(_){}
+    try{
+      const h = document.getElementById('ubicarResultado');
+      if(h && !h.hidden && _hojaVis > 0 && _shellActivo()){
+        const a = _hojaAlturas();
+        hojaIr(Math.min(_hojaVis, a[3]));
+      }
+    }catch(_){}
+  };
+  const alRedimensionar = () => { clearTimeout(t); t = setTimeout(ajustar, 140); };
+  window.addEventListener('resize', alRedimensionar);
+  try{ if(window.visualViewport) window.visualViewport.addEventListener('resize', alRedimensionar); }catch(_){}
 })();
 
 function closeDrawer(){
