@@ -2247,9 +2247,10 @@ header.top .meta{display:flex;align-items:center;gap:12px}
 .pgoedf-leyenda[hidden]{display:none !important}
 .pgoedf-ley-item{display:flex;align-items:center;gap:7px;white-space:nowrap}
 .pgoedf-ley-item .pg-dot{width:10px;height:10px}
-.pgoedf-ley-item .pg-dot+.pg-dot{margin-left:-3px}
-.pgoedf-ley-item .pg-dot-vacio{visibility:hidden}
-.pgoedf-ley-item small{font-size:var(--fs-micro);color:var(--muted)}
+.pgoedf-ley-txt{min-width:0}
+.pgoedf-ley-esp{display:inline-flex;align-items:center;gap:5px;margin-left:6px;padding-left:8px;border-left:1px solid var(--line-soft);
+  font-size:var(--fs-micro);color:var(--muted)}
+.pgoedf-toggle:focus:not(:focus-visible){outline:none}
 /* El menú crece con las capas (y con la leyenda del PGOEDF): en ningún ancho
    debe salirse del lienzo; el JS le pasa el alto del mapa en --lienzo-h. */
 .map-block-controls-floating .map-block-toggle{max-height:calc(var(--lienzo-h,100dvh) - 66px);overflow-y:auto;

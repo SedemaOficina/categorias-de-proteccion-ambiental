@@ -6417,12 +6417,13 @@ const PGOEDF_LEYENDA = [
   ['PDU',null,'Poblados, equipamiento y programas parciales']
 ];
 function _pgoedfLeyendaHTML(){
-  /* Cinco renglones: la variante «Especial» comparte renglón con un segundo
-     punto, más claro; el título del punto dice cuál es cuál. */
+  /* Cinco renglones. Cada color va pegado a su etiqueta: el punto de la
+     variante «Especial» se coloca junto a esa palabra, no al inicio. */
   return PGOEDF_LEYENDA.map(([k, ke, n]) =>
     '<span class="pgoedf-ley-item"><span class="pg-dot" style="--c:' + PGOEDF_COLOR[k] + '" title="' + esc(n) + ' (' + k + ')"></span>'
-    + (ke ? '<span class="pg-dot" style="--c:' + PGOEDF_COLOR[ke] + '" title="' + esc(n) + ' Especial (' + ke + ')"></span>' : '<span class="pg-dot pg-dot-vacio"></span>')
-    + esc(n) + (ke ? ' <small>· Especial</small>' : '') + '</span>').join('');
+    + '<span class="pgoedf-ley-txt">' + esc(n) + '</span>'
+    + (ke ? '<span class="pgoedf-ley-esp"><span class="pg-dot" style="--c:' + PGOEDF_COLOR[ke] + '" title="' + esc(n) + ' Especial (' + ke + ')"></span>Especial</span>' : '')
+    + '</span>').join('');
 }
 const PGOEDF_COLOR = {
   FC:'#1f6b4a', FCE:'#3f8f6a', FP:'#1c6b85', FPE:'#4a8fa8',
