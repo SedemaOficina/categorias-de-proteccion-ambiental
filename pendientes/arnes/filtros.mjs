@@ -1,13 +1,11 @@
-import pw from '/home/claude/.npm-global/lib/node_modules/playwright/index.js';
-const { chromium } = pw; import fs from 'fs';
-const CSV = fs.readFileSync('fixtures/inventario.csv','utf8');
-const STUB = fs.readFileSync('fixtures/leaflet-stub.js','utf8');
+import { playwright, lanzar, CSV_MIN as CSV, LEAFLET_STUB as STUB, BASE } from './_comun.mjs';
+const { chromium } = await playwright(); import fs from 'fs';
 const EMPTY = JSON.stringify({type:'FeatureCollection',features:[]});
-const b = await chromium.launch({executablePath:'/opt/pw-browsers/chromium-1194/chrome-linux/chrome',args:['--no-sandbox']});
+const b = await lanzar(chromium);
 const ctx = await b.newContext({viewport:{width:1440,height:1000}});
 await ctx.route('**/*', async r=>{
   const u=r.request().url();
-  if(u.startsWith('http://localhost:8899')) return r.continue();
+  if(u.startsWith(BASE)) return r.continue();
   if(u.includes('leaflet.js')) return r.fulfill({contentType:'application/javascript',body:STUB});
   if(u.includes('leaflet.css')||u.includes('fonts.googleapis.com')) return r.fulfill({contentType:'text/css',body:''});
   if(u.includes('docs.google.com')) return r.fulfill({contentType:'text/csv',body:CSV});
@@ -16,7 +14,7 @@ await ctx.route('**/*', async r=>{
 });
 const pg = await ctx.newPage();
 const errs=[]; pg.on('pageerror',e=>errs.push(String(e)));
-await pg.goto('http://localhost:8899/index.html',{waitUntil:'load'});
+await pg.goto(BASE+'/index.html',{waitUntil:'load'});
 await pg.waitForTimeout(3000);
 const visibles = () => pg.evaluate(()=>{
   const ids=['q','fTipo','fJur','fCat','fAlc','fPM','fSC','fDG'];

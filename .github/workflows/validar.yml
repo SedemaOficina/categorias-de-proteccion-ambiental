@@ -1,11 +1,20 @@
 name: Validar entrega SIA
 
 # Red de seguridad de la cadena de publicación. Comprueba lo que hasta ahora
-# dependía solo de la disciplina de quien edita:
-#   1. que el JavaScript inline de index.html sea sintácticamente válido
-#   2. que sw.js sea válido
-#   3. que CACHE_VERSION se haya bumpeado cuando index.html o sw.js cambian
-#      (sin ese bump el navegador sigue sirviendo el index.html viejo: cache-first)
+# dependía solo de la disciplina de quien edita (auditoría 13-sep-2026, D12-02:
+# la versión anterior nunca validaba app.js ni styles.css, y el chequeo de bump
+# solo corría en pull_request, cuando el flujo real es push directo a main):
+#   1. que app.js, sw.js y config.js sean sintácticamente válidos
+#   2. que el JavaScript inline de index.html sea válido
+#   3. que styles.css no tenga errores de sintaxis
+#   4. que CACHE_VERSION se haya bumpeado cuando cambie CUALQUIERA de los
+#      archivos que el Service Worker sirve desde caché (index.html, styles.css,
+#      app.js, config.js, sw.js, manifest.json, data/**): sin el bump el
+#      navegador sigue sirviendo la versión anterior (cache-first)
+#   5. que los GeoJSON sean JSON válido, 2D y en EPSG:4326 (lon/lat)
+#   6. que el invariante 66 = 13 + 26 + 18 + 9 se cumpla en geometrias.geojson
+#      y en data/inventario.csv (respaldo del Sheet)
+#   7. que las 17 columnas del contrato del Sheet sigan en el respaldo
 
 on:
   push:
@@ -24,47 +33,114 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Sintaxis de app.js, sw.js y config.js
+        run: |
+          for f in app.js sw.js config.js; do
+            node --check "$f" && echo "$f: OK"
+          done
+
       - name: Extraer y validar el JavaScript inline de index.html
         run: |
-          sed -n '/^<script>$/,/^<\/script>$/p' index.html | sed '1d;$d' > /tmp/sia_inline.js
-          test -s /tmp/sia_inline.js || { echo "::error::No se pudo extraer el <script> inline"; exit 1; }
+          node -e "
+            const h = require('fs').readFileSync('index.html','utf8');
+            const bloques = [...h.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+            if (!bloques.length) { console.error('::error::No se encontró ningún <script> inline'); process.exit(1); }
+            require('fs').writeFileSync('/tmp/sia_inline.js', bloques.join('\n;\n'));
+            console.log('bloques inline:', bloques.length);
+          "
           node --check /tmp/sia_inline.js
-          echo "JavaScript inline valido ($(wc -l < /tmp/sia_inline.js) lineas)"
+          echo "JavaScript inline válido"
 
-      - name: Validar sw.js
-        run: node --check sw.js
+      - name: Sintaxis de styles.css
+        run: |
+          npm i --no-save --silent css-tree@2
+          node -e "
+            const csstree = require('css-tree');
+            const css = require('fs').readFileSync('styles.css','utf8');
+            const errores = [];
+            csstree.parse(css, { positions:true, onParseError(e){ errores.push(e.message + ' (línea ' + e.line + ')'); } });
+            if (errores.length) { errores.forEach(e => console.error('::error::styles.css: ' + e)); process.exit(1); }
+            console.log('styles.css: 0 errores de sintaxis');
+          "
 
       - name: Verificar que CACHE_VERSION se haya bumpeado
-        if: github.event_name == 'pull_request'
         run: |
-          base="${{ github.event.pull_request.base.sha }}"
-          if git diff --name-only "$base" HEAD | grep -qE '^(index\.html|sw\.js)$'; then
-            antes=$(git show "$base:sw.js" | grep -oP "CACHE_VERSION = '\K[^']+" || echo "")
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+          # Primer push de la rama o base desconocida: no hay contra qué comparar.
+          if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            echo "Sin commit base ($base): se omite la comparación de versión"; exit 0
+          fi
+          cambiados=$(git diff --name-only "$base" HEAD)
+          echo "$cambiados"
+          if echo "$cambiados" | grep -qE '^(index\.html|styles\.css|app\.js|config\.js|sw\.js|manifest\.json|data/.*)$'; then
+            antes=$(git show "$base:sw.js" 2>/dev/null | grep -oP "CACHE_VERSION = '\K[^']+" || echo "")
             ahora=$(grep -oP "CACHE_VERSION = '\K[^']+" sw.js)
             echo "antes=$antes  ahora=$ahora"
             if [ "$antes" = "$ahora" ]; then
-              echo "::error::index.html o sw.js cambiaron pero CACHE_VERSION sigue en '$ahora'. Bumpeala (formato sia-v35-AAAA-MM-DD<letra>) o el navegador servira la version anterior."
+              echo "::error::Cambió un archivo servido desde caché pero CACHE_VERSION sigue en '$ahora'. Bumpéala (formato sia-v35-AAAA-MM-DD<letra>) o el navegador servirá la versión anterior."
               exit 1
             fi
+            echo "$ahora" | grep -qE "^sia-v35-[0-9]{4}-[0-9]{2}-[0-9]{2}[a-z]+$" || { echo "::error::CACHE_VERSION '$ahora' no sigue el formato sia-v35-AAAA-MM-DD<letra>"; exit 1; }
+          else
+            echo "Ningún archivo servido desde caché cambió: no se exige bump"
           fi
 
-      - name: Verificar los GeoJSON
-        run: |
-          for f in data/*.geojson; do
-            node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" || { echo "::error::$f no es JSON valido"; exit 1; }
-          done
-          echo "Los $(ls data/*.geojson | wc -l) GeoJSON son JSON valido"
-
-      - name: Verificar el invariante del inventario (66 areas)
+      - name: Verificar los GeoJSON (JSON válido · 2D · EPSG:4326)
         run: |
           node -e "
-            const fc = JSON.parse(require('fs').readFileSync('data/geometrias.geojson','utf8'));
-            const c = {};
-            fc.features.forEach(f => { const g = f.properties.grupo; c[g] = (c[g]||0) + 1; });
+            const fs = require('fs'), path = require('path');
+            const archivos = [];
+            (function walk(d){ for (const e of fs.readdirSync(d, {withFileTypes:true})) { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (p.endsWith('.geojson')) archivos.push(p); } })('data');
+            let mal = 0;
+            const revisa = (c, f) => { if (typeof c[0] === 'number') { if (c.length !== 2) { console.error('::error::' + f + ': coordenada con ' + c.length + ' componentes (debe ser 2D)'); return false; } if (c[0] < -120 || c[0] > -85 || c[1] < 14 || c[1] > 33) { console.error('::error::' + f + ': coordenada fuera de México en lon/lat (' + c + '); ¿está en 4326?'); return false; } return true; } return c.every(x => revisa(x, f)); };
+            for (const f of archivos) {
+              let g; try { g = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { console.error('::error::' + f + ' no es JSON válido: ' + e.message); mal++; continue; }
+              const feats = g.features || [];
+              let ok = true;
+              for (const ft of feats) { if (!ft.geometry) continue; if (!revisa(ft.geometry.coordinates, f)) { ok = false; break; } }
+              if (!ok) mal++; else console.log(f + ': ' + feats.length + ' rasgos OK');
+            }
+            if (mal) process.exit(1);
+            console.log('Los ' + archivos.length + ' GeoJSON son válidos, 2D y 4326');
+          "
+
+      - name: Verificar el invariante del inventario (66 áreas) y el contrato de columnas
+        run: |
+          node -e "
+            const fs = require('fs');
             const esperado = {'AVA · Bosque Urbano':13,'AVA · Barranca':26,'ANP · Local':18,'ANP · Federal':9};
-            let ok = fc.features.length === 66;
-            for (const [k,v] of Object.entries(esperado)) if (c[k] !== v) ok = false;
-            console.log('total', fc.features.length, JSON.stringify(c));
-            if (!ok) { console.error('::error::El inventario dejo de ser 66 = 13 BU + 26 Barranca + 18 ANP Local + 9 ANP Federal'); process.exit(1); }
-            console.log('Invariante de 66 areas: OK');
+            const comprueba = (nombre, grupos) => {
+              const c = {}; grupos.forEach(g => { c[g] = (c[g]||0) + 1; });
+              let ok = grupos.length === 66;
+              for (const [k,v] of Object.entries(esperado)) if (c[k] !== v) ok = false;
+              console.log(nombre, grupos.length, JSON.stringify(c));
+              if (!ok) { console.error('::error::' + nombre + ': dejó de ser 66 = 13 BU + 26 Barranca + 18 ANP Local + 9 ANP Federal'); process.exit(1); }
+            };
+            const fc = JSON.parse(fs.readFileSync('data/geometrias.geojson','utf8'));
+            comprueba('geometrias.geojson', fc.features.map(f => f.properties.grupo));
+            // Respaldo del Sheet: parser CSV mínimo con comillas
+            let t = fs.readFileSync('data/inventario.csv','utf8'); if (t.charCodeAt(0) === 0xFEFF) t = t.slice(1);
+            const filas = []; let fila = [], campo = '', q = false;
+            for (let i = 0; i < t.length; i++) { const ch = t[i], n = t[i+1];
+              if (q) { if (ch === '\"' && n === '\"') { campo += '\"'; i++; } else if (ch === '\"') q = false; else campo += ch; }
+              else if (ch === '\"') q = true; else if (ch === ',') { fila.push(campo); campo = ''; }
+              else if (ch === '\n' || ch === '\r') { if (campo !== '' || fila.length) { fila.push(campo); filas.push(fila); } fila = []; campo = ''; if (ch === '\r' && n === '\n') i++; }
+              else campo += ch; }
+            if (campo !== '' || fila.length) { fila.push(campo); filas.push(fila); }
+            const cab = filas[0].map(s => s.trim());
+            const COLUMNAS = ['id','nombre','grupo','categoria','alcaldia','fecha_decreto','fecha_decreto_iso','superficie','programa_manejo','fecha_pm','fecha_pm_iso','suelo_conservacion_pct','dg_responsable','url_pdf_decreto','url_gaceta_decreto','url_pdf_pm','url_gaceta_pm'];
+            const faltan = COLUMNAS.filter(c => !cab.includes(c));
+            if (faltan.length) { console.error('::error::data/inventario.csv no trae las columnas: ' + faltan.join(', ')); process.exit(1); }
+            const ig = cab.indexOf('grupo'), inom = cab.indexOf('nombre');
+            const datos = filas.slice(1).filter(r => r.some(v => v !== ''));
+            comprueba('inventario.csv', datos.map(r => (r[ig]||'').trim()));
+            const nombres = new Set(datos.map(r => (r[inom]||'').trim()));
+            const geom = new Set(fc.features.map(f => f.properties.nombre));
+            const sin = [...nombres].filter(n => !geom.has(n));
+            if (sin.length) { console.error('::error::Nombres del respaldo sin polígono en geometrias.geojson: ' + sin.join(', ')); process.exit(1); }
+            console.log('Invariante de 66 áreas, contrato de 17 columnas y cruce de nombres: OK');
           "

@@ -1,38 +1,30 @@
-import pw from '/home/claude/.npm-global/lib/node_modules/playwright/index.js';
-const { chromium, devices } = pw; import fs from 'fs'; import zlib from 'zlib';
-const F=n=>fs.readFileSync(n,'utf8');
-const LEAF=F('vendor/leaflet.js'),LCSS=F('vendor/leaflet.css');
-const D={geometrias:F('data/geometrias.geojson'),alcaldias:F('data/alcaldias.geojson'),suelo_conservacion:F('data/suelo_conservacion.geojson'),arcac:F('arcac.geojson'),zona_patrimonio:F('data/zona_patrimonio.geojson'),traslapes:fs.existsSync('data/traslapes.geojson')?F('data/traslapes.geojson'):null};
-function png(w,h,rgb){const raw=Buffer.alloc((w*3+1)*h);for(let y=0;y<h;y++){raw[y*(w*3+1)]=0;for(let x=0;x<w;x++){const o=y*(w*3+1)+1+x*3;raw[o]=rgb[0];raw[o+1]=rgb[1];raw[o+2]=rgb[2];}}
- const crc=(b)=>{let c,t=[];for(let n=0;n<256;n++){c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;t[n]=c;}let cr=0xffffffff;for(const x of b)cr=t[(cr^x)&255]^(cr>>>8);return (cr^0xffffffff)>>>0;};
- const ch=(t,d)=>{const l=Buffer.alloc(4);l.writeUInt32BE(d.length);const td=Buffer.concat([Buffer.from(t),d]);const c=Buffer.alloc(4);c.writeUInt32BE(crc(td));return Buffer.concat([l,td,c]);};
- const ih=Buffer.alloc(13);ih.writeUInt32BE(w,0);ih.writeUInt32BE(h,4);ih[8]=8;ih[9]=2;
- return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),ch('IHDR',ih),ch('IDAT',zlib.deflateSync(raw)),ch('IEND',Buffer.alloc(0))]);}
-const TILE=png(256,256,[236,233,224]);
+import { playwright, lanzar, F, LEAF, LCSS, CSV_REAL, CAPAS, VACIA, teselaCORS, BASE } from './_comun.mjs';
+const { chromium, devices } = await playwright(); import fs from 'fs';
+const D = CAPAS;
 const PERFILES=[
  {n:'iPhone 14 (Safari-like)', vp:{width:390,height:844}, dpr:3, mob:true, ua:'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'},
  {n:'Android Pixel 7', vp:{width:412,height:915}, dpr:2.625, mob:true, ua:'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36'},
  {n:'Laptop 1366×768', vp:{width:1366,height:768}, dpr:1, mob:false},
  {n:'Escritorio 1920×1080', vp:{width:1920,height:1080}, dpr:1, mob:false},
 ];
-const b=await chromium.launch({executablePath:process.env.CHROME||'/opt/pw-browsers/chromium-1194/chrome-linux/chrome',args:['--no-sandbox']});
+const b=await lanzar(chromium);
 const informe={};
 for(const P of PERFILES){
  const ctx=await b.newContext({viewport:P.vp,deviceScaleFactor:P.dpr,isMobile:P.mob,hasTouch:P.mob,userAgent:P.ua});
  let bytes=0; const peticiones=[];
  await ctx.route('**/*', async r=>{const u=r.request().url();
-  if(u.startsWith('http://localhost:8897')){ peticiones.push(u.replace('http://localhost:8897/','')); return r.continue(); }
+  if(u.startsWith(BASE)){ peticiones.push(u.replace(BASE+'/','')); return r.continue(); }
   if(u.includes('leaflet.js'))return r.fulfill({contentType:'application/javascript',body:LEAF});
   if(u.includes('leaflet.css'))return r.fulfill({contentType:'text/css',body:LCSS});
-  if(u.includes('docs.google.com'))return r.fulfill({contentType:'text/csv',body:F('inventario_v39.csv')});
-  if(u.includes('basemaps.cartocdn')||u.includes('arcgisonline'))return r.fulfill({contentType:'image/png',headers:{'Access-Control-Allow-Origin':'*'},body:TILE});
+  if(u.includes('docs.google.com'))return r.fulfill({contentType:'text/csv',body:CSV_REAL});
+  if(u.includes('basemaps.cartocdn')||u.includes('arcgisonline'))return teselaCORS(r);
   for(const k in D) if(D[k] && u.includes(k+'.geojson')) return r.fulfill({contentType:'application/json',body:D[k]});
-  if(u.endsWith('.geojson'))return r.fulfill({contentType:'application/json',body:'{"type":"FeatureCollection","features":[]}'});
+  if(u.endsWith('.geojson'))return r.fulfill({contentType:'application/json',body:VACIA});
   return r.abort();});
  const pg=await ctx.newPage(); const errs=[], warns=[]; pg.on('pageerror',e=>errs.push(String(e).slice(0,160))); pg.on('console',m=>{ if(m.type()==='warning'||m.type()==='error') warns.push(m.type()+': '+m.text().slice(0,140)); });
  pg.on('response',async r=>{ try{ const h=r.headers()['content-length']; if(h) bytes+=+h; }catch(_){}} );
  const t0=Date.now();
- await pg.goto('http://localhost:8897/index.html',{waitUntil:'load'});
+ await pg.goto(BASE+'/index.html',{waitUntil:'load'});
  await pg.waitForFunction(()=>document.querySelectorAll('#tb tr').length>0 || document.querySelector('.dest'), null, {timeout:15000}).catch(()=>{});
  const tBoot=Date.now()-t0;
  await pg.waitForTimeout(2500);

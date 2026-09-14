@@ -1,6 +1,6 @@
 # CLAUDE.md · Sistema de Información Ambiental (SIA) · SEDEMA CDMX
 
-Reglas del proyecto para el asistente de código. Vigente desde el 13 de septiembre de 2026 (v53). La versión anterior, con el historial de decisiones de agosto y principios de septiembre, quedó en `_borrar/CLAUDE-2026-09-11.md`; el detalle de cada auditoría vive en los documentos del Proyecto de Claude (`claude/*.md`).
+Reglas del proyecto para el asistente de código. Vigente desde el 13 de septiembre de 2026 (v53; última revisión con la entrega 5 de la auditoría 360, sin bump: v70 sigue vigente). La versión anterior, con el historial de decisiones de agosto y principios de septiembre, está en el historial de git (commits del 11-sep-2026); el detalle de cada auditoría vive en los documentos del Proyecto de Claude (`claude/*.md`) y en `pendientes/` del repo. **El Proyecto de Claude guarda una copia idéntica de este archivo (`CLAUDE.md`)**: se actualizan juntos.
 
 ## Qué es
 Tablero público de las 66 áreas de protección ambiental de la CDMX. Público objetivo: personal de SEDEMA en campo (celular) y en oficina (escritorio). Producción: **https://sia.contactoverde.com** en Cloudflare Workers (assets estáticos). Repo: `SedemaOficina/categorias-de-proteccion-ambiental`. GitHub Pages está apagado.
@@ -8,10 +8,11 @@ Tablero público de las 66 áreas de protección ambiental de la CDMX. Público 
 ## Arquitectura (desde v44)
 - **Cuatro archivos, sin build ni framework:** `index.html` (marcado), `styles.css`, `app.js` (un solo IIFE; no es módulo ES) y `config.js` (`window.SIA_CONFIG.GOOGLE_MAPS_API_KEY`). El orden de carga es `config.js` → `app.js`.
 - **`config.js` nunca se reescribe en las entregas**: contiene la llave. Si hace falta cambiarla, se edita esa línea y nada más.
-- `sw.js` en la raíz (su ámbito es la carpeta desde la que se sirve). `CORE_ASSETS` instala `./`, `index.html`, `styles.css`, `app.js`, `config.js`, logo, favicon, `data/inventario.csv`, `data/zonificacion/index.json`, `data/pgoedf_areas.json`. Nada pesado ahí.
+- `sw.js` en la raíz (su ámbito es la carpeta desde la que se sirve). `CORE_ASSETS` instala `./`, `index.html`, `styles.css`, `app.js`, `config.js`, logo, favicon, `manifest.json`, `assets/icon-192.png`, `data/inventario.csv`, `data/zonificacion/index.json`, `data/pgoedf_areas.json`. Nada pesado ahí.
 - Sin `?v=` en las URLs de los assets: Cloudflare ignora la query; la coherencia la da la caché por versión del SW.
-- `_headers`: cabeceras de seguridad (nosniff, Referrer-Policy, Permissions-Policy, HSTS, COOP y la misma CSP que `index.html` lleva en `<meta>`; `frame-ancestors` pendiente de decisión).
-- **PWA:** `manifest.json` (standalone, atajos «¿Dónde estoy?» e «Inventario») + iconos en `assets/icon-*.png`; el SW responde navegaciones con query desde `index.html` cacheado (`ignoreSearch`). `.assetsignore`: `tools`, `CLAUDE.md`, `README.md`, `_borrar`, `wrangler.jsonc`, dotfiles.
+- `_headers`: cabeceras de seguridad (nosniff, Referrer-Policy, Permissions-Policy, HSTS, COOP, `frame-ancestors 'self'` desde v65 y la misma CSP que `index.html` lleva en `<meta>`; `script-src` aún con `'unsafe-inline'`: pasar a hash es la entrega 6 de la auditoría). `charset=utf-8` explícito en `.js`/`.css`.
+- **PWA:** `manifest.json` (standalone, atajos «¿Dónde estoy?» e «Inventario») + iconos en `assets/icon-*.png`; el SW responde navegaciones con query desde `index.html` cacheado (`ignoreSearch`). `.assetsignore`: `tools`, `CLAUDE.md`, `README.md`, `_borrar`, `pendientes`, `wrangler.jsonc`, dotfiles.
+- **Teselas CARTO:** `TILE_LAYERS.positron.url` lleva `?key=…` de una cuenta CARTO no documentada; los basemaps gratuitos no la exigen. Si dejan de cargar, probar sin `?key=` (pendiente B12).
 - Datos en `data/`. Inventario en vivo desde el Google Sheet (CSV publicado); respaldo en `data/inventario.csv`.
 - **Contrato de columnas del Sheet (v68):** `COLUMNAS_ESPERADAS` (las 17 del README) y `COLUMNAS_CRITICAS` (`nombre`, `grupo`, `superficie`, `programa_manejo`). Falta crítica → respaldo con aviso; falta no crítica → alerta de integridad y columna vacía; columnas extra se ignoran. Si el Sheet gana una columna que el tablero usa, añadirla a la lista.
 - **Capas complementarias (SC, ARCAC, Zona Patrimonio):** los cargadores siempre resuelven con una colección; si fallan la marcan `_fallo:true` y no la cachean, `_cargarCapasCobertura()` las reintenta y `_capasFallidas` alimenta «Resultado incompleto…». No volver a cachear una colección vacía por fallo.
@@ -31,7 +32,7 @@ Tablero público de las 66 áreas de protección ambiental de la CDMX. Público 
 - Derivados: `tools/traslapes.py` regenera `traslapes.geojson` (solo la parte poligonal de cada intersección: nunca `GeometryCollection`, que Leaflet pinta como marcadores y líneas); `pgoedf_areas.json` se recalcula con shapely en 6372 cuando cambien geometrías o PGOEDF. Los GeoJSON de `data/zonificacion/` también se validan con `buffer(0)` y sin rasgos de área cero; `index.json` se recalcula al tocarlos (v70: `la-loma.geojson`).
 
 ## Reglas de despliegue (obligatorias en cada entrega)
-1. `node --check app.js` (y `sw.js` si cambió). CSS: 0 errores de sintaxis.
+1. `node --check app.js` (y `sw.js` si cambió). CSS: 0 errores de sintaxis. El CI (`.github/workflows/validar.yml`) repite estas comprobaciones en cada push y exige el bump cuando cambia cualquier archivo servido desde caché; que pase el CI no sustituye el arnés.
 2. **Bumpear `CACHE_VERSION` en `sw.js`** (`sia-v35-AAAA-MM-DD<letra>`).
 3. Decir qué archivos subir. El push lo hace la persona con GitHub Desktop; después **Purge Everything** en Cloudflare y comprobar `sw.js` en vivo.
 4. La copia local está en LF (`.gitattributes`); escribir los archivos en LF.
@@ -79,7 +80,7 @@ Tablero público de las 66 áreas de protección ambiental de la CDMX. Público 
 Suelo urbano → chip «Suelo urbano» + área más cercana · Suelo de Conservación sin ANP → bloque PGOEDF con zona, clave y catálogo · ANP con PM → chips «Programa de manejo publicado · fecha» (+ «Coadministración con la Federación») + «Zona del programa de manejo en este punto» (o «aún no disponible en formato geoespacial») · sin PM → «Sin programa de manejo vigente» · varias coberturas → lista por jerarquía normativa + nota de concurrencia · fuera de CDMX → aviso de ámbito.
 
 ## Verificación antes de entregar
-Arnés Playwright (Chromium) con doble de Leaflet, teselas sintéticas y CSV de 66 filas: `traslapes-ui` (0 pares encimados en 393 y 1500 px), `integ` (invariante y escenarios de borrado/renombre), `flujos` (4 casos), `zon`, `limpiar`, `fichas-uniformes` (misma huella en las tres fichas), `aud360` (cuatro perfiles: iPhone, Pixel, laptop, escritorio). Lo que el arnés no ve —teselas reales, fuentes, Google Places, SW en producción— se comprueba en el navegador real tras la purga.
+Arnés Playwright (Chromium) en `pendientes/arnes/` (README con la línea exacta de arranque; reproducible desde cualquier carpeta vía `_comun.mjs`): `aud360.mjs` (cuatro perfiles: iPhone, Pixel, laptop, escritorio; errores, desbordes, táctiles, contraste y los cuatro flujos de ubicación), `filtros.mjs`, `acceso.mjs` (sesión de Access). Los scripts de cada auditoría (`t_*.mjs`: rotación, SW con corte de red, contrato de columnas, fallos de capas, ligas, accesibilidad) se documentan en su `auditoria-360-*.md`. Lo que el arnés no ve —teselas reales, fuentes, Google Places, SW en producción— se comprueba en el navegador real tras la purga.
 
 ## Pendientes y decisiones
 Lista viva en **dos copias idénticas**: `pendientes/pendientes.md` (repo; carpeta versionada pero excluida del sitio por `.assetsignore`) y `claude/pendientes.md` (Proyecto de Claude). Se actualizan las dos en cada entrega. Los cortes de verificación y hallazgos (cruces con Gacetas, revisión de ligas, análisis puntuales) van en la misma carpeta con fecha en el nombre. No duplicar la lista aquí.

@@ -1,5 +1,6 @@
 import http from 'http'; import fs from 'fs'; import path from 'path';
-const root='/home/claude/verif'; const FLAG='/home/claude/verif/.expirada';
+import { RAIZ, R } from './_comun.mjs';
+const root=RAIZ; const FLAG=R('.expirada');
 const types={'.html':'text/html','.js':'application/javascript','.css':'text/css','.json':'application/json','.geojson':'application/json','.png':'image/png','.csv':'text/csv','.svg':'image/svg+xml'};
 http.createServer((req,res)=>{
   const u=new URL(req.url,'http://x'); const exp=fs.existsSync(FLAG);

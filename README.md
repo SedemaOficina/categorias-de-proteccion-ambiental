@@ -17,7 +17,7 @@
 - **Imagen de la consulta de ubicación**: imagen compartible del diagnóstico por punto (coordenada, fecha y hora, coberturas, régimen, zonas PM y PGOEDF). Es informativa, sin validez legal, y así lo dice la propia imagen.
 - **Instalable como app** (PWA) en iPhone y Android, con operación offline mediante Service Worker con caché versionada.
 
-Público objetivo: personal de la Secretaría en campo (celular) y en oficina (escritorio). El sitio es público; no requiere autenticación.
+Público objetivo: personal de la Secretaría en campo (celular) y en oficina (escritorio). **Desde el 13 de septiembre de 2026 el sitio está detrás de Cloudflare Access**: exige iniciar sesión (código de un solo uso al correo o cuenta de Google) y solo entran los correos dados de alta en la política (ver `pendientes/altas-acceso.md`). El tablero arranca desde la caché del Service Worker y, si la sesión expiró, detecta la redirección y manda al login solo.
 
 ## 2. Estructura del repositorio
 
@@ -35,7 +35,9 @@ categorias-de-proteccion-ambiental/
 ├── CLAUDE.md             ← reglas del proyecto para el asistente de código
 ├── assets/               ← logo, favicon, apple-touch-icon, og-image
 ├── tools/traslapes.py    ← regenera data/traslapes.geojson
-├── .github/workflows/validar.yml  ← CI: sintaxis, bump de versión, JSON, invariante 66
+├── pendientes/           ← lista viva de pendientes, cortes de verificación y el arnés de pruebas (no se publica)
+├── .editorconfig · .gitattributes ← LF y UTF-8 en el editor y en git
+├── .github/workflows/validar.yml  ← CI: sintaxis de app.js/sw.js/config.js/inline/CSS, bump de versión en push, GeoJSON 2D-4326, invariante 66, contrato de columnas
 └── data/
     ├── inventario.csv               ← respaldo del Sheet (arranque sin red)
     ├── geometrias.geojson           ← 66 polígonos del inventario
@@ -79,13 +81,15 @@ Cloudflare Workers sirve el repositorio como assets estáticos (`wrangler.jsonc`
 3. Commit y push a `main` (GitHub Desktop). Cloudflare despliega.
 4. **Purge Everything** en Cloudflare y comprobar en el sitio que `sw.js` muestre la versión nueva.
 
-El CI (`validar.yml`) rechaza cambios con sintaxis inválida, sin bump de versión, con JSON roto o que rompan el invariante de 66.
+El CI (`validar.yml`) corre en cada push a `main` y en cada pull request: rechaza sintaxis inválida en `app.js`, `sw.js`, `config.js`, el script inline de `index.html` y `styles.css`; exige el bump de `CACHE_VERSION` cuando cambia cualquier archivo servido desde caché (`index.html`, `styles.css`, `app.js`, `config.js`, `sw.js`, `manifest.json`, `data/**`); valida que los GeoJSON sean JSON, 2D y lon/lat; y comprueba el invariante de 66 en `geometrias.geojson` y en `data/inventario.csv`, las 17 columnas del respaldo y que todo nombre del respaldo tenga polígono. Las pruebas de comportamiento (Playwright) viven en `pendientes/arnes/` (ver su `README.md`) y se corren a mano antes de cada entrega.
+
+El pie del tablero muestra la versión instalada («Versión del tablero»), que es el `CACHE_VERSION` del Service Worker que controla ese navegador: es lo que hay que reportar cuando algo se ve distinto en dos aparatos.
 
 Las capas pesadas (`pgoedf`, `sipam_fao`, `arcac`, `traslapes`, zonificaciones) no van en `CORE_ASSETS`: se piden bajo demanda y se cachean en tiempo de ejecución.
 
 ## 5. Servicios externos
 
-- **Leaflet 1.9.4** (unpkg, con SRI). Teselas: CARTO Positron y Esri World Imagery.
+- **Leaflet 1.9.4** (unpkg, con SRI). Teselas: CARTO Positron y Esri World Imagery, pedidas con `crossOrigin` para que el Service Worker pueda cachearlas (hasta 600 entradas). La URL de Positron lleva una llave de CARTO (`?key=…` en `TILE_LAYERS.positron.url`, `app.js`); los basemaps gratuitos de CARTO no la exigen y no está documentado de qué cuenta cuelga: si algún día las teselas dejan de cargar, lo primero es probar la misma URL sin `?key=`.
 - **Google Maps JavaScript API + Places API (New)** para direcciones (autocompletado con token de sesión, desde 3 caracteres). La llave es de navegador, pública por diseño; lo que la protege son las restricciones por sitio y las cuotas en Google Cloud.
 - **Google Fonts**: Roboto, Roboto Mono, Cabin.
 
