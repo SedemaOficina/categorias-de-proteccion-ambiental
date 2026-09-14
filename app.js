@@ -6827,6 +6827,26 @@ function montarBotonBase(){
       /* El menú no debe salirse del lienzo: se le pasa el alto del mapa y el
          CSS lo convierte en tope con desplazamiento interno. */
       try{ const lz = cont.parentElement; if(lz) cont.style.setProperty('--lienzo-h', lz.clientHeight + 'px'); }catch(_){}
+      /* v76: tope real del menú = lo que queda VISIBLE desde su borde superior
+         (54 px bajo el botón) hasta el fondo del lienzo, del viewport o de la
+         barra de destinos fija de celular, lo que llegue primero. Con solo el
+         alto del lienzo, en «¿Dónde estoy?» el final del menú quedaba bajo la
+         barra y en la ficha bajo el borde del minimapa. */
+      try{
+        const lz = cont.parentElement, rc = cont.getBoundingClientRect();
+        const fondoLienzo = lz ? lz.getBoundingClientRect().bottom : window.innerHeight;
+        let fondo = fondoLienzo;
+        /* En celular, la barra de destinos fija tapa el final del lienzo; si
+           el mapa está casi todo bajo el pliegue, el tope sería ridículo y se
+           vuelve al del lienzo (la página se desplaza). En escritorio la página
+           se desplaza y manda el lienzo. */
+        const barra = document.querySelector('.destbar');
+        if(barra && getComputedStyle(barra).position === 'fixed'){
+          const visible = Math.min(fondoLienzo, window.innerHeight, barra.getBoundingClientRect().top);
+          if(visible - rc.top - 54 >= 240) fondo = visible;
+        }
+        cont.style.setProperty('--menu-max', Math.max(180, Math.round(fondo - rc.top - 54 - 10)) + 'px');
+      }catch(_){}
       const ab = cont.classList.toggle('base-abierto');
       b.setAttribute('aria-expanded', ab ? 'true' : 'false');
     });
@@ -6839,6 +6859,14 @@ function montarBotonBase(){
       b.setAttribute('aria-expanded','false');
     });
     cont.appendChild(b);
+    /* v76: el menú vive DENTRO del contenedor de Leaflet en el mapa general.
+       Sin esto, el touchstart subía al mapa, Leaflet iniciaba su arrastre y
+       su preventDefault del touchmove (no pasivo en WebKit) cancelaba el
+       desplazamiento del menú: en iPhone las capas del final no se alcanzaban.
+       Lo mismo con la rueda: desplaza el menú, no acerca el mapa. */
+    if(typeof L !== 'undefined' && L.DomEvent){
+      try{ L.DomEvent.disableClickPropagation(cont); L.DomEvent.disableScrollPropagation(cont); }catch(_){}
+    }
     /* Título de la sección de base (v76): el menú se lee como un panel de
        ajustes con dos apartados, «Mapa base» y «Capas». */
     if(!toggle.querySelector('.menu-tit-base')){

@@ -2790,10 +2790,17 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
    zonas del PGOEDF sangradas bajo su capa madre con guía a la izquierda. */
 .map-block-controls-floating{top:12px;right:12px}
 #mapCanvas .map-block-controls-floating{top:12px;right:12px}
-.map-block-controls-floating .map-block-toggle{min-width:320px;top:54px;padding:6px 0 8px;
-  max-height:min(calc(var(--lienzo-h,100dvh) - 72px), calc(100dvh - 140px))}
+/* overflow-y:auto: la regla del botón redondo (más abajo en la hoja, misma
+   especificidad) ponía overflow:hidden y el menú NUNCA se desplazaba: en
+   celular las capas del final quedaban fuera de alcance. El tope lo calcula
+   el JS al abrir (--menu-max); --lienzo-h queda de respaldo. */
+.map-block-controls-floating .map-block-toggle,
+.map-block-controls-floating.base-abierto .map-block-toggle{min-width:320px;top:54px;padding:6px 0 8px;
+  overflow-y:auto;overflow-x:hidden;
+  max-height:var(--menu-max, min(calc(var(--lienzo-h,100dvh) - 72px), calc(100dvh - 140px)))}
 @media (max-width:760px){
-  .map-block-controls-floating .map-block-toggle{min-width:300px;max-width:calc(100vw - 36px)}
+  .map-block-controls-floating .map-block-toggle,
+  .map-block-controls-floating.base-abierto .map-block-toggle{min-width:300px;max-width:calc(100vw - 36px)}
 }
 /* Títulos de sección (el de «Mapa base» lo inserta montarBotonBase). */
 /* El menú es una columna flex con tope de alto: sin flex-shrink:0 los
