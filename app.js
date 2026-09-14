@@ -3603,6 +3603,7 @@ function openZPDrawer(row){
       <p>Instrumento de protección superpuesto al territorio patrimonial. No forma parte del inventario ANP/AVA de la CDMX ni de sus conteos.</p></div>
   `;
   bd.classList.add('open'); dr.classList.add('open');
+  _fichaD = null;
 
   // Renderiza el mapa de la designación (solo mapa + zoom, sin buscador/toggle/fullscreen)
   loadZonaPatrimonio().then(()=>{
@@ -4038,6 +4039,7 @@ async function loadARCAC(){
 function openARCACFicha(no){
   const p = arcacByNo[no];
   if(!p) return;
+  _fichaD = null;
   if(typeof destroyMap === 'function'){ try{ destroyMap(); }catch(e){} }
   _marcaFicha(true);
   /* Abre en la posición alta: la ficha es el objeto de la consulta y a media
@@ -5118,6 +5120,11 @@ function _opcionesTeselas(cfg){
 let activeMap = null;
 let activeBaseLayer = null;
 let activeGeoLayer = null;
+/* Fila del inventario cuya ficha está abierta. La usa el menú de capas del
+   mini-mapa para decidir qué capas ofrecer: una capa que no toca el polígono
+   no debe aparecer (decisión del 14-sep-2026). Las fichas de ARCAC y Zona
+   Patrimonio la ponen en null: no son filas del inventario. */
+let _fichaD = null;
 
 function destroyMap(){
   if(activeMap){ activeMap.remove(); activeMap = null; activeBaseLayer = null; activeGeoLayer = null; }
@@ -6713,6 +6720,31 @@ function _pgoedfTocaArea(feat, area){
   for(let i=0;i<va.length;i+=paso(va)) if(geoContainsPoint(va[i][0], va[i][1], feat.geometry)) return true;
   return false;
 }
+/* Cobertura mínima para ofrecer la capa en el mini-mapa de una ficha. Es el
+   mismo corte con el que la ficha decide mostrar la tabla de zonas: por debajo
+   lo que entra son franjas de ajuste cartográfico de unas hectáreas, que a la
+   escala del mini-mapa no se ven y hacen creer que el interruptor no sirve. */
+const PGOEDF_MIN_FICHA_PCT = 2;
+/* Si al final no queda ninguna capa que ofrecer, el rótulo «Capas» se queda
+   solo y el menú parece incompleto. Se retira la sección vacía. */
+function _podarSeccionCapas(raiz){
+  (raiz || document).querySelectorAll('.map-block-toggle .capa-extra').forEach(sec => {
+    if(!sec.querySelector(':scope > *:not(.capa-extra-tit)')) sec.remove();
+  });
+}
+/* El PGOEDF no ordena las áreas naturales protegidas —rige su decreto y su
+   programa de manejo— ni alcanza a las que están fuera del Suelo de
+   Conservación: en esas fichas la capa no tiene nada que pintar y no se ofrece. */
+function _pgoedfAplicaEnFicha(){
+  const d = _fichaD;
+  if(!d) return Promise.resolve(false);
+  const e = scEstado(d);
+  if(e === 'fuera' || e === 'sindato') return Promise.resolve(false);
+  return pgoedfAreas()
+    .then(as => { const a = as[_claveDe(d)] || as[d.nombre] || null;
+                  return !!(a && typeof a.pct === 'number' && a.pct >= PGOEDF_MIN_FICHA_PCT); })
+    .catch(()=> false);
+}
 function _montarPgoedfEnMenu(lienzo, toggle, seccionCapas){
   const enFicha = !!lienzo.closest('#dr');
   const wrap = document.createElement('div'); wrap.className = 'pgoedf-flotante en-menu';
@@ -6724,6 +6756,15 @@ function _montarPgoedfEnMenu(lienzo, toggle, seccionCapas){
   const ley = document.createElement('div'); ley.className = 'pgoedf-leyenda'; ley.hidden = true;
   wrap.appendChild(chip); wrap.appendChild(ley);
   seccionCapas().appendChild(wrap);
+  /* En la ficha se monta oculto y se retira si el área no tiene zonificación
+     del PGOEDF: un interruptor que no cambia nada es peor que no tenerlo. */
+  if(enFicha){
+    wrap.hidden = true;
+    _pgoedfAplicaEnFicha().then(ok => {
+      if(ok){ wrap.hidden = false; return; }
+      const sec = wrap.parentElement; wrap.remove(); _podarSeccionCapas(sec && sec.parentElement);
+    });
+  }
   if(typeof L !== 'undefined' && L.DomEvent){ L.DomEvent.disableClickPropagation(wrap); }
 
   const mapaDe = () => { const c = lienzo.classList.contains('leaflet-container') ? lienzo : lienzo.querySelector('.leaflet-container'); return c && c._siaMapa; };
@@ -6747,7 +6788,6 @@ function _montarPgoedfEnMenu(lienzo, toggle, seccionCapas){
         && !(mapa._pgoedfClip && l === mapa._pgoedfClip.poligono)) l.bringToFront(); }); }catch(_){}
   };
   /* Filas de la leyenda: una por zona presente, cada una es un interruptor. */
-  let nombreArea = null;
   const pintarLeyenda = (mapa, presentes) => {
     ley.innerHTML = '';
     const cap = document.createElement('span'); cap.className = 'pgoedf-ley-cap';
@@ -6772,15 +6812,15 @@ function _montarPgoedfEnMenu(lienzo, toggle, seccionCapas){
     /* Cuántas hectáreas del área tienen zona del PGOEDF. Dentro de un ANP casi
        siempre es una franja marginal —el Programa no ordena las ANP—, y sin
        decirlo la capa parece no encender. Cifra del cruce ya calculado. */
-    if(enFicha && nombreArea){
+    if(enFicha && _fichaD){
+      const d = _fichaD;
       pgoedfAreas().then(as => {
         if(!ley.isConnected) return;
-        const e = as[nombreArea] || as[nombreClave(nombreArea)] || null;
+        const e = as[_claveDe(d)] || as[d.nombre] || null;
+        if(!e || typeof e.pct !== 'number') return;
         const n = document.createElement('span'); n.className = 'pgoedf-ley-nota';
-        n.textContent = e
-          ? 'Cubre ' + (e.pct < 0.1 ? 'menos del 0.1' : e.pct.toFixed(1)) + '% del área ('
-            + fmt(Math.round(e.cubierto_ha)) + ' ha). El PGOEDF no asigna zona dentro de las áreas naturales protegidas.'
-          : 'El PGOEDF no asigna zona dentro de las áreas naturales protegidas.';
+        n.textContent = 'Zonificada: ' + e.pct.toFixed(1) + '% del área ('
+          + fmt(Math.round(e.cubierto_ha)) + ' ha).';
         ley.appendChild(n);
       }).catch(()=>{});
     }
@@ -6799,7 +6839,6 @@ function _montarPgoedfEnMenu(lienzo, toggle, seccionCapas){
     if(enFicha && typeof activeGeoLayer !== 'undefined' && activeGeoLayer){
       try{ const fc = activeGeoLayer.toGeoJSON(); area = fc.type === 'FeatureCollection' ? fc.features[0] : fc; }catch(_){ area = null; }
       if(area && area.geometry) feats = feats.filter(f => f.geometry && _pgoedfTocaArea(f, area));
-      try{ nombreArea = area && area.properties ? area.properties.nombre : null; }catch(_){ nombreArea = null; }
     }
     const presentes = new Set(feats.map(f => (f.properties||{}).clave).filter(Boolean));
     const sub = {};
@@ -6921,7 +6960,16 @@ function montarBotonBase(){
     const zw = lienzo && lienzo.querySelector('.zonif-flotante');
     if(zw && !toggle.contains(zw)){ zw.classList.add('en-menu'); seccionCapas().appendChild(zw); }
     const sc = lienzo && lienzo.querySelector('.drawer-sc-floating');
-    if(sc && !toggle.contains(sc)){ sc.classList.add('en-menu'); seccionCapas().appendChild(sc); }
+    /* Misma regla que el PGOEDF: en la ficha de un área que no toca ni colinda
+       con el Suelo de Conservación, su capa queda fuera del encuadre del
+       mini-mapa y el interruptor no cambia nada. Fuera del inventario
+       (ARCAC, Zona Patrimonio) no hay dato y se conserva. */
+    if(sc && _fichaD && lienzo.closest('#dr')){
+      const pct = scPct(_fichaD);
+      if(pct === null || pct < 0.5){ sc.remove(); }
+    }
+    const sc2 = lienzo && lienzo.querySelector('.drawer-sc-floating');
+    if(sc2 && !toggle.contains(sc2)){ sc2.classList.add('en-menu'); seccionCapas().appendChild(sc2); }
     /* «Usar mi ubicación» vive SOBRE el mapa, como botón redondo guinda en la
        esquina inferior derecha: es la acción que más se repite en campo y al
        lado del buscador estorbaba (decisión del 12-sep-2026). Dispara el
@@ -6963,6 +7011,7 @@ function montarBotonBase(){
         seccionCapas().appendChild(filtros);
       }
     }
+    _podarSeccionCapas(toggle);
   });
 }
 /* Un toque FUERA cierra el panel abierto. Dentro no: ahi vive el interruptor
@@ -7279,7 +7328,7 @@ function pintarPgoedfFicha(d){
         notas.push('Las zonas PDU (poblados rurales, programas parciales, zona urbana y equipamiento rural) se rigen por su instrumento de desarrollo urbano, no por el catálogo de actividades del PGOEDF.');
       cuerpo += notas.map(n => '<p class="zonif-nota">' + n + '</p>').join('');
     } else if(esANP){
-      cuerpo = '<div class="zonif-vacio"><b>Figura como Área Natural Protegida en la cartografía del PGOEDF.</b> '
+      cuerpo = '<div class="zonif-vacio"><b>La cartografía del PGOEDF no cubre esta área natural protegida.</b> '
         + 'El Programa no le asigna zona de ordenamiento ni catálogo de actividades: rigen su decreto y, en su caso, su programa de manejo.'
         + (cob >= 0.5 ? ' Una franja marginal (' + cob.toFixed(1) + '%) cae en zonas colindantes por ajuste cartográfico.' : '') + '</div>';
     } else {
@@ -7297,7 +7346,7 @@ function montarZonificacionEnMapa(mapa, d){
   if(!mapa || !d) return;
   zonifDe(_claveDe(d)).then(e=>{
     const cont = document.getElementById('zonifToggleWrap');
-    if(!e){ if(cont) cont.remove(); return; }
+    if(!e){ if(cont){ const sec = cont.parentElement; cont.remove(); _podarSeccionCapas(sec && sec.parentElement); } return; }
     if(!cont) return;
     const btn = document.getElementById('zonifToggle');
     if(!btn) return;
@@ -7469,6 +7518,7 @@ function fichaMapaConectar(container){
 
 const bd=document.getElementById('bd'),dr=document.getElementById('dr'),drIn=document.getElementById('drIn');
 function openDrawer(d){
+  _fichaD = d;
   const legalParts = getLegalContext(d);
   /* De un solo uso: lo pone el manejador de [data-ficha] justo antes de abrir
      y se consume aquí. Así una ficha abierta después desde la tabla no arrastra
