@@ -2010,7 +2010,12 @@ thead.t-head th:nth-child(7){white-space:nowrap}
      no participa del scroll ni del rebote elástico del cuerpo. */
   .drawer-head{flex:0 0 auto;position:relative;top:auto;z-index:600;background:var(--card);
     box-shadow:0 6px 10px -8px rgba(60,64,67,.35)}
-  .drawer-head .drawer-header-row{position:static;margin:0;padding:6px 62px 9px 18px;box-shadow:none}
+  /* Especificidad por encima de `.drawer .drawer-header-row` (más abajo), que
+     aún trae el margen negativo de cuando la fila vivía dentro del cuerpo con
+     18 px de relleno: en #drHead ese margen la sacaba al borde de la pantalla
+     (nombre pegado a la izquierda, botón de imagen encimado al «×»; v75). */
+  .drawer .drawer-head .drawer-header-row{position:static;margin:0;padding:6px 66px 9px 18px;box-shadow:none}
+  .drawer .drawer-head .btn-share-area{margin-right:2px}
   .drawer .close:active{background:#e6e1d4}
   /* Cabecera fija: nombre, categoría y los dos botones se quedan arriba al
      desplazar el cuerpo, como la tarjeta de lugar de Maps. Antes el nombre se

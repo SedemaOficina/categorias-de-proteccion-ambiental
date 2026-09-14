@@ -3368,9 +3368,9 @@ function _doLocate(map,getContainment,btn,getFeatures,opts){
     });
     if(opts.area) _ubicarEnFicha(map, e.latlng, opts);
   });
-  map.once('locationerror', ()=>{
+  map.once('locationerror', e=>{
     if(btn) btn.style.opacity = '';
-    siaToast('No se pudo obtener tu ubicación. Revisa el permiso de ubicación del navegador (requiere HTTPS).');
+    siaToast(_mensajeGeo(e), 9000);
   });
 }
 
@@ -6098,18 +6098,46 @@ function ubicarDesdeTexto(txt){
   });
 }
 
+/* Mensaje según la causa real del fallo de geolocalización (v75). Antes un
+   solo texto genérico («requiere HTTPS») para tres situaciones distintas; en
+   producción el sitio ya es HTTPS, así que el caso frecuente en campo es el
+   permiso negado en el teléfono (código 1), y el aviso debe decir dónde
+   activarlo en ese sistema. */
+function _mensajeGeo(err){
+  const c = err && err.code;
+  const ua = navigator.userAgent || '';
+  const ios = /iPhone|iPad|iPod/.test(ua), android = /Android/.test(ua);
+  if(c === 1){
+    if(ios) return 'Ubicación no permitida. En el iPhone: Ajustes → Privacidad y seguridad → Localización → activa el navegador (Safari o Chrome) en «Al usar la app». En Safari además: botón «AA» de la barra → Ajustes del sitio web → Ubicación → Permitir.';
+    if(android) return 'Ubicación no permitida. En el teléfono: Ajustes → Aplicaciones → el navegador → Permisos → Ubicación; y en el navegador, el candado de la barra → Permisos → Ubicación → Permitir.';
+    return 'Ubicación no permitida. Da permiso de ubicación a este sitio en el candado de la barra del navegador.';
+  }
+  if(c === 3) return 'El teléfono no entregó la ubicación a tiempo. Sal a cielo abierto o activa el GPS e inténtalo de nuevo; también puedes escribir la dirección.';
+  if(c === 2) return 'Ubicación no disponible en este momento (sin GPS ni red de posicionamiento). Inténtalo de nuevo o escribe la dirección.';
+  return 'No se pudo obtener tu ubicación. Revisa el permiso de ubicación del navegador.';
+}
 function ubicarPorGPS(){
   const btn = document.getElementById('ubicarGps');
   if(!navigator.geolocation){ siaToast('Este navegador no permite geolocalización.'); return; }
   const span = btn.querySelector('span'); const txt = span ? span.textContent : '';
   btn.disabled = true; if(span) span.textContent = 'Ubicando…';
-  navigator.geolocation.getCurrentPosition(pos=>{
+  const ok = pos=>{
     btn.disabled = false; if(span) span.textContent = txt;
     _ubicarDomicilio = null;                       // el punto no viene de una direccion
     ubicarResolver({lat:pos.coords.latitude, lng:pos.coords.longitude}, pos.coords.accuracy, null);
-  }, err=>{
+  };
+  navigator.geolocation.getCurrentPosition(ok, err=>{
+    /* Sin señal fina (código 3, tiempo agotado) se reintenta una vez con
+       precisión baja: en interiores suele bastar la red. */
+    if(err && err.code === 3){
+      navigator.geolocation.getCurrentPosition(ok, err2=>{
+        btn.disabled = false; if(span) span.textContent = txt;
+        siaToast(_mensajeGeo(err2), 9000);
+      }, {enableHighAccuracy:false, timeout:15000, maximumAge:60000});
+      return;
+    }
     btn.disabled = false; if(span) span.textContent = txt;
-    siaToast('No se pudo obtener tu ubicación. Revisa el permiso del navegador (requiere HTTPS).');
+    siaToast(_mensajeGeo(err), 9000);
   }, {enableHighAccuracy:true, timeout:12000, maximumAge:0});
 }
 
