@@ -5,7 +5,7 @@ Cómo levantar, en cualquier chat del Proyecto o en cualquier máquina, el entor
 ## 1. Qué se necesita y qué no
 - **Node ≥ 18 y Playwright** con Chromium. Instalación normal: `npm i -D playwright` en la raíz del repo y `npx playwright install chromium`. En el contenedor de Claude ya están (`playwright` 1.56 en `/home/claude/.npm-global/lib/node_modules/playwright`, Chromium en `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`): no correr `playwright install`; se apuntan con `PLAYWRIGHT_DIR=/home/claude/.npm-global/lib` y `CHROME=<ruta>`.
 - **Los archivos del repo**: `index.html`, `app.js`, `styles.css`, `config.js`, `sw.js`, `_headers`, `manifest.json`, `assets/`, `data/`. Se traen de la carpeta vinculada (`device_stage_files`) a una carpeta de trabajo, p. ej. `/home/claude/verif/`.
-- **Leaflet 1.9.4 local**: ya viene en el repo en `pendientes/arnes/vendor/` (`leaflet.js`, `leaflet.css`, idénticos a los de unpkg; el SRI de `index.html` los acepta). Si hiciera falta reponerlos: `npm pack leaflet@1.9.4` (cdnjs y unpkg no se alcanzan desde el contenedor).
+- **Leaflet 1.9.4 local**: desde el 14-sep-2026 (B13) es parte del sitio, en `vendor/` de la raíz (`leaflet.js`, `leaflet.css`; el `.css` normalizado a LF por `.gitattributes`, con su hash SRI recalculado en `index.html`). El arnés lo sirve como cualquier archivo del repo. Si hiciera falta reponerlos: `npm pack leaflet@1.9.4` (cdnjs y unpkg no se alcanzan desde el contenedor).
 - **No hace falta red** para nada más: el CSV del Sheet, las teselas y los GeoJSON se sirven desde el arnés.
 
 ## 2. Servidor
@@ -23,7 +23,7 @@ Cada script abre Chromium y registra `ctx.route('**/*', …)` con estas reglas, 
 | Petición | Respuesta |
 |---|---|
 | `http://localhost:8897/...` | `continue()` (archivos reales) |
-| `leaflet.js` / `leaflet.css` | `pendientes/arnes/vendor/` (mapas reales) — o `fixtures/leaflet-stub.js` y CSS vacío (solo arranque, sin mapas) |
+| `leaflet.js` / `leaflet.css` | `vendor/` de la raíz del repo (mapas reales; se sirve solo) — o `fixtures/leaflet-stub.js` y CSS vacío (solo arranque, sin mapas) |
 | `docs.google.com` (CSV del Sheet) | `fixtures/inventario_real_2026-09-12.csv` (66 filas reales, columnas del Sheet) o `fixtures/inventario.csv` (66 sintéticas) |
 | `basemaps.cartocdn` / `arcgisonline` (teselas) | PNG 256×256 generado en memoria, **con `Access-Control-Allow-Origin: *`** (desde v67 las teselas se piden con `crossOrigin`; sin la cabecera el mapa no pinta) |
 | `*.geojson` | el archivo de `data/` con ese nombre; si no existe, `FeatureCollection` vacía |
@@ -50,6 +50,7 @@ Los demás scripts de la sesión (unos 130: `chips`, `gesto2`, `fsbtn`, `arctab`
 5. Mapas incrustados en móvil: `touch-action: pan-x pan-y` en reposo, `.btn-ampliar` presente, `.sia-fs` al ampliar; mapa del shell con `.mapa-gesto-total`.
 6. Service Worker: instala con red → bump de `CACHE_VERSION` sin red (la caché nueva queda vacía y **no** se purga la vieja; la página arranca desde la anterior) → vuelve la red: **desde v67** la primera navegación dispara `repararSiIncompleta()`, que completa la caché nueva, purga la anterior y muestra «Nueva versión disponible…» (hasta v66 esto NO ocurría: la caché nueva quedaba vacía hasta el siguiente bump; auditoría 13-sep-2026, D7-01). **No se simula con `ctx.route`**: las rutas de Playwright no ven las peticiones del SW. Se prueba con un servidor propio que corta la red por bandera (`.caida` → toda petición salvo `sw.js` se destruye; `.caida-total` → también `sw.js`) y un contexto con `serviceWorkers:'allow'`; el guion está en `pendientes/auditoria-360-2026-09-13.md` (D7) y sus scripts `srv-sw.mjs` / `t_sw.mjs` en el arnés de esa auditoría.
 7. `_headers`: cada origen que realmente se pide (ver `peticiones` en `aud360.json`) está en la CSP; `frame-ancestors 'self'`.
+8. **CSP sobre el Service Worker** (incidente del 14-sep-2026): `_headers` manda la CSP también con `sw.js`, y la CSP de un worker gobierna sus `fetch()`. Todo host que el SW pida (Leaflet, fuentes, teselas, Sheet) debe estar en `connect-src`. Se prueba levantando el servidor del SW con la cabecera real —`CSP_SRC=_headers node srv-sw.mjs`— y comprobando que, con la página controlada por el SW, `typeof L === 'object'` y las hojas externas responden 200 (no 503). El arnés no lo detecta con `ctx.route`: las rutas no ven las peticiones del SW.
 
 ## 6. Simulación de Cloudflare Access
 Playwright no intercepta las peticiones del Service Worker, así que la expiración de sesión se simula en el servidor: `srv-acceso.mjs` (puerto 8898) responde **302 a `cloudflareaccess.com`** —igual que Access— para `?sesion=`, `?entrar=` y `pgoedf.geojson` mientras exista el archivo `.expirada`; sin él, sirve normal.

@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-09-14b';
+const CACHE_VERSION = 'sia-v35-2026-09-14c';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 
@@ -25,6 +25,11 @@ const CORE_ASSETS = [
   './styles.css',
   './app.js',
   './config.js',
+  /* Leaflet 1.9.4 desde el propio dominio (14-sep-2026, B13): 162 KB que antes
+     venían de unpkg y solo entraban a la caché runtime cuando la red y la CSP
+     lo permitían; ahora se instalan con el resto y el mapa arranca sin red. */
+  './vendor/leaflet.js',
+  './vendor/leaflet.css',
   './assets/logo-sedema.png',
   './assets/favicon.png',
   './manifest.json',
@@ -93,7 +98,7 @@ async function repararCore(){
 async function cacheUtilizable(){
   const cache = await caches.open(CACHE_VERSION);
   const piezas = await Promise.all(
-    ['./', './index.html', './styles.css', './app.js', './config.js'].map(u => cache.match(u))
+    ['./', './index.html', './styles.css', './app.js', './config.js', './vendor/leaflet.js', './vendor/leaflet.css'].map(u => cache.match(u))
   );
   return piezas.every(Boolean);
 }
@@ -242,8 +247,8 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 5. CDN de Leaflet, fuentes Google: cache-first runtime
-  if(/(?:unpkg|fonts\.googleapis|fonts\.gstatic)/.test(url.hostname)){
+  // 5. Fuentes Google: cache-first runtime (Leaflet ya es propio: regla 3)
+  if(/(?:fonts\.googleapis|fonts\.gstatic)/.test(url.hostname)){
     event.respondWith(cacheFirst(req, CACHE_RUNTIME));
     return;
   }

@@ -1109,6 +1109,14 @@
   .drawer .subcat{font-size:var(--fs-base);color:var(--muted);margin-bottom:18px;font-style:italic}
   /* Encabezado del drawer con botón Compartir alineado a la derecha */
   .drawer-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:8px;padding-right:44px}
+  /* Cabecera fija de la ficha (14-sep-2026): #drHead recibe la
+     .drawer-header-row de cada ficha y contiene el «×»; el cuerpo (#drIn) se
+     desplaza por debajo. En escritorio el cajón entero es el que hace scroll,
+     así que la cabecera es sticky; en celular es un hijo fijo del flex. */
+  .drawer-head{position:sticky;top:0;z-index:600;background:var(--card)}
+  .drawer-head .drawer-header-row{position:static;margin:0;padding:22px 62px 12px 34px;
+    box-shadow:0 6px 10px -8px rgba(60,64,67,.35)}
+  .drawer-head:empty,.drawer-head:not(:has(.drawer-header-row)){box-shadow:none}
   .drawer-header-left{flex:1;min-width:0}
   .drawer-header-left h2{margin-bottom:6px}
   .drawer-header-left .subcat{margin-bottom:0}
@@ -1993,9 +2001,14 @@ thead.t-head th:nth-child(7){white-space:normal;line-height:1.15}
      altura del título —no flotando en el hueco de arriba—. */
   /* z-index por encima de la cabecera fija (600): desde que la cabecera cubre
      el ancho completo, un valor menor dejaba el tache tapado por ella. */
-  .drawer .close{position:absolute;z-index:601;top:32px;right:14px;
+  .drawer .close{position:absolute;z-index:601;top:6px;right:14px;
     width:34px;height:34px;border-radius:50%;background:var(--bg-2);color:var(--ink-2);
     font-size:var(--fs-xl);box-shadow:var(--gm-e1)}
+  /* El bloque de cabecera es un hijo fijo del flex de la hoja (bajo el asa):
+     no participa del scroll ni del rebote elástico del cuerpo. */
+  .drawer-head{flex:0 0 auto;position:relative;top:auto;z-index:600;background:var(--card);
+    box-shadow:0 6px 10px -8px rgba(60,64,67,.35)}
+  .drawer-head .drawer-header-row{position:static;margin:0;padding:6px 62px 9px 18px;box-shadow:none}
   .drawer .close:active{background:#e6e1d4}
   /* Cabecera fija: nombre, categoría y los dos botones se quedan arriba al
      desplazar el cuerpo, como la tarjeta de lugar de Maps. Antes el nombre se
@@ -2341,10 +2354,8 @@ html.arranque-campo body > .wrap{visibility:hidden}
    fija resolvio en el telefono. Mismo componente, mismas medidas del cajon. */
 @media (min-width:761px){
   .drawer-inner{padding-top:0}
-  .drawer .drawer-header-row{position:sticky;top:0;z-index:600;background:var(--card);
-    margin:0 -34px;padding:22px 62px 12px 34px;
+  .drawer-head .drawer-header-row{position:static;margin:0;padding:22px 62px 12px 34px;
     box-shadow:0 6px 10px -8px rgba(60,64,67,.35)}
-  .drawer-inner > .drawer-header-row{max-width:none}
   .drawer .close{z-index:601}
 }
 
@@ -2663,6 +2674,18 @@ html.arranque-campo body > .wrap{visibility:hidden}
   max-width:none !important;margin:0 !important;border-radius:0 !important;background:var(--card)}
 .sia-fs .leaflet-container,.sia-fs .map-canvas-inner{height:100% !important;min-height:0 !important;border-radius:0 !important}
 html.sia-fs-abierto{overflow:hidden}
+/* Ampliar dentro de la ficha (14-sep-2026, A1c-3): la hoja entera se vuelve el
+   mapa. En iOS el portal a <body> con position:fixed dejaba el lienzo del
+   tamaño del cuerpo de la hoja y el «×» de la ficha encima de los controles;
+   aquí no hay fixed ni portal: la hoja ocupa la pantalla, se ocultan asa,
+   cabecera y «×», y el lienzo se posiciona en absoluto dentro de ella. */
+html.sia-fs-hoja-abierta .drawer{top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;
+  width:100% !important;height:100% !important;max-width:none !important;transform:none !important;
+  border:none !important;border-radius:0 !important;box-shadow:none !important;overflow:hidden !important}
+html.sia-fs-hoja-abierta .drawer-asa,html.sia-fs-hoja-abierta .drawer-tirador,
+html.sia-fs-hoja-abierta .drawer-head,html.sia-fs-hoja-abierta .drawer .close{display:none !important}
+html.sia-fs-hoja-abierta .drawer-inner{overflow:hidden !important}
+.sia-fs.sia-fs-hoja{position:absolute !important}
 /* Botón «Ampliar» de los mapas incrustados (solo táctil; lo crea el JS). Mismo
    lenguaje que el botón de capas; se esconde mientras el menú de capas está
    abierto porque ese menú cae sobre él. En modo ampliado se vuelve guinda y

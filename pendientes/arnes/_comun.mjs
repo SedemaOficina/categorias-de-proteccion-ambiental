@@ -29,10 +29,12 @@ export const lanzar = (chromium, extra={}) => chromium.launch({
   args: ['--no-sandbox'], ...extra
 });
 
-/* Leaflet 1.9.4 local (pendientes/arnes/vendor/): el arnés no tiene red y
-   index.html lo pide a unpkg con SRI, así que se sirve el mismo archivo. */
-export const LEAF = F('pendientes', 'arnes', 'vendor', 'leaflet.js');
-export const LCSS = F('pendientes', 'arnes', 'vendor', 'leaflet.css');
+/* Leaflet 1.9.4: desde el 14-sep-2026 (B13) index.html lo carga de vendor/
+   del propio sitio, que el servidor del arnés sirve como cualquier otro
+   archivo del repo. Se lee de ahí para los scripts que interceptan
+   «leaflet.js» por URL (srv-sw, stubs); pendientes/arnes/vendor/ ya no existe. */
+export const LEAF = F('vendor', 'leaflet.js');
+export const LCSS = F('vendor', 'leaflet.css');
 
 /* CSV real del inventario (copia del Sheet del 12-sep-2026) y CSV mínimo. */
 export const CSV_REAL = F('pendientes', 'arnes', 'fixtures', 'inventario_real_2026-09-12.csv');

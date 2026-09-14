@@ -44,21 +44,25 @@
      pero acota a qué dominios puede hablar la página y bloquea <base> y plugins.
      frame-ancestors se omite a propósito: los navegadores lo ignoran cuando llega por
      <meta> y solo ensucia la consola; para impedir el embebido hace falta cabecera HTTP. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://maps.googleapis.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com https://cloudflareinsights.com https://docs.google.com https://googleusercontent.com https://*.googleusercontent.com https://maps.googleapis.com https://places.googleapis.com https://nominatim.openstreetmap.org https://*.basemaps.cartocdn.com https://cartodb-basemaps-a.global.ssl.fastly.net https://server.arcgisonline.com; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cloudflareinsights.com https://docs.google.com https://googleusercontent.com https://*.googleusercontent.com https://maps.googleapis.com https://places.googleapis.com https://nominatim.openstreetmap.org https://*.basemaps.cartocdn.com https://cartodb-basemaps-a.global.ssl.fastly.net https://server.arcgisonline.com; object-src 'none'; base-uri 'none'">
 
 <!-- DNS prefetch para CDNs externas -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cabin:wght@500;600;700&family=Roboto:ital,wght@0,400;0,500;0,700;0,900;1,400;1,500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-<!-- DNS prefetch para CDNs y tiles de mapa -->
-<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<!-- DNS prefetch para los servidores de teselas -->
 <link rel="dns-prefetch" href="https://cartodb-basemaps-a.global.ssl.fastly.net">
 <link rel="dns-prefetch" href="https://server.arcgisonline.com">
 
-<!-- Leaflet · Mapas interactivos -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+<!-- Leaflet 1.9.4 · Mapas interactivos. Desde el 14-sep-2026 (B13) se sirve
+     desde el propio dominio (vendor/): un CDN externo (unpkg) era una
+     dependencia de disponibilidad ajena y un host más en la CSP. Los archivos
+     son los de unpkg (leaflet.css normalizado a LF por .gitattributes, de ahí
+     su hash distinto). El SRI se conserva; si se actualiza Leaflet, recalcular:
+     sha256 en base64 del archivo. -->
+<link rel="stylesheet" href="./vendor/leaflet.css" integrity="sha256-M3v8pcq9A7OYFbJwD+vis7ft9VkhxZzUn4jssyghIwM=" crossorigin="" />
+<script src="./vendor/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
 <link rel="stylesheet" href="./styles.css">
 <script>
 /* Antes del primer pintado: en celular la entrada es el mapa de campo, no la
@@ -215,7 +219,13 @@ try{
        aria-label="Altura de la ficha" aria-valuemin="0" aria-valuemax="2" aria-valuenow="2" aria-valuetext="completa"><span></span></div>
   <button type="button" class="drawer-tirador" id="drTirador"
           aria-label="Cerrar ficha · también se puede arrastrar hacia la derecha"></button>
-  <button class="close" id="drClose" aria-label="Cerrar ficha">×</button>
+  <!-- Cabecera fija (14-sep-2026): título, botón de imagen y «×» son un solo
+       bloque fuera del cuerpo desplazable. Antes el título era «sticky» dentro
+       del cuerpo y el «×» colgaba de la hoja: con el rebote elástico de iOS se
+       separaban. El JS mueve aquí la .drawer-header-row de cada ficha. -->
+  <div class="drawer-head" id="drHead">
+    <button class="close" id="drClose" aria-label="Cerrar ficha">×</button>
+  </div>
   <div class="drawer-inner" id="drIn"></div>
 </aside>
 

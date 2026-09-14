@@ -1,6 +1,6 @@
 # Arnés de verificación · SIA Dashboard
 
-Pruebas automatizadas con Playwright (Chromium) contra la copia local del repo, **sin red**: Leaflet se sirve desde `vendor/`, el inventario desde `fixtures/`, las teselas son sintéticas y todo lo demás se aborta. Reproducible desde cualquier carpeta: los scripts resuelven sus rutas respecto a la raíz del repo (`_comun.mjs`).
+Pruebas automatizadas con Playwright (Chromium) contra la copia local del repo, **sin red**: Leaflet se sirve desde `vendor/` de la raíz (propio del sitio desde B13), el inventario desde `fixtures/`, las teselas son sintéticas y todo lo demás se aborta. Reproducible desde cualquier carpeta: los scripts resuelven sus rutas respecto a la raíz del repo (`_comun.mjs`).
 
 ## 1. Requisitos (una sola vez)
 
@@ -44,7 +44,6 @@ Otro puerto: `PUERTO=9000 node pendientes/arnes/srv.mjs` y el mismo `PUERTO=9000
 | `filtros.mjs` | Filtros visibles/ocultos y columnas por subconjunto (usa el stub de Leaflet, no el real). |
 | `acceso.mjs` + `srv-acceso.mjs` | Detección de sesión expirada de Cloudflare Access (sondeo `?sesion=` y aviso del SW). |
 | `fixtures/` | `inventario_real_2026-09-12.csv` (copia del Sheet), `inventario.csv` (mínimo), `leaflet-stub.js`. |
-| `vendor/` | Leaflet 1.9.4 (`leaflet.js`, `leaflet.css`), idénticos a los de unpkg (el SRI de `index.html` los acepta). |
 
 ## 4. Reglas
 

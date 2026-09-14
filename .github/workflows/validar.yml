@@ -10,8 +10,10 @@ name: Validar entrega SIA
 #      inline de index.html coincida con el declarado en la CSP de _headers
 #   4. que CACHE_VERSION se haya bumpeado cuando cambie CUALQUIERA de los
 #      archivos que el Service Worker sirve desde caché (index.html, styles.css,
-#      app.js, config.js, sw.js, manifest.json, data/**): sin el bump el
-#      navegador sigue sirviendo la versión anterior (cache-first)
+#      app.js, config.js, sw.js, manifest.json, data/**, vendor/**): sin el
+#      bump el navegador sigue sirviendo la versión anterior (cache-first)
+#   4b. que los hashes integrity de vendor/ (Leaflet propio) coincidan con los
+#      archivos del repo
 #   5. que los GeoJSON sean JSON válido, 2D y en EPSG:4326 (lon/lat)
 #   6. que el invariante 66 = 13 + 26 + 18 + 9 se cumpla en geometrias.geojson
 #      y en data/inventario.csv (respaldo del Sheet)
@@ -68,6 +70,22 @@ jobs:
             if (declarados.length && !declarados.includes(hash)) { console.error('::error::El script inline de index.html cambió y su hash ya no coincide con el de _headers (' + declarados.join(', ') + '). Actualiza el hash o la CSP bloqueará el arranque en celular.'); process.exit(1); }
           "
 
+      - name: SRI de vendor/ (Leaflet propio desde B13, 14-sep-2026)
+        run: |
+          node -e "
+            const fs = require('fs'), crypto = require('crypto');
+            const h = fs.readFileSync('index.html', 'utf8');
+            const refs = [...h.matchAll(/(?:src|href)=\"\.\/(vendor\/[^\"]+)\"[^>]*integrity=\"(sha256-[A-Za-z0-9+/=]+)\"/g)];
+            if (!refs.length) { console.error('::error::index.html no referencia vendor/ con integrity'); process.exit(1); }
+            let mal = 0;
+            for (const [, ruta, decl] of refs) {
+              const real = 'sha256-' + crypto.createHash('sha256').update(fs.readFileSync(ruta)).digest('base64');
+              console.log(ruta, decl === real ? 'OK' : 'DIFIERE (' + real + ')');
+              if (decl !== real) mal++;
+            }
+            if (mal) { console.error('::error::El hash integrity de index.html no coincide con el archivo en vendor/. Ojo: .gitattributes normaliza a LF; el hash debe ser el del archivo como queda en el repo.'); process.exit(1); }
+          "
+
       - name: Sintaxis de styles.css
         run: |
           npm i --no-save --silent css-tree@2
@@ -93,7 +111,7 @@ jobs:
           fi
           cambiados=$(git diff --name-only "$base" HEAD)
           echo "$cambiados"
-          if echo "$cambiados" | grep -qE '^(index\.html|styles\.css|app\.js|config\.js|sw\.js|manifest\.json|data/.*)$'; then
+          if echo "$cambiados" | grep -qE '^(index\.html|styles\.css|app\.js|config\.js|sw\.js|manifest\.json|data/.*|vendor/.*)$'; then
             antes=$(git show "$base:sw.js" 2>/dev/null | grep -oP "CACHE_VERSION = '\K[^']+" || echo "")
             ahora=$(grep -oP "CACHE_VERSION = '\K[^']+" sw.js)
             echo "antes=$antes  ahora=$ahora"

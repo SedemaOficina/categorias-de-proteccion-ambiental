@@ -89,7 +89,7 @@ Las capas pesadas (`pgoedf`, `sipam_fao`, `arcac`, `traslapes`, zonificaciones) 
 
 ## 5. Servicios externos
 
-- **Leaflet 1.9.4** (unpkg, con SRI). Teselas: CARTO Positron y Esri World Imagery, pedidas con `crossOrigin` para que el Service Worker pueda cachearlas (hasta 600 entradas). La URL de Positron lleva una llave de CARTO (`?key=…` en `TILE_LAYERS.positron.url`, `app.js`); los basemaps gratuitos de CARTO no la exigen y no está documentado de qué cuenta cuelga: si algún día las teselas dejan de cargar, lo primero es probar la misma URL sin `?key=`.
+- **Leaflet 1.9.4**, alojado en `vendor/` del propio sitio (desde v73; antes unpkg) y cargado con SRI; instalado por el Service Worker con el núcleo, así que el mapa arranca sin red desde la primera visita. Teselas: CARTO Positron y Esri World Imagery, pedidas con `crossOrigin` para que el Service Worker pueda cachearlas (hasta 600 entradas). La URL de Positron lleva una llave de CARTO (`?key=…` en `TILE_LAYERS.positron.url`, `app.js`); los basemaps gratuitos de CARTO no la exigen y no está documentado de qué cuenta cuelga: si algún día las teselas dejan de cargar, lo primero es probar la misma URL sin `?key=`.
 - **Google Maps JavaScript API + Places API (New)** para direcciones (autocompletado con token de sesión, desde 3 caracteres). La llave es de navegador, pública por diseño; lo que la protege son las restricciones por sitio y las cuotas en Google Cloud.
 - **Google Fonts**: Roboto, Roboto Mono, Cabin.
 

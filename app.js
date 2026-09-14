@@ -4622,13 +4622,14 @@ function attachSCToggle(btnId, mapInstance, groupLayers, alcaldiasLayer){
 
 /* Pantalla completa simulada: portal del lienzo a <body> y regreso.
    Un marcador oculto guarda el lugar de origen. */
-function _siaFsPortal(canvas, en){
+function _siaFsPortal(canvas, en, destino){
   try{
     if(en){
-      if(canvas._siaFsPh || canvas.parentNode === document.body) return;
+      const dest = destino || document.body;
+      if(canvas._siaFsPh || canvas.parentNode === dest) return;
       const ph = document.createElement('div'); ph.className = 'sia-fs-ph'; ph.hidden = true;
       canvas.parentNode.insertBefore(ph, canvas); canvas._siaFsPh = ph;
-      document.body.appendChild(canvas);
+      dest.appendChild(canvas);
     } else if(canvas._siaFsPh){
       const ph = canvas._siaFsPh; canvas._siaFsPh = null;
       if(ph.parentNode) ph.parentNode.insertBefore(canvas, ph);
@@ -4638,8 +4639,9 @@ function _siaFsPortal(canvas, en){
 }
 function siaFsSalirTodo(){
   try{
-    document.querySelectorAll('.sia-fs').forEach(c => { c.classList.remove('sia-fs'); _siaFsPortal(c, false); });
+    document.querySelectorAll('.sia-fs').forEach(c => { c.classList.remove('sia-fs'); c.classList.remove('sia-fs-hoja'); _siaFsPortal(c, false); });
     document.documentElement.classList.remove('sia-fs-abierto');
+    document.documentElement.classList.remove('sia-fs-hoja-abierta');
   }catch(_){}
 }
 function attachFullscreenBtn(canvas, mapInstance){
@@ -4655,10 +4657,22 @@ function attachFullscreenBtn(canvas, mapInstance){
   const avisarMapa = en => { try{ if(mapInstance && mapInstance._siaEnPantallaCompleta) mapInstance._siaEnPantallaCompleta(en); }catch(_){} };
   const fsSimulado = en => {
     canvas.classList.toggle('sia-fs', en);
-    /* position:fixed no escapa de un ancestro con transform (la hoja #dr lo
-       lleva): el lienzo se saca a <body> mientras dura y vuelve a su sitio al salir. */
-    _siaFsPortal(canvas, en);
+    /* Dentro de la ficha (hoja #dr) no se saca el lienzo a <body>: en iOS ese
+       portal con position:fixed dejaba el mapa del tamaño del cuerpo de la
+       hoja y el «×» de la ficha encima de los controles (A1c-3, 14-sep-2026).
+       La hoja entera se convierte en el mapa (html.sia-fs-hoja-abierta):
+       ocupa la pantalla, se ocultan asa, cabecera y «×», y el lienzo se
+       posiciona en absoluto dentro de ella. Los mapas de la página siguen
+       usando el portal (position:fixed no escapa de un ancestro con
+       transform). */
+    const hoja = canvas.closest('#dr'), enHoja = !!hoja;
+    canvas.classList.toggle('sia-fs-hoja', en && enHoja);
+    /* En la hoja, el lienzo pasa a hijo directo de #dr (sus ancestros
+       .map-block llevan position:relative y overflow:hidden) y vuelve a su
+       sitio al salir; en la página, a <body>. */
+    _siaFsPortal(canvas, en, hoja || document.body);
     document.documentElement.classList.toggle('sia-fs-abierto', en);
+    document.documentElement.classList.toggle('sia-fs-hoja-abierta', en && enHoja);
     fresh.setAttribute('aria-label', en ? 'Salir de pantalla completa' : 'Pantalla completa');
     fresh.title = fresh.getAttribute('aria-label');
     setTimeout(() => { if(mapInstance) mapInstance.invalidateSize(); }, 80);
@@ -7487,6 +7501,7 @@ function closeDrawer(){
   try{ _drVis = 0; document.getElementById('dr').style.removeProperty('--dvis'); }catch(e){}
   bd.classList.remove('open');
   dr.classList.remove('open');
+  try{ document.querySelectorAll('#drHead .drawer-header-row').forEach(x => x.remove()); }catch(_){}
   destroyMap();
   // Limpiar hash de la URL (sin generar entrada en history)
   if(location.hash.startsWith('#area=')){
@@ -7529,6 +7544,24 @@ function _marcarNavegables(){
   const sincronizar = ()=> inp.setAttribute('aria-expanded', sug.hasAttribute('hidden') ? 'false' : 'true');
   new MutationObserver(sincronizar).observe(sug, {attributes:true, attributeFilter:['hidden']});
   sincronizar();
+})();
+/* Cabecera fija de la ficha (14-sep-2026): cada apertura pinta su
+   `.drawer-header-row` al inicio de #drIn (inventario, ARCAC, Zona
+   Patrimonio, embarcaderos). Este observador la saca del cuerpo desplazable y
+   la coloca en #drHead, junto al «×», antes del primer pintado: así título,
+   botón de imagen y cierre son un solo bloque que no se mueve con el rebote
+   elástico de iOS ni con el scroll. No tocar las cuatro plantillas. */
+(function(){
+  const head = document.getElementById('drHead'), cuerpo = document.getElementById('drIn');
+  if(!head || !cuerpo) return;
+  const fijar = () => {
+    const fila = cuerpo.querySelector(':scope > .drawer-header-row');
+    if(!fila) return;
+    head.querySelectorAll('.drawer-header-row').forEach(x => x.remove());
+    head.insertBefore(fila, head.firstChild);
+  };
+  new MutationObserver(fijar).observe(cuerpo, { childList:true });
+  fijar();
 })();
 let _navPend = false;
 new MutationObserver(muts=>{
