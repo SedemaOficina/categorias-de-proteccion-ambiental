@@ -29,3 +29,6 @@ README.md
 # Seguimiento de trabajo (pendientes, verificaciones, hallazgos): se versiona
 # en el repositorio pero NO se publica en el sitio
 pendientes
+
+# Capturas que la app de Claude guarda en la carpeta de trabajo: no forman parte del sitio
+Claude outputs

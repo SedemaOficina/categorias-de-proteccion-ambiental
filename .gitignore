@@ -1,3 +1,6 @@
 _borrar/
 *.bak
 *.bak[0-9]
+
+# Capturas que la app de Claude guarda en la carpeta de trabajo: no van al repo
+Claude outputs/
