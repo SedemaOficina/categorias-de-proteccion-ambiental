@@ -1690,8 +1690,13 @@
   margin:2px}
 .gm-mark-pin svg{filter:drop-shadow(0 2px 3px rgba(42,42,42,.4))}
 
-/* ── PANTALLA COMPLETA: FUERA DE LOS CUATRO MAPAS ──────────────────
-   No aportaba nada —en celular el mapa ya ocupa la pantalla y en
+/* ── PANTALLA COMPLETA ─────────────────────────────────────────────
+   v80 (28-sep-2026): el botón nativo `.map-fullscreen-btn` sigue oculto (es
+   solo el objetivo del clic); el control visible de TODO mapa incrustado es
+   `.btn-ampliar` (redondo, bajo el de capas), en cualquier puntero. Lo crea
+   `_gestosTactilesIncrustado` y lo cablea `attachFullscreenBtn`. Todo mapa
+   nuevo debe llevar un `.map-fullscreen-btn` en su lienzo y llamar a ambas.
+   Nota histórica (v70): no aportaba nada —en celular el mapa ya ocupa la pantalla y en
    escritorio la ventana ES la pantalla— y en iOS solo servía para mostrar
    «Tu navegador no admite el modo pantalla completa». Va sin media query:
    sobra en todos los anchos. Deja sin efecto a `html.sin-fullscreen`. */
@@ -2752,17 +2757,26 @@ html.sia-fs-hoja-abierta .drawer-inner{overflow:hidden !important}
    lenguaje que el botón de capas; se esconde mientras el menú de capas está
    abierto porque ese menú cae sobre él. En modo ampliado se vuelve guinda y
    su icono se interpreta como «cerrar». */
-.btn-ampliar{display:none}
-@media (pointer:coarse){
-  .btn-ampliar{position:absolute;right:10px;top:62px;z-index:var(--z-flotante);width:44px;height:44px;border-radius:50%;border:none;
-    background:var(--card);color:var(--ink-2);box-shadow:var(--gm-e2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
-  .btn-ampliar svg{width:21px;height:21px}
-  .btn-ampliar:active{transform:scale(.95)}
-  .btn-ampliar.activo{background:var(--guinda);color:var(--crema)}
-  .btn-ampliar.activo svg{transform:rotate(180deg)}
-  .map-block-controls-floating.base-abierto ~ .btn-ampliar,
-  :has(> .map-block-controls-floating.base-abierto) > .btn-ampliar{opacity:0;pointer-events:none}
-}
+/* v80: el botón «Ampliar» se muestra en TODO puntero (antes solo táctil): es el
+   control de pantalla completa de todos los mapas de la plataforma. */
+.btn-ampliar{position:absolute;right:10px;top:62px;z-index:var(--z-flotante);width:44px;height:44px;border-radius:50%;border:none;
+  background:var(--card);color:var(--ink-2);box-shadow:var(--gm-e2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  transition:background .15s,color .15s}
+.btn-ampliar svg{width:21px;height:21px}
+.btn-ampliar:hover{background:var(--bg-2);color:var(--guinda)}
+.btn-ampliar:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+.btn-ampliar:active{transform:scale(.95)}
+.btn-ampliar.activo{background:var(--guinda);color:var(--crema)}
+.map-block-controls-floating.base-abierto ~ .btn-ampliar,
+:has(> .map-block-controls-floating.base-abierto) > .btn-ampliar{opacity:0;pointer-events:none}
+/* Mapa del resultado de «¿Dónde estoy?»: sin menú de capas, el botón va arriba a la derecha. */
+.ubi-map-wrap{position:relative}
+.ubi-map-wrap .btn-ampliar{top:10px !important}
+.ubi-map-wrap:fullscreen,.ubi-map-wrap:-webkit-full-screen{background:var(--card)}
+.ubi-map-wrap:fullscreen .ubi-map,.ubi-map-wrap:-webkit-full-screen .ubi-map{height:100% !important;border-radius:0;border:none}
+.sia-fs.ubi-map-wrap .ubi-map{height:100% !important;border-radius:0;border:none}
+/* Pantalla completa nativa de los demás lienzos (traslapes y ARCAC no tenían regla). */
+#trasMapCanvas:fullscreen,#trasMapCanvas:-webkit-full-screen{height:100vh !important;width:100vw !important;background:var(--card);border-radius:0 !important}
 
 
 /* Objetivos táctiles de 44 px también en tabletas y teléfonos en horizontal

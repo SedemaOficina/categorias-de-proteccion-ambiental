@@ -6672,7 +6672,7 @@ function renderUbicarResultado(latlng, precision, etiqueta){
     ${etiqueta ? `<p class="ubi-etiqueta">${esc(etiqueta)}</p>` : ''}
     <div class="ubi-grid">
       <div class="ubi-col">${cuerpo}</div>
-      <div class="ubi-col"><div class="ubi-map" id="ubicarMapCanvas"></div></div>
+      <div class="ubi-col"><div class="ubi-map-wrap" id="ubicarMapWrap"><div class="ubi-map" id="ubicarMapCanvas"></div><button class="map-fullscreen-btn" type="button" aria-label="Pantalla completa" title="Pantalla completa"></button></div></div>
     </div>
     ${sc === true && enCDMX ? '<div id="ubiPgoedf" class="pg-cont"></div>' : ''}
     <div class="ubi-ctx">${ctx}</div>
@@ -7088,6 +7088,7 @@ function pintarUbicacionEnGlobal(latlng, precision){
        if(pv){ globalMap.removeLayer(pv.m); globalMap.removeLayer(pv.c); _locateRefs.delete(globalMap); } }catch(e){}
   _capaUbicGlobal = L.layerGroup().addTo(globalMap);
   const bounds = _dibujarUbicacion(globalMap, _capaUbicGlobal, latlng, precision);
+  try{ _extenderConCercana(bounds, latlng, globalGroupLayers ? { resaltar:false, eachLayer: fn => Object.values(globalGroupLayers).forEach(g => g && g.eachLayer && g.eachLayer(fn)) } : null); }catch(e){}
   const hoja = document.getElementById('ubicarResultado');
   const tapa = hoja ? Math.round(hoja.getBoundingClientRect().height * 0) : 0;
   const pad  = { paddingTopLeft:[18, 78], paddingBottomRight:[18, _hojaVis + 18 + tapa] };
@@ -7113,16 +7114,77 @@ function initUbicarMap(latlng, precision){
   _gestosTactilesIncrustado(ubicarMap);
   try{ ubicarMap.invalidateSize(); }catch(e){}
   L.tileLayer(TILE_LAYERS.positron.url, _opcionesTeselas(TILE_LAYERS.positron)).addTo(ubicarMap);
-  try{ createAlcaldiasLayer({interactive:false}).addTo(ubicarMap); }catch(e){}
+  let alcUbic = null;
+  try{ alcUbic = createAlcaldiasLayer({interactive:false}).addTo(ubicarMap); }catch(e){}
+  /* Contexto de protección: sin él, un punto fuera de toda área dejaba el
+     mapa vacío y la herramienta perdía su sentido. Suelo de Conservación al
+     fondo (carga bajo demanda) y las 66 áreas del inventario encima; las que
+     cubren el punto se repintan con trazo firme en _dibujarUbicacion. */
+  const ctxUbic = _capaContextoUbicar(ubicarMap, alcUbic);
 
   const bounds = _dibujarUbicacion(ubicarMap, ubicarMap, latlng, precision);
+  _extenderConCercana(bounds, latlng, ctxUbic);
 
   if(bounds.isValid()){ ubicarMap.fitBounds(bounds,{padding:[24,24],maxZoom:16}); ubicarMap._siaHome = bounds; }
   else ubicarMap.setView([latlng.lat,latlng.lng],15);
   ubicarMap.on('click focus', ()=>ubicarMap.scrollWheelZoom.enable());
   ubicarMap.on('mouseout',    ()=>ubicarMap.scrollWheelZoom.disable());
   addResetViewControl(ubicarMap, 'Vista general');
+  try{ attachFullscreenBtn(document.getElementById('ubicarMapWrap'), ubicarMap); }catch(e){}
   setTimeout(()=>{ try{ ubicarMap.invalidateSize(); }catch(e){} }, 200);
+}
+
+/* Capas de contexto del mapa del resultado de «¿Dónde estoy?». Devuelve el
+   grupo de las áreas del inventario (o null si aún no hay geometrías). */
+function _capaContextoUbicar(mapa, alcaldias){
+  let grupo = null;
+  try{
+    const feats = (GEOMETRIES && GEOMETRIES.features) || [];
+    if(feats.length){
+      const estilo = f => { const c = GROUP_COLORS[f.properties.grupo] || COL_GRIS_NEUTRO;
+                            return { color:c, weight:1.75, fillColor:c, fillOpacity:0.20 }; };
+      grupo = L.geoJSON({type:'FeatureCollection', features:feats}, {
+        style: estilo,
+        onEachFeature: (feat, lyr) => {
+          lyr.bindTooltip(feat.properties.nombre, {sticky:true, direction:'top'});
+          lyr.on('click', () => { const a = areaPorNombre(feat.properties.nombre); if(a) openDrawer(a); });
+          lyr.on('mouseover', () => lyr.setStyle({weight:3, fillOpacity:0.38}));
+          lyr.on('mouseout',  () => lyr.setStyle(estilo(feat)));
+        }
+      }).addTo(mapa);
+    }
+  }catch(e){ console.warn('[Ubicar] contexto de áreas:', e && e.message); }
+  /* Suelo de Conservación: asíncrono; al llegar se manda al fondo, bajo las
+     áreas y las alcaldías. Si el mapa ya se reinició, no se pinta. */
+  loadSueloConservacion().then(sc => {
+    try{
+      if(!sc || !sc.features || !sc.features.length || mapa !== ubicarMap) return;
+      mapa._scLayer = L.geoJSON(sc, {
+        style:{ color:'var(--sc-900)', weight:1.25, fillColor:'var(--sc)', fillOpacity:0.12, dashArray:'4,3' },
+        interactive:false
+      }).addTo(mapa);
+      mapa._scLayer.bringToBack();
+    }catch(e){}
+  }).catch(()=>{});
+  return grupo;
+}
+
+/* Sin cobertura en el punto, el encuadre incluye el área más cercana (si está
+   a ≤ 8 km) y esta se resalta: el usuario ve de inmediato «qué hay cerca». */
+function _extenderConCercana(bounds, latlng, grupoCtx){
+  try{
+    if(_coberturasEn(latlng).length) return;
+    const feats = (GEOMETRIES && GEOMETRIES.features) || [];
+    const cer = _masCercana(latlng, feats);
+    if(!cer || cer.d > 8000) return;
+    if(grupoCtx) grupoCtx.eachLayer(l => {
+      if(l.feature && l.feature.properties.nombre === cer.nombre){
+        const c = GROUP_COLORS[l.feature.properties.grupo] || COL_GRIS_NEUTRO;
+        if(grupoCtx.resaltar !== false) l.setStyle({weight:3, fillOpacity:0.34, color:c});
+        try{ bounds.extend(l.getBounds()); }catch(_){}
+      }
+    });
+  }catch(e){}
 }
 
 
@@ -7460,17 +7522,19 @@ function fichaMapaHTML(opts){
    modo estaba. La etiqueta desaparece con el primer gesto de dos dedos. */
 function _gestosTactilesIncrustado(mapa, opts){
   try{
-    if(!mapa || !window.matchMedia('(pointer:coarse)').matches) return;
+    if(!mapa) return;
+    const tactil = window.matchMedia('(pointer:coarse)').matches;
     const cont = mapa.getContainer();
     const total = !!(opts && opts.total);
     const reposo = en => {
       if(en){ mapa.dragging.disable(); cont.classList.add('mapa-en-reposo'); cont.classList.remove('mapa-gesto-total'); }
       else  { mapa.dragging.enable();  cont.classList.remove('mapa-en-reposo'); cont.classList.add('mapa-gesto-total'); }
     };
-    reposo(!total);
-    /* Botón «Ampliar» (solo mapas incrustados en táctil): es la vía para
-       arrastrar con un dedo. Reutiliza el botón de pantalla completa, que
-       está oculto por CSS, y vive bajo el botón de capas. */
+    if(tactil) reposo(!total);
+    /* Botón «Ampliar» (todo mapa incrustado, en cualquier puntero): lleva el
+       mapa a pantalla completa —nativa o simulada— y, en táctil, es la vía
+       para arrastrar con un dedo. Reutiliza el botón de pantalla completa,
+       que está oculto por CSS, y vive bajo el botón de capas. */
     if(!total){
       let canvas = cont, n = 0;
       while(canvas && n < 4 && !canvas.querySelector('.map-fullscreen-btn')){ canvas = canvas.parentElement; n++; }
@@ -7479,9 +7543,8 @@ function _gestosTactilesIncrustado(mapa, opts){
         const ctrl = fsBtn.closest('.map-block-controls-floating');
         const b = document.createElement('button');
         b.type = 'button'; b.className = 'btn-ampliar';
-        b.setAttribute('aria-label', 'Ampliar el mapa'); b.title = 'Ampliar el mapa';
-        b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-                    + '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+        b.setAttribute('aria-label', 'Ampliar el mapa a pantalla completa'); b.title = 'Ampliar el mapa a pantalla completa';
+        b.innerHTML = _SVG_AMPLIAR;
         if(ctrl) b.style.top = (ctrl.offsetTop + 52) + 'px';
         /* Se resuelve al hacer clic: attachFullscreenBtn clona el botón después. */
         b.addEventListener('click', e=>{ e.stopPropagation(); const f = canvas.querySelector('.map-fullscreen-btn'); if(f) f.click(); });
@@ -7492,17 +7555,26 @@ function _gestosTactilesIncrustado(mapa, opts){
     }
     /* La etiqueta se retira con el primer gesto de dos dedos del usuario, no
        con movimientos programáticos (fitBounds, setView). */
-    cont.addEventListener('touchstart', e=>{ if(e.touches && e.touches.length >= 2) cont.classList.add('mapa-usado'); }, {passive:true});
+    if(tactil) cont.addEventListener('touchstart', e=>{ if(e.touches && e.touches.length >= 2) cont.classList.add('mapa-usado'); }, {passive:true});
     /* En pantalla completa (nativa o simulada) el conflicto desaparece y el
        arrastre con un dedo se devuelve al mapa; al salir, vuelve al reposo
        salvo que el mapa sea de gesto total. */
     mapa._siaEnPantallaCompleta = en => {
-      reposo(!en && !total);
+      if(tactil) reposo(!en && !total);
       const b = cont._siaBtnAmpliar;
-      if(b){ b.classList.toggle('activo', !!en); b.setAttribute('aria-label', en ? 'Cerrar el mapa ampliado' : 'Ampliar el mapa'); b.title = b.getAttribute('aria-label'); }
+      if(b){
+        b.classList.toggle('activo', !!en);
+        b.innerHTML = en ? _SVG_REDUCIR : _SVG_AMPLIAR;
+        b.setAttribute('aria-label', en ? 'Salir de pantalla completa' : 'Ampliar el mapa a pantalla completa');
+        b.title = b.getAttribute('aria-label');
+      }
     };
   }catch(_){}
 }
+const _SVG_AMPLIAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+  + '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+const _SVG_REDUCIR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+  + '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>';
 const _gestosTactilesMinimapa = mapa => _gestosTactilesIncrustado(mapa);
 function fichaMapaConectar(container){
   if(!activeMap) return;
