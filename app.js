@@ -5791,7 +5791,11 @@ async function compartirFichaImagen(d, btn){
       if(!blob){ siaToast('No se pudo generar la imagen.'); return res(false); }
       const file = new File([blob], nombreArchivo, {type:'image/png'});
       try{
-        if(navigator.canShare && navigator.canShare({files:[file]})){
+        /* Hoja de compartir del sistema solo en táctil (celular/tableta). En
+           escritorio, Windows y macOS abren un menú del sistema que estorba y
+           no ofrece guardar el archivo: ahí siempre se descarga directo. */
+        const _tactilShare = window.matchMedia('(pointer:coarse)').matches;
+        if(_tactilShare && navigator.canShare && navigator.canShare({files:[file]})){
           /* Solo `files`: agregar `title` hace que iOS trate la hoja como un
              envío mixto y muestre la ficha genérica de documento en lugar de
              la miniatura de la imagen. */
