@@ -6358,11 +6358,32 @@ function descConstancia(u, scFC){
      principal o del marco alrededor del punto): si no, la leyenda prometería
      una capa que no se ve. */
   const bboxDe = g => { const c = JSON.stringify(g.coordinates).match(/-?\d+\.?\d*(?:e-?\d+)?/g).map(Number); let w=1e9,e=-1e9,s2=1e9,n=-1e9; for(let i=0;i<c.length;i+=2){ if(c[i]<w)w=c[i]; if(c[i]>e)e=c[i]; if(c[i+1]<s2)s2=c[i+1]; if(c[i+1]>n)n=c[i+1]; } return {w,e,s:s2,n}; };
-  const bb = bboxDe(geoP ? geoP.geometry : _marcoAlrededor(u.latlng, 900));
+  /* Sin cobertura, el marco crece hasta abarcar el área más cercana (tope 3 km)
+     para que la imagen muestre «qué hay cerca» y no un recuadro vacío. */
+  let rMarco = 650;
+  if(!geoP){ try{ const cer0 = _masCercana(u.latlng, (GEOMETRIES && GEOMETRIES.features) || []); if(cer0 && cer0.d < 3000) rMarco = Math.max(650, Math.round(cer0.d * 1.5)); }catch(_){} }
+  const bb = bboxDe(geoP ? geoP.geometry : _marcoAlrededor(u.latlng, rMarco * 1.4));
   const tocaBB = f => { try{ const b2 = bboxDe(f.geometry); return !(b2.e<bb.w||b2.w>bb.e||b2.n<bb.s||b2.s>bb.n); }catch(_){ return true; } };
   const scCerca = (scFC && scFC.features) ? scFC.features.filter(tocaBB) : [];
   if(scCerca.length)
     capas.push({ id:'extra', fc:{type:'FeatureCollection', features:scCerca}, estilo:{ fill:colorLiteral('var(--sc)'), fillAlpha:.10, stroke:colorLiteral('var(--sc-900)'), width:2.5, dash:[8,6] }, leyenda:'Suelo de Conservación' });
+  /* Áreas del inventario que caen en el encuadre y no son coberturas del punto
+     (p. ej. la barranca a 56 m de un punto «sin área decretada»): sin ellas la
+     imagen mostraba un mapa vacío que la pantalla sí llenaba. Una capa por
+     categoría, con su color y su leyenda. */
+  try{
+    const yaEn = new Set(covs.map(c => c.nombre));
+    const porGrupo = {};
+    ((GEOMETRIES && GEOMETRIES.features) || []).forEach(f => {
+      const nom = f.properties && f.properties.nombre;
+      if(!nom || yaEn.has(nom) || !f.geometry || !tocaBB(f)) return;
+      (porGrupo[f.properties.grupo] = porGrupo[f.properties.grupo] || []).push(f);
+    });
+    Object.keys(porGrupo).forEach(gr => {
+      const col = colorLiteral((typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[gr]) || COL_GRIS_NEUTRO);
+      capas.push({ id:'extra', fc:{type:'FeatureCollection', features:porGrupo[gr]}, estilo:{ fill:col, fillAlpha:.22, stroke:col, width:3 }, leyenda:gr.replace(/^(AVA|ANP) · /, '$1 ') });
+    });
+  }catch(_){}
   covs.slice(1).forEach(c => { const g = _geoDeCobertura(c); if(g) capas.push({ id:'extra', fc:{type:'FeatureCollection', features:[g]}, estilo:{ fill:colorLiteral(c.color), fillAlpha:.12, stroke:colorLiteral(c.color), width:3 }, leyenda:c.nombre }); });
   const filas = [];
   filas.push(['FECHA Y HORA', fechaTxt]);
@@ -6392,7 +6413,7 @@ function descConstancia(u, scFC){
     /* Nunca «constancia»: la imagen es informativa y no tiene efectos legales. */
     subtitulo: (principal ? (principal.sub || principal.tag || '') + ' · ' : '') + 'Consulta informativa · sin validez legal',
     color,
-    geo: geoP || _marcoAlrededor(u.latlng, 650),
+    geo: geoP || _marcoAlrededor(u.latlng, rMarco),
     soloPunto: !geoP,
     grande: coord, grandeLabel: 'COORDENADA · WGS84',
     capas, filas
