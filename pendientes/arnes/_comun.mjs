@@ -6,7 +6,7 @@
 import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 export const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const R = (...p) => path.join(RAIZ, ...p);
@@ -21,7 +21,8 @@ export async function playwright(){
   catch(_){
     const dir = process.env.PLAYWRIGHT_DIR;
     if(!dir) throw new Error('No se encontró playwright. Ejecuta `npm i -D playwright` en la raíz del repo o define PLAYWRIGHT_DIR.');
-    return norm(await import(path.join(dir, 'node_modules', 'playwright', 'index.js')));
+    /* URL file:// y no ruta: en Windows import('C:\\…') falla (ERR_UNSUPPORTED_ESM_URL_SCHEME). */
+    return norm(await import(pathToFileURL(path.join(dir, 'node_modules', 'playwright', 'index.js')).href));
   }
 }
 export const lanzar = (chromium, extra={}) => chromium.launch({

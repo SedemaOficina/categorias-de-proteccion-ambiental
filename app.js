@@ -4693,18 +4693,24 @@ function attachFullscreenBtn(canvas, mapInstance){
   });
 
   // Recalcular tamaño del mapa al entrar/salir de fullscreen.
-  // Esta función se invoca desde 4 sitios y antes acumulaba 2 listeners de document
-  // por invocación, sin removerlos nunca. Se guarda la referencia y se limpia.
-  if(attachFullscreenBtn._onChange){
-    document.removeEventListener('fullscreenchange', attachFullscreenBtn._onChange);
-    document.removeEventListener('webkitfullscreenchange', attachFullscreenBtn._onChange);
-  }
+  // Un escucha POR LIENZO (v81, 5-oct-2026): antes había uno solo para toda la
+  // página y cada mapa nuevo borraba el del anterior; tras abrir una ficha, el
+  // mapa general entraba a pantalla completa sin enterarse (botón sin «Salir»,
+  // sin invalidateSize al salir con Esc, y en Android sin arrastre de un dedo).
+  // Al re-inicializar el mismo lienzo se quita el suyo; el de un lienzo que
+  // salió del DOM se quita solo en el siguiente cambio.
+  const quitar = h => { document.removeEventListener('fullscreenchange', h); document.removeEventListener('webkitfullscreenchange', h); };
+  if(canvas._siaFsOnChange) quitar(canvas._siaFsOnChange);
   const onChange = () => {
+    if(!canvas.isConnected){ quitar(onChange); return; }
     const el = document.fullscreenElement || document.webkitFullscreenElement;
-    avisarMapa(!!(el && (el === canvas || el.contains(canvas))));
+    const en = !!(el && (el === canvas || el.contains(canvas)));
+    if(!en && !canvas._siaFsNativo) return;   /* el cambio es de otro mapa */
+    canvas._siaFsNativo = en;
+    avisarMapa(en);
     setTimeout(() => { if(mapInstance) mapInstance.invalidateSize(); }, 100);
   };
-  attachFullscreenBtn._onChange = onChange;
+  canvas._siaFsOnChange = onChange;
   document.addEventListener('fullscreenchange', onChange);
   document.addEventListener('webkitfullscreenchange', onChange);
 }
@@ -7174,7 +7180,9 @@ function _capaContextoUbicar(mapa, alcaldias){
           lyr.bindTooltip(feat.properties.nombre, {sticky:true, direction:'top'});
           lyr.on('click', () => { const a = areaPorNombre(feat.properties.nombre); if(a) openDrawer(a); });
           lyr.on('mouseover', () => lyr.setStyle({weight:3, fillOpacity:0.38}));
-          lyr.on('mouseout',  () => lyr.setStyle(estilo(feat)));
+          /* Al salir, vuelve a su estilo, conservando el resalte del área más
+             cercana si _extenderConCercana se lo puso. */
+          lyr.on('mouseout',  () => lyr.setStyle(Object.assign(estilo(feat), lyr._siaResalte || {})));
         }
       }).addTo(mapa);
     }
@@ -7205,7 +7213,7 @@ function _extenderConCercana(bounds, latlng, grupoCtx){
     if(grupoCtx) grupoCtx.eachLayer(l => {
       if(l.feature && l.feature.properties.nombre === cer.nombre){
         const c = GROUP_COLORS[l.feature.properties.grupo] || COL_GRIS_NEUTRO;
-        if(grupoCtx.resaltar !== false) l.setStyle({weight:3, fillOpacity:0.34, color:c});
+        if(grupoCtx.resaltar !== false){ l._siaResalte = {weight:3, fillOpacity:0.34, color:c}; l.setStyle(l._siaResalte); }
         try{ bounds.extend(l.getBounds()); }catch(_){}
       }
     });
