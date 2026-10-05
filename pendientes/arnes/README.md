@@ -49,5 +49,36 @@ Otro puerto: `PUERTO=9000 node pendientes/arnes/srv.mjs` y el mismo `PUERTO=9000
 
 - Las teselas se responden **con** `Access-Control-Allow-Origin: *`: desde v67 las capas se piden con `crossOrigin`, y sin la cabecera el mapa no pinta.
 - Los scripts no dependen de la carpeta desde la que se ejecutan ni de rutas de una máquina concreta; si uno nuevo lo hace, corrígelo antes de guardarlo aquí.
-- El Service Worker se prueba con un servidor propio y corte de red por bandera (las rutas de Playwright no ven las peticiones del SW); ese escenario está descrito en `pendientes/arnes-verificacion.md` § 5.6 y en la auditoría del 13-sep-2026 (D7-01).
+- El Service Worker se prueba con un servidor propio y corte de red por bandera (las rutas de Playwright no ven las peticiones del SW); ese escenario está descrito en § 6.6 y en la auditoría del 13-sep-2026 (D7-01).
 - Lo que el arnés no ve —teselas reales, fuentes, Google Places, el SW en producción, Cloudflare Access real— se comprueba en el navegador tras la purga.
+- En móvil hay que crear el contexto con `hasTouch:true`; si no, los gestos táctiles (`_gestosTactilesIncrustado`) no se activan. `fixtures/leaflet-stub.js` acepta cualquier llamada a `L.*` sin hacer nada: sirve para arranque, filtros y tabla, **no** para verificar mapas.
+- Las pruebas puntuales de una entrega (`t_*.mjs`) no se guardan aquí: se escriben en unas 20 líneas importando `playwright()`, `lanzar()` y `enrutar()` de `_comun.mjs` y se documentan en el informe de su auditoría.
+
+## 5. Intercepción de red (patrón de todos los scripts, `enrutar()`)
+
+| Petición | Respuesta |
+|---|---|
+| `http://localhost:8897/...` | archivos reales del repo |
+| `leaflet.js` / `leaflet.css` | `vendor/` de la raíz (mapas reales) o `fixtures/leaflet-stub.js` y CSS vacío |
+| `docs.google.com` (CSV del Sheet) | `fixtures/inventario_real_2026-09-12.csv` (66 filas reales) o `fixtures/inventario.csv` (66 sintéticas) |
+| `basemaps.cartocdn` / `arcgisonline` | PNG 256×256 en memoria con `Access-Control-Allow-Origin: *` |
+| `*.geojson` | el archivo de `data/` con ese nombre; si no existe, `FeatureCollection` vacía |
+| `fonts.googleapis.com` | CSS vacío |
+| todo lo demás | `abort()` |
+
+## 6. Qué probar en cada entrega (lista mínima)
+
+1. Las validaciones del CI (`.github/workflows/validar.yml`) en local: sintaxis de JS y CSS, hashes de CSP y SRI, GeoJSON, invariante de 66 y contrato de columnas.
+2. `aud360.mjs` en los cuatro perfiles: cero `pageerror`; sin scroll horizontal en ningún destino; sin objetivos táctiles nuevos < 40 px; los cuatro flujos de ubicación con su cabeza esperada.
+3. Invariantes en pantalla: `#metaCount` = 66; chips 13/26/18/9; ARCAC y Zona Patrimonio nunca alteran esos contadores.
+4. Ficha: abre desde tabla, mapa y resultado de ubicación; `#dr` pierde `inert` al abrir y en móvil el cuerpo lleva `pagina-bloqueada`; Escape cierra; el asa de la hoja sube, nunca cierra.
+5. Mapas incrustados: en móvil `touch-action: pan-x pan-y` en reposo y `.mapa-gesto-total` en el mapa del caparazón; `.btn-ampliar` presente en todo puntero y en estado «Salir de pantalla completa» al ampliar cualquier mapa, aunque antes se haya abierto otro (v81).
+6. Service Worker: instala con red → bump de `CACHE_VERSION` sin red (la caché nueva queda vacía y la página arranca de la anterior) → vuelve la red: la primera navegación dispara `repararSiIncompleta()`, que completa la caché nueva, purga la anterior y muestra «Nueva versión disponible…». Se prueba con un servidor que corta la red por bandera (`.caida`: todo salvo `sw.js`; `.caida-total`: también `sw.js`) y un contexto con `serviceWorkers:'allow'`; guion en `pendientes/auditoria-360-2026-09-13.md` (D7).
+7. CSP: cada origen que realmente se pide (`peticiones` en `aud360.json`) está en la CSP de `_headers`, y todo host que pida el SW está además en `connect-src` (la CSP de un worker gobierna sus `fetch()`; incidente del 14-sep-2026).
+8. `acceso.mjs`: `navegó a Access: true` en los dos casos y `errores: []`.
+
+## 7. Producción
+
+`sia.contactoverde.com` está detrás de Cloudflare Access: lo que se verifica en vivo se hace desde el Chrome de la persona. El pie del tablero muestra la versión instalada («Versión del tablero»); en consola, `navigator.serviceWorker.getRegistrations()` y `caches.keys()` dicen qué versión sirve ese navegador. Si un navegador conserva un SW anterior a v74 y el login termina en `ERR_FAILED`, «Unregister» en DevTools → Application → Service Workers lo resuelve. Prueba de sesión real: abrir `https://sedema-sia.cloudflareaccess.com/cdn-cgi/access/logout` y luego el tablero: la copia cacheada carga y en ≤ 4 s redirige al login sola.
+
+Antes de reportar un hallazgo, contrastar con `pendientes/pendientes.md` (lo abierto), la última `pendientes/auditoria-360-*.md` (lo ya revisado) y `CLAUDE.md` (reglas e invariantes).

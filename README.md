@@ -78,7 +78,7 @@ Cloudflare Workers sirve el repositorio como assets estáticos (`wrangler.jsonc`
 
 1. Editar los archivos.
 2. `node --check app.js` y **bumpear `CACHE_VERSION` en `sw.js`** (`sia-v35-AAAA-MM-DD<letra>`). Sin el bump el Service Worker sigue sirviendo la versión anterior.
-3. Commit y push a `main` (GitHub Desktop). Cloudflare despliega.
+3. Commit y push a `main` (desde el 5-oct-2026 los hace el asistente, con título y descripción). Cloudflare despliega.
 4. **Purge Everything** en Cloudflare y comprobar en el sitio que `sw.js` muestre la versión nueva.
 
 El CI (`validar.yml`) corre en cada push a `main` y en cada pull request: rechaza sintaxis inválida en `app.js`, `sw.js`, `config.js`, el script inline de `index.html` y `styles.css`; exige el bump de `CACHE_VERSION` cuando cambia cualquier archivo servido desde caché (`index.html`, `styles.css`, `app.js`, `config.js`, `sw.js`, `manifest.json`, `data/**`); valida que los GeoJSON sean JSON, 2D y lon/lat; y comprueba el invariante de 66 en `geometrias.geojson` y en `data/inventario.csv`, las 17 columnas del respaldo y que todo nombre del respaldo tenga polígono. Las pruebas de comportamiento (Playwright) viven en `pendientes/arnes/` (ver su `README.md`) y se corren a mano antes de cada entrega.
