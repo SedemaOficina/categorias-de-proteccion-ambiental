@@ -34,7 +34,7 @@ Tablero público de las 66 áreas de protección ambiental de la CDMX. Público 
 ## Reglas de despliegue (obligatorias en cada entrega)
 1. `node --check app.js` (y `sw.js` si cambió). CSS: 0 errores de sintaxis. El CI (`.github/workflows/validar.yml`) repite estas comprobaciones en cada push y exige el bump cuando cambia cualquier archivo servido desde caché; que pase el CI no sustituye el arnés.
 2. **Bumpear `CACHE_VERSION` en `sw.js`** (`sia-v35-AAAA-MM-DD<letra>`).
-3. Decir qué archivos subir. El push lo hace la persona con GitHub Desktop; después **Purge Everything** en Cloudflare y comprobar `sw.js` en vivo.
+3. **Commit y push los hace el asistente (desde el 5-oct-2026):** `git commit` con título en español, en imperativo y descriptivo (nada de «t» o «Q»), y un cuerpo que diga qué cambió y por qué (versión `CACHE_VERSION`, archivos tocados, cómo se verificó); después `git push origin main`. Luego **Purge Everything** en Cloudflare (desde el Chrome de la persona si responde; si no, se le pide) y comprobar `sw.js` en vivo.
 4. La copia local está en LF (`.gitattributes`); escribir los archivos en LF.
 5. **Nunca borrar archivos de la carpeta local:** lo que sobre se mueve a `_borrar/` (ignorada por git) y se avisa.
 
