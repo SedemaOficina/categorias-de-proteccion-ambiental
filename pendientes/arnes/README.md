@@ -49,5 +49,5 @@ Otro puerto: `PUERTO=9000 node pendientes/arnes/srv.mjs` y el mismo `PUERTO=9000
 
 - Las teselas se responden **con** `Access-Control-Allow-Origin: *`: desde v67 las capas se piden con `crossOrigin`, y sin la cabecera el mapa no pinta.
 - Los scripts no dependen de la carpeta desde la que se ejecutan ni de rutas de una máquina concreta; si uno nuevo lo hace, corrígelo antes de guardarlo aquí.
-- El Service Worker se prueba con un servidor propio y corte de red por bandera (las rutas de Playwright no ven las peticiones del SW); ese escenario está descrito en `claude/arnes-verificacion.md` § 5.6 y en la auditoría del 13-sep-2026 (D7-01).
+- El Service Worker se prueba con un servidor propio y corte de red por bandera (las rutas de Playwright no ven las peticiones del SW); ese escenario está descrito en `pendientes/arnes-verificacion.md` § 5.6 y en la auditoría del 13-sep-2026 (D7-01).
 - Lo que el arnés no ve —teselas reales, fuentes, Google Places, el SW en producción, Cloudflare Access real— se comprueba en el navegador tras la purga.
