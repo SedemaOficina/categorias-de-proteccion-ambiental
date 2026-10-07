@@ -40,6 +40,13 @@ Nueve áreas difieren más del 5 % entre el decreto y la poligonal (D1-04): El T
 ### B15 · Guía interactiva de uso 🟠 · siguiente trabajo (acordado el 6-oct)
 Recorrido guiado para el personal que entra por primera vez: paso a paso sobre la interfaz real (buscar un punto o usar Ubicarme, leer el resultado, abrir una ficha, cambiar capas y ampliar el mapa, Inventario y Análisis). Se ofrece al primer ingreso y se puede volver a abrir desde el botón «?». Distinta de la «Guía rápida» actual, que explica las categorías, no el uso.
 
+### B16 · Módulo de administración y datos de uso 🟠 · plan del 6-oct, faltan decisiones
+Amplía B8. Qué daría: quién entra, cuándo y cada cuánto; secciones y fichas más consultadas; horas pico; quién generó imágenes; celular contra computadora; alta y baja de personas con perfil administrador/usuario.
+- **Dónde vive (recomendado):** infraestructura institucional `sedema.sia.cdmx.gob.mx` (ADIP): módulo «tablero» en `sia-backend` (Node/Express, servidor .196), esquema `tablero` en `bd_csia` (PostgreSQL 17, servidor .167, con respaldos cifrados) y su propia cuenta de servicio.
+- **Dos caminos para la identidad:** (1) puente: el tablero sigue en Cloudflare + Access y un Worker reenvía los eventos al backend con una llave entre servidores; (2) mudanza (destino recomendado): el tablero se publica en el dominio institucional (p. ej. `/categorias/`, nginx) y `sia-backend` hace inicio de sesión, perfiles, altas y registro de uso; se retiran Access y la lista de usuarios de prueba de Google.
+- **Fases:** 1) registro de uso + vista «Uso» (solo administradores); 2) perfiles; 3) altas y bajas desde el tablero.
+- **Decidir:** ¿el tablero puede mudarse al dominio institucional?; ¿`sia-backend` ya tiene inicio de sesión de administradores que se pueda reutilizar?; ¿quién despliega con la VPN de ADIP (Claude prepara módulo, SQL, bloque de nginx e instrucciones)?; aviso de privacidad al personal (y quién lo aprueba); de las búsquedas guardar solo el resultado —alcaldía y área—, no la dirección (recomendado); conservación de registros (p. ej. 12 meses); quiénes son administradores.
+
 ### B11 · `robots`, `canonical` y Open Graph con el sitio detrás de Access 🟢
 `index.html` declara `robots index,follow`, `canonical`, `og:*` y `og:image` en `sia.contactoverde.com`, pero desde el 13-sep ningún rastreador ni vista previa (WhatsApp, Teams) puede leer nada: reciben el login. Propuesta: `noindex, nofollow` y retirar `og:image` (o alojarla fuera de Access si se quiere vista previa al compartir la liga entre el personal). Dime cuál y lo aplico en la siguiente entrega con bump.
 
