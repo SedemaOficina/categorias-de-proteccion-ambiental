@@ -5410,13 +5410,31 @@ function _trazarCapaEnCaja(ctx, fc, P, x, y, w, h, estilo){
     const polys = g.type==='Polygon' ? [g.coordinates] : g.type==='MultiPolygon' ? g.coordinates : [];
     if(!polys.length) return;
     const st = estilo(f.properties || {}) || {};
+    /* Solo cuenta lo que cae dentro del recuadro: el que llama usa la cuenta
+       para decidir si la capa entra a la leyenda (v86). Sin esto la imagen
+       nombraba capas que no se veían. */
+    /* Visible = algún vértice dentro del recuadro, o el centro del recuadro
+       dentro del polígono (un polígono enorme que lo cubre sin vértices
+       adentro). El rectángulo envolvente no basta: el del Suelo de
+       Conservación abarca casi toda la ciudad. */
+    let visible = false;
+    const cx = x + w/2, cy = y + h/2;
     polys.forEach(poly=>{
       ctx.beginPath();
-      poly.forEach(ring=>{ ring.forEach((c,i)=>{ const [px,py]=P(c); i?ctx.lineTo(px,py):ctx.moveTo(px,py); }); ctx.closePath(); });
+      let cruces = 0;
+      poly.forEach(ring=>{
+        let ant = null;
+        ring.forEach((c,i)=>{ const [px,py]=P(c);
+          if(!visible && px>=x && px<=x+w && py>=y && py<=y+h) visible = true;
+          if(ant && ((ant[1] > cy) !== (py > cy)) && cx < ant[0] + (cy - ant[1]) * (px - ant[0]) / (py - ant[1])) cruces++;
+          ant = [px,py];
+          i?ctx.lineTo(px,py):ctx.moveTo(px,py); });
+        ctx.closePath(); });
+      if(cruces % 2 === 1) visible = true;
       if(st.fill && st.fillAlpha){ ctx.globalAlpha = st.fillAlpha; ctx.fillStyle = st.fill; ctx.fill('evenodd'); ctx.globalAlpha = 1; }
       if(st.stroke){ ctx.strokeStyle = st.stroke; ctx.lineWidth = st.width || 2; ctx.setLineDash(st.dash || []); ctx.lineJoin='round'; ctx.stroke(); ctx.setLineDash([]); }
     });
-    n++;
+    if(visible) n++;
   });
   ctx.restore();
   return n;
@@ -5426,6 +5444,25 @@ function _capasActivasFicha(){
   const out = [];
   try{ if(activeMap && activeMap._scLayer) out.push({ id:'sc', fc: activeMap._scLayer.toGeoJSON() }); }catch(_){}
   try{ if(typeof _zonifCapa !== 'undefined' && _zonifCapa && activeMap && activeMap.hasLayer(_zonifCapa)) out.push({ id:'zonif', fc: _zonifCapa.toGeoJSON() }); }catch(_){}
+  /* Capas de contexto encendidas en el minimapa (v86): una capa por color,
+     con su leyenda, debajo del polígono del área como en pantalla. */
+  try{
+    const ctxC = activeMap && activeMap._ctxCapas;
+    const lit = c => colorLiteral(c);
+    if(ctxC && ctxC.inv && activeMap.hasLayer(ctxC.inv)){
+      const porGrupo = {};
+      ctxC.inv.toGeoJSON().features.forEach(f => { (porGrupo[f.properties.grupo] = porGrupo[f.properties.grupo] || []).push(f); });
+      Object.keys(porGrupo).forEach(gr => { const col = lit(GROUP_COLORS[gr] || COL_GRIS_NEUTRO);
+        out.push({ id:'extra', fc:{type:'FeatureCollection', features:porGrupo[gr]}, estilo:{ fill:col, fillAlpha:.12, stroke:col, width:2 }, leyenda: gr.replace(/^(AVA|ANP) · /, '$1 ') }); });
+    }
+    if(ctxC && ctxC.arcac && activeMap.hasLayer(ctxC.arcac)){
+      const col = lit('var(--arcac-com)');
+      out.push({ id:'extra', fc: ctxC.arcac.toGeoJSON(), estilo:{ fill:col, fillAlpha:.18, stroke:col, width:2 }, leyenda:'ARCAC' });
+    }
+    if(ctxC && ctxC.zp && activeMap.hasLayer(ctxC.zp)){
+      out.push({ id:'extra', fc: ctxC.zp.toGeoJSON(), estilo:{ fill:'#444441', fillAlpha:.06, stroke:'#444441', width:2, dash:[3,6] }, leyenda:'Zona Patrimonio' });
+    }
+  }catch(_){}
   return out;
 }
 function _drawGeoInBox(ctx, geoIn, x, y, w, h, color, punto, T){
@@ -5698,12 +5735,12 @@ async function compartirFichaImagen(d, btn){
       const colSC = colorLiteral('var(--sc)'), colSC9 = colorLiteral('var(--sc-900)');
       capas.forEach(c=>{
         if(c.id === 'sc'){
-          _trazarCapaEnCaja(ctx, c.fc, T.P, 48, y, W-96, boxH, ()=>({ fill: colSC, fillAlpha: .10, stroke: colSC9, width: 2.5, dash: [8,6] }));
-          leyenda.push({ txt:'Suelo de Conservación', col: colSC9, dash:true });
+          const n = _trazarCapaEnCaja(ctx, c.fc, T.P, 48, y, W-96, boxH, ()=>({ fill: colSC, fillAlpha: .10, stroke: colSC9, width: 2.5, dash: [8,6] }));
+          if(n) leyenda.push({ txt:'Suelo de Conservación', col: colSC9, dash:true });
         }
         if(c.id === 'extra' && c.fc){
-          _trazarCapaEnCaja(ctx, c.fc, T.P, 48, y, W-96, boxH, ()=>c.estilo);
-          if(c.leyenda) leyenda.push({ txt:c.leyenda, col:c.estilo.stroke || c.estilo.fill, dash: !!c.estilo.dash });
+          const n = _trazarCapaEnCaja(ctx, c.fc, T.P, 48, y, W-96, boxH, ()=>c.estilo);
+          if(n && c.leyenda) leyenda.push({ txt:c.leyenda, col:c.estilo.stroke || c.estilo.fill, dash: !!c.estilo.dash });
         }
         if(c.id === 'zonif'){
           /* Misma regla que la leyenda del minimapa (UI-04): nombre literal de la
@@ -6985,6 +7022,81 @@ function _montarPgoedfEnMenu(lienzo, toggle, seccionCapas){
     chip.classList.add('active'); chip.setAttribute('aria-pressed','true'); ley.hidden = false;
   });
 }
+/* ═══ CAPAS DE CONTEXTO EN EL MINIMAPA DE LA FICHA (v86, 6-oct-2026) ═══
+   El minimapa solo dibujaba el área de la ficha, las alcaldías y el Suelo de
+   Conservación: al alejarlo no se veía qué hay alrededor (¿otra área cerca?,
+   ¿un núcleo agrario?). Ahora su menú de capas ofrece el mismo contexto que
+   el mapa principal: las otras áreas del inventario (encendidas de inicio,
+   trazo tenue en el color de su categoría; clic abre su ficha), ARCAC y Zona
+   Patrimonio (apagadas). Van debajo del contorno del área de la ficha.
+   `mapa._ctxCapas` las guarda para la imagen compartible (_capasActivasFicha). */
+const _CTX_FICHA = [
+  { id:'inv', txt:'Otras áreas del inventario', color:'var(--guinda)', inicio:true,
+    cargar: async () => { if(!GEOMETRIES) await loadGeometries(); return GEOMETRIES; },
+    excluir: f => _fichaD && f.properties.nombre === _claveDe(_fichaD),
+    estilo: f => { const c = GROUP_COLORS[f.properties.grupo] || COL_GRIS_NEUTRO; return { color:c, weight:1.25, fillColor:c, fillOpacity:0.10 }; },
+    tip: p => p.nombre,
+    clic: p => { const a = areaPorNombre(p.nombre); if(a) openDrawer(a); } },
+  { id:'arcac', txt:'ARCAC', color:'var(--arcac-com)', inicio:false,
+    cargar: () => loadARCAC(),
+    estilo: f => { const c = f.properties._color || 'var(--arcac-com)'; return { color:c, weight:1.25, fillColor:c, fillOpacity:0.18 }; },
+    tip: p => p.nombre + (p.tenencia ? ' · ' + p.tenencia : ''),
+    clic: p => openARCACFicha(p.no) },
+  { id:'zp', txt:'Zona Patrimonio', color:'#444441', inicio:false,
+    cargar: () => loadZonaPatrimonio(),
+    estilo: f => { const r = (typeof ZP_DATA !== 'undefined' && ZP_DATA.find(x => x.key === f.properties.capa)) || {};
+                   const c = r.color || '#444441';
+                   return f.properties.tipo === 'contenedor'
+                     ? { color:c, weight:2, fillColor:c, fillOpacity:0.04, dashArray:'6 5' }
+                     : { color:c, weight:2, fillColor:c, fillOpacity:0.08, dashArray:'1 5', lineCap:'round' }; },
+    tip: p => p.nombre,
+    clic: null }
+];
+function _montarContextoEnFicha(lienzo, toggle, seccionCapas){
+  const mapaDe = () => { const c = lienzo.querySelector('.leaflet-container'); return c && c._siaMapa; };
+  _CTX_FICHA.forEach(def => {
+    const wrap = document.createElement('div'); wrap.className = 'ctx-flotante en-menu';
+    const chip = document.createElement('button');
+    chip.type = 'button'; chip.className = 'map-filter-chip ctx-toggle';
+    chip.dataset.ctx = def.id; chip.style.setProperty('--chip-color', def.color);
+    chip.setAttribute('aria-pressed', 'false');
+    chip.innerHTML = '<span class="chip-dot"></span>' + esc(def.txt);
+    wrap.appendChild(chip); seccionCapas().appendChild(wrap);
+    if(typeof L !== 'undefined' && L.DomEvent){ L.DomEvent.disableClickPropagation(wrap); }
+    const marcar = on => { chip.classList.toggle('active', on); chip.setAttribute('aria-pressed', on ? 'true' : 'false'); };
+    const encender = async () => {
+      const mapa = mapaDe(); if(!mapa) return;
+      mapa._ctxCapas = mapa._ctxCapas || {};
+      if(!mapa._ctxCapas[def.id]){
+        const fc = await def.cargar();
+        if(!fc || !fc.features || !fc.features.length || mapaDe() !== mapa) return;
+        const feats = def.excluir ? fc.features.filter(f => !def.excluir(f)) : fc.features;
+        mapa._ctxCapas[def.id] = L.geoJSON({type:'FeatureCollection', features:feats}, {
+          style: def.estilo,
+          onEachFeature: (feat, lyr) => {
+            const p = feat.properties || {};
+            lyr.bindTooltip(esc(def.tip(p) || ''), {sticky:true, direction:'top'});
+            if(def.clic) lyr.on('click', () => def.clic(p));
+            lyr.on('mouseover', () => lyr.setStyle({weight:2.5, fillOpacity:0.28}));
+            lyr.on('mouseout',  () => lyr.setStyle(def.estilo(feat)));
+          }
+        });
+      }
+      mapa._ctxCapas[def.id].addTo(mapa);
+      /* El contorno del área de la ficha siempre por encima del contexto. */
+      try{ if(activeGeoLayer && mapa === activeMap) activeGeoLayer.bringToFront(); }catch(_){}
+      marcar(true);
+    };
+    chip.addEventListener('click', e => {
+      e.stopPropagation();
+      const mapa = mapaDe(); if(!mapa) return;
+      const capa = mapa._ctxCapas && mapa._ctxCapas[def.id];
+      if(capa && mapa.hasLayer(capa)){ mapa.removeLayer(capa); marcar(false); }
+      else encender();
+    });
+    if(def.inicio) encender();
+  });
+}
 function montarBotonBase(){
   document.querySelectorAll('.map-block-controls-floating').forEach(cont=>{
     const toggle = cont.querySelector('.map-block-toggle');
@@ -7106,6 +7218,11 @@ function montarBotonBase(){
        (v75): mapa general, minimapas de ficha y traslapes. Ver _montarPgoedfEnMenu. */
     if(lienzo && !toggle.querySelector('.pgoedf-toggle')){
       try{ _montarPgoedfEnMenu(lienzo, toggle, seccionCapas); }catch(_){}
+    }
+    /* Capas de contexto (v86): solo en el minimapa de la ficha; el mapa
+       principal ya las tiene en sus chips de categoría, ARCAC y Zona Patrimonio. */
+    if(lienzo && lienzo.closest('#dr') && !toggle.querySelector('.ctx-toggle')){
+      try{ _montarContextoEnFicha(lienzo, toggle, seccionCapas); }catch(_){}
     }
     /* En celular, los chips de categoría (inventario, coadministración, ARCAC,
        Suelo de Conservación) entran al MISMO menú. Antes tenían un segundo
