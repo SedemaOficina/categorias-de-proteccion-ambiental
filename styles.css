@@ -3051,7 +3051,7 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
   #tableSection > .toolbar.hoja-abierta label{display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%;max-width:none;flex:0 0 auto}
   #tableSection > .toolbar.hoja-abierta select,
   #tableSection > .toolbar.hoja-abierta input{width:100%;max-width:none;min-height:44px}
-  /* Limpiar y Copiar liga al final de la hoja, a todo el ancho. */
+  /* «Limpiar» al final de la hoja, a todo el ancho. */
   #tableSection > .toolbar.hoja-abierta .btn-group{display:flex;gap:8px;width:100%;order:10;margin-top:4px}
   #tableSection > .toolbar.hoja-abierta .btn-group .btn{flex:1 1 0;min-height:44px}
   .hoja-filtros-bd:not([hidden]){display:block;position:fixed;inset:0;z-index:1140;background:rgba(42,42,42,.45)}

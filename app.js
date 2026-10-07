@@ -872,6 +872,7 @@ function buildTabs(){
       if(d && d.sub.length && !d.sub.includes(state.tab)) state.tab = d.sub[0];
       limpiarFiltros();
       buildTabs(); populateFilters(); renderDashboard(); render();
+      _pushVista();
       window.scrollTo({top:0,behavior:_suave()});
     });
   });
@@ -881,6 +882,7 @@ function buildTabs(){
       state.tab = b.dataset.id;
       limpiarFiltros();
       buildTabs(); populateFilters(); renderDashboard(); render();
+      _pushVista();
       _trasElegirSubconjunto();
     });
   });
@@ -1340,6 +1342,7 @@ document.addEventListener('click', e => {
   state.tab = c.dataset.ir;
   limpiarFiltros();
   buildTabs(); populateFilters(); renderDashboard(); render();
+  _pushVista();
   window.scrollTo({top:0, behavior:_suave()});
 });
 
@@ -2604,8 +2607,8 @@ function render(){
 }
 
 /* ═══ FILTROS EN CELULAR COMO HOJA (v89, 7-oct-2026) ═════════════════════
-   En celular la barra de filtros (Alcaldía, Programa, Más filtros, Limpiar,
-   Copiar liga) ocupaba casi toda la pantalla antes de la primera área. Ahí
+   En celular la barra de filtros (Alcaldía, Programa, Más filtros, Limpiar)
+   ocupaba casi toda la pantalla antes de la primera área. Ahí
    solo quedan visibles el buscador y un botón «Filtros (n)», con n = filtros
    activos; el botón abre la misma barra como hoja inferior, con los filtros
    avanzados ya desplegados y «Ver N resultados» para cerrar. Son los mismos
@@ -6610,6 +6613,7 @@ function _abrirResultadoLateral(){
     state.dest = 'UBICAR';
     limpiarFiltros();
     buildTabs(); populateFilters(); renderDashboard(); render();
+    _pushVista();
   }
   const w = document.querySelector('.wrap'); if(w) w.classList.add('ubi-lateral');
 }
@@ -7958,8 +7962,10 @@ function openDrawer(d){
   // Actualizar URL con slug del área (sin recargar página)
   const slug = slugify(d.nombre);
   const newHash = `#area=${slug}`;
+  /* v90: la ficha deja una entrada en el historial: «atrás» la cierra y se
+     vuelve a la misma pantalla (en Android, el botón atrás del teléfono). */
   if(location.hash !== newHash){
-    history.replaceState(null, '', newHash);
+    history.pushState({ siaFicha: true }, '', newHash);
   }
   _marcaFicha(true);
   /* Abre en la posición alta: la ficha es el objeto de la consulta y a media
@@ -8248,7 +8254,16 @@ function _marcaFicha(abierta){
   try{ if(window.visualViewport) window.visualViewport.addEventListener('resize', alRedimensionar); }catch(_){}
 })();
 
+/* v90: si la ficha abierta dejó su propia entrada en el historial, cerrarla
+   (×, Esc, fondo, arrastre) es ir atrás: así el historial no acumula fichas
+   ya cerradas y «atrás» después lleva a la pantalla anterior. El cierre real
+   lo hace el escucha de popstate con _cerrarFicha(). */
 function closeDrawer(){
+  if(!dr.classList.contains('open')) return;
+  if(history.state && history.state.siaFicha && location.hash.startsWith('#area=')){ history.back(); return; }
+  _cerrarFicha();
+}
+function _cerrarFicha(){
   _marcaFicha(false);
   /* Si la ficha se cierra con el mapa en pantalla completa simulada, se sale de ella. */
   siaFsSalirTodo();
@@ -8553,24 +8568,10 @@ function aplicarVistaDeURL(){
 }
 
 /* Expuesta a proposito: permite armar la liga desde la consola y es el
-   enganche de las pruebas automatizadas. */
+   enganche de las pruebas automatizadas. El botón «Copiar liga de esta vista»
+   se retiró el 7-oct-2026 (el acceso es restringido y no se quiere invitar a
+   compartir ligas); las vistas #v? siguen vivas porque las usa el historial. */
 window.vistaAURL = vistaAURL;
-function conectarVistaCompartible(){
-  const b = document.getElementById('btnVista');
-  if(!b) return;
-  b.addEventListener('click', async ()=>{
-    const url = vistaAURL();
-    try{
-      await navigator.clipboard.writeText(url);
-      siaToast('Liga copiada. Reproduce esta vista tal como la ves.');
-    }catch(_){
-      /* Sin permiso de portapapeles —o sin HTTPS— se deja en la barra de
-         direcciones para que se copie a mano. */
-      history.replaceState(null, '', url);
-      siaToast('Liga puesta en la barra de direcciones: cópiala desde ahí.');
-    }
-  });
-}
 
 /* Campo primero: en celular el uso dominante es ubicarse, no consultar tablas.
    En escritorio el uso dominante es lo contrario, y la entrada es el inventario. */
@@ -8581,7 +8582,7 @@ try{ if(window.matchMedia('(max-width:760px)').matches) state.dest = 'UBICAR'; }
 buildTabs(); populateFilters();
 try{ if(aplicarVistaDeURL()) buildTabs(); }catch(_){}
 renderDashboard(); render();
-initUbicarBar(); conectarVistaCompartible();
+initUbicarBar();
 /* Integridad del inventario: la comprobación contra el respaldo es asíncrona
    y no debe retrasar el primer pintado. */
 verificarInventario('arranque').catch(()=>{});
@@ -8602,10 +8603,50 @@ function openAreaFromHash(){
 }
 // Resolver al cargar la página
 openAreaFromHash();
-// Resolver al usar back/forward del navegador
-window.addEventListener('hashchange', () => {
-  if(location.hash.startsWith('#area=')) openAreaFromHash();
-  else if(dr.classList.contains('open')) closeDrawer();
+/* ═══ HISTORIAL DEL NAVEGADOR (v90, 7-oct-2026) ═══════════════════════════
+   Antes todo usaba replaceState y la flecha «atrás» sacaba del sitio. Ahora
+   cambiar de destino o de sección y abrir una ficha dejan una entrada
+   (pushState); los filtros no, para no obligar a oprimir atrás diez veces.
+   popstate (atrás/adelante, también al editar el # a mano) abre o cierra la
+   ficha y restaura la vista de esa entrada: `#v?…` con sus filtros, o sin #
+   la vista de inicio. Solo se vuelve a pintar si la vista cambió: cerrar una
+   ficha con «atrás» no rehace el mapa ni mueve la página. */
+function _pushVista(){
+  try{
+    let url = vistaAURL();
+    /* vistaAURL omite dest=INVENTARIO (lo normal en escritorio). En celular la
+       pantalla de inicio es Ubicar: sin el destino explícito, Inventario «Todas»
+       se escribiría igual que el inicio y no dejaría entrada. */
+    const porOmision = window.matchMedia('(max-width:760px)').matches ? 'UBICAR' : 'INVENTARIO';
+    if(state.dest !== porOmision && !new URLSearchParams(url.split('#v?')[1] || '').has('dest')){
+      url += (url.includes('#v?') ? '&' : '#v?') + 'dest=' + state.dest;
+    }
+    if(url !== location.href) history.pushState({ siaVista: true }, '', url);
+  }catch(_){}
+}
+function _vistaInicial(){
+  state.dest = window.matchMedia('(max-width:760px)').matches ? 'UBICAR' : 'INVENTARIO';
+  const d = DESTINOS.find(x => x.id === state.dest);
+  state.tab = (d && d.sub.length) ? d.sub[0] : 'ALL';
+  state.sortKey = 'nombre'; state.sortDir = 1;
+  limpiarFiltros();
+}
+window.addEventListener('popstate', () => {
+  const h = location.hash || '';
+  if(h.startsWith('#area=')){ openAreaFromHash(); return; }
+  if(dr.classList.contains('open')) _cerrarFicha();
+  const antes = vistaAURL();
+  if(h.startsWith('#v?')){
+    /* Lo que la liga no trae vuelve a su valor por omisión antes de aplicarla. */
+    limpiarFiltros(); state.sortKey = 'nombre'; state.sortDir = 1; state.tab = 'ALL';
+    state.dest = 'INVENTARIO';
+    aplicarVistaDeURL();
+  } else {
+    _vistaInicial();
+  }
+  if(vistaAURL() === antes) return;
+  buildTabs(); populateFilters(); renderDashboard(); render();
+  window.scrollTo({ top:0, behavior:'auto' });
 });
 
 /* ============================================================
