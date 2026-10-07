@@ -4,3 +4,6 @@ _borrar/
 
 # Capturas que la app de Claude guarda en la carpeta de trabajo: no van al repo
 Claude outputs/
+
+# Capturas que deja el arnés (filtros.mjs) en la carpeta desde la que se corre
+shots/
