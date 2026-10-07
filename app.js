@@ -1054,6 +1054,9 @@ function renderDashboard(){
   siaBloquearPagina(state.dest==='UBICAR' && _movil, 'shell');
   if(state.dest!=='UBICAR'){
     if(typeof limpiarUbicacionGlobal === 'function') limpiarUbicacionGlobal();
+    /* Escritorio (B14): el resultado vive junto al mapa de Ubicar; fuera de
+       ese destino se cierra. */
+    if(!_movil && wrap && wrap.classList.contains('ubi-lateral')) cerrarResultadoLateral();
     const _hr = document.getElementById('ubicarResultado');
     if(_hr) _hr.style.removeProperty('--vis');
     _hojaVis = 0;
@@ -4509,6 +4512,8 @@ async function initGlobalMap(){
   // cada primera apertura del mapa global aunque la capa quedara invisible.
   globalArcacLayer = null;
   if(state.showArcac) asegurarCapaArcacGlobal();
+  /* Escritorio: si hay una consulta abierta, el punto vuelve al mapa rehecho. */
+  if(state.dest === 'UBICAR') _pintarLateral();
 }
 
 /* === Pantalla completa (Fullscreen API nativa) === */
@@ -5864,7 +5869,7 @@ async function compartirFichaImagen(d, btn){
    un botón por cobertura para abrir su ficha. Vive fuera de las pestañas
    porque es una acción disponible desde cualquier vista.
    ═══════════════════════════════════════════════════════════════════════ */
-let ubicarMap = null, _ubicarDebounce = null, _ubicarSeq = 0;
+let _ubicarDebounce = null, _ubicarSeq = 0;
 
 function initUbicarBar(){
   const inp = document.getElementById('ubicarInput');
@@ -6290,6 +6295,7 @@ async function ubicarResolver(latlng, precision, etiqueta){
   const sec = document.getElementById('ubicarResultado');
   if(!sec) return;
   const shell = _shellActivo();
+  if(!shell) _abrirResultadoLateral();
   sec.hidden = false;
   sec.innerHTML = '<div class="gm-handle" id="ubicarAsa" aria-hidden="true"></div>'
                 + '<div class="panel"><div class="ubi-cargando">Consultando capas…</div></div>';
@@ -6346,17 +6352,55 @@ async function ubicarResolver(latlng, precision, etiqueta){
   const cerrar = document.getElementById('ubicarCerrar');
   if(cerrar) cerrar.addEventListener('click', ()=>{
     if(_shellActivo()){ cerrarHoja(); return; }
-    sec.hidden = true; sec.innerHTML='';
-    if(ubicarMap){ try{ubicarMap.remove();}catch(e){} ubicarMap=null; }
+    cerrarResultadoLateral();
   });
   if(shell){
     /* Un solo lienzo: el punto y sus polígonos se pintan sobre el mapa de
-       fondo. El mini-mapa del resultado queda oculto por CSS. */
+       fondo. */
     hojaIr(_hojaAlturas()[2]);
     pintarUbicacionEnGlobal(latlng, precision);
   } else {
-    setTimeout(()=>initUbicarMap(latlng, precision), 60);
+    /* Escritorio (B14, v85): el mismo principio, sin hoja. El resultado va en
+       una columna a la izquierda del mapa principal y el punto se pinta en
+       él; ya no hay un segundo mapa dentro del resultado. */
+    _ubiLateral = { latlng:{lat:latlng.lat, lng:latlng.lng}, precision };
+    _pintarLateral();
   }
+}
+
+/* ═══ «¿DÓNDE ESTOY?» EN ESCRITORIO · COLUMNA JUNTO AL MAPA (B14, v85) ════
+   En escritorio había dos mapas en la misma página —el chico del resultado
+   y el principal debajo de las pestañas— y la persona no entendía la
+   diferencia. Ahora, como en celular, hay uno: al consultar un punto el
+   tablero pasa al destino Ubicar, `.wrap.ubi-lateral` pone el resultado en
+   una columna a la izquierda del mapa principal y el punto se pinta en
+   él. `_ubiLateral` guarda el último punto para volver a pintarlo cuando el
+   mapa se rehace (initGlobalMap lo llama al terminar). */
+let _ubiLateral = null;
+function _pintarLateral(){
+  if(!_ubiLateral || _shellActivo() || !globalMap) return;
+  const c = document.getElementById('globalMapCanvas');
+  if(!c || globalMap.getContainer() !== c) return;
+  try{ globalMap.invalidateSize(); }catch(_){}
+  pintarUbicacionEnGlobal(_ubiLateral.latlng, _ubiLateral.precision);
+}
+function _abrirResultadoLateral(){
+  if(_shellActivo() || window.matchMedia('(max-width:760px)').matches) return;
+  if(state.dest !== 'UBICAR'){
+    state.dest = 'UBICAR';
+    limpiarFiltros();
+    buildTabs(); populateFilters(); renderDashboard(); render();
+  }
+  const w = document.querySelector('.wrap'); if(w) w.classList.add('ubi-lateral');
+}
+function cerrarResultadoLateral(){
+  const sec = document.getElementById('ubicarResultado');
+  if(sec){ sec.hidden = true; sec.innerHTML = ''; }
+  _ubiLateral = null;
+  const w = document.querySelector('.wrap'); if(w) w.classList.remove('ubi-lateral');
+  limpiarUbicacionGlobal();
+  /* El mapa recupera el ancho de la columna: Leaflet necesita saberlo. */
+  setTimeout(()=>{ try{ if(globalMap) globalMap.invalidateSize(); }catch(_){} }, 60);
 }
 
 
@@ -6739,7 +6783,6 @@ function renderUbicarResultado(latlng, precision, etiqueta){
     ${etiqueta ? `<p class="ubi-etiqueta">${esc(etiqueta)}</p>` : ''}
     <div class="ubi-grid">
       <div class="ubi-col">${cuerpo}</div>
-      <div class="ubi-col"><div class="ubi-map-wrap" id="ubicarMapWrap"><div class="ubi-map" id="ubicarMapCanvas"></div><div class="map-block-controls map-block-controls-floating"><div class="map-block-toggle"><button data-layer="positron" class="active">Mapa</button><button data-layer="satelite">Satélite</button></div><button class="map-fullscreen-btn" type="button" aria-label="Pantalla completa" title="Pantalla completa"></button></div><div class="drawer-sc-floating"><button class="map-filter-chip active" id="ubicarSCToggle" type="button" style="--chip-color:var(--sc)"><span class="chip-dot"></span>Suelo de Conservación</button></div></div></div>
     </div>
     ${sc === true && enCDMX ? '<div id="ubiPgoedf" class="pg-cont"></div>' : ''}
     <div class="ubi-ctx">${ctx}</div>
@@ -7167,83 +7210,6 @@ function pintarUbicacionEnGlobal(latlng, precision){
 function limpiarUbicacionGlobal(){
   if(globalMap && _capaUbicGlobal){ try{ globalMap.removeLayer(_capaUbicGlobal); }catch(e){} }
   _capaUbicGlobal = null;
-}
-
-function initUbicarMap(latlng, precision){
-  const cont = document.getElementById('ubicarMapCanvas');
-  if(!cont) return;
-  if(typeof L === 'undefined'){ _sinLeaflet(cont); return; }
-  if(ubicarMap){ try{ ubicarMap.remove(); }catch(e){} ubicarMap = null; }
-  /* setView antes de agregar capas: Leaflet necesita una vista establecida
-     o los vectores fallan en _clipPoints al no existir aún los pixelBounds. */
-  ubicarMap = L.map(cont, {zoomControl:true, scrollWheelZoom:false, attributionControl:true})
-                .setView([latlng.lat, latlng.lng], 14);
-  _gestosTactilesIncrustado(ubicarMap);
-  try{ ubicarMap.invalidateSize(); }catch(e){}
-  /* v84: mismo juego de controles que los demás mapas —menú con Mapa/Satélite,
-     Suelo de Conservación y PGOEDF; Ubicarme; vista general y Ampliar—. Antes
-     este mapa solo tenía acercar y ampliar. */
-  const wrapUbic = document.getElementById('ubicarMapWrap');
-  let baseUbic = null;
-  const ponerBaseUbic = key => {
-    if(!ubicarMap) return;
-    if(baseUbic){ try{ ubicarMap.removeLayer(baseUbic); }catch(_){} }
-    const cfg = TILE_LAYERS[key] || TILE_LAYERS.positron;
-    baseUbic = L.tileLayer(cfg.url, _opcionesTeselas(cfg)).addTo(ubicarMap);
-    _marcarBase(ubicarMap, key);
-    if(wrapUbic) wrapUbic.querySelectorAll('.map-block-toggle button[data-layer]').forEach(b=>b.classList.toggle('active', b.dataset.layer === key));
-  };
-  ponerBaseUbic('positron');
-  if(wrapUbic) wrapUbic.querySelectorAll('.map-block-toggle button[data-layer]').forEach(b=>b.addEventListener('click', ()=>ponerBaseUbic(b.dataset.layer)));
-  let alcUbic = null;
-  try{ alcUbic = createAlcaldiasLayer({interactive:false}).addTo(ubicarMap); }catch(e){}
-  /* Contexto de protección: sin él, un punto fuera de toda área dejaba el
-     mapa vacío y la herramienta perdía su sentido. Suelo de Conservación al
-     fondo (carga bajo demanda) y las 66 áreas del inventario encima; las que
-     cubren el punto se repintan con trazo firme en _dibujarUbicacion. */
-  const ctxUbic = _capaContextoUbicar(ubicarMap, alcUbic);
-
-  const bounds = _dibujarUbicacion(ubicarMap, ubicarMap, latlng, precision);
-  _extenderConCercana(bounds, latlng, ctxUbic);
-
-  if(bounds.isValid()){ ubicarMap.fitBounds(bounds,{padding:[24,24],maxZoom:16}); ubicarMap._siaHome = bounds; }
-  else ubicarMap.setView([latlng.lat,latlng.lng],15);
-  ubicarMap.on('click focus', ()=>ubicarMap.scrollWheelZoom.enable());
-  ubicarMap.on('mouseout',    ()=>ubicarMap.scrollWheelZoom.disable());
-  try{ addLocateControl(ubicarMap, ll=>featuresContaining(GEOMETRIES&&GEOMETRIES.features, ll), ()=>(GEOMETRIES&&GEOMETRIES.features)||[]); }catch(e){}
-  addResetViewControl(ubicarMap, 'Vista general');
-  try{ attachFullscreenBtn(wrapUbic, ubicarMap); }catch(e){}
-  /* Suelo de Conservación encendido de inicio, ahora con su interruptor. */
-  try{ attachSCToggle('ubicarSCToggle', ubicarMap, ctxUbic ? {areas:ctxUbic} : null, alcUbic); }catch(e){}
-  setTimeout(()=>{ try{ montarBotonBase(); }catch(e){} }, 80);
-  setTimeout(()=>{ try{ ubicarMap.invalidateSize(); }catch(e){} }, 200);
-}
-
-/* Capas de contexto del mapa del resultado de «¿Dónde estoy?». Devuelve el
-   grupo de las áreas del inventario (o null si aún no hay geometrías). */
-function _capaContextoUbicar(mapa, alcaldias){
-  let grupo = null;
-  try{
-    const feats = (GEOMETRIES && GEOMETRIES.features) || [];
-    if(feats.length){
-      const estilo = f => { const c = GROUP_COLORS[f.properties.grupo] || COL_GRIS_NEUTRO;
-                            return { color:c, weight:1.75, fillColor:c, fillOpacity:0.20 }; };
-      grupo = L.geoJSON({type:'FeatureCollection', features:feats}, {
-        style: estilo,
-        onEachFeature: (feat, lyr) => {
-          lyr.bindTooltip(feat.properties.nombre, {sticky:true, direction:'top'});
-          lyr.on('click', () => { const a = areaPorNombre(feat.properties.nombre); if(a) openDrawer(a); });
-          lyr.on('mouseover', () => lyr.setStyle({weight:3, fillOpacity:0.38}));
-          /* Al salir, vuelve a su estilo, conservando el resalte del área más
-             cercana si _extenderConCercana se lo puso. */
-          lyr.on('mouseout',  () => lyr.setStyle(Object.assign(estilo(feat), lyr._siaResalte || {})));
-        }
-      }).addTo(mapa);
-    }
-  }catch(e){ console.warn('[Ubicar] contexto de áreas:', e && e.message); }
-  /* Suelo de Conservación: desde v84 lo pone su interruptor del menú de capas
-     (attachSCToggle en initUbicarMap), encendido de inicio. */
-  return grupo;
 }
 
 /* Sin cobertura en el punto, el encuadre incluye el área más cercana (si está

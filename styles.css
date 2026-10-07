@@ -254,7 +254,8 @@
     color:var(--muted);margin-bottom:14px;min-height:24px}
   .ubi-cabeza-txt{flex:1;min-width:0}
   .ubi-etiqueta{font-size:var(--fs-base);color:var(--ink-2);margin:-8px 0 14px}
-  .ubi-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+  /* v85 (B14): el resultado ya no lleva mapa propio; una sola columna. */
+  .ubi-grid{display:grid;grid-template-columns:1fr;gap:20px;align-items:start}
   .ubi-col{min-width:0}
 
   /* La respuesta */
@@ -286,14 +287,11 @@
     border-radius:var(--r-ui);cursor:pointer;font-family:'Roboto Mono',monospace;font-size:var(--fs-md);line-height:1}
   .ubi-mini:hover{background:var(--c);color:#fff}
 
-  .ubi-map{height:280px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-soft);background:var(--map-bg)}
   .ubi-ctx{margin-top:16px;padding-top:12px;border-top:1px solid var(--line-soft);
     font-family:'Roboto',sans-serif;font-size:var(--fs-xs);color:var(--muted);letter-spacing:.03em}
 
   @media (max-width:900px){
     .ubi-grid{grid-template-columns:1fr;gap:16px}
-    .ubi-col:last-child{order:-1}
-    .ubi-map{height:220px}
     .ubi-main-nom{font-size:var(--fs-2xl)}
     .ubi-ficha{width:100%;justify-content:center;padding:13px}
   }
@@ -1896,8 +1894,6 @@ thead.t-head th:nth-child(7){white-space:nowrap}
     margin:0;border:none;border-radius:0;box-shadow:none;padding:0 14px 18px}
   /* Con el mapa detrás, el mini-mapa del resultado sobra: mostraba el
      mismo punto dos veces y partía la pantalla en dos lienzos. */
-  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-map,
-  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-col:has(.ubi-map){display:none}
   /* Sin el mini-mapa, la rejilla de dos columnas deja una columna con ancho
      mínimo que se desborda de la hoja. En la hoja el resultado es una sola
      columna, sin excepción. */
@@ -2790,12 +2786,6 @@ html.sia-fs-hoja-abierta .drawer-inner{overflow:hidden !important}
 .btn-ampliar.activo{background:var(--guinda);color:var(--crema)}
 .map-block-controls-floating.base-abierto ~ .btn-ampliar,
 :has(> .map-block-controls-floating.base-abierto) > .btn-ampliar{opacity:0;pointer-events:none}
-/* Mapa del resultado de «¿Dónde estoy?» (v84: con menú de capas, Ubicarme y
-   «Ampliar» bajo el menú, como los demás mapas). */
-.ubi-map-wrap{position:relative}
-.ubi-map-wrap:fullscreen,.ubi-map-wrap:-webkit-full-screen{background:var(--card)}
-.ubi-map-wrap:fullscreen .ubi-map,.ubi-map-wrap:-webkit-full-screen .ubi-map{height:100% !important;border-radius:0;border:none}
-.sia-fs.ubi-map-wrap .ubi-map{height:100% !important;border-radius:0;border:none}
 /* Pantalla completa nativa de los demás lienzos (traslapes y ARCAC no tenían regla). */
 #trasMapCanvas:fullscreen,#trasMapCanvas:-webkit-full-screen{height:100vh !important;width:100vw !important;background:var(--card);border-radius:0 !important}
 
@@ -2930,3 +2920,26 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
 .tras-toolbar #trasSearch{flex:2 1 260px;width:auto;margin:0}
 .tras-toolbar #trasCruceFilter{flex:1 1 220px;width:auto;margin:0}
 .tras-toolbar #trasCsv{flex:0 0 auto;margin:0}
+
+/* ═══ «¿DÓNDE ESTOY?» EN ESCRITORIO · RESULTADO JUNTO AL MAPA (B14, v85) ══
+   Un solo mapa, como en celular: el resultado ocupa una columna a la
+   izquierda del mapa principal y mide lo mismo que él (si es más largo, se
+   desplaza por dentro). El orden del DOM no cambia —el resultado sigue
+   antes de las pestañas— y la rejilla lo coloca en su sitio:
+     fila 1 · buscador · fila 2 · pestañas · fila 3 · resultado | mapa */
+/* Selectores con `main#main-content` y `:has(#ubicarResultado)`: la vista
+   partida de escritorio (≥ 1200 px) ya hace de `main` una rejilla de dos
+   columnas con reglas de id (`main#main-content …`, y una con :has que suma
+   dos ids) que, si no, ganan por especificidad. */
+@media (min-width:761px){
+  .wrap.ubi-lateral main#main-content{display:grid;grid-template-columns:minmax(320px,400px) minmax(0,1fr);
+    column-gap:16px;align-items:stretch}
+  .wrap.ubi-lateral main#main-content > *{grid-column:1 / -1}
+  .wrap.ubi-lateral main#main-content > #ubicarBar{grid-row:1}
+  .wrap.ubi-lateral main#main-content > #tabs{grid-row:2}
+  .wrap.ubi-lateral main#main-content > #ubicarResultado{grid-column:1;grid-row:3;height:0;min-height:100%;
+    overflow-y:auto;overscroll-behavior:contain;margin:0}
+  .wrap.ubi-lateral #ubicarResultado > .panel{margin:0;min-height:100%}
+  .wrap.ubi-lateral main#main-content:has(#ubicarResultado) > #globalMapSection{grid-column:2;grid-row:3;min-width:0;margin:0;position:static}
+  .wrap.ubi-lateral #ubicarResultado .ubi-ctx{flex-wrap:wrap}
+}
