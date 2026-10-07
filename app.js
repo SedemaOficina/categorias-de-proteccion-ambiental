@@ -1410,7 +1410,7 @@ function renderAnalisisPage(){
         superposición de instrumentos sobre un mismo predio, a <b>Traslapes</b>.</p>
     </div>
 
-    <div class="hero">
+    <div class="hero hero-3">
       <div class="hero-card hero-warning">
         <div class="hero-eyebrow">Brecha principal</div>
         <div class="hero-value">${pct(supSinPM,totArea).toFixed(0)}<span style="font-size:var(--fs-lg);color:var(--muted);margin-left:4px;font-weight:500">%</span></div>
@@ -3920,8 +3920,9 @@ function setZPBaseLayer(key){
 function renderZonaPatrimonioPage(){
   return `
   <div class="panel">
-    <div class="panel-eyebrow">Patrimonio Mundial · UNESCO · Valor Universal Excepcional</div>
-    <h2 class="panel-title" style="color:var(--guinda)">Zona Patrimonio Natural y Cultural de la Humanidad</h2>
+    <!-- v82 (auditoría UI-07): rótulo pequeño arriba y título grande, como el resto de los paneles. -->
+    <div class="panel-title">Patrimonio Mundial · UNESCO · Valor Universal Excepcional</div>
+    <h3>Zona Patrimonio Natural y Cultural <em>de la Humanidad</em></h3>
     <p class="panel-intro">Xochimilco, Tláhuac y Milpa Alta · <b>7,534.17 ha</b> · convergencia de instrumentos
       de protección internacionales, federales y locales sobre un mismo territorio chinampero.
       Active o desactive cada capa de forma independiente. Esta sección es únicamente cartográfica;
@@ -4152,8 +4153,9 @@ function trasFeats(){ return (TRASLAPES_GEO && TRASLAPES_GEO.features) || []; }
 function renderTraslapesPage(){
   return `
   <div class="panel">
-    <div class="panel-eyebrow">Análisis espacial · superposición de instrumentos de protección</div>
-    <h2 class="panel-title" style="color:var(--magenta)">Traslapes entre áreas</h2>
+    <!-- v82 (auditoría UI-07): rótulo pequeño arriba y título grande, como el resto de los paneles. -->
+    <div class="panel-title">Análisis espacial · superposición de instrumentos de protección</div>
+    <h3>Traslapes entre <em>áreas</em></h3>
     <p class="panel-intro">Un mismo predio puede estar cubierto por más de un instrumento: dos decretos de
       protección, un ANP y un ARCAC, o un área del inventario dentro del polígono de Patrimonio Mundial.
       Este módulo mide esas superposiciones sobre la geometría real y las dibuja en el mapa.
@@ -5110,6 +5112,12 @@ const TILE_LAYERS = {
     try{
       if(typeof L === 'undefined' || !L.Map || L.Map._siaSinTab) return;
       L.Map._siaSinTab = true;
+      /* Leaflet 1.9 deja pendiente el fin de la animación de acercamiento
+         (setTimeout de 250 ms) aunque el mapa se destruya: si un mapa se
+         quita a media animación, el aviso llega sin `_mapPane` y lanza
+         «reading '_leaflet_pos'» (auditoría de interfaz UI-09). */
+      const _finZoom = L.Map.prototype._onZoomTransitionEnd;
+      L.Map.prototype._onZoomTransitionEnd = function(){ if(!this._mapPane) return; return _finZoom.apply(this, arguments); };
       L.Map.addInitHook(function(){
         /* Registro lienzo → mapa: el menú de capas (montarBotonBase) encuentra
            así la instancia del mapa sobre el que está montado (v75, PGOEDF). */
@@ -5676,9 +5684,13 @@ async function compartirFichaImagen(d, btn){
           if(c.leyenda) leyenda.push({ txt:c.leyenda, col:c.estilo.stroke || c.estilo.fill, dash: !!c.estilo.dash });
         }
         if(c.id === 'zonif'){
+          /* Misma regla que la leyenda del minimapa (UI-04): nombre literal de la
+             zona si es la única de su familia, nombre de la familia si agrupa varias. */
           const fams = new Map();
-          _trazarCapaEnCaja(ctx, c.fc, T.P, 48, y, W-96, boxH, pr => { const f = zonifFamilia(pr.zona_k); fams.set(f.lbl, f.color); return { fill: f.color, fillAlpha: .45, stroke: '#ffffff', width: 2.5 }; });
-          fams.forEach((col,lbl)=>leyenda.push({ txt: lbl, col }));
+          _trazarCapaEnCaja(ctx, c.fc, T.P, 48, y, W-96, boxH, pr => { const f = zonifFamilia(pr.zona_k);
+            if(!fams.has(f.id)) fams.set(f.id, { f, zonas:new Set() }); if(pr.zona) fams.get(f.id).zonas.add(pr.zona);
+            return { fill: f.color, fillAlpha: .45, stroke: '#ffffff', width: 2.5 }; });
+          fams.forEach(({f, zonas})=>leyenda.push({ txt: zonas.size === 1 ? [...zonas][0] : f.lbl, col: f.color }));
           T.sinRelleno = true;
         }
       });
@@ -7487,11 +7499,17 @@ function montarZonificacionEnMapa(mapa, d){
       try{ _zonifCapa.bringToBack(); }catch(_){}
       prendida = true; btn.classList.add('active'); btn.setAttribute('aria-pressed','true');
       const fam = [...new Set(e.zonas.map(z=>zonifFamilia(z.k).id))];
+      /* Si la familia tiene una sola zona en esta área, la leyenda usa el nombre
+         literal del programa —el mismo de la tabla de abajo—; si agrupa varias
+         (Uso Público Intensivo y Extensivo), el de la familia. Antes siempre
+         decía la familia y no coincidía con la tabla (auditoría UI-04). */
+      const zonasDe = {};
+      e.zonas.forEach(z=>{ const id = zonifFamilia(z.k).id; (zonasDe[id] = zonasDe[id] || new Set()).add(z.zona); });
       const ley = document.getElementById('zonifLeyenda');
       if(ley){
         ley.innerHTML = ZONIF_FAMILIAS.filter(f=>fam.indexOf(f.id) >= 0).map(f=>
           '<span class="zl-i"><span class="zl-sw" style="background:' + f.color + '"></span>'
-          + esc(f.lbl) + '</span>').join('');
+          + esc(zonasDe[f.id] && zonasDe[f.id].size === 1 ? [...zonasDe[f.id]][0] : f.lbl) + '</span>').join('');
         ley.hidden = false;
       }
     });

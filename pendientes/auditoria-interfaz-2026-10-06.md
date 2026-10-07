@@ -22,31 +22,31 @@ Los interinatos (Encinas, Amieva, Batres) se suman al periodo que termina, decis
 
 ## Media · consistencia y jerarquía
 
-### UI-03 · Ficha: la misma información tres veces y con estilos distintos
+### UI-03 · Ficha: la misma información tres veces y con estilos distintos · pendiente de decisión (repetición). El cambio de estilo de Subcategoría en celular es intencional (`styles.css`, «SUBCATEGORÍA LARGA EN CELULAR»): no se toca.
 La cabecera dice «ANP · FEDERAL · Parque Nacional» y debajo se repite en Tipo («Área Natural Protegida»), Jurisdicción («Federal») y Subcategoría («Parque Nacional»). Subcategoría es una etiqueta con borde en escritorio y texto guinda sin borde en celular. **Propuesta:** quitar Jurisdicción y Subcategoría de los campos (ya están en la cabecera) o dejar la cabecera solo con el nombre; mismo estilo de etiqueta en todos los anchos.
 
-### UI-04 · Zonificación: la leyenda y la tabla nombran distinto la misma zona
+### UI-04 · Zonificación: la leyenda y la tabla nombran distinto la misma zona · ✅ v82b: la leyenda (minimapa e imagen compartible) usa el nombre literal de la zona cuando es la única de su familia
 En el minimapa de la ficha la leyenda dice «Restauración y recuperación» y «Uso público» (familias); la tabla de abajo dice «Zona de Recuperación» y «Zona de uso público» (zonas), con los mismos colores. Quien compara las dos no sabe si son lo mismo. **Propuesta:** leyenda con el nombre de la zona del programa, o tabla agrupada por familia con la zona como detalle.
 
-### UI-05 · Aros de foco que aparecen con ratón y con el dedo
+### UI-05 · Aros de foco que aparecen con ratón y con el dedo · ❎ descartado: con clic y toque reales `:focus-visible` no se activa; lo provocaban los clics simulados del arnés
 Tras un clic, el chip activo («Todas», «Brechas y distribución», «Metas») muestra doble aro; el «×» de la ficha en celular aparece con aro dorado al abrir, y la guía con borde dorado. Es el foco programático (accesibilidad, v69), pero para quien no usa teclado parece un error. **Propuesta:** `el.focus({focusVisible:false})` donde el navegador lo admita y estilos de foco solo en `:focus-visible`.
 
-### UI-06 · «¿Dónde estoy?» en escritorio: el resultado empuja la navegación
+### UI-06 · «¿Dónde estoy?» en escritorio: el resultado empuja la navegación · ✅ v82b: asa oculta desde 761 px. El resultado se queda bajo el buscador (pegado a lo que se escribió), no debajo de las pestañas
 Al consultar un punto, la tarjeta de resultado aparece arriba y las pestañas Ubicar / Inventario / Análisis quedan debajo de ella. En escritorio también se ve el asa de arrastre (barrita gris), que solo tiene sentido en celular. En el caso «Suelo de Conservación» la columna izquierda queda con un hueco de ~150 px junto al mapa. **Propuesta:** resultado debajo de las pestañas (o pestañas fijas arriba), asa oculta desde 761 px.
 
-### UI-07 · Traslapes rompe el patrón de encabezado
+### UI-07 · Traslapes rompe el patrón de encabezado · ✅ v82b: Traslapes y Zona Patrimonio con rótulo arriba y título grande; filtros en una fila
 Todos los paneles usan rótulo pequeño en mayúsculas → título grande con palabra en guinda → texto. Traslapes pone el título en texto normal y el rótulo («TRASLAPES ENTRE ÁREAS») debajo. Sus filtros (buscador y selector) ocupan cada uno todo el ancho en escritorio.
 
-### UI-08 · Tarjetas de cifras de «Brechas y distribución» desalineadas
+### UI-08 · Tarjetas de cifras de «Brechas y distribución» desalineadas · ✅ v82b: tres columnas desde 1201 px
 Las tres tarjetas (Brecha principal, Vigencia, Concentración) llenan tres de cuatro columnas y dejan un hueco a la derecha en 1366 y 1920 px. **Propuesta:** rejilla de tres columnas en este panel.
 
 ## Baja · pulido
 
-- **UI-09 · Error de consola `_leaflet_pos`.** Aparece cuando un mapa se destruye mientras anima un acercamiento: Leaflet 1.9 deja pendiente `_onZoomTransitionEnd`. No se ve en pantalla; se reprodujo al cambiar el tamaño de la ventana durante el cambio de destino. Arreglo de 3 líneas: envolver `L.Map.prototype._onZoomTransitionEnd` para salir si `!this._mapPane`.
-- **UI-10 · Textos.** El título dice «Dashboard» (inglés) en un sitio en español: «Tablero». «Registros · 66» en la cabecera repite el «66 áreas protegidas» del resumen. Hay trato de usted («vaya a Metas», «Toque una barra») y de tú («Ubica un punto y revisa»): elegir uno.
-- **UI-11 · Botones del mapa en celular.** «Inicio» es un cuadrado de esquinas redondeadas y «Capas» un círculo, uno al lado del otro.
-- **UI-12 · Guía rápida.** La tarjeta «ANP» (27 = 18 locales + 9 federales) lleva el borde naranja de ANP Local.
-- **UI-13 · Etiquetas de la ficha en celular.** «FECHA PROGRAMA DE MANEJO» ocupa tres renglones y «COADMINISTRACIÓN» se parte con guion. Verificar en iPhone con la tipografía real; si persiste, abreviar («Fecha PM») o dar 110 px a la columna.
+- **UI-09 · ✅ v82b.** **Error de consola `_leaflet_pos`.** Aparece cuando un mapa se destruye mientras anima un acercamiento: Leaflet 1.9 deja pendiente `_onZoomTransitionEnd`. No se ve en pantalla; se reprodujo al cambiar el tamaño de la ventana durante el cambio de destino. Arreglo de 3 líneas: envolver `L.Map.prototype._onZoomTransitionEnd` para salir si `!this._mapPane`.
+- **UI-10 · pendiente de decisión.** **Textos.** El título dice «Dashboard» (inglés) en un sitio en español: «Tablero». «Registros · 66» en la cabecera repite el «66 áreas protegidas» del resumen. Hay trato de usted («vaya a Metas», «Toque una barra») y de tú («Ubica un punto y revisa»): elegir uno.
+- **UI-11 · ❎ se conserva:** a la izquierda van los controles estándar de Leaflet (cuadrados) y a la derecha los botones propios (redondos), igual en todos los mapas. **Botones del mapa en celular.** «Inicio» es un cuadrado de esquinas redondeadas y «Capas» un círculo, uno al lado del otro.
+- **UI-12 · ✅ v82b:** filete de dos colores (AVA: Bosque Urbano/Barranca; ANP: local/federal). **Guía rápida.** La tarjeta «ANP» (27 = 18 locales + 9 federales) lleva el borde naranja de ANP Local.
+- **UI-13 · pendiente de verificar en iPhone.** **Etiquetas de la ficha en celular.** «FECHA PROGRAMA DE MANEJO» ocupa tres renglones y «COADMINISTRACIÓN» se parte con guion. Verificar en iPhone con la tipografía real; si persiste, abreviar («Fecha PM») o dar 110 px a la columna.
 
 ## Lo que está bien
 Cero errores visibles en los cuatro flujos de ubicación; la jerarquía de coberturas («Estás dentro de 2 áreas», mayor jerarquía primero y nota de concurrencia) se lee clara; el caso urbano muestra el área más cercana y su distancia; la hoja de ficha y la de resultado respetan la barra inferior; contraste y tamaños táctiles sin regresiones respecto a la auditoría del 13-sep.

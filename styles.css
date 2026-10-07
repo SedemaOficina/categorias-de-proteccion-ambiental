@@ -460,6 +460,8 @@
   }
 
   .hero{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  /* v82 (auditoría UI-08): paneles con tres cifras —Brechas y distribución— en tres columnas; con cuatro dejaban un hueco a la derecha. */
+  @media (min-width:1201px){ .hero.hero-3{grid-template-columns:repeat(3,1fr)} }
   .hero-card{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:20px 22px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
   .hero-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--guinda)}
   .hero-card.bu::before{background:var(--bu)}
@@ -1736,6 +1738,9 @@ thead.t-head th:nth-child(7){white-space:nowrap}
 
 /* Asa de arrastre (componente `handle` del kit) */
 .gm-handle{width:34px;height:4px;border-radius:2px;background:#dadce0;margin:8px auto 4px}
+/* v82 (auditoría UI-06): en escritorio el resultado de «¿Dónde estoy?» es una
+   tarjeta fija en la página, no una hoja que se arrastra: el asa sobra. */
+@media (min-width:761px){ .gm-handle{display:none} }
 
 @media (max-width:760px){
   /* ── NAVBAR (componente `navbar`) ──────────────────────────────────
@@ -2166,8 +2171,13 @@ header.top .meta{display:flex;align-items:center;gap:12px}
 .ayuda-fam{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 4px}
 .ayuda-fam-card{border:1px solid var(--line-soft);border-left:4px solid var(--guinda);
   border-radius:var(--radius);padding:12px 14px;background:var(--bg-2)}
-.ayuda-fam-card.ava{border-left-color:var(--verde)}
-.ayuda-fam-card.anp{border-left-color:var(--naranja)}
+/* v82 (auditoría UI-12): cada familia lleva en el filete los colores de sus dos
+   grupos —AVA: Bosque Urbano y Barranca; ANP: local y federal—; antes ANP iba
+   solo en el naranja de ANP Local y AVA solo en el verde de Bosque Urbano. */
+.ayuda-fam-card.ava,.ayuda-fam-card.anp{border-left-color:transparent;background-repeat:no-repeat;
+  background-position:0 0;background-size:4px 100%;background-origin:border-box}
+.ayuda-fam-card.ava{background-image:linear-gradient(var(--bu) 50%, var(--br) 50%)}
+.ayuda-fam-card.anp{background-image:linear-gradient(var(--anpl) 50%, var(--anpf) 50%)}
 .ayuda-fam-card .sig{display:block;font-family:'Roboto',sans-serif;font-size:var(--fs-sm);
   font-weight:500;color:var(--ink);letter-spacing:.04em}
 .ayuda-fam-card .nom{display:block;margin-top:2px;font-size:var(--fs-xs);color:var(--muted);line-height:1.35}
@@ -2906,3 +2916,12 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
 .map-block-controls-floating .map-block-toggle .pgoedf-ley-nota{
   display:block;padding:6px 8px 2px;font-size:var(--fs-mini);line-height:1.35;
   color:var(--muted);white-space:normal}
+
+/* ═══ TRASLAPES · BARRA DE FILTROS (v82, auditoría UI-07) ═════════════
+   Buscador, selector de cruce y CSV en una sola fila; en pantallas
+   angostas se acomodan solos en dos. Antes no tenía reglas y cada control
+   ocupaba todo el ancho en escritorio. */
+.tras-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:6px 0 12px}
+.tras-toolbar #trasSearch{flex:2 1 260px;width:auto;margin:0}
+.tras-toolbar #trasCruceFilter{flex:1 1 220px;width:auto;margin:0}
+.tras-toolbar #trasCsv{flex:0 0 auto;margin:0}
