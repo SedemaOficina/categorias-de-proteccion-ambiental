@@ -1406,7 +1406,7 @@ function renderAnalisisPage(){
       <h3>Brechas y <em>distribución</em></h3>
       <p class="panel-intro" style="margin-top:8px">Dos preguntas: qué le falta al sistema y cómo se
         reparte. Todo se calcula sobre el inventario en vivo, así que estas cifras cambian solas cuando
-        cambia el Sheet. Para el comparativo entre administraciones, vaya a <b>Metas</b>; para la
+        cambia el Sheet. Para el comparativo entre administraciones, ve a <b>Metas</b>; para la
         superposición de instrumentos sobre un mismo predio, a <b>Traslapes</b>.</p>
     </div>
 
@@ -1711,7 +1711,7 @@ function graficaPorAdministracion(o){
           ${gobiernos.length} administraciones · ${totalUbicado} de ${registros.length}
           ${registros.length===1?singular:plural} caen dentro de estos periodos${
             previos ? ` · ${previos} ${previos===1?'es anterior':'son anteriores'} a ${Math.floor(gobiernos[0].start)}` : ''}
-          · toque una barra —o pase el cursor— para ver el detalle
+          · toca una barra —o pasa el cursor— para ver el detalle
         </div>
       </div>
     </div>`;
@@ -1789,7 +1789,7 @@ function renderCronologiaSection(){
     <div class="panel" style="margin-top:18px">
       <div class="panel-title">Cronología · Línea de tiempo de decretos</div>
       <h3>Evolución <em>histórica</em> del sistema de áreas protegidas</h3>
-      <p class="panel-intro">Distribución temporal de los <b>${conFecha.length} decretos</b> de creación de áreas protegidas, en un periodo de <b>${maxDec - minDec + 10} años</b> de política ambiental local. Pico histórico: <b>${picos[0]?.decada || '—'}s</b> (${picos[0]?.count || 0} decretos) · Promedio en décadas activas: <b>${promedioActivas} decretos</b> · ${decadasActivas.length} de ${todasDecadas.length} décadas con actividad${decadasVacias > 0 ? ` (${decadasVacias} sin decretos)` : ''}. Toque una barra —o pase el cursor— para ver qué áreas se decretaron.</p>
+      <p class="panel-intro">Distribución temporal de los <b>${conFecha.length} decretos</b> de creación de áreas protegidas, en un periodo de <b>${maxDec - minDec + 10} años</b> de política ambiental local. Pico histórico: <b>${picos[0]?.decada || '—'}s</b> (${picos[0]?.count || 0} decretos) · Promedio en décadas activas: <b>${promedioActivas} decretos</b> · ${decadasActivas.length} de ${todasDecadas.length} décadas con actividad${decadasVacias > 0 ? ` (${decadasVacias} sin decretos)` : ''}. Toca una barra —o pasa el cursor— para ver qué áreas se decretaron.</p>
 
       <div class="cronologia-container">
         <div class="cronologia-chart" id="cronologiaChart">
@@ -3920,12 +3920,11 @@ function setZPBaseLayer(key){
 function renderZonaPatrimonioPage(){
   return `
   <div class="panel">
-    <!-- v82 (auditoría UI-07): rótulo pequeño arriba y título grande, como el resto de los paneles. -->
     <div class="panel-title">Patrimonio Mundial · UNESCO · Valor Universal Excepcional</div>
     <h3>Zona Patrimonio Natural y Cultural <em>de la Humanidad</em></h3>
     <p class="panel-intro">Xochimilco, Tláhuac y Milpa Alta · <b>7,534.17 ha</b> · convergencia de instrumentos
       de protección internacionales, federales y locales sobre un mismo territorio chinampero.
-      Active o desactive cada capa de forma independiente. Esta sección es únicamente cartográfica;
+      Activa o desactiva cada capa de forma independiente. Esta sección es únicamente cartográfica;
       no forma parte del inventario ANP/AVA ni afecta sus tablas, filtros o conteos.</p>
 
     <div class="map-filters" id="zpFilters" style="margin-top:14px"></div>
@@ -4153,7 +4152,6 @@ function trasFeats(){ return (TRASLAPES_GEO && TRASLAPES_GEO.features) || []; }
 function renderTraslapesPage(){
   return `
   <div class="panel">
-    <!-- v82 (auditoría UI-07): rótulo pequeño arriba y título grande, como el resto de los paneles. -->
     <div class="panel-title">Análisis espacial · superposición de instrumentos de protección</div>
     <h3>Traslapes entre <em>áreas</em></h3>
     <p class="panel-intro">Un mismo predio puede estar cubierto por más de un instrumento: dos decretos de
@@ -5482,14 +5480,13 @@ function descInventario(d){
     geo:    (typeof findGeometry==='function') ? findGeometry(d) : null,
     superficie: d.superficie,
     supLabel: 'SUPERFICIE DECRETADA',
-    /* Mismo orden lógico que la ficha: lo que se deriva de Suelo de
+    /* Mismo orden lógico que la ficha (sin Jurisdicción ni Subcategoría desde
+       v83: van en el distintivo y el subtítulo de la tarjeta). Lo que se deriva de Suelo de
        Conservación (PGOEDF) va debajo de ese dato; lo que se deriva del
        programa de manejo (zonificación), debajo de él. */
     filas: [
       ['DG RESPONSABLE', d.dg_responsable||'Sin asignar'],
       ['TIPO',         d.tipo==='AVA' ? 'Área de Valor Ambiental' : 'Área Natural Protegida'],
-      ['JURISDICCIÓN', d.jurisdiccion||'—'],
-      ['SUBCATEGORÍA', d.categoria||'—'],
       ['ALCALDÍA(S)',  d.alcaldia||'—'],
       ['SUELO DE CONSERVACIÓN', SC_CORTO(d)]
     ].concat(
@@ -7697,8 +7694,6 @@ function openDrawer(d){
       '<span style="color:var(--muted)">Sin asignar</span>'
     }</div></div>
     <div class="field"><div class="k">Tipo</div><div class="v"><span class="tag tag-${d.tipo} tag-full">${d.tipo==='AVA'?'Área de Valor Ambiental':'Área Natural Protegida'}</span></div></div>
-    <div class="field"><div class="k">Jurisdicción</div><div class="v"><span class="tag tag-jur-${d.jurisdiccion}">${d.jurisdiccion}</span></div></div>
-    <div class="field"><div class="k">Subcategoría</div><div class="v"><span class="tag-sub sub-${subCode(d.categoria)} tag-sub-full">${d.categoria}</span></div></div>
     <div class="field"><div class="k">Alcaldía(s)</div><div class="v">${d.alcaldia}</div></div>
     <div class="field"><div class="k">Suelo de Conservación</div><div class="v">${(() => {
       /* Un solo elemento: el punto y el texto que lo explica. Con la columna

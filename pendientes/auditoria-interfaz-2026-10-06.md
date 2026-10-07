@@ -22,7 +22,7 @@ Los interinatos (Encinas, Amieva, Batres) se suman al periodo que termina, decis
 
 ## Media · consistencia y jerarquía
 
-### UI-03 · Ficha: la misma información tres veces y con estilos distintos · pendiente de decisión (repetición). El cambio de estilo de Subcategoría en celular es intencional (`styles.css`, «SUBCATEGORÍA LARGA EN CELULAR»): no se toca.
+### UI-03 · Ficha: la misma información tres veces y con estilos distintos · ✅ v83: Jurisdicción y Subcategoría fuera de la ficha y de la imagen compartible (decisión 6-oct). El cambio de estilo de Subcategoría en celular es intencional (`styles.css`, «SUBCATEGORÍA LARGA EN CELULAR»): no se toca.
 La cabecera dice «ANP · FEDERAL · Parque Nacional» y debajo se repite en Tipo («Área Natural Protegida»), Jurisdicción («Federal») y Subcategoría («Parque Nacional»). Subcategoría es una etiqueta con borde en escritorio y texto guinda sin borde en celular. **Propuesta:** quitar Jurisdicción y Subcategoría de los campos (ya están en la cabecera) o dejar la cabecera solo con el nombre; mismo estilo de etiqueta en todos los anchos.
 
 ### UI-04 · Zonificación: la leyenda y la tabla nombran distinto la misma zona · ✅ v82b: la leyenda (minimapa e imagen compartible) usa el nombre literal de la zona cuando es la única de su familia
@@ -43,7 +43,7 @@ Las tres tarjetas (Brecha principal, Vigencia, Concentración) llenan tres de cu
 ## Baja · pulido
 
 - **UI-09 · ✅ v82b.** **Error de consola `_leaflet_pos`.** Aparece cuando un mapa se destruye mientras anima un acercamiento: Leaflet 1.9 deja pendiente `_onZoomTransitionEnd`. No se ve en pantalla; se reprodujo al cambiar el tamaño de la ventana durante el cambio de destino. Arreglo de 3 líneas: envolver `L.Map.prototype._onZoomTransitionEnd` para salir si `!this._mapPane`.
-- **UI-10 · pendiente de decisión.** **Textos.** El título dice «Dashboard» (inglés) en un sitio en español: «Tablero». «Registros · 66» en la cabecera repite el «66 áreas protegidas» del resumen. Hay trato de usted («vaya a Metas», «Toque una barra») y de tú («Ubica un punto y revisa»): elegir uno.
+- **UI-10 · ✅ v83:** título «Tablero» (title, h1, descripción, og/twitter) y trato de tú en los cuatro textos que hablaban de usted (decisión 6-oct). **Textos.** El título dice «Dashboard» (inglés) en un sitio en español: «Tablero». «Registros · 66» en la cabecera repite el «66 áreas protegidas» del resumen. Hay trato de usted («vaya a Metas», «Toque una barra») y de tú («Ubica un punto y revisa»): elegir uno.
 - **UI-11 · ❎ se conserva:** a la izquierda van los controles estándar de Leaflet (cuadrados) y a la derecha los botones propios (redondos), igual en todos los mapas. **Botones del mapa en celular.** «Inicio» es un cuadrado de esquinas redondeadas y «Capas» un círculo, uno al lado del otro.
 - **UI-12 · ✅ v82b:** filete de dos colores (AVA: Bosque Urbano/Barranca; ANP: local/federal). **Guía rápida.** La tarjeta «ANP» (27 = 18 locales + 9 federales) lleva el borde naranja de ANP Local.
 - **UI-13 · pendiente de verificar en iPhone.** **Etiquetas de la ficha en celular.** «FECHA PROGRAMA DE MANEJO» ocupa tres renglones y «COADMINISTRACIÓN» se parte con guion. Verificar en iPhone con la tipografía real; si persiste, abreviar («Fecha PM») o dar 110 px a la columna.
