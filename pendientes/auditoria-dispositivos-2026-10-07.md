@@ -22,8 +22,8 @@ Recorrido completo del tablero en **celular** (390 × 844, táctil), **iPad vert
 
 ### Prioridad media
 
-- **R-01 · Cabecera en iPad vertical.** De 761 a ~1100 px «Actualizado · 7 oct 2026» y el botón «?» bajan a un renglón propio con mucho aire (unos 90 px perdidos arriba). Ponerlos en la misma línea que el título o compactar el bloque.
-- **R-02 · El buscador conserva la última consulta.** Tras cerrar el resultado de «¿Dónde estoy?», la coordenada o dirección sigue escrita en el buscador al cambiar a Inventario o Análisis (en celular, en la cápsula de arriba). Propuesta: al cerrar el resultado, vaciar el campo (o dejar el texto en gris como «última consulta»).
+- **R-01 · ✅ v93.** **Cabecera en iPad vertical.** De 761 a ~1100 px «Actualizado · 7 oct 2026» y el botón «?» bajan a un renglón propio con mucho aire (unos 90 px perdidos arriba). Ponerlos en la misma línea que el título o compactar el bloque.
+- **R-02 · ✅ v93 (se vacía al cerrar el resultado).** **El buscador conserva la última consulta.** Tras cerrar el resultado de «¿Dónde estoy?», la coordenada o dirección sigue escrita en el buscador al cambiar a Inventario o Análisis (en celular, en la cápsula de arriba). Propuesta: al cerrar el resultado, vaciar el campo (o dejar el texto en gris como «última consulta»).
 - **R-03 · iPad horizontal en «¿Dónde estoy?».** El resultado ocupa 400 px y el mapa el resto: bien. En iPad vertical (820) la columna del mapa queda en ~470 px; si el resultado es largo, la página crece. Valorar en iPad vertical poner el resultado arriba del mapa a todo el ancho.
 - **R-04 · Probar en dispositivos reales lo que el arnés no ve:** arrastre de las hojas en iPhone (v87), pantalla completa simulada en iPad Safari, desplazamiento del menú de capas en iPad, fuentes reales (Roboto Mono) en las etiquetas de la ficha (UI-13).
 

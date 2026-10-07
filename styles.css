@@ -3152,3 +3152,14 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
   #tableSection table.t th:nth-child(2),#tableSection table.t td:nth-child(2){width:9%}
   #tableSection table.t th:nth-child(4),#tableSection table.t td:nth-child(4){width:11%}
 }
+
+/* ═══ CABECERA EN TABLETA (v93, R-01 de la auditoría por dispositivo) ════
+   De 761 a 900 px la cabecera se apilaba en columna y «Actualizado · fecha»
+   con el botón «?» quedaban en un renglón propio con mucho aire (~90 px
+   perdidos en iPad vertical). Ahora: logotipo arriba a todo el ancho; título
+   a la izquierda y fecha + «?» a la derecha, en la misma fila. */
+@media (min-width:761px) and (max-width:900px){
+  header.top{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px 16px}
+  header.top .logo-inst{grid-column:1 / -1}
+  header.top .meta{text-align:right;justify-content:flex-end}
+}

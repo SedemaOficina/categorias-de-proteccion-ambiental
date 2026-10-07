@@ -6492,7 +6492,19 @@ function hojaSnap(vis){
   hojaIr(best);
   return best;
 }
+/* R-02 (auditoría por dispositivo, 7-oct-2026): al cerrar el resultado se
+   vacía el buscador. Antes la última coordenada o dirección seguía escrita
+   al pasar a Inventario o Análisis y parecía una búsqueda en curso. */
+function _vaciarBuscadorUbicar(){
+  try{
+    const inp = document.getElementById('ubicarInput'); if(inp) inp.value = '';
+    const sug = document.getElementById('ubicarSug'); if(sug){ sug.hidden = true; sug.innerHTML = ''; }
+    lastSearchLatLng = null; _ubicarDomicilio = null;
+    if(window._actualizarLimpiarUbicar) window._actualizarLimpiarUbicar();
+  }catch(_){}
+}
 function cerrarHoja(){
+  _vaciarBuscadorUbicar();
   const sec = document.getElementById('ubicarResultado');
   hojaIr(0);
   limpiarUbicacionGlobal();
@@ -6648,6 +6660,7 @@ function _abrirResultadoLateral(){
   const w = document.querySelector('.wrap'); if(w) w.classList.add('ubi-lateral');
 }
 function cerrarResultadoLateral(){
+  _vaciarBuscadorUbicar();
   const sec = document.getElementById('ubicarResultado');
   if(sec){ sec.hidden = true; sec.innerHTML = ''; }
   _ubiLateral = null;
