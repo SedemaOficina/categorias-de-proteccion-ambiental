@@ -3021,3 +3021,66 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
 .map-filters-lbl span{font-family:'Roboto',sans-serif;text-transform:none;letter-spacing:0;font-size:var(--fs-xs)}
 .map-filters-lbl + .map-filters{margin-top:6px}
 @media (max-width:760px){ .map-filters-lbl{display:none} }
+
+/* ═══ FILTROS EN CELULAR COMO HOJA (v89, 7-oct-2026) ═══════════════════
+   Cerrada: buscador + botón «Filtros (n)». Abierta: la barra entera es una
+   hoja inferior sobre la barra de destinos, con los filtros avanzados ya
+   desplegados (el botón «Más filtros» sobra ahí). En escritorio nada cambia. */
+.btn-filtros-movil,.hoja-filtros-cab,.hoja-filtros-bd{display:none}
+@media (max-width:760px){
+  #tableSection > .toolbar:not(.hoja-abierta){flex-wrap:nowrap;align-items:center}
+  #tableSection > .toolbar:not(.hoja-abierta) > :not(.f-buscar):not(.btn-filtros-movil){display:none !important}
+  #tableSection > .toolbar:not(.hoja-abierta) > label.f-buscar{flex:1 1 auto;min-width:0}
+  #tableSection > .toolbar:not(.hoja-abierta) > label.f-buscar .lab{display:none}
+  #tableSection > .toolbar:not(.hoja-abierta) > label.f-buscar input{width:100%}
+  .btn-filtros-movil{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;min-height:44px;padding:0 14px}
+  .fm-n{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;
+    border-radius:10px;background:var(--guinda);color:var(--crema);font-size:var(--fs-xs);font-weight:700}
+  .fm-n[hidden]{display:none}
+  #tableSection > .toolbar.hoja-abierta{position:fixed;left:0;right:0;bottom:0;z-index:1150;margin:0;
+    max-height:85svh;overflow-y:auto;overscroll-behavior:contain;border-radius:16px 16px 0 0;
+    flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:12px;
+    padding:0 16px calc(16px + env(safe-area-inset-bottom, 0px));box-shadow:0 -6px 24px rgba(42,42,42,.22)}
+  #tableSection > .toolbar.hoja-abierta > .hoja-filtros-cab{display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:1;background:var(--card);padding:14px 0 10px;border-bottom:1px solid var(--line-soft)}
+  .hoja-filtros-cab b{font-family:'Cabin','Roboto',sans-serif;font-size:var(--fs-lg)}
+  .hoja-filtros-cab .btn{background:var(--guinda);border-color:var(--guinda);color:var(--crema);font-weight:700;min-height:44px}
+  #tableSection > .toolbar.hoja-abierta > .btn-filtros-movil,
+  #tableSection > .toolbar.hoja-abierta > #btnMasFiltros{display:none !important}
+  #tableSection > .toolbar.hoja-abierta > .filtros-av{display:flex !important;flex-direction:column;gap:12px;margin:0;padding:0;border:none}
+  #tableSection > .toolbar.hoja-abierta label{display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%;max-width:none;flex:0 0 auto}
+  #tableSection > .toolbar.hoja-abierta select,
+  #tableSection > .toolbar.hoja-abierta input{width:100%;max-width:none;min-height:44px}
+  /* Limpiar y Copiar liga al final de la hoja, a todo el ancho. */
+  #tableSection > .toolbar.hoja-abierta .btn-group{display:flex;gap:8px;width:100%;order:10;margin-top:4px}
+  #tableSection > .toolbar.hoja-abierta .btn-group .btn{flex:1 1 0;min-height:44px}
+  .hoja-filtros-bd:not([hidden]){display:block;position:fixed;inset:0;z-index:1140;background:rgba(42,42,42,.45)}
+}
+
+/* ═══ MARCO JURÍDICO · ÍNDICE, PLEGABLES Y ENLACES OFICIALES (v89) ═════
+   Índice pegado debajo de lo que ya está fijo arriba (--legal-top lo mide
+   _ajustarIndiceLegal); el contenido largo de cada norma va en un <details>
+   cerrado de inicio; las normas enlazan a su texto vigente oficial. */
+.legal-indice{position:sticky;top:var(--legal-top,0px);z-index:6;display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+  background:var(--bg,#fffdf0);padding:10px 0;margin:0 0 14px;border-bottom:1px solid var(--line-soft)}
+.legal-indice .li-lbl{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.legal-indice button{font:inherit;font-size:var(--fs-sm);min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--line);
+  background:var(--card);color:var(--ink);cursor:pointer}
+.legal-indice button:hover{border-color:var(--guinda);color:var(--guinda)}
+.legal-indice button:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+@media (max-width:760px){
+  .legal-indice{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .legal-indice button{flex:0 0 auto;min-height:44px}
+  .legal-indice .li-lbl{display:none}
+}
+.legal-det{margin-top:14px}
+.legal-det > summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+  font-weight:700;color:var(--guinda);font-size:var(--fs-base);padding:8px 0;min-height:44px}
+.legal-det > summary::-webkit-details-marker{display:none}
+.legal-det > summary::before{content:'▸';display:inline-block;transition:transform .15s}
+.legal-det[open] > summary::before{transform:rotate(90deg)}
+.legal-det > summary:focus-visible{outline:2px solid var(--guinda);outline-offset:2px;border-radius:4px}
+.btn-ext .pdf-badge{background:var(--guinda)}
+.btn-ext.btn-pdf-federal .pdf-badge{background:#c0392b}
+.btn-ext span b{display:block}
+.btn-ext .ext-fuente{display:block;font-size:var(--fs-micro);color:var(--muted);font-weight:400}

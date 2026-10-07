@@ -48,7 +48,7 @@ categorias-de-proteccion-ambiental/
     ├── pgoedf_actividades.json      ← 117 actividades × 8 claves de zona
     ├── pgoedf_areas.json            ← cruce PGOEDF × poligonal de cada área
     ├── zonificacion/                ← index.json + un GeoJSON por ANP con zonificación
-    └── normativa/                   ← PDFs citados desde el tablero
+    └── normativa/                   ← PDF del Convenio Marco 2025 (las leyes enlazan a su texto oficial vigente)
 ```
 
 ## 3. Datos

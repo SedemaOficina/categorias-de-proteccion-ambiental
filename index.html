@@ -142,8 +142,10 @@ try{
     <!-- Filtros jerarquizados · rediseno 2026-09-10
          Ocho filtros con el mismo peso visual obligaban a leerlos todos. Los tres
          de uso dominante quedan a la vista; los cinco restantes, tras un boton. -->
-    <div class="toolbar">
+    <div class="toolbar" id="tableToolbar">
+      <div class="hoja-filtros-cab"><b>Filtros</b><button type="button" class="btn" id="btnFiltrosListo">Ver resultados</button></div>
       <label class="f-buscar"><span class="lab">Búsqueda</span><input id="q" type="search" placeholder="Buscar por nombre del área…" /></label>
+      <button type="button" class="btn ghost btn-filtros-movil" id="btnFiltrosMovil" aria-expanded="false" aria-controls="tableToolbar"><span>Filtros</span><span class="fm-n" id="filtrosMovilN" hidden>0</span></button>
       <label><span class="lab">Alcaldía</span><select id="fAlc"><option value="">Todas</option></select></label>
       <label><span class="lab" title="Programa de manejo">Programa</span><select id="fPM"><option value="">Todos</option><option value="Sí">Con PM</option><option value="No">Sin PM</option></select></label>
       <button type="button" class="btn ghost btn-masf" id="btnMasFiltros" aria-expanded="false" aria-controls="filtrosAvanzados">
@@ -158,6 +160,7 @@ try{
         <label><span class="lab" title="Dirección General responsable">DG resp.</span><select id="fDG"><option value="">Todas</option><option value="DGSANPAVA">DGSANPAVA</option><option value="DGCORENADER">DGCORENADER</option><option value="__sin__">Sin asignar</option></select></label>
       </div>
     </div>
+    <div class="hoja-filtros-bd" id="hojaFiltrosBd" hidden></div>
     <div class="counter-row">
       <span id="counterLive" aria-live="polite" aria-atomic="true">Mostrando <b id="showCount">0</b> de <b id="totalCount">0</b> registros</span>
       <span id="sortInfo">Orden · Nombre ↑</span>

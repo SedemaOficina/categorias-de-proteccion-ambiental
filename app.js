@@ -495,8 +495,10 @@ const LEGAL = {
       {fr:"XXIII", lbl:"Diseñar e implementar, en coordinación con el Gobierno de la Ciudad de México, acciones que promuevan la innovación científica y tecnológica en materia de preservación y mejoramiento del medio ambiente."},
       {fr:"XXIV",  lbl:"Vigilar, en coordinación con el Gobierno de la Ciudad de México, que no sean ocupadas de manera ilegal las áreas naturales protegidas y el suelo de conservación."},
     ],
-    urlLocal: "data/normativa/CPCDMX_Constitucion_CDMX.pdf",
-    urlLabel: "Texto vigente (PDF)"
+    /* v89 (7-oct-2026): texto vigente en el sitio de la Consejería Jurídica,
+       no una copia en PDF que se desactualiza con cada reforma. */
+    url: "https://data.consejeria.cdmx.gob.mx/index.php/leyes/constitucion",
+    urlFuente: "Consejería Jurídica y de Servicios Legales de la CDMX"
   },
   instrumento: {
     nombre: "Ley Ambiental de la Ciudad de México",
@@ -504,8 +506,8 @@ const LEGAL = {
     publicacion: "Gaceta Oficial de la Ciudad de México · 18 de julio de 2024",
     abroga: "Abroga la Ley Ambiental de Protección a la Tierra en la Ciudad de México.",
     expedida: "Decreto expedido por la persona titular de la Jefatura de Gobierno de la Ciudad de México.",
-    url: "data/normativa/LACM_Ley_Ambiental_CDMX.pdf",
-    urlLabel: "Texto vigente (PDF)"
+    url: "https://data.consejeria.cdmx.gob.mx/index.php/leyes/leyes#ley-ambiental-de-la-ciudad-de-m%C3%A9xico",
+    urlFuente: "Consejería Jurídica y de Servicios Legales de la CDMX"
   },
   instrumentoFederal: {
     nombre: "Ley General del Equilibrio Ecológico y la Protección al Ambiente",
@@ -513,8 +515,8 @@ const LEGAL = {
     publicacion: "Diario Oficial de la Federación · 28 de enero de 1988",
     ultimaReforma: "Última reforma publicada en el DOF el 19 de enero de 2026",
     alcance: "Regula las ANP de jurisdicción federal (fracciones I a VIII y XI del Art. 46). Concurre con la LACM cuando el GCDMX administra ANP de competencia federal conforme al Art. 136 LACM. Establece el marco nacional al que se ajustan las legislaciones locales en materia de áreas naturales protegidas.",
-    url: "data/normativa/LGEEPA_Ley_General_Equilibrio_Ecologico.pdf",
-    urlLabel: "Texto vigente (PDF)"
+    url: "https://www.diputados.gob.mx/LeyesBiblio/pdf/LGEEPA.pdf",
+    urlFuente: "Cámara de Diputados · Leyes federales vigentes"
   },
   definiciones: [
     {t:"Área de Valor Ambiental (AVA)", ref:"Art. 4° fr. VI", c:"Todos los bosques urbanos, barrancas y cuerpos de agua dentro del territorio y bajo las competencias de la Ciudad de México, tanto en suelo urbano como en suelo de conservación, en donde los ambientes originales han sido modificados por las actividades antropogénicas y que requieren ser restauradas o preservadas, en función de que aún mantienen ciertas características biofísicas y escénicas, las cuales les permiten contribuir a mantener la calidad ambiental de la Ciudad."},
@@ -1101,6 +1103,7 @@ function renderDashboard(){
     if(mapSec) mapSec.style.display = 'none';
   } else if(g.id==='LEGAL'){
     dash.innerHTML = renderLegalDashboard();
+    setTimeout(_ajustarIndiceLegal, 0);
     tblSec.style.display = 'none';
     if(mapSec) mapSec.style.display = 'none';
   } else if(g.id==='METAS'){
@@ -1311,7 +1314,7 @@ function renderPortadaAnalisis(){
       nota: m ? `decretos locales en la administración actual frente a la anterior · programas de manejo: ${m.pAct} / ${m.pAnt}` : 'comparativo entre administraciones' },
     { id:'LEGAL', rot:'Fundamento', tit:'Marco jurídico',
       preg:'¿Qué leyes y convenios sostienen cada categoría de protección?',
-      cifra:'4', nota:'ordenamientos con su PDF: Constitución CDMX, LGEEPA, Ley Ambiental y Convenio 2025' }
+      cifra:'4', nota:'ordenamientos: Constitución CDMX, Ley Ambiental y LGEEPA (texto vigente en línea) y Convenio Marco 2025' }
   ];
   return `
     <div class="panel an-intro">
@@ -2133,6 +2136,41 @@ function _filasConvenioHTML(){
   return filas;
 }
 
+/* Botón a la versión oficial de una norma (v89): se abre en otra pestaña y
+   dice de dónde viene. Sustituye a los PDF locales, que había que reemplazar a
+   mano con cada reforma. */
+function _btnNormaExterna(n, badge, federal){
+  return `<a class="btn-pdf btn-ext${federal ? ' btn-pdf-federal' : ''}" href="${n.url}" target="_blank" rel="noopener noreferrer"
+            title="Texto vigente · ${n.urlFuente} (se abre en otra pestaña)">
+            <span class="pdf-badge">${badge}</span>
+            <span><b>${n.abreviatura}</b><small class="ext-fuente">Texto vigente · ${n.urlFuente.split(' · ')[0].replace('Consejería Jurídica y de Servicios Legales de la CDMX','Consejería Jurídica')}</small></span>
+            <span class="pdf-arrow" aria-hidden="true">↗</span>
+          </a>`;
+}
+/* Índice de Marco jurídico (v89): la página medía unos 9,000 px sin índice.
+   Botones (no ligas con #, que pisarían las vistas compartibles #v?…) que
+   llevan a cada norma y abren su bloque plegable. */
+document.addEventListener('click', e => {
+  const b = e.target && e.target.closest && e.target.closest('.legal-indice [data-ir-a]');
+  if(!b) return;
+  const el = document.getElementById(b.dataset.irA); if(!el) return;
+  const det = el.querySelector('details.legal-det'); if(det) det.open = true;
+  const ind = document.querySelector('.legal-indice');
+  const tope = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--legal-top')) || 0) + (ind ? ind.offsetHeight : 0) + 12;
+  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - tope, behavior: _suave() });
+});
+/* El índice se pega debajo de lo que ya está fijo arriba (buscador en
+   escritorio, tira de chips en celular): se mide al pintar la página. */
+function _ajustarIndiceLegal(){
+  try{
+    let alto = 0;
+    document.querySelectorAll('.ubicar-bar, nav#tabs').forEach(e => {
+      const cs = getComputedStyle(e);
+      if(cs.position === 'sticky' && parseFloat(cs.top || 0) <= 1) alto = Math.max(alto, e.getBoundingClientRect().height);
+    });
+    document.documentElement.style.setProperty('--legal-top', Math.round(alto) + 'px');
+  }catch(_){}
+}
 function renderLegalDashboard(){
   const defCards = LEGAL.definiciones.map(d=>`
     <div class="legal-card">
@@ -2141,10 +2179,17 @@ function renderLegalDashboard(){
       <p>${d.c}</p>
     </div>`).join('');
   return `
+    <nav class="legal-indice" aria-label="Índice del marco jurídico">
+      <span class="li-lbl">Ir a</span>
+      <button type="button" data-ir-a="legal-cpcdmx">Constitución CDMX</button>
+      <button type="button" data-ir-a="legal-lacm">Ley Ambiental (LACM)</button>
+      <button type="button" data-ir-a="legal-lgeepa">LGEEPA</button>
+      <button type="button" data-ir-a="legal-convenio">Convenio Marco 2025</button>
+    </nav>
     <!-- ====================================================== -->
     <!-- 1. CONSTITUCIÓN POLÍTICA DE LA CDMX (CPCDMX) -->
     <!-- ====================================================== -->
-    <div class="panel constitucion-block" style="border-left:3px solid var(--guinda)">
+    <div class="panel constitucion-block" id="legal-cpcdmx" style="border-left:3px solid var(--guinda)">
       <div class="panel-title" style="color:var(--guinda)">Marco constitucional · Norma suprema local</div>
       <div class="norma-header">
         <div class="norma-header-left">
@@ -2152,14 +2197,12 @@ function renderLegalDashboard(){
           <p class="panel-intro" style="margin-top:8px">${LEGAL.constitucion.publicacion}. ${LEGAL.constitucion.ultimaReforma}.<br><b>${LEGAL.constitucion.articulo}</b></p>
         </div>
         <div class="norma-header-right">
-          <a class="btn-pdf" href="${LEGAL.constitucion.urlLocal}" target="_blank" rel="noopener" download>
-            <span class="pdf-badge">PDF</span>
-              <span><b>${LEGAL.constitucion.abreviatura}</b></span>
-              <span class="pdf-arrow">↓</span>
-          </a>
+          ${_btnNormaExterna(LEGAL.constitucion, 'WEB')}
         </div>
       </div>
 
+      <details class="legal-det">
+      <summary>Ver artículos · Art. 16 A (medio ambiente) y Art. 53 (alcaldías)</summary>
       <div class="norma-subsec">
         <span class="norma-subsec-title">CPCDMX · Artículo 16 A · Apartado A · Medio Ambiente</span>
         <div class="constitucion-grid">
@@ -2183,12 +2226,13 @@ function renderLegalDashboard(){
             </li>`).join('')}
         </ul>
       </div>
+      </details>
     </div>
 
     <!-- ====================================================== -->
     <!-- 2. LEY AMBIENTAL DE LA CDMX (LACM) -->
     <!-- ====================================================== -->
-    <div class="panel panel-accent-anp" style="border-left:3px solid var(--guinda)">
+    <div class="panel panel-accent-anp" id="legal-lacm" style="border-left:3px solid var(--guinda)">
       <div class="panel-title">Instrumento rector · Norma reglamentaria local</div>
       <div class="norma-header">
         <div class="norma-header-left">
@@ -2196,14 +2240,12 @@ function renderLegalDashboard(){
           <p class="panel-intro" style="margin-top:8px">${LEGAL.instrumento.publicacion}. <b>${LEGAL.instrumento.abroga}</b> ${LEGAL.instrumento.expedida}</p>
         </div>
         <div class="norma-header-right">
-          <a class="btn-pdf" href="${LEGAL.instrumento.url}" target="_blank" rel="noopener" download>
-            <span class="pdf-badge">PDF</span>
-              <span><b>${LEGAL.instrumento.abreviatura}</b></span>
-              <span class="pdf-arrow">↓</span>
-          </a>
+          ${_btnNormaExterna(LEGAL.instrumento, 'WEB')}
         </div>
       </div>
 
+      <details class="legal-det">
+      <summary>Ver glosario, categorías, declaratorias y disposiciones</summary>
       <div class="norma-subsec">
         <span class="norma-subsec-title">LACM · Artículo 4° · Definiciones fundamentales</span>
         <h4 style="font-family:'Roboto',sans-serif;font-weight:700;font-size:var(--fs-lg);color:var(--ink);margin-bottom:14px;letter-spacing:-.01em">Glosario técnico-jurídico</h4>
@@ -2301,6 +2343,7 @@ function renderLegalDashboard(){
           </div>
         </div>
       </div>
+      </details>
     </div>
 
     <!-- ====================================================== -->
@@ -2312,7 +2355,7 @@ function renderLegalDashboard(){
       <p class="panel-intro" style="margin-bottom:18px">Las ANP de competencia federal ubicadas dentro del territorio de la Ciudad de México se rigen por la <b>LGEEPA</b> y son administradas por la <b>CONANP</b> (Comisión Nacional de Áreas Naturales Protegidas). La Ciudad de México coadyuva en su administración mediante el Convenio Marco vigente.</p>
 
       <!-- 3.1 LGEEPA -->
-      <div class="anp-fed-card">
+      <div class="anp-fed-card" id="legal-lgeepa">
         <div class="panel-title" style="color:var(--azul);margin-bottom:6px">Instrumento concurrente · Norma reglamentaria federal</div>
         <div class="norma-header">
           <div class="norma-header-left">
@@ -2320,14 +2363,12 @@ function renderLegalDashboard(){
             <p style="color:var(--ink-2);font-size:var(--fs-base);line-height:1.6;margin:0"><b>${LEGAL.instrumentoFederal.abreviatura}</b>. ${LEGAL.instrumentoFederal.publicacion}. ${LEGAL.instrumentoFederal.ultimaReforma}. ${LEGAL.instrumentoFederal.alcance}</p>
           </div>
           <div class="norma-header-right">
-            <a class="btn-pdf btn-pdf-federal" href="${LEGAL.instrumentoFederal.url}" target="_blank" rel="noopener" download>
-              <span class="pdf-badge">PDF</span>
-              <span><b>${LEGAL.instrumentoFederal.abreviatura}</b></span>
-              <span class="pdf-arrow">↓</span>
-            </a>
+            ${_btnNormaExterna(LEGAL.instrumentoFederal, 'PDF', true)}
           </div>
         </div>
 
+        <details class="legal-det">
+        <summary>Ver categorías de ANP federales (Art. 46)</summary>
         <div class="norma-subsec" style="border-top-color:rgba(38,108,180,.15)">
           <span class="norma-subsec-title">LGEEPA · Artículo 46 · Sección II · Categorías de ANP federales</span>
           <p class="panel-intro" style="margin-bottom:10px">${LEGAL.categoriasANPFederal.intro}</p>
@@ -2342,10 +2383,11 @@ function renderLegalDashboard(){
               </li>`).join('')}
           </ul>
         </div>
+        </details>
       </div>
 
       <!-- 3.2 Convenio Marco -->
-      <div class="anp-fed-card" style="margin-top:18px">
+      <div class="anp-fed-card" id="legal-convenio" style="margin-top:18px">
         <div class="panel-title" style="color:var(--azul);margin-bottom:6px">Coordinación interinstitucional · Federal–Local</div>
         <div class="norma-header">
           <div class="norma-header-left">
@@ -2353,7 +2395,7 @@ function renderLegalDashboard(){
             <p style="color:var(--ink-2);font-size:var(--fs-base);line-height:1.6;margin:0">Suscrito el <b>10 de marzo de 2025</b> entre el Ejecutivo Federal, a través de la <b>SEMARNAT</b> (Secretaría de Medio Ambiente y Recursos Naturales) por conducto de la CONANP, y el Gobierno de la Ciudad de México, a través de la SEDEMA. <b>Vigencia hasta el 30 de septiembre de 2030</b>.</p>
           </div>
           <div class="norma-header-right">
-            <a class="btn-pdf btn-pdf-federal" href="data/normativa/CONVENIO_SEMARNAT-CONANP-CDMX_2025.pdf" download>
+            <a class="btn-pdf btn-pdf-federal" href="data/normativa/CONVENIO_SEMARNAT-CONANP-CDMX_2025.pdf" target="_blank" rel="noopener" title="Convenio Marco firmado (PDF)">
               <span class="pdf-badge">PDF</span>
               <span><b>Convenio Marco</b></span>
               <span class="pdf-arrow">↓</span>
@@ -2361,6 +2403,8 @@ function renderLegalDashboard(){
           </div>
         </div>
 
+        <details class="legal-det">
+        <summary>Ver cláusulas y las ocho áreas en coadministración</summary>
         <div class="norma-subsec" style="border-top-color:rgba(38,108,180,.15)">
           <span class="norma-subsec-title">Convenio Marco · Cláusulas Primera y Segunda</span>
           <div class="convenio-meta">
@@ -2424,6 +2468,7 @@ function renderLegalDashboard(){
             </div>
           </div>
         </div>
+        </details>
       </div>
     </div>
 
@@ -2555,7 +2600,42 @@ function render(){
   });
   const thActive = document.querySelector(`thead.t-head th[data-k="${state.sortKey}"]`);
   document.getElementById('sortInfo').textContent = `Orden · ${thActive?(thActive.getAttribute('aria-label')||thActive.textContent.replace(/[▲▼]/g,'').trim()):''} ${state.sortDir===1?'↑':'↓'}`;
+  _contarFiltrosMovil(rows.length);
 }
+
+/* ═══ FILTROS EN CELULAR COMO HOJA (v89, 7-oct-2026) ═════════════════════
+   En celular la barra de filtros (Alcaldía, Programa, Más filtros, Limpiar,
+   Copiar liga) ocupaba casi toda la pantalla antes de la primera área. Ahí
+   solo quedan visibles el buscador y un botón «Filtros (n)», con n = filtros
+   activos; el botón abre la misma barra como hoja inferior, con los filtros
+   avanzados ya desplegados y «Ver N resultados» para cerrar. Son los mismos
+   nodos —conservan id y escuchas—: solo cambia su presentación por CSS. */
+function _contarFiltrosMovil(nRes){
+  const ids = ['fAlc','fPM','fTipo','fJur','fCat','fSC','fDG'];
+  const k = ids.filter(id => { const el = document.getElementById(id); return el && el.value; }).length;
+  const n = document.getElementById('filtrosMovilN');
+  if(n){ n.textContent = String(k); n.hidden = !k; }
+  const listo = document.getElementById('btnFiltrosListo');
+  if(listo && nRes != null) listo.textContent = `Ver ${fmtInt(nRes)} ${nRes === 1 ? 'resultado' : 'resultados'}`;
+}
+(function(){
+  const tb = document.getElementById('tableToolbar'), btn = document.getElementById('btnFiltrosMovil');
+  const listo = document.getElementById('btnFiltrosListo'), bdF = document.getElementById('hojaFiltrosBd');
+  if(!tb || !btn) return;
+  const abrir = on => {
+    tb.classList.toggle('hoja-abierta', on);
+    if(bdF) bdF.hidden = !on;
+    btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+    siaBloquearPagina(on, 'filtros');
+    if(!on) btn.focus({preventScroll:true});
+  };
+  btn.addEventListener('click', () => abrir(true));
+  if(listo) listo.addEventListener('click', () => abrir(false));
+  if(bdF) bdF.addEventListener('click', () => abrir(false));
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && tb.classList.contains('hoja-abierta')) abrir(false); });
+  /* Al pasar a escritorio (giro de tableta, ventana más ancha) la hoja se cierra. */
+  try{ window.matchMedia('(max-width:760px)').addEventListener('change', e => { if(!e.matches && tb.classList.contains('hoja-abierta')) abrir(false); }); }catch(_){}
+})();
 
 /* Orden de la tabla principal por clic y por teclado (auditoría 13-sep-2026,
    D5-01): los <th> son enfocables (tabindex en index.html) y anuncian
