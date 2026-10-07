@@ -2994,3 +2994,30 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
   .an-card{padding:16px 18px}
   .an-tit{font-size:var(--fs-xl)}
 }
+
+/* ═══ TABLA · AYUDA Y LEYENDA (v89, 7-oct-2026) ═════════════════════════
+   La ayuda habla según el puntero (clic/Enter con ratón; «toca» en pantalla
+   táctil) y una línea explica los puntos de PM y SC, que antes no tenían
+   leyenda cerca. En celular la tabla ya no muestra la columna de
+   subcategoría, así que esa parte de la leyenda se oculta. */
+.tabla-hint .hint-tactil{display:none}
+@media (pointer:coarse){
+  .tabla-hint .hint-raton{display:none}
+  .tabla-hint .hint-tactil{display:inline}
+}
+.tabla-leyenda{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:var(--fs-xs);color:var(--muted);margin:-2px 0 10px;line-height:1.5}
+.tabla-leyenda b{font-family:'Roboto Mono',monospace;font-weight:500;color:var(--ink-2);letter-spacing:.04em;margin-right:4px}
+.tabla-leyenda .lg-pt{display:inline-block;width:9px;height:9px;border-radius:50%;border:1.6px solid #c0bbaa;vertical-align:-1px;margin:0 3px 0 6px}
+.tabla-leyenda .lg-pt.lleno{background:var(--ink-2);border-color:var(--ink-2)}
+.tabla-leyenda .lg-pt.sc{background:var(--sc);border-color:var(--sc)}
+@media (max-width:760px){ .tabla-leyenda .lg-sub{display:none} }
+
+/* ═══ INVENTARIO · RÓTULO DE LOS BOTONES DEL MAPA (v89, 7-oct-2026) ════
+   Los botones de categoría sobre el mapa prenden y apagan capas; los de
+   «Filtrar» de arriba filtran la tabla. Se parecían tanto que confundían.
+   En celular esos botones viven dentro del menú de capas: el rótulo sobra. */
+.map-filters-lbl{margin-top:14px;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.map-filters-lbl span{font-family:'Roboto',sans-serif;text-transform:none;letter-spacing:0;font-size:var(--fs-xs)}
+.map-filters-lbl + .map-filters{margin-top:6px}
+@media (max-width:760px){ .map-filters-lbl{display:none} }

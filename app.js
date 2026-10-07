@@ -651,11 +651,14 @@ const fmtInt = n => n.toLocaleString('es-MX');
    ficha y en la suma del pie, que es donde sí se consulta con precisión.
    Excepción: por debajo de 1 ha se conservan dos decimales, porque redondear
    Vista Hermosa (0.32 ha) a «0» sería falso, no compacto. */
+/* Superficie en la tabla: un decimal (v89). Antes se redondeaba a entero y la
+   columna decía «11» mientras el resumen decía «27,747.05». Debajo de 1 ha, dos
+   decimales para no mostrar «0.0». La cifra completa va en el title. */
 const fmtSup = n => {
   const v = +n || 0;
   return (v > 0 && v < 1)
     ? v.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})
-    : Math.round(v).toLocaleString('es-MX');
+    : v.toLocaleString('es-MX',{minimumFractionDigits:1,maximumFractionDigits:1});
 };
 /* Año del decreto a cuatro dígitos. La tabla solo necesita el año —el día y el
    mes viven en la ficha— y así la columna cabe donde la regla de redundancia
@@ -712,6 +715,12 @@ const SUBCAT = {
 };
 const subCode  = cat => (SUBCAT[cat] && SUBCAT[cat].code)  || "BU";
 const subShort = cat => (SUBCAT[cat] && SUBCAT[cat].short) || cat;
+/* Celda de subcategoría en la tabla de escritorio (v89): siempre la sigla
+   (BU, BR, PN, ZCE…) con el nombre completo en el title. «Bosque Urbano» y
+   «Parque Nacional» no cabían y se cortaban («Bosque Urba…»), mientras las ANP
+   locales ya iban en sigla. La tenencia de ARCAC (Comunidad, Ejido) va completa. */
+const SUB_TENENCIA = new Set(['Comunidad','Ejido']);
+const subTabla = cat => SUB_TENENCIA.has(cat) ? subShort(cat) : ((SUBCAT[cat] && SUBCAT[cat].code) || cat);
 
 /* Normaliza texto para búsqueda: quita acentos, minúsculas, trim. Permite buscar con o sin acento. */
 function normText(s){
@@ -2496,7 +2505,7 @@ function render(){
         }</span></td>
         <td><span class="tag tag-${d.tipo}">${d.tipo}</span></td>
         <td><span class="tag tag-jur-${d.jurisdiccion}">${d.jurisdiccion}</span></td>
-        <td><span class="tag-sub sub-${subCode(d.categoria)}" title="${d.categoria}">${subShort(d.categoria)}</span></td>
+        <td><span class="tag-sub sub-${subCode(d.categoria)}" title="${d.categoria}">${subTabla(d.categoria)}</span></td>
         <td class="cell-alcaldia">${d.alcaldia}</td>
         <td class="date" style="text-align:right" title="${d.fecha_decreto||''}">${anioDecreto(d)}</td>
         <td class="num" title="${fmt(d.superficie)} ha">${fmtSup(d.superficie)}</td>
@@ -2954,6 +2963,7 @@ function renderMapaPage(g, limpio){
       <h3 class="mapa-h">${title}</h3>
       ${intro ? `<p class="panel-intro" style="margin-bottom:10px">${intro}</p>` : ''}`}
 
+      ${limpio ? '' : `<div class="map-filters-lbl">Capas del mapa <span>· prenden y apagan lo que se dibuja; no filtran la tabla</span></div>`}
       <div class="map-filters${limpio ? ' map-filters--oculto' : ''}" id="mapFilters"
            data-mode="${isGlobal ? 'global' : 'group'}"></div>
 
@@ -8368,7 +8378,17 @@ document.getElementById('drClose').addEventListener('click',closeDrawer);
 bd.addEventListener('click',closeDrawer);
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDrawer(); });
 
-document.getElementById('metaCount').textContent = fmtInt(DATA.length);
+/* Cabecera (v89): «Registros · 66» repetía el 66 del resumen. Ahora dice cuándo
+   se actualizó el tablero, con la fecha de la versión instalada (CACHE_VERSION
+   del Service Worker, la misma del pie). Sin SW no se muestra. */
+function _pintarActualizado(version){
+  const m = String(version || '').match(/(\d{4})-(\d{2})-(\d{2})/);
+  const caja = document.getElementById('metaActualizado'), f = document.getElementById('metaFecha');
+  if(!m || !caja || !f) return;
+  const MES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  f.textContent = (+m[3]) + ' ' + MES[+m[2] - 1] + ' ' + m[1];
+  caja.hidden = false;
+}
 
 /* Fecha de consulta del inventario en el pie institucional. Es un dato verificable
    —cuándo leyó este navegador el Sheet—, no una fecha de corte declarada: esa debe
@@ -8591,7 +8611,7 @@ if('serviceWorker' in navigator){
       /* El SW completó en caliente la caché de una versión que se activó sin
          red (D7-01): la pestaña sigue con el código anterior hasta recargar. */
       if(e.data.tipo === 'cache-reparada') showOfflineNotice('Nueva versión disponible. Recarga la página para actualizar.', 'update');
-      if(e.data.tipo === 'version'){ const v = document.getElementById('footerVersion'); if(v) v.textContent = String(e.data.version || '—').replace(/^sia-v35-/, ''); }
+      if(e.data.tipo === 'version'){ const v = document.getElementById('footerVersion'); if(v) v.textContent = String(e.data.version || '—').replace(/^sia-v35-/, ''); _pintarActualizado(e.data.version); }
     });
     /* Versión instalada, para el pie (D4-02). Se pregunta al SW que controla
        la página; si aún no controla (primera visita), se pregunta al quedar

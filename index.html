@@ -92,7 +92,7 @@ try{
       <p class="sub">Secretaría del Medio Ambiente (SEDEMA) · Gobierno de la Ciudad de México</p>
     </div>
     <div class="meta">
-      <div>REGISTROS · <b id="metaCount">—</b></div>
+      <div id="metaActualizado" hidden>ACTUALIZADO · <b id="metaFecha">—</b></div>
       <button type="button" class="ayuda-btn" id="ayudaAbrir" aria-haspopup="dialog" aria-label="Guía rápida" title="Guía rápida">
         <span class="ay-ico" aria-hidden="true">?</span>
       </button>
@@ -162,7 +162,8 @@ try{
       <span id="counterLive" aria-live="polite" aria-atomic="true">Mostrando <b id="showCount">0</b> de <b id="totalCount">0</b> registros</span>
       <span id="sortInfo">Orden · Nombre ↑</span>
     </div>
-    <p class="tabla-hint">El filete de color indica la categoría · clic o Enter en un encabezado para ordenar · clic en una fila para abrir la ficha</p>
+    <p class="tabla-hint"><span class="hint-raton">El filete de color indica la categoría · clic o Enter en un encabezado para ordenar · clic en una fila para abrir la ficha</span><span class="hint-tactil">El filete de color indica la categoría · toca un encabezado para ordenar · toca un área para abrir su ficha</span></p>
+    <p class="tabla-leyenda" aria-label="Leyenda de las columnas PM y SC"><span><b>PM</b> programa de manejo: <span class="lg-pt lleno" aria-hidden="true"></span> publicado <span class="lg-pt" aria-hidden="true"></span> sin programa</span><span><b>SC</b> Suelo de Conservación: <span class="lg-pt sc" aria-hidden="true"></span> dentro (con su %) <span class="lg-pt" aria-hidden="true"></span> fuera</span><span class="lg-sub"><b>Subcategoría</b> en sigla: pasa el cursor para ver el nombre completo</span></p>
     <div class="table-wrap"><div class="table-scroll">
       <table class="t">
         <caption class="sr-only">Inventario de áreas protegidas de la Ciudad de México · filtrable por tipo, jurisdicción, subcategoría, alcaldía, programa de manejo, suelo de conservación y dirección general responsable</caption>

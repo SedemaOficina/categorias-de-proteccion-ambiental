@@ -6,19 +6,19 @@
   ],
   "zonas": [
    {
-    "zona": "Zona de Recuperación",
+    "zona": "Zona de recuperación",
     "k": "recuperacion",
     "ha": 71.14,
     "n": 1
    },
    {
-    "zona": "Zona de Uso Público Recreativo",
+    "zona": "Zona de uso público recreativo",
     "k": "uso publico recreativo",
     "ha": 27.03,
     "n": 3
    },
    {
-    "zona": "Zona de Uso Público Educativo y Cultural",
+    "zona": "Zona de uso público educativo y cultural",
     "k": "uso publico educativo y cultural",
     "ha": 23.02,
     "n": 3
@@ -34,31 +34,31 @@
   ],
   "zonas": [
    {
-    "zona": "Zona de Restauracion Ecologica",
+    "zona": "Zona de restauración ecológica",
     "k": "restauracion ecologica",
     "ha": 52.38,
     "n": 59
    },
    {
-    "zona": "Zona de Proteccion Estricta",
+    "zona": "Zona de protección estricta",
     "k": "proteccion estricta",
     "ha": 19.28,
     "n": 27
    },
    {
-    "zona": "Zona de Uso Publico Intensivo",
+    "zona": "Zona de uso público intensivo",
     "k": "uso publico intensivo",
     "ha": 2.2,
     "n": 9
    },
    {
-    "zona": "Zona de Uso Especial",
+    "zona": "Zona de uso especial",
     "k": "uso especial",
     "ha": 1.71,
     "n": 8
    },
    {
-    "zona": "Zona de Uso Público Extensivo",
+    "zona": "Zona de uso público extensivo",
     "k": "uso publico extensivo",
     "ha": 1.34,
     "n": 16
@@ -132,19 +132,19 @@
   ],
   "zonas": [
    {
-    "zona": "Agricola Chinampera",
+    "zona": "Agrícola chinampera",
     "k": "agricola chinampera",
     "ha": 1186.02,
     "n": 1
    },
    {
-    "zona": "Restauración Ecológica",
+    "zona": "Restauración ecológica",
     "k": "restauracion ecologica",
     "ha": 531.3,
     "n": 1
    },
    {
-    "zona": "Uso Público",
+    "zona": "Uso público",
     "k": "uso publico",
     "ha": 446.07,
     "n": 1
@@ -166,7 +166,7 @@
   ],
   "zonas": [
    {
-    "zona": "Zona de Recuperación",
+    "zona": "Zona de recuperación",
     "k": "recuperacion",
     "ha": 1227.13,
     "n": 4
@@ -188,13 +188,13 @@
   ],
   "zonas": [
    {
-    "zona": "Protección con Uso Restringido",
+    "zona": "Protección con uso restringido",
     "k": "proteccion con uso restringido",
     "ha": 354.99,
     "n": 12
    },
    {
-    "zona": "Restauración Ecológica",
+    "zona": "Restauración ecológica",
     "k": "restauracion ecologica",
     "ha": 253.56,
     "n": 20
@@ -206,7 +206,7 @@
     "n": 2
    },
    {
-    "zona": "Zona de Uso Especial",
+    "zona": "Zona de uso especial",
     "k": "uso especial",
     "ha": 4.25,
     "n": 2
@@ -222,37 +222,37 @@
   ],
   "zonas": [
    {
-    "zona": "Proteccion Estricta",
+    "zona": "Protección estricta",
     "k": "proteccion estricta",
     "ha": 97.05,
     "n": 4
    },
    {
-    "zona": "Uso Publico Extensivo",
+    "zona": "Uso público extensivo",
     "k": "uso publico extensivo",
     "ha": 62.49,
     "n": 2
    },
    {
-    "zona": "Proteccion con Uso Restringido",
+    "zona": "Protección con uso restringido",
     "k": "proteccion con uso restringido",
     "ha": 60.87,
     "n": 4
    },
    {
-    "zona": "Uso Publico Intensivo",
+    "zona": "Uso público intensivo",
     "k": "uso publico intensivo",
     "ha": 16.21,
     "n": 1
    },
    {
-    "zona": "Uso Especial",
+    "zona": "Uso especial",
     "k": "uso especial",
     "ha": 11.36,
     "n": 5
    },
    {
-    "zona": "Restauracion",
+    "zona": "Restauración",
     "k": "restauracion",
     "ha": 3.77,
     "n": 7

@@ -70,7 +70,7 @@ Otro puerto: `PUERTO=9000 node pendientes/arnes/srv.mjs` y el mismo `PUERTO=9000
 
 1. Las validaciones del CI (`.github/workflows/validar.yml`) en local: sintaxis de JS y CSS, hashes de CSP y SRI, GeoJSON, invariante de 66 y contrato de columnas.
 2. `aud360.mjs` en los cuatro perfiles: cero `pageerror`; sin scroll horizontal en ningún destino; sin objetivos táctiles nuevos < 40 px; los cuatro flujos de ubicación con su cabeza esperada.
-3. Invariantes en pantalla: `#metaCount` = 66; chips 13/26/18/9; ARCAC y Zona Patrimonio nunca alteran esos contadores.
+3. Invariantes en pantalla: el resumen dice 66 áreas; chips 13/26/18/9; ARCAC y Zona Patrimonio nunca alteran esos contadores.
 4. Ficha: abre desde tabla, mapa y resultado de ubicación; `#dr` pierde `inert` al abrir y en móvil el cuerpo lleva `pagina-bloqueada`; Escape cierra; el asa de la hoja sube, nunca cierra.
 5. Mapas incrustados: en móvil `touch-action: pan-x pan-y` en reposo y `.mapa-gesto-total` en el mapa del caparazón; `.btn-ampliar` presente en todo puntero y en estado «Salir de pantalla completa» al ampliar cualquier mapa, aunque antes se haya abierto otro (v81).
 6. Service Worker: instala con red → bump de `CACHE_VERSION` sin red (la caché nueva queda vacía y la página arranca de la anterior) → vuelve la red: la primera navegación dispara `repararSiIncompleta()`, que completa la caché nueva, purga la anterior y muestra «Nueva versión disponible…». Se prueba con un servidor que corta la red por bandera (`.caida`: todo salvo `sw.js`; `.caida-total`: también `sw.js`) y un contexto con `serviceWorkers:'allow'`; guion en `pendientes/auditoria-360-2026-09-13.md` (D7).
