@@ -1346,27 +1346,30 @@ function renderAnalisisPage(){
     'Cuauhtémoc','Gustavo A. Madero','Iztacalco','Iztapalapa','La Magdalena Contreras','Miguel Hidalgo',
     'Milpa Alta','Tláhuac','Tlalpan','Venustiano Carranza','Xochimilco'];
   const alcVacia = () => ({'AVA · Bosque Urbano':0,'AVA · Barranca':0,'ANP · Local':0,
-                           'ANP · Federal':0,'ARCAC':0,total:0,sup:0,supInv:0});
+                           'ANP · Federal':0,total:0,sup:0,supG:{},arcac:0,supArcac:0});
   const alcStats = {};
   DATA.forEach(d => explode([d],'alcaldia').forEach(a=>{
     const k = a.split(' (')[0].trim(); if(!k) return;
     if(!alcStats[k]) alcStats[k] = alcVacia();
     if(alcStats[k][d.grupo] !== undefined){
-      alcStats[k][d.grupo]++; alcStats[k].total++;
-      alcStats[k].sup += +d.superficie||0; alcStats[k].supInv += +d.superficie||0;
+      const ha = +d.superficie||0;
+      alcStats[k][d.grupo]++; alcStats[k].total++; alcStats[k].sup += ha;
+      alcStats[k].supG[d.grupo] = (alcStats[k].supG[d.grupo]||0) + ha;
     }
   }));
-  /* ARCAC entra al reparto territorial pero en su propio segmento y con su
-     propia cuenta: suma hectáreas a la demarcación sin sumarse al inventario.
-     `supInv` conserva la superficie de las 66 para lo que sí debe excluirla. */
+  /* ARCAC NO entra a la barra, al total ni al orden (v82, auditoría de
+     interfaz UI-01): son núcleos agrarios, no áreas del inventario, y antes
+     la gráfica decía «no suma al inventario» mientras los sumaba (Tlalpan
+     salía con 21 áreas y 26,450 ha en lugar de 11 y 12,511). Se cuentan
+     aparte y se rotulan en la fila, igual que en «Los cuatro grupos». */
   DATA_ARCAC.forEach(d=>{
     const k = String(d.alcaldia||'').split(' (')[0].trim(); if(!k) return;
     if(!alcStats[k]) alcStats[k] = alcVacia();
-    alcStats[k]['ARCAC']++; alcStats[k].total++; alcStats[k].sup += +d.superficie||0;
+    alcStats[k].arcac++; alcStats[k].supArcac += +d.superficie||0;
   });
-  const alcSorted = Object.entries(alcStats).sort((a,b)=>b[1].sup - a[1].sup);
+  const alcSorted = Object.entries(alcStats).filter(([,s])=>s.total>0).sort((a,b)=>b[1].sup - a[1].sup);
   const maxAlcSup = Math.max(...alcSorted.map(([,s])=>s.sup));
-  const sinAreas  = ALC16.filter(a=>!alcStats[a]);
+  const sinAreas  = ALC16.filter(a=>!alcStats[a] || !alcStats[a].total);
 
   /* ── Composición por grupo ─────────────────────────────────────────── */
   const supArcac = sum(DATA_ARCAC,'superficie');
@@ -1565,31 +1568,35 @@ function renderAnalisisPage(){
     <div class="panel panel-compact">
       <div class="panel-title">Territorio</div>
       <h3>Reparto por <em>alcaldía</em></h3>
-      <p class="panel-intro" style="margin-bottom:10px">Ordenado por superficie, no por número de áreas:
-        una barranca de 8 ha y un parque nacional de 6,000 ha cuentan igual en un conteo y no se parecen
-        en nada en el territorio. Un área que cruza límites aparece en cada demarcación que toca.</p>
+      <p class="panel-intro" style="margin-bottom:10px">Barras y orden por superficie decretada del
+        inventario, no por número de áreas: una barranca de 8 ha y un parque nacional de 6,000 ha cuentan
+        igual en un conteo y no se parecen en nada en el territorio. Cada tramo mide la superficie de su
+        categoría y su número es el de áreas. Un área que cruza límites aparece en cada demarcación que toca.
+        ${DATA_ARCAC.length ? 'Los núcleos ARCAC no forman parte del inventario: se indican aparte, debajo del total de cada alcaldía.' : ''}</p>
 
       <div class="alc-legend">
         ${GRUPOS_INV.map(g=>`<span class="alc-leg-item"><span class="alc-leg-swatch" style="background:${GROUP_COLORS[g.key]}"></span>${g.label}</span>`).join('')}
-        ${DATA_ARCAC.length ? `<span class="alc-leg-item"><span class="alc-leg-swatch" style="background:var(--arcac-com)"></span>ARCAC <span style="color:var(--muted)">· no suma al inventario</span></span>` : ''}
       </div>
 
       <div class="alc-stacked">
         ${alcSorted.map(([k,s])=>{
-          const segs = GRUPOS_INV.map(g=>({n:s[g.key], color:GROUP_COLORS[g.key], label:g.label})
-                       ).concat([{n:s['ARCAC']||0, color:'var(--arcac-com)', label:'ARCAC'}])
+          const ancho = pct(s.sup, maxAlcSup);
+          const segs = GRUPOS_INV.map(g=>({n:s[g.key], ha:s.supG[g.key]||0, color:GROUP_COLORS[g.key], label:g.label}))
                                  .filter(x=>x.n>0);
           return `<div class="alc-row">
             <span class="alc-name">${k}</span>
-            <div class="alc-track" style="width:${pct(s.sup,maxAlcSup)}%">
+            <div class="alc-track" style="width:${ancho}%">
               ${segs.map(x=>{
-                const p = pct(x.n, s.total);
+                const p = pct(x.ha, s.sup);
+                /* El número solo cuando el tramo mide al menos ~5 % del ancho de la
+                   columna: en barras cortas se enciman («1 2 1» en Miguel Hidalgo). */
+                const cabe = p * ancho / 100 >= 5;
                 /* Texto oscuro sobre el naranja de ANP Local: el blanco no alcanza AA (D5-04). */
                 const oscuro = x.color === GROUP_COLORS['ANP · Local'] ? ' alc-seg-num-oscuro' : '';
-                return `<div class="alc-seg" style="width:${p}%;background:${x.color}" title="${k} · ${x.label}: ${x.n}">${p>=16?`<span class="alc-seg-num${oscuro}">${x.n}</span>`:''}</div>`;
+                return `<div class="alc-seg" style="width:${p}%;background:${x.color}" title="${k} · ${x.label}: ${x.n} ${x.n===1?'área':'áreas'} · ${fmt(x.ha)} ha">${cabe?`<span class="alc-seg-num${oscuro}">${x.n}</span>`:''}</div>`;
               }).join('')}
             </div>
-            <span class="alc-total">${fmt(s.sup)} ha · ${s.total}</span>
+            <span class="alc-total">${fmt(s.sup)} ha · ${s.total} ${s.total===1?'área':'áreas'}${s.arcac ? `<span class="alc-arcac">+ ${s.arcac} ARCAC · ${fmt(s.supArcac)} ha</span>` : ''}</span>
           </div>`;
         }).join('')}
       </div>

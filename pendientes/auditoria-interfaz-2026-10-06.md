@@ -10,12 +10,12 @@ Lo que ya está en `pendientes.md` no se repite aquí.
 
 ## Alta · el dato que se ve no es el correcto
 
-### UI-01 · «Reparto por alcaldía» suma ARCAC aunque dice que no
+### UI-01 · «Reparto por alcaldía» suma ARCAC aunque dice que no · ✅ corregido en v82 (`sia-v35-2026-10-06a`)
 Análisis → Brechas y distribución. La leyenda dice «ARCAC · no suma al inventario», pero el total de cada fila y la longitud de la barra incluyen los núcleos ARCAC (`alcStats[k].total++` y `.sup +=` en `app.js:1365`). Ejemplo: Tlalpan aparece con **26,450.04 ha · 21**, cuando en el inventario tiene **11 áreas y 12,511.42 ha**; las otras 10 y ~13,900 ha son ARCAC. El orden de las alcaldías también cambia por ello: Milpa Alta sube al tercer lugar casi solo por ARCAC. `alcStats[k].supInv` ya existe y no se usa en la gráfica.
 Además, la barra mezcla dos medidas: su longitud es superficie y sus segmentos son conteos. En las barras cortas los números se enciman (Miguel Hidalgo «1 2 1») y Coyoacán, Venustiano Carranza y Cuauhtémoc quedan casi invisibles.
 **Propuesta:** total y orden por `supInv` y conteo sin ARCAC; ARCAC como dato aparte en la fila (o fuera de la gráfica, como en «Los cuatro grupos»); ocultar el número del segmento cuando el segmento mida menos de ~24 px.
 
-### UI-02 · Gráficas por sexenio: color de marca solo para las dos últimas administraciones e interinatos sin aviso
+### UI-02 · Gráficas por sexenio: color de marca solo para las dos últimas administraciones e interinatos sin aviso · decisión 6-oct: se conservan los colores y no se agrega nota de interinatos
 «Cuántas áreas se decretaron» y «Cuántos programas de manejo se publicaron» pintan a C. Sheinbaum y C. Brugada en guinda (el color institucional del gobierno actual) y a las tres anteriores en morado (`gobiernos`, `app.js:1769`). En un tablero institucional eso puede leerse como énfasis político.
 Los interinatos (Encinas, Amieva, Batres) se suman al periodo que termina, decisión documentada en el código pero invisible en pantalla. Por ejemplo, Tepepolco (decreto del 17/07/2024, interinato de Batres) cuenta para «C. Sheinbaum 2018–2024», y esa misma cifra es la línea base de **Metas**. «AMLO» va con siglas y los demás con inicial y apellido.
 **Propuesta:** un solo color para todas las barras (o resaltar solo la que se señala con el cursor); una nota bajo cada gráfica: «Cada periodo incluye su interinato (Encinas 2005–06, Amieva 2018, Batres 2023–24)»; nombres con el mismo formato.

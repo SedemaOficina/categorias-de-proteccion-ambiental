@@ -743,7 +743,8 @@
   .alc-leg-swatch{display:inline-block;width:14px;height:11px;border-radius:var(--r-chip);flex-shrink:0}
 
   .alc-stacked{display:flex;flex-direction:column;gap:7px}
-  .alc-row{display:grid;grid-template-columns:1.3fr 2.4fr auto;gap:12px;align-items:center;font-size:var(--fs-base)}
+  /* v82: la columna del total tiene ancho fijo; con `auto` cada fila medía distinto y las barras no arrancaban en el mismo punto. */
+  .alc-row{display:grid;grid-template-columns:1.3fr 2.4fr 11.5rem;gap:12px;align-items:center;font-size:var(--fs-base)}
   .alc-name{color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400}
   .alc-track{display:flex;height:22px;background:var(--bg-2);border-radius:var(--r-ui);overflow:hidden;transition:width .4s cubic-bezier(.2,.8,.2,1)}
   .alc-seg{display:flex;align-items:center;justify-content:center;height:100%;color:#fff;font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);font-weight:600;letter-spacing:.02em;cursor:help;transition:filter .15s;border-right:1px solid rgba(255,255,255,.25);min-width:0}
@@ -752,12 +753,17 @@
   .alc-seg-num{padding:0 4px;text-shadow:0 1px 2px rgba(0,0,0,.25)}
   .alc-seg-num-oscuro{color:#3b1d00;text-shadow:none}
   .alc-total{font-family:'Roboto',sans-serif;font-size:var(--fs-sm);color:var(--ink);white-space:nowrap;min-width:90px;text-align:right;font-weight:600}
+  /* v82: ARCAC fuera de la barra, como dato aparte bajo el total de la alcaldía. */
+  .alc-arcac{display:block;font-size:var(--fs-xs);font-weight:400;color:var(--muted)}
+  /* Las alcaldías con muy poca superficie (Coyoacán, Cuauhtémoc, V. Carranza) no deben desaparecer. */
+  .alc-track{min-width:4px}
 
   /* Mobile: stack vertical para legibilidad */
   @media (max-width:640px){
     .alc-row{grid-template-columns:1fr;gap:4px}
     .alc-name{font-size:var(--fs-sm);font-weight:500;color:var(--ink)}
-    .alc-track{width:100% !important;height:20px}
+    /* v82: la barra conserva su largo proporcional también en celular (antes todas a 100 %). */
+    .alc-track{height:20px}
     .alc-total{text-align:left;font-size:var(--fs-xs);color:var(--muted)}
     .alc-legend{font-size:var(--fs-micro);gap:8px 12px;padding:8px 10px}
     .alc-leg-swatch{width:12px;height:9px}
