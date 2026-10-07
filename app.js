@@ -5627,7 +5627,9 @@ function _capasActivasFicha(){
       out.push({ id:'extra', fc: ctxC.arcac.toGeoJSON(), estilo:{ fill:col, fillAlpha:.18, stroke:col, width:2 }, leyenda:'ARCAC' });
     }
     if(ctxC && ctxC.zp && activeMap.hasLayer(ctxC.zp)){
-      out.push({ id:'extra', fc: ctxC.zp.toGeoJSON(), estilo:{ fill:'#444441', fillAlpha:.06, stroke:'#444441', width:2, dash:[3,6] }, leyenda:'Zona Patrimonio' });
+      /* Trazo continuo: el punteado sobre los cientos de vértices de SIPAM y
+         Ramsar se volvía una nube de puntos en la imagen (v91). */
+      out.push({ id:'extra', fc: ctxC.zp.toGeoJSON(), estilo:{ fill:'#444441', fillAlpha:.04, stroke:'rgba(68,68,65,.55)', width:1 }, leyenda:'Zona Patrimonio' });
     }
   }catch(_){}
   return out;
@@ -5843,8 +5845,31 @@ function conectarCompartir(descOrFn){
 }
 
 async function compartirFichaImagen(d, btn){
-  const W=1080, H=1440;
   try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(_){}
+  /* v91 (7-oct-2026): el alto ya no es fijo. Con 1440 px y mucha información
+     (fichas desde una ubicación, varias coberturas, zonificación y PGOEDF)
+     las filas se apretaban, los valores largos se cortaban a un renglón y la
+     leyenda se salía del recuadro. Ahora se mide todo antes de dibujar: el
+     lienzo mide 1080 de ancho y al menos 1440 de alto, y crece lo necesario
+     para que cada valor quepa completo. */
+  const W = 1080, BOX_H = 430, COL_V = 378, ANCHO_V = W - 48 - COL_V;
+  const med = document.createElement('canvas').getContext('2d');
+  const logo = document.querySelector('.logo-inst');
+  const logoH = (logo && logo.complete && logo.naturalWidth) ? Math.min(600, W-96) * logo.naturalHeight / logo.naturalWidth : 0;
+  med.font = '900 54px Roboto, sans-serif';
+  const lineasNombre = _wrapText(med, d.nombre || '', W-96);
+  med.font = '400 28px Roboto, sans-serif';
+  const lineasSub = d.subtitulo ? _wrapText(med, d.subtitulo, W-96) : [];
+  med.font = '500 25px Roboto, sans-serif';
+  const filasMed = (d.filas || []).map(([k, v]) => {
+    const lineas = _wrapText(med, String(v == null ? '' : v), ANCHO_V);
+    return { k, lineas, alto: Math.max(1, lineas.length) * 32 + 16 };
+  });
+  const altoFilas = filasMed.reduce((a, f) => a + f.alto, 0);
+  const altoNecesario = 54 + (logoH ? logoH + 26 : 20) + 3 + 44 + 92
+                      + lineasNombre.length * 62 + 6 + lineasSub.length * 36 + 8
+                      + BOX_H + 78 + 34 + 64 + altoFilas + 30 + 120;
+  const H = Math.max(1440, Math.ceil(altoNecesario));
   const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
   const ctx=cv.getContext('2d');
   const color = d.color || colorLiteral('var(--guinda)');
@@ -5853,11 +5878,9 @@ async function compartirFichaImagen(d, btn){
 
   /* Encabezado institucional */
   let y=54;
-  const logo=document.querySelector('.logo-inst');
-  if(logo && logo.complete && logo.naturalWidth){
-    const lw=Math.min(600, W-96), lh=lw*logo.naturalHeight/logo.naturalWidth;
-    try{ ctx.drawImage(logo,48,y,lw,lh); y+=lh+26; }catch(_){ y+=20; }
-  }
+  if(logoH){
+    try{ ctx.drawImage(logo,48,y,Math.min(600, W-96),logoH); y+=logoH+26; }catch(_){ y+=20; }
+  } else y+=20;
   ctx.fillStyle=colorLiteral('var(--guinda)'); ctx.fillRect(48,y,W-96,3); y+=44;
 
   /* Badge de categoría */
@@ -5871,18 +5894,18 @@ async function compartirFichaImagen(d, btn){
 
   /* Nombre */
   ctx.fillStyle='#2a2a2a'; ctx.font='900 54px Roboto, sans-serif';
-  _wrapText(ctx,d.nombre,W-96).forEach(l=>{ ctx.fillText(l,48,y); y+=62; });
+  lineasNombre.forEach(l=>{ ctx.fillText(l,48,y); y+=62; });
   y+=6;
   ctx.fillStyle='#55585a'; ctx.font='400 28px Roboto, sans-serif';
-  ctx.fillText(d.subtitulo||'',48,y); y+=44;
+  lineasSub.forEach(l=>{ ctx.fillText(l,48,y); y+=36; });
+  y+=8;
 
   /* Polígono */
   const geo = d.geo || null;
   /* La caja del mapa cede alto cuando hay muchas filas: con doce renglones
      (ficha abierta desde una ubicación, con zonificación y PGOEDF) el paso
      entre filas bajaba a 25 px y los filetes cortaban el texto. */
-  const nFilas = (d.filas || []).length;
-  const boxH = nFilas > 11 ? 340 : nFilas > 9 ? 380 : 430;
+  const boxH = BOX_H;
   ctx.fillStyle='#f8f4e0'; ctx.fillRect(48,y,W-96,boxH);
   ctx.strokeStyle='#eae4cf'; ctx.lineWidth=2; ctx.strokeRect(48,y,W-96,boxH);
   const ctxU = _fichaCtxUbic;
@@ -5926,17 +5949,29 @@ async function compartirFichaImagen(d, btn){
     if(T && d.soloPunto) T.soloPunto = true;
     _drawGeoInBox(ctx,geo,48,y,W-96,boxH,color,ctxU,T);
     if(leyenda.length){
-      /* Leyenda de capas dentro del recuadro, arriba a la izquierda. */
+      /* Leyenda de capas dentro del recuadro, arriba a la izquierda, en las
+         filas que haga falta (v91: antes iba en una sola y se salía del
+         recuadro con cinco o más capas). */
       ctx.save();
       ctx.font='500 17px Roboto, sans-serif';
-      let lx = 48+12, ly = y+12;
-      const anchoTotal = leyenda.reduce((a,l)=>a + 28 + ctx.measureText(l.txt).width + 18, 0);
-      ctx.fillStyle='rgba(255,255,255,.88)'; ctx.fillRect(lx-6, ly-4, Math.min(anchoTotal+6, W-96-12), 30);
+      const x0 = 48+12, xMax = W-48-12, filaH = 28;
+      const filasLey = [[]]; let ancho = 0;
       leyenda.forEach(l=>{
-        if(l.dash){ ctx.strokeStyle=l.col; ctx.lineWidth=3; ctx.setLineDash([6,4]); ctx.beginPath(); ctx.moveTo(lx, ly+11); ctx.lineTo(lx+20, ly+11); ctx.stroke(); ctx.setLineDash([]); }
-        else { ctx.fillStyle=l.col; ctx.fillRect(lx+2, ly+3, 16, 16); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.strokeRect(lx+2, ly+3, 16, 16); }
-        ctx.fillStyle='#2a2a2a'; ctx.fillText(l.txt, lx+28, ly+17);
-        lx += 28 + ctx.measureText(l.txt).width + 18;
+        const w = 28 + ctx.measureText(l.txt).width + 18;
+        if(ancho + w > xMax - x0 && filasLey[filasLey.length-1].length){ filasLey.push([]); ancho = 0; }
+        filasLey[filasLey.length-1].push(l); ancho += w;
+      });
+      const anchoMax = Math.max(...filasLey.map(f => f.reduce((a,l)=>a + 28 + ctx.measureText(l.txt).width + 18, 0)));
+      ctx.fillStyle='rgba(255,255,255,.9)';
+      ctx.fillRect(x0-6, y+8, Math.min(anchoMax+6, xMax-x0+6), filasLey.length*filaH + 8);
+      filasLey.forEach((fila, i)=>{
+        let lx = x0; const ly = y + 12 + i*filaH;
+        fila.forEach(l=>{
+          if(l.dash){ ctx.strokeStyle=l.col; ctx.lineWidth=3; ctx.setLineDash([6,4]); ctx.beginPath(); ctx.moveTo(lx, ly+11); ctx.lineTo(lx+20, ly+11); ctx.stroke(); ctx.setLineDash([]); }
+          else { ctx.fillStyle=l.col; ctx.fillRect(lx+2, ly+3, 16, 16); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.strokeRect(lx+2, ly+3, 16, 16); }
+          ctx.fillStyle='#2a2a2a'; ctx.fillText(l.txt, lx+28, ly+17);
+          lx += 28 + ctx.measureText(l.txt).width + 18;
+        });
       });
       ctx.restore();
     }
@@ -5995,22 +6030,17 @@ async function compartirFichaImagen(d, btn){
   ctx.fillText(d.grandeLabel || d.supLabel || 'SUPERFICIE',48,y); y+=64;
 
   /* Datos duros */
-  const filas = d.filas || [];
-  /* El paso entre filas se calcula, no se fija: al pasar de cinco a ocho
-     filas el bloque se metía debajo del pie y la última renglonada quedaba
-     encimada con el filete. Se reparte el espacio que queda hasta el pie,
-     con un tope de 46 px para que con pocas filas no se vea estirado. */
-  const PIE_Y = H - 120;
-  const paso  = Math.max(30, Math.min(46, Math.floor((PIE_Y - y) / filas.length)));
-  filas.forEach(([k,v])=>{
-    if(y > PIE_Y) return;                       /* nunca invadir el pie */
-    ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='500 19px "Roboto Mono", monospace'; ctx.fillText(k,48,y);
+  /* v91: cada fila mide lo que su valor necesita (renglones de 32 px) y el
+     filete va debajo del último renglón, con aire: ya no se cortan valores ni
+     se encima el texto con la línea. El lienzo creció lo necesario arriba. */
+  filasMed.forEach(f=>{
+    ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='500 19px "Roboto Mono", monospace'; ctx.fillText(f.k,48,y);
     ctx.fillStyle='#2a2a2a'; ctx.font='500 25px Roboto, sans-serif';
-    const lines=_wrapText(ctx,v,W-96-330);
-    ctx.fillText(lines[0]||'',378,y);
+    f.lineas.forEach((l, i)=> ctx.fillText(l, COL_V, y + i*32));
+    const yLinea = y + (Math.max(1, f.lineas.length) - 1)*32 + 14;
     ctx.strokeStyle='#eae4cf'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(48,y+paso-32); ctx.lineTo(W-48,y+paso-32); ctx.stroke();
-    y+=paso;
+    ctx.beginPath(); ctx.moveTo(48,yLinea); ctx.lineTo(W-48,yLinea); ctx.stroke();
+    y += f.alto;
   });
 
   /* Pie */
