@@ -40,9 +40,12 @@ for(const P of PERFILES){
  const dests=await pg.evaluate(()=>[...document.querySelectorAll('.dest[data-dest]')].map(b=>b.dataset.dest));
  for(const d of dests){
    await pg.evaluate(d=>{const b=document.querySelector(`.dest[data-dest="${d}"]`); b&&b.click();}, d); await pg.waitForTimeout(1200);
-   const subs=await pg.evaluate(()=>[...document.querySelectorAll('.subchip[data-id]')].map(b=>b.dataset.id));
+   /* Análisis (v88) abre en una portada de tarjetas sin chips: se audita la
+      portada (null) y después cada sección entrando por su tarjeta. */
+   const subs=await pg.evaluate(()=>{ const c=[...document.querySelectorAll('.subchip[data-id]')].map(b=>b.dataset.id); if(c.length) return c;
+     const t=[...document.querySelectorAll('.an-card[data-ir]')].map(b=>b.dataset.ir); return t.length ? [null, ...t] : []; });
    for(const s of (subs.length?subs:[null])){
-     if(s){ await pg.evaluate(s=>{const b=document.querySelector(`.subchip[data-id="${s}"]`); b&&b.click();}, s); await pg.waitForTimeout(1500); }
+     if(s){ await pg.evaluate(s=>{const b=document.querySelector(`.subchip[data-id="${s}"]`)||document.querySelector(`.an-card[data-ir="${s}"]`); b&&b.click();}, s); await pg.waitForTimeout(1500); }
      const m=await pg.evaluate(()=>{
        const vw=document.documentElement.clientWidth; const hs=document.documentElement.scrollWidth>vw+1;
        const fuera=[]; for(const el of document.querySelectorAll('body *')){ const r=el.getBoundingClientRect(); if(r.width>0&&r.height>0&&r.right>vw+2&&getComputedStyle(el).position!=='fixed'&&!el.closest('.leaflet-container')&&!el.closest('.tabla-scroll,.table-wrap,[style*="overflow"]')) { fuera.push((el.tagName+'.'+String(el.className).split(' ')[0]).slice(0,40)); if(fuera.length>5) break; } }

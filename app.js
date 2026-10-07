@@ -449,6 +449,8 @@ const GROUPS = [
   {id:'ZP',      label:'Zona Patrimonio', cls:'zp',     key:'ZONA_PATRIMONIO'},
   {id:'ARCAC',   label:'ARCAC',           cls:'arcac',  key:'ARCAC'},
   {id:'TRASLAPES',label:'Traslapes',      cls:'traslapes',key:'TRASLAPES'},
+  /* Portada de Análisis (v88): cuatro tarjetas que llevan a cada sección. */
+  {id:'PORTADA', label:'Análisis',        cls:'analisis',key:'PORTADA'},
   {id:'ANALISIS',label:'Análisis',        cls:'analisis',key:'ANALISIS'},
   {id:'METAS',   label:'Metas',           cls:'metas',  key:'METAS'},
   {id:'LEGAL',   label:'Marco Jurídico',  cls:'legal',  key:'LEGAL'},
@@ -723,7 +725,7 @@ const currentGroup = () => GROUPS.find(g=>g.id===state.tab);
 /* Pestañas con página propia: no usan la tabla compartida ni sus filtros.
    TRASLAPES entró aquí el 11-sep-2026; estaba fuera por descuido y hacía que
    render() y populateFilters() trabajaran sobre una tabla oculta. */
-const isSpecialTab = (id) => id==='LEGAL' || id==='METAS' || id==='ANALISIS' || id==='ZP' || id==='TRASLAPES';
+const isSpecialTab = (id) => id==='PORTADA' || id==='LEGAL' || id==='METAS' || id==='ANALISIS' || id==='ZP' || id==='TRASLAPES';
 /* ════════════════════════════════════════════════════════════════════
  * ARCAC en la tabla general · 11 sep 2026
  * Los 30 núcleos NO entran a DATA ni a GEOMETRIES: el inventario sigue
@@ -789,7 +791,8 @@ const DEST_ICONS = {
 const DESTINOS = [
   { id:'UBICAR',     label:'Ubicar',     sub:[] },
   { id:'INVENTARIO', label:'Inventario', sub:['ALL','BU','BR','ANPL','ANPF','COADMIN','ARCAC','ZP'] },
-  { id:'ANALITICA',  label:'Análisis',   sub:['ANALISIS','TRASLAPES','METAS','LEGAL'] },
+  /* PORTADA primero: al entrar a Análisis se llega a las cuatro tarjetas. */
+  { id:'ANALITICA',  label:'Análisis',   sub:['PORTADA','ANALISIS','TRASLAPES','METAS','LEGAL'] },
 ];
 
 /* Punto de color del subfiltro: solo donde el color significa territorio. */
@@ -805,7 +808,7 @@ function subLabel(id){
             ANPF:'ANP Federales', COADMIN:'En coadministración',
             ZP:'Zona Patrimonio', ARCAC:'ARCAC',
             TRASLAPES:'Traslapes', ANALISIS:'Brechas y distribución',
-            METAS:'Metas', LEGAL:'Marco jurídico' })[id] || id;
+            METAS:'Metas', LEGAL:'Marco jurídico', PORTADA:'Análisis' })[id] || id;
 }
 function subCount(id){
   if(id==='ALL') return fmtInt(DATA.length);
@@ -813,7 +816,7 @@ function subCount(id){
   if(id==='ARCAC') return '30';
   if(id==='TRASLAPES') return '35 pares';
   if(id==='COADMIN') return fmtInt(DATA.filter(d=>isCoadmin(d.nombre)).length);
-  if(id==='ANALISIS' || id==='METAS' || id==='LEGAL') return '';
+  if(id==='PORTADA' || id==='ANALISIS' || id==='METAS' || id==='LEGAL') return '';
   const g = GROUPS.find(x=>x.id===id);
   return g ? fmtInt(DATA.filter(d=>d.grupo===g.key).length) : '';
 }
@@ -832,15 +835,22 @@ function buildTabs(){
         <span class="dest-lbl">${d.label}</span>
       </button>`).join('');
 
-  const chips = dest.sub.map(id=>{
+  /* Análisis (v88): en la portada no hay chips —las tarjetas son la
+     navegación—; dentro de una sección, «← Análisis» y las cuatro secciones
+     como pestañas (son páginas, no filtros). */
+  const enAnalisis = dest.id === 'ANALITICA';
+  const subIds = enAnalisis ? (state.tab === 'PORTADA' ? [] : dest.sub.filter(id => id !== 'PORTADA')) : dest.sub;
+  const chips = subIds.map(id=>{
     const sw = SUB_SW[id] ? `<span class="sw" style="background:${SUB_SW[id]}"></span>` : '';
     const n  = subCount(id);
     return `<button type="button" class="subchip ${state.tab===id?'active':''}" data-id="${id}"
               aria-current="${state.tab===id?'true':'false'}">${sw}${subLabel(id)}${n?`<span class="n">${n}</span>`:''}</button>`;
   }).join('');
+  const volver = enAnalisis && chips
+    ? `<button type="button" class="subchip subchip-volver" data-id="PORTADA" aria-label="Volver a la portada de Análisis">← Análisis</button>` : '';
 
   el.innerHTML = `<div class="destbar" role="tablist">${barra}</div>` +
-                 `<div class="subnav">${chips ? `<span class="subnav-lbl">Filtrar</span>${chips}` : ''}</div>`;
+                 `<div class="subnav${enAnalisis ? ' subnav-secciones' : ''}">${chips ? `${volver}<span class="subnav-lbl">${enAnalisis ? 'Sección' : 'Filtrar'}</span>${chips}` : ''}</div>`;
 
   el.querySelectorAll('.dest[data-dest]').forEach(b=>{
     b.addEventListener('click',()=>{
@@ -1076,7 +1086,11 @@ function renderDashboard(){
     return;
   }
 
-  if(g.id==='LEGAL'){
+  if(g.id==='PORTADA'){
+    dash.innerHTML = renderPortadaAnalisis();
+    tblSec.style.display = 'none';
+    if(mapSec) mapSec.style.display = 'none';
+  } else if(g.id==='LEGAL'){
     dash.innerHTML = renderLegalDashboard();
     tblSec.style.display = 'none';
     if(mapSec) mapSec.style.display = 'none';
@@ -1257,6 +1271,66 @@ function renderGlobalDashboard(){
 }
 
 /* ===== Página Metas: comparativo de administraciones + sección Brechas ===== */
+/* ═══ PORTADA DE ANÁLISIS (v88, 6-oct-2026) ═══════════════════════════
+   Los cuatro chips de Análisis se perdían: parecían filtros y eran cuatro
+   páginas distintas. Al entrar a Análisis se llega aquí, a cuatro tarjetas
+   con la pregunta que responde cada sección y su cifra clave, calculada en
+   vivo sobre DATA (ninguna escrita a mano). Dentro de cada sección, la
+   barra lleva «← Análisis» y las cuatro secciones como pestañas. */
+function renderPortadaAnalisis(){
+  const totArea = sum(DATA,'superficie');
+  const sinPM   = DATA.filter(d=>d.programa_manejo!=='Sí');
+  const pctSin  = totArea ? Math.round(sum(sinPM,'superficie') / totArea * 100) : 0;
+  const pares   = parseInt(subCount('TRASLAPES'), 10) || 0;
+  let m = null;
+  try{
+    const loc = x => x.BU.length + x.BR.length + x.ANPL.length;
+    const ant = computeAdminStats('2018-12-05', '2024-10-04');
+    const act = computeAdminStats('2024-10-05', new Date().toISOString().slice(0,10));
+    m = { dAct: loc(act.dec), dAnt: loc(ant.dec), pAct: loc(act.pm), pAnt: loc(ant.pm) };
+  }catch(_){}
+  const T = [
+    { id:'ANALISIS', rot:'Diagnóstico', tit:'Brechas y distribución',
+      preg:'¿Qué le falta al sistema y cómo se reparte en el territorio?',
+      cifra:`${pctSin}<span class="u">%</span>`, nota:'de la superficie protegida no tiene programa de manejo' },
+    { id:'TRASLAPES', rot:'Análisis espacial', tit:'Traslapes',
+      preg:'¿Dónde se superponen dos instrumentos de protección sobre el mismo predio?',
+      cifra:fmtInt(pares), nota:'pares de áreas que se superponen' },
+    { id:'METAS', rot:'Planeación sexenal', tit:'Metas',
+      preg:'¿Cuánto se ha decretado y publicado en esta administración frente a la anterior?',
+      cifra: m ? `${m.dAct}<span class="u">/ ${m.dAnt}</span>` : '—',
+      nota: m ? `decretos locales en la administración actual frente a la anterior · programas de manejo: ${m.pAct} / ${m.pAnt}` : 'comparativo entre administraciones' },
+    { id:'LEGAL', rot:'Fundamento', tit:'Marco jurídico',
+      preg:'¿Qué leyes y convenios sostienen cada categoría de protección?',
+      cifra:'4', nota:'ordenamientos con su PDF: Constitución CDMX, LGEEPA, Ley Ambiental y Convenio 2025' }
+  ];
+  return `
+    <div class="panel an-intro">
+      <div class="panel-title">Análisis del sistema</div>
+      <h3>¿Qué quieres <em>analizar</em>?</h3>
+      <p class="panel-intro">Cuatro secciones, cada una responde una pregunta. Todas las cifras se calculan sobre el inventario en vivo.</p>
+    </div>
+    <div class="an-portada">
+      ${T.map(t => `
+      <button type="button" class="an-card" data-ir="${t.id}">
+        <span class="an-rot">${t.rot}</span>
+        <span class="an-tit">${t.tit}</span>
+        <span class="an-preg">${t.preg}</span>
+        <span class="an-cifra">${t.cifra}</span>
+        <span class="an-nota">${esc(t.nota)}</span>
+        <span class="an-ir">Entrar <span aria-hidden="true">→</span></span>
+      </button>`).join('')}
+    </div>`;
+}
+document.addEventListener('click', e => {
+  const c = e.target && e.target.closest && e.target.closest('.an-card[data-ir]');
+  if(!c) return;
+  state.tab = c.dataset.ir;
+  limpiarFiltros();
+  buildTabs(); populateFilters(); renderDashboard(); render();
+  window.scrollTo({top:0, behavior:_suave()});
+});
+
 function renderMetasPage(){
   /* Las brechas se mudaron a «Análisis» el 11-sep-2026: el chip de allá las
      promete por nombre y aquí quedaban escondidas detrás de otra pregunta. */

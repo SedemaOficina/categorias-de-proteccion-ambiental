@@ -2962,3 +2962,35 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
   .wrap.ubi-lateral main#main-content:has(#ubicarResultado) > #globalMapSection{grid-column:2;grid-row:3;min-width:0;margin:0;position:static}
   .wrap.ubi-lateral #ubicarResultado .ubi-ctx{flex-wrap:wrap}
 }
+
+/* ═══ PORTADA DE ANÁLISIS (v88, 6-oct-2026) ══════════════════════════════
+   Cuatro tarjetas, una por sección (Brechas, Traslapes, Metas, Marco
+   jurídico): la pregunta que responde y su cifra clave. Dos columnas en
+   escritorio, una en celular. Dentro de cada sección, la barra lleva
+   «← Análisis» y las secciones como pestañas. */
+.an-portada{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:0 0 18px}
+.an-card{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;
+  background:var(--card);border:1px solid var(--line-soft);border-left:4px solid var(--guinda);
+  border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);cursor:pointer;
+  font:inherit;color:var(--ink);transition:transform .15s, box-shadow .15s, border-color .15s}
+.an-card:hover{transform:translateY(-2px);box-shadow:var(--sh-3, 0 8px 24px rgba(42,42,42,.12));border-color:var(--line)}
+.an-card:focus-visible{outline:2px solid var(--guinda);outline-offset:3px}
+.an-card[data-ir="TRASLAPES"]{border-left-color:var(--magenta)}
+.an-card[data-ir="METAS"]{border-left-color:var(--dorado)}
+.an-card[data-ir="LEGAL"]{border-left-color:var(--gris, #55585a)}
+.an-rot{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--guinda)}
+.an-tit{font-family:'Cabin','Roboto',sans-serif;font-size:var(--fs-2xl);font-weight:700;line-height:1.15}
+.an-preg{font-size:var(--fs-base);color:var(--ink-2);line-height:1.45}
+.an-cifra{margin-top:8px;font-family:'Roboto',sans-serif;font-size:var(--fs-mega);font-weight:900;line-height:1;letter-spacing:-.02em}
+.an-cifra .u{font-size:var(--fs-lg);font-weight:500;color:var(--muted);margin-left:4px}
+.an-nota{font-size:var(--fs-sm);color:var(--muted);line-height:1.4}
+.an-ir{margin-top:10px;font-weight:700;color:var(--guinda);font-size:var(--fs-sm)}
+.an-card:hover .an-ir span{display:inline-block;transform:translateX(3px);transition:transform .15s}
+/* Barra de secciones dentro de Análisis: «← Análisis» separado de las pestañas. */
+.subnav-secciones .subchip-volver{background:transparent;border-color:transparent;color:var(--guinda);font-weight:700;padding-left:4px}
+.subnav-secciones .subchip-volver:hover{text-decoration:underline}
+@media (max-width:760px){
+  .an-portada{grid-template-columns:1fr;gap:12px}
+  .an-card{padding:16px 18px}
+  .an-tit{font-size:var(--fs-xl)}
+}
