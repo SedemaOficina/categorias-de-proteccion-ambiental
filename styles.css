@@ -3103,3 +3103,52 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
 /* Botones «Entrar» alineados al fondo de cada tarjeta aunque los textos midan distinto. */
 .an-nota{margin-bottom:14px}
 .an-portada .an-ir{margin-top:auto}
+
+/* ═══ TABLETA Y PANTALLAS TÁCTILES (v92, auditoría del 7-oct-2026) ═══════
+   1. Tabla del Inventario de 761 a 1199 px (iPad vertical y horizontal): con
+      las once columnas, en iPad vertical la de hectáreas salía cortada y PM,
+      SC, Fecha PM y DG quedaban fuera; en horizontal se cortaban encabezados
+      y la columna DG. Ahí se quedan siete: Nombre, Tipo, Subcategoría,
+      Alcaldía, Ha, PM y SC. Jurisdicción, Decreto, Fecha PM y DG siguen en la
+      ficha. Columnas: 1 Nombre · 2 Tipo · 3 Jur. · 4 Subcat. · 5 Alcaldía ·
+      6 Decreto · 7 Ha · 8 PM · 9 Fecha PM · 10 SC · 11 DG.
+   2. Objetivos táctiles de 44 px en pantallas táctiles de cualquier ancho
+      (en iPad el diseño es el de escritorio, pero se usa con el dedo).
+   3. La leyenda «pasa el cursor para ver el nombre completo» sobra donde no
+      hay cursor. */
+@media (min-width:761px) and (max-width:1199px){
+  #tableSection table.t th:nth-child(3),#tableSection table.t td:nth-child(3),
+  #tableSection table.t th:nth-child(6),#tableSection table.t td:nth-child(6),
+  #tableSection table.t th:nth-child(9),#tableSection table.t td:nth-child(9),
+  #tableSection table.t th:nth-child(11),#tableSection table.t td:nth-child(11){display:none}
+  #tableSection table.t th:nth-child(1),#tableSection table.t td:nth-child(1){width:34%}
+}
+@media (pointer:coarse){
+  .ubicar-limpiar{width:44px;height:44px}
+  .legal-indice button{min-height:44px}
+  .brecha-card-details > summary,.meta-det > summary,.panel details > summary{min-height:44px;display:flex;align-items:center}
+  .btn-share-area,.ubi-compartir{min-height:44px}
+  .tabla-leyenda .lg-sub{display:none}
+}
+/* La regla de 900 px (`table.t{min-width:980px}`) obligaba al desplazamiento
+   lateral en iPad vertical aunque ya solo quedan siete columnas: en tableta la
+   tabla se ajusta al ancho. */
+@media (min-width:761px) and (max-width:1199px){
+  #tableSection table.t{min-width:0;table-layout:fixed}
+}
+@media (min-width:761px) and (max-width:1199px){
+  /* Reparto a mano para que ni «Tipo» ni «1,100.0» se corten. */
+  #tableSection table.t th:nth-child(1),#tableSection table.t td:nth-child(1){width:30%}
+  #tableSection table.t th:nth-child(2),#tableSection table.t td:nth-child(2){width:10%}
+  #tableSection table.t th:nth-child(4),#tableSection table.t td:nth-child(4){width:10%}
+  #tableSection table.t th:nth-child(5),#tableSection table.t td:nth-child(5){width:19%}
+  #tableSection table.t th:nth-child(7),#tableSection table.t td:nth-child(7){width:12%}
+  #tableSection table.t th:nth-child(8),#tableSection table.t td:nth-child(8){width:7%}
+  #tableSection table.t th:nth-child(10),#tableSection table.t td:nth-child(10){width:12%}
+}
+@media (min-width:761px) and (max-width:1199px){
+  /* El nombre completo en dos renglones, no cortado con «…». */
+  #tableSection table.t td.name{white-space:normal;overflow:visible;text-overflow:clip}
+  #tableSection table.t th:nth-child(2),#tableSection table.t td:nth-child(2){width:9%}
+  #tableSection table.t th:nth-child(4),#tableSection table.t td:nth-child(4){width:11%}
+}
