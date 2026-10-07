@@ -3084,3 +3084,22 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
 .btn-ext.btn-pdf-federal .pdf-badge{background:#c0392b}
 .btn-ext span b{display:block}
 .btn-ext .ext-fuente{display:block;font-size:var(--fs-micro);color:var(--muted);font-weight:400}
+
+/* ═══ AJUSTES 7-OCT (v91) ══════════════════════════════════════════════
+   1. Chips cortados en celular: la tira (.subnav) se desplaza de lado
+      (overflow-x:auto), lo que también recorta en vertical; los chips
+      arrancaban en su borde y perdían la línea superior y la sombra.
+   2. «Entrar» de las tarjetas de Análisis: era texto guinda pequeño y las
+      tarjetas parecían solo informativas. Ahora es un botón lleno. */
+@media (max-width:760px){
+  .subnav{padding-top:4px;padding-bottom:6px}
+}
+.an-ir{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin-top:14px;
+  padding:10px 18px;min-height:44px;border-radius:22px;background:var(--guinda);color:var(--crema);
+  font-weight:700;font-size:var(--fs-base);box-shadow:0 2px 6px rgba(157,33,72,.25);transition:background .15s, transform .15s}
+.an-card:hover .an-ir{background:var(--guinda-900, #7a1a38)}
+.an-card:hover .an-ir span{transform:translateX(3px)}
+.an-ir span{display:inline-block;transition:transform .15s}
+/* Botones «Entrar» alineados al fondo de cada tarjeta aunque los textos midan distinto. */
+.an-nota{margin-bottom:14px}
+.an-portada .an-ir{margin-top:auto}

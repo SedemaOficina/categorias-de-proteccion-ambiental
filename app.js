@@ -1308,7 +1308,7 @@ function renderPortadaAnalisis(){
       preg:'¿Qué le falta al sistema y cómo se reparte en el territorio?',
       cifra:`${pctSin}<span class="u">%</span>`, nota:'de la superficie protegida no tiene programa de manejo' },
     { id:'TRASLAPES', rot:'Análisis espacial', tit:'Traslapes',
-      preg:'¿Dónde se superponen dos instrumentos de protección sobre el mismo predio?',
+      preg:'¿Dónde se superponen dos instrumentos de protección sobre el mismo polígono?',
       cifra:fmtInt(pares), nota:'pares de áreas que se superponen' },
     { id:'METAS', rot:'Planeación sexenal', tit:'Metas',
       preg:'¿Cuánto se ha decretado y publicado en esta administración frente a la anterior?',
@@ -1499,7 +1499,7 @@ function renderAnalisisPage(){
       <p class="panel-intro" style="margin-top:8px">Dos preguntas: qué le falta al sistema y cómo se
         reparte. Todo se calcula sobre el inventario en vivo, así que estas cifras cambian solas cuando
         cambia el Sheet. Para el comparativo entre administraciones, ve a <b>Metas</b>; para la
-        superposición de instrumentos sobre un mismo predio, a <b>Traslapes</b>.</p>
+        superposición de instrumentos sobre un mismo polígono, a <b>Traslapes</b>.</p>
     </div>
 
     <div class="hero hero-3">
@@ -1634,7 +1634,7 @@ function renderAnalisisPage(){
       <div class="panel-title">Composición</div>
       <h3>Los cuatro grupos del <em>inventario</em></h3>
       <p class="panel-intro">Las superficies son las decretadas; la suma de las cuatro excede la
-        superficie realmente protegida, porque hay predios cubiertos por dos instrumentos a la vez.
+        superficie realmente protegida, porque hay polígonos cubiertos por dos instrumentos a la vez.
         <b>ARCAC aparece bajo el total, no dentro</b>: son núcleos agrarios, no áreas del inventario,
         así que suman hectáreas comparables pero no entran en el 100% ni en los porcentajes.</p>
       <div class="comp-scroll" style="margin-top:16px"><table class="comp">
@@ -4324,7 +4324,7 @@ function renderTraslapesPage(){
   <div class="panel">
     <div class="panel-title">Análisis espacial · superposición de instrumentos de protección</div>
     <h3>Traslapes entre <em>áreas</em></h3>
-    <p class="panel-intro">Un mismo predio puede estar cubierto por más de un instrumento: dos decretos de
+    <p class="panel-intro">Un mismo polígono puede estar cubierto por más de un instrumento: dos decretos de
       protección, un ANP y un ARCAC, o un área del inventario dentro del polígono de Patrimonio Mundial.
       Este módulo mide esas superposiciones sobre la geometría real y las dibuja en el mapa.
       Es información de coordinación: donde hay traslape, hay más de una autoridad y más de un
