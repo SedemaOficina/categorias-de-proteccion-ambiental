@@ -1285,6 +1285,88 @@ function renderGlobalDashboard(){
 }
 
 /* ===== Página Metas: comparativo de administraciones + sección Brechas ===== */
+/* ═══ GUARDAR PARA USAR SIN SEÑAL (v94, 7-oct-2026) ═══════════════════════
+   Antes solo quedaban sin conexión las capas que ya se habían abierto, y una
+   versión nueva empezaba con su caché vacía. Este botón (en la guía y en el
+   pie) descarga de una vez todas las capas y el mapa base de la CDMX
+   (zoom 10 a 13) a la caché `sia-campo-v35`, que el Service Worker sirve sin
+   red y refresca en segundo plano cuando hay red; esa caché sobrevive a las
+   actualizaciones. Las teselas se piden con la misma URL que usa Leaflet
+   (getTileUrl) para que coincidan en la caché. La imagen satelital no entra:
+   pesa diez veces más. */
+const CAMPO_CACHE = 'sia-campo-v35', CAMPO_CLAVE = 'sia_campo_guardado';
+const CAMPO_CAPAS = ['data/geometrias.geojson','data/alcaldias.geojson','data/suelo_conservacion.geojson',
+  'data/zona_patrimonio.geojson','data/sipam_fao.geojson','data/arcac.geojson','data/traslapes.geojson',
+  'data/embarcaderos.geojson','data/pgoedf.geojson','data/pgoedf_actividades.json','data/pgoedf_areas.json',
+  'data/zonificacion/index.json'];
+const CAMPO_BBOX = { w:-99.37, e:-98.94, s:19.04, n:19.60 }, CAMPO_ZOOM = [10, 13];
+function _campoTeselas(){
+  if(typeof L === 'undefined') return [];
+  const capa = L.tileLayer(TILE_LAYERS.positron.url, _opcionesTeselas(TILE_LAYERS.positron));
+  const t = (lon, lat, z) => { const n = 2 ** z, r = lat * Math.PI / 180;
+    return [Math.floor((lon + 180) / 360 * n), Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n)]; };
+  const urls = [];
+  for(let z = CAMPO_ZOOM[0]; z <= CAMPO_ZOOM[1]; z++){
+    const [x0, y0] = t(CAMPO_BBOX.w, CAMPO_BBOX.n, z), [x1, y1] = t(CAMPO_BBOX.e, CAMPO_BBOX.s, z);
+    capa._tileZoom = z;
+    for(let x = x0; x <= x1; x++) for(let y = y0; y <= y1; y++) urls.push(capa.getTileUrl({x, y, z}));
+  }
+  return urls;
+}
+function _campoPintarEstado(txt){
+  document.querySelectorAll('[data-campo-estado]').forEach(e => { e.textContent = txt; });
+}
+function _campoEstadoGuardado(){
+  try{
+    const g = JSON.parse(localStorage.getItem(CAMPO_CLAVE) || 'null');
+    if(!g) return _campoPintarEstado('');
+    const f = new Date(g.fecha).toLocaleDateString('es-MX', {day:'numeric', month:'short', year:'numeric'});
+    _campoPintarEstado(`Guardado el ${f} · ${(g.bytes / 1048576).toFixed(1)} MB${g.faltan ? ` · ${g.faltan} sin descargar` : ''}`);
+  }catch(_){ _campoPintarEstado(''); }
+}
+let _campoEnCurso = false;
+async function guardarParaCampo(){
+  if(_campoEnCurso) return;
+  if(!('caches' in window)){ siaToast('Este navegador no permite guardar para usar sin señal.'); return; }
+  if(navigator.onLine === false){ siaToast('Sin conexión: conéctate a internet para guardar las capas.'); return; }
+  _campoEnCurso = true;
+  const botones = document.querySelectorAll('[data-campo-guardar]');
+  botones.forEach(b => b.disabled = true);
+  try{ if(navigator.storage && navigator.storage.persist) await navigator.storage.persist(); }catch(_){}
+  let zonif = [];
+  try{ const idx = await (await fetch('data/zonificacion/index.json')).json();
+       zonif = [...new Set(Object.values(idx).map(v => 'data/zonificacion/' + v.archivo))]; }catch(_){}
+  const lista = [...CAMPO_CAPAS, ...zonif].map(u => ({ url: new URL(u, location.href).href, cors: false }))
+                .concat(_campoTeselas().map(u => ({ url: u, cors: true })));
+  const cache = await caches.open(CAMPO_CACHE);
+  let hechas = 0, bytes = 0, faltan = 0;
+  const uno = async it => {
+    try{
+      const r = await fetch(it.url, it.cors ? { mode:'cors', credentials:'omit' } : { cache:'no-cache', redirect:'manual' });
+      if(r.type === 'opaqueredirect'){ faltan++; return; }
+      if(!r.ok) { faltan++; return; }
+      const b = await r.clone().blob(); bytes += b.size;
+      await cache.put(it.url, r);
+    }catch(_){ faltan++; }
+    hechas++;
+    _campoPintarEstado(`Guardando… ${hechas} de ${lista.length}`);
+  };
+  /* Seis descargas a la vez: rápido sin saturar la red del teléfono. */
+  const cola = lista.slice();
+  await Promise.all(Array.from({length:6}, async () => { while(cola.length) await uno(cola.shift()); }));
+  try{ localStorage.setItem(CAMPO_CLAVE, JSON.stringify({ fecha: Date.now(), bytes, faltan })); }catch(_){}
+  _campoEstadoGuardado();
+  siaToast(faltan ? `Guardado con ${faltan} elementos pendientes: vuelve a intentarlo con mejor señal.`
+                  : 'Listo: el tablero funciona sin señal en este equipo.', 4000);
+  botones.forEach(b => b.disabled = false);
+  _campoEnCurso = false;
+}
+document.addEventListener('click', e => {
+  const b = e.target && e.target.closest && e.target.closest('[data-campo-guardar]');
+  if(b) guardarParaCampo();
+});
+_campoEstadoGuardado();
+
 /* ═══ PORTADA DE ANÁLISIS (v88, 6-oct-2026) ═══════════════════════════
    Los cuatro chips de Análisis se perdían: parecían filtros y eran cuatro
    páginas distintas. Al entrar a Análisis se llega aquí, a cuatro tarjetas
@@ -5930,7 +6012,11 @@ async function compartirFichaImagen(d, btn){
         }
         if(c.id === 'extra' && c.fc){
           const n = _trazarCapaEnCaja(ctx, c.fc, T.P, 48, y, W-96, boxH, ()=>c.estilo);
-          if(n && c.leyenda) leyenda.push({ txt:c.leyenda, col:c.estilo.stroke || c.estilo.fill, dash: !!c.estilo.dash });
+          /* v94: una sola entrada por color. Si ya está «ANP Local», el área
+             «Cerro de la Estrella (local)» —mismo color— no se repite: su nombre
+             ya va en las filas («También en»). */
+          const col = c.estilo.stroke || c.estilo.fill;
+          if(n && c.leyenda && !leyenda.some(l => l.col === col && !!l.dash === !!c.estilo.dash)) leyenda.push({ txt:c.leyenda, col, dash: !!c.estilo.dash });
         }
         if(c.id === 'zonif'){
           /* Misma regla que la leyenda del minimapa (UI-04): nombre literal de la
@@ -6366,10 +6452,17 @@ function ubicarDesdeTexto(txt){
   const q = String(txt||'').trim();
   if(!q) return;
   const c = parseCoordsSia(q);
-  if(c){ _ubicarDomicilio = null; ubicarResolver(c, null, null); return; }
+  if(c){
+    _ubicarDomicilio = null;
+    /* v94: las coordenadas y ligas de Google Maps también quedan en recientes. */
+    recienteGuardar({t:'coord', lat:c.lat, lng:c.lng, titulo:c.lat.toFixed(5) + ', ' + c.lng.toFixed(5),
+                     sub:/maps|goo\.gl|google/i.test(q) ? 'Liga de Google Maps' : 'Coordenada'});
+    ubicarResolver(c, null, null); return;
+  }
   const loc = _buscarLocal(q);
   if(loc.length){
     const x = loc[0];
+    recienteGuardar({t:x.t, ref:x.ref, titulo:x.nombre, sub:x.sub||''});
     try{
       if(x.t==='inv'){ const a=areaPorNombre(x.ref); if(a) return openDrawer(a); }
       if(x.t==='arcac') return openARCACFicha(Number(x.ref));
@@ -6385,6 +6478,7 @@ function ubicarDesdeTexto(txt){
     }
     try{
       const r = await siaResolverLugar(dirs[0].place);
+      recienteGuardar({t:'dir', titulo:dirs[0].principal, sub:dirs[0].secundario||''});
       ubicarResolver({lat:r.lat, lng:r.lng}, null, r.etiqueta || dirs[0].principal);
     }catch(err){ siaToast('No se pudo ubicar esa dirección.'); }
   });

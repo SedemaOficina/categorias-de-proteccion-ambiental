@@ -9,9 +9,12 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-10-07h';
+const CACHE_VERSION = 'sia-v35-2026-10-07i';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
+/* Capas y teselas que la persona guardó con «Guardar para usar sin señal»
+   (v94). No lleva la versión en el nombre: sobrevive a las actualizaciones. */
+const CACHE_CAMPO   = 'sia-campo-v35';
 
 /* Recursos críticos: lo mínimo para que la app arranque y se vea.
    La vista por defecto es la tabla del inventario, que no necesita geometrías. */
@@ -107,7 +110,7 @@ async function cacheUtilizable(){
 async function purgarAnteriores(){
   const keys = await caches.keys();
   await Promise.all(
-    keys.filter(k => k !== CACHE_VERSION && k !== CACHE_RUNTIME && k !== CACHE_DATA)
+    keys.filter(k => k !== CACHE_VERSION && k !== CACHE_RUNTIME && k !== CACHE_DATA && k !== CACHE_CAMPO)
         .map(k => caches.delete(k))
   );
 }
@@ -281,6 +284,21 @@ async function cacheFirst(req, cacheName, event){
   const propioVigente = (await cache.match(req, {ignoreSearch:true}))
                      || (esApp ? (await cache.match('./index.html')) : null);
   if(propioVigente) return propioVigente;
+  /* Guardado para campo (v94): se sirve de inmediato y, si hay red, se
+     refresca en segundo plano para no quedarse con datos viejos tras una
+     actualización. Va antes del respaldo para no disparar la reparación de la
+     caché de versión por algo que nunca fue parte de ella. */
+  try{
+    const campo = await caches.open(CACHE_CAMPO);
+    const guardado = await campo.match(req, {ignoreSearch:true});
+    if(guardado){
+      const refrescar = fetch(new Request(req, {redirect:'manual'}))
+        .then(r => { if(r && r.status === 200) return campo.put(req, r); })
+        .catch(() => {});
+      if(event) event.waitUntil(refrescar);
+      return guardado;
+    }
+  }catch(_){}
   const respaldo = await caches.match(req, {ignoreSearch:true});
   if(respaldo){
     /* Salió de una caché de respaldo (versión anterior): la de esta versión

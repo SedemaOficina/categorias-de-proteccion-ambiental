@@ -33,7 +33,7 @@ categorias-de-proteccion-ambiental/
 ├── .assetsignore         ← qué NO se publica (tools, CLAUDE.md, README, _borrar…)
 ├── wrangler.jsonc        ← despliegue en Cloudflare Workers (assets estáticos)
 ├── CLAUDE.md             ← reglas del proyecto para el asistente de código
-├── assets/               ← logo, favicon, apple-touch-icon, og-image
+├── assets/               ← logo, favicon, apple-touch-icon e iconos de la app
 ├── tools/traslapes.py    ← regenera data/traslapes.geojson
 ├── pendientes/           ← lista viva de pendientes, cortes de verificación y el arnés de pruebas (no se publica)
 ├── .editorconfig · .gitattributes ← LF y UTF-8 en el editor y en git

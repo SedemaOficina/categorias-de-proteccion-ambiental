@@ -3163,3 +3163,16 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
   header.top .logo-inst{grid-column:1 / -1}
   header.top .meta{text-align:right;justify-content:flex-end}
 }
+
+/* ═══ v94 (7-oct-2026) ══════════════════════════════════════════════════
+   1. Portada de Análisis en celular: el panel de introducción dejaba un hueco
+      grande bajo el texto (márgenes del párrafo sumados al relleno).
+   2. «Guardar para usar sin señal» en la guía y en el pie. */
+.an-intro .panel-intro{margin-bottom:0}
+@media (max-width:760px){ .an-intro{padding-bottom:16px;margin-bottom:12px} }
+.campo-sec{background:var(--bg-2);border:1px solid var(--line-soft);border-left:4px solid var(--guinda);border-radius:var(--radius);padding:14px 16px}
+.campo-btn{background:var(--guinda);border-color:var(--guinda);color:var(--crema);font-weight:700;min-height:44px;margin-top:6px}
+.campo-btn[disabled],[data-campo-guardar][disabled]{opacity:.6;cursor:progress}
+.campo-estado{font-size:var(--fs-xs);color:var(--muted);margin:6px 0 0}
+.campo-estado:empty{display:none}
+.campo-estado-pie{margin:0 0 0 6px}

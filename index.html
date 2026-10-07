@@ -9,7 +9,10 @@
 <meta name="description" content="Sistema de Información Ambiental de la CDMX. Tablero institucional de las 66 Áreas Naturales Protegidas, Áreas de Valor Ambiental y Zonas Comunitarias de Conservación Ecológica del territorio capitalino.">
 <meta name="author" content="Secretaría del Medio Ambiente · Gobierno de la Ciudad de México">
 <meta name="theme-color" content="#9d2148">
-<meta name="robots" content="index,follow">
+<!-- v94 (7-oct-2026, B11): el tablero está detrás de un inicio de sesión;
+     ningún buscador ni vista previa puede leerlo, así que no se indexa ni se
+     ofrece imagen de vista previa. -->
+<meta name="robots" content="noindex,nofollow">
 
 <!-- Favicon institucional -->
 <link rel="icon" type="image/png" href="./assets/favicon.png">
@@ -24,18 +27,14 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Tablero · Categorías de Protección Ambiental · SEDEMA CDMX">
 <meta property="og:description" content="Sistema institucional de las 66 áreas protegidas de la Ciudad de México: ANP, AVA y ZCEC.">
-<meta property="og:image" content="https://sia.contactoverde.com/assets/og-image.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
 <meta property="og:url" content="https://sia.contactoverde.com/">
 <meta property="og:locale" content="es_MX">
 <meta property="og:site_name" content="SIA · SEDEMA CDMX">
 
 <!-- Twitter Card · vista previa al compartir en X -->
-<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Tablero · Categorías de Protección Ambiental · SEDEMA CDMX">
 <meta name="twitter:description" content="Sistema institucional de las 66 áreas protegidas de la Ciudad de México: ANP, AVA y ZCEC.">
-<meta name="twitter:image" content="https://sia.contactoverde.com/assets/og-image.png">
 
 <link rel="canonical" href="https://sia.contactoverde.com/">
 
@@ -209,6 +208,9 @@ try{
       <span class="sia-footer-text-2">Gobierno de la Ciudad de México</span>
       <span class="sia-footer-sep">·</span>
       <button type="button" class="sia-footer-ayuda" id="ayudaAbrirPie" aria-haspopup="dialog">¿Qué significan estas categorías?</button>
+      <span class="sia-footer-sep">·</span>
+      <button type="button" class="sia-footer-ayuda" data-campo-guardar>Guardar para usar sin señal</button>
+      <span class="campo-estado campo-estado-pie" data-campo-estado aria-live="polite"></span>
     </div>
   </footer>
 </div>
@@ -245,6 +247,15 @@ try{
     <button type="button" class="ayuda-cerrar" id="ayudaCerrar" aria-label="Cerrar la guía">×</button>
   </div>
   <div class="ayuda-cuerpo">
+
+    <section class="ayuda-sec campo-sec" id="campoSec">
+      <h3>Antes de salir a campo</h3>
+      <p>Guarda en este equipo todas las capas (áreas, Suelo de Conservación, PGOEDF,
+         zonificaciones, ARCAC, Zona Patrimonio) y el mapa base de la Ciudad de México.
+         Así «¿Dónde estoy?» y las fichas funcionan sin señal. Son unos 10 a 15 MB; hazlo con wifi.</p>
+      <button type="button" class="btn campo-btn" data-campo-guardar>Guardar para usar sin señal</button>
+      <p class="campo-estado" data-campo-estado aria-live="polite"></p>
+    </section>
 
     <section class="ayuda-sec">
       <h3>Qué es este tablero</h3>
