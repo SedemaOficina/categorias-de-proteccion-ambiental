@@ -1998,6 +1998,13 @@ thead.t-head th:nth-child(7){white-space:nowrap}
   .drawer-asa{flex:0 0 auto;display:flex;align-items:center;justify-content:center;
     height:26px;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent}
   .drawer-asa:active{cursor:grabbing}
+  /* v87: el encabezado de la ficha también arrastra la hoja. Sin touch-action
+     el navegador podía quedarse con el gesto (pointercancel) y la hoja se
+     detenía a medio arrastre. Los botones conservan su toque normal. */
+  .drawer-head{touch-action:none;-webkit-user-select:none;user-select:none}
+  .drawer-head button,.drawer-head a{touch-action:manipulation}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-cabeza{touch-action:none;-webkit-user-select:none;user-select:none}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-cabeza button{touch-action:manipulation}
   .drawer-asa span{display:block;width:36px;height:4px;border-radius:2px;background:#dadce0}
   .drawer-asa:focus-visible{outline:2px solid var(--guinda);outline-offset:-4px;border-radius:6px}
   /* `overflow-x:hidden` no es cosmética: un elemento `sticky` se desplaza con

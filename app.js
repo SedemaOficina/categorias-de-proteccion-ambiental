@@ -6301,26 +6301,45 @@ function cerrarHoja(){
   limpiarUbicacionGlobal();
   setTimeout(()=>{ if(sec && _hojaVis === 0){ sec.hidden = true; sec.innerHTML = ''; } }, 300);
 }
-/* Arrastre delegado: el asa se vuelve a crear en cada consulta. */
+/* Arrastre delegado: el asa se vuelve a crear en cada consulta. Misma
+   corrección que la hoja de la ficha (v87): se agarra también por el
+   encabezado del resultado (salvo sus botones), la altura se acota a
+   [0, tope] con origen móvil, se pinta una vez por cuadro y un toque se
+   distingue de un arrastre con 8 px. */
 document.addEventListener('pointerdown', e=>{
-  const asa = e.target && e.target.closest && e.target.closest('#ubicarAsa');
+  const t = e.target && e.target.closest ? e.target : null;
+  const asa = t && (t.closest('#ubicarAsa') || (t.closest('#ubicarResultado .ubi-cabeza') && !t.closest('button, a, [role="button"]')));
   if(!asa || !_shellActivo()) return;
+  const porAsa = !!t.closest('#ubicarAsa');
   const h = document.getElementById('ubicarResultado'); if(!h) return;
-  const y0 = e.clientY, v0 = _hojaVis; let movio = false;
+  const tope = _hojaAlturas()[3];
+  const y0 = e.clientY, v0 = Math.min(_hojaVis, tope); let movio = false, ultimo = v0, cuadro = 0;
+  let base = v0, yBase = y0;
   h.classList.add('arrastrando');
-  const mover = ev => { if(Math.abs(ev.clientY - y0) > 3) movio = true; hojaIr(v0 + (y0 - ev.clientY)); };
+  const pintar = () => { cuadro = 0; _hojaVis = ultimo; h.style.setProperty('--vis', ultimo + 'px'); };
+  const mover = ev => {
+    if(!movio && Math.abs(ev.clientY - y0) <= DR_UMBRAL_TOQUE) return;
+    movio = true;
+    let v = base + (yBase - ev.clientY);
+    if(v > tope){ v = tope; base = tope; yBase = ev.clientY; }
+    else if(v < 0){ v = 0; base = 0; yBase = ev.clientY; }
+    ultimo = v;
+    if(!cuadro) cuadro = requestAnimationFrame(pintar);
+  };
   const soltar = ev => {
     document.removeEventListener('pointermove', mover);
     document.removeEventListener('pointerup', soltar);
     document.removeEventListener('pointercancel', soltar);
+    if(cuadro){ cancelAnimationFrame(cuadro); pintar(); }
     h.classList.remove('arrastrando');
+    if(!movio && !porAsa) return;
     if(!movio){                                   /* toque simple: siguiente posición */
       const a = _hojaAlturas();
       const i = a.findIndex(v => v > _hojaVis + 4);
       hojaIr(i === -1 ? a[1] : a[i]);
       return;
     }
-    if(hojaSnap(v0 + (y0 - ev.clientY)) === 0) cerrarHoja();
+    if(hojaSnap(ultimo) === 0) cerrarHoja();
   };
   document.addEventListener('pointermove', mover);
   document.addEventListener('pointerup', soltar);
@@ -7898,19 +7917,49 @@ function drSnap(vis){
   drIr(best);
   return best;
 }
+/* Arrastre de la hoja (v87, 6-oct-2026: «se siente pegajosa» en iPhone).
+   · Se agarra por el asa Y por todo el encabezado (tipo, nombre), salvo sus
+     botones: el asa sola es una franja de 26 px y el dedo va al título.
+   · La altura se acota a [0, tope] mientras se arrastra: antes, arrastrar
+     más allá del tope acumulaba un sobrante invisible y al regresar la hoja
+     no se movía hasta deshacerlo.
+   · Las alturas se miden una vez al empezar y el movimiento se pinta una vez
+     por cuadro (requestAnimationFrame): antes cada pointermove medía la hoja
+     con getBoundingClientRect.
+   · Un toque que se mueve menos de 8 px sigue siendo toque (antes 3 px: en
+     iPhone casi todo toque se volvía un arrastre de cero que no hacía nada). */
+const DR_UMBRAL_TOQUE = 8;
 document.addEventListener('pointerdown', e=>{
-  const asa = e.target && e.target.closest && e.target.closest('#drawerAsa');
+  const t = e.target && e.target.closest ? e.target : null;
+  const asa = t && (t.closest('#drawerAsa') || (t.closest('#drHead') && !t.closest('button, a, input, select, [role="button"]')));
   if(!asa || !_drMovil()) return;
-  const dr = document.getElementById('dr'); if(!dr) return;
-  const y0 = e.clientY, v0 = _drVis; let movio = false;
+  const porAsa = !!t.closest('#drawerAsa');
+  const dr = document.getElementById('dr'); if(!dr || !dr.classList.contains('open')) return;
+  if(document.documentElement.classList.contains('sia-fs-hoja-abierta')) return;
+  const al = _drAlturas(), tope = al[3];
+  const y0 = e.clientY, v0 = Math.min(_drVis, tope); let movio = false, ultimo = v0, cuadro = 0;
+  /* Origen móvil: al topar arriba o abajo se reajusta al dedo, así el exceso
+     se descarta y la hoja responde en cuanto el dedo cambia de sentido. */
+  let base = v0, yBase = y0;
   dr.classList.add('arrastrando');
-  const mover = ev => { if(Math.abs(ev.clientY - y0) > 3) movio = true;
-                        drIr(v0 + (y0 - ev.clientY)); };
+  const pintar = () => { cuadro = 0; _drVis = ultimo; dr.style.setProperty('--dvis', ultimo + 'px'); };
+  const mover = ev => {
+    if(!movio && Math.abs(ev.clientY - y0) <= DR_UMBRAL_TOQUE) return;
+    movio = true;
+    let v = base + (yBase - ev.clientY);
+    if(v > tope){ v = tope; base = tope; yBase = ev.clientY; }
+    else if(v < 0){ v = 0; base = 0; yBase = ev.clientY; }
+    ultimo = v;
+    if(!cuadro) cuadro = requestAnimationFrame(pintar);
+  };
   const soltar = ev => {
     document.removeEventListener('pointermove', mover);
     document.removeEventListener('pointerup', soltar);
     document.removeEventListener('pointercancel', soltar);
+    if(cuadro){ cancelAnimationFrame(cuadro); pintar(); }
     dr.classList.remove('arrastrando');
+    /* Un toque en el encabezado no mueve la hoja; solo el del asa. */
+    if(!movio && !porAsa) return;
     if(!movio){
       /* Toque simple: SUBE a la siguiente posición; desde la completa vuelve a
          la media. Antes bajaba y, por debajo de la asomada, cerraba: un roce
@@ -7920,7 +7969,8 @@ document.addEventListener('pointerdown', e=>{
       const sig = al.find(v => v > _drVis + 4);
       drIr(sig != null ? sig : al[2]); return;
     }
-    if(drSnap(v0 + (y0 - ev.clientY)) === 0) closeDrawer();
+    /* `ultimo` y no ev.clientY: en pointercancel la coordenada puede venir en 0. */
+    if(drSnap(ultimo) === 0) closeDrawer();
   };
   document.addEventListener('pointermove', mover);
   document.addEventListener('pointerup', soltar);
