@@ -2757,6 +2757,11 @@ html.arranque-campo body > .wrap{visibility:hidden}
   max-width:none !important;margin:0 !important;border-radius:0 !important;background:var(--card)}
 .sia-fs .leaflet-container,.sia-fs .map-canvas-inner{height:100% !important;min-height:0 !important;border-radius:0 !important}
 html.sia-fs-abierto{overflow:hidden}
+/* v84: la ficha se abre ENCIMA de un mapa de la página ampliado (z 1200). Antes
+   quedaba detrás —con la pantalla completa del navegador, ni se veía— y había
+   que salir del mapa ampliado para leerla. */
+html.sia-fs-abierto .backdrop{z-index:1250}
+html.sia-fs-abierto .drawer{z-index:1260}
 /* Ampliar dentro de la ficha (14-sep-2026, A1c-3): la hoja entera se vuelve el
    mapa. En iOS el portal a <body> con position:fixed dejaba el lienzo del
    tamaño del cuerpo de la hoja y el «×» de la ficha encima de los controles;
@@ -2785,9 +2790,9 @@ html.sia-fs-hoja-abierta .drawer-inner{overflow:hidden !important}
 .btn-ampliar.activo{background:var(--guinda);color:var(--crema)}
 .map-block-controls-floating.base-abierto ~ .btn-ampliar,
 :has(> .map-block-controls-floating.base-abierto) > .btn-ampliar{opacity:0;pointer-events:none}
-/* Mapa del resultado de «¿Dónde estoy?»: sin menú de capas, el botón va arriba a la derecha. */
+/* Mapa del resultado de «¿Dónde estoy?» (v84: con menú de capas, Ubicarme y
+   «Ampliar» bajo el menú, como los demás mapas). */
 .ubi-map-wrap{position:relative}
-.ubi-map-wrap .btn-ampliar{top:10px !important}
 .ubi-map-wrap:fullscreen,.ubi-map-wrap:-webkit-full-screen{background:var(--card)}
 .ubi-map-wrap:fullscreen .ubi-map,.ubi-map-wrap:-webkit-full-screen .ubi-map{height:100% !important;border-radius:0;border:none}
 .sia-fs.ubi-map-wrap .ubi-map{height:100% !important;border-radius:0;border:none}

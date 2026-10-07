@@ -4646,13 +4646,30 @@ function _siaFsPortal(canvas, en, destino){
     }
   }catch(_){}
 }
+/* Al cerrar la ficha sale de pantalla completa SOLO su minimapa. Desde v84 la
+   ficha puede abrirse sobre un mapa de la página ampliado, y ese debe seguir
+   ampliado al cerrarla. */
 function siaFsSalirTodo(){
   try{
-    document.querySelectorAll('.sia-fs').forEach(c => { c.classList.remove('sia-fs'); c.classList.remove('sia-fs-hoja'); _siaFsPortal(c, false); });
-    document.documentElement.classList.remove('sia-fs-abierto');
+    document.querySelectorAll('#dr .sia-fs').forEach(c => {
+      if(c._siaFsSalir){ c._siaFsSalir(); return; }
+      c.classList.remove('sia-fs'); c.classList.remove('sia-fs-hoja'); _siaFsPortal(c, false);
+    });
+    document.documentElement.classList.toggle('sia-fs-abierto', !!document.querySelector('.sia-fs'));
     document.documentElement.classList.remove('sia-fs-hoja-abierta');
   }catch(_){}
 }
+/* Esc sale del mapa ampliado. Con la ficha abierta, Esc la cierra a ella
+   primero (su propio escucha): por eso aquí se revisa en la fase de captura,
+   antes de que la ficha se cierre. */
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Escape') return;
+  const drAbierta = document.getElementById('dr') && document.getElementById('dr').classList.contains('open');
+  const ayuda = document.querySelector('.ayuda-dlg:not([hidden])');
+  if(drAbierta || ayuda) return;
+  const c = [...document.querySelectorAll('.sia-fs')].pop();
+  if(c && c._siaFsSalir){ e.preventDefault(); c._siaFsSalir(); }
+}, true);
 function attachFullscreenBtn(canvas, mapInstance){
   // El botón vive como hermano dentro de canvas → buscar el más cercano
   const btn = canvas.querySelector('.map-fullscreen-btn');
@@ -4680,23 +4697,26 @@ function attachFullscreenBtn(canvas, mapInstance){
        .map-block llevan position:relative y overflow:hidden) y vuelve a su
        sitio al salir; en la página, a <body>. */
     _siaFsPortal(canvas, en, hoja || document.body);
-    document.documentElement.classList.toggle('sia-fs-abierto', en);
-    document.documentElement.classList.toggle('sia-fs-hoja-abierta', en && enHoja);
+    /* Puede haber dos a la vez: el mapa de la página ampliado y, encima, la
+       ficha con su minimapa ampliado. La clase sigue mientras quede alguno. */
+    document.documentElement.classList.toggle('sia-fs-abierto', !!document.querySelector('.sia-fs'));
+    document.documentElement.classList.toggle('sia-fs-hoja-abierta', !!document.querySelector('.sia-fs-hoja'));
     fresh.setAttribute('aria-label', en ? 'Salir de pantalla completa' : 'Pantalla completa');
     fresh.title = fresh.getAttribute('aria-label');
     setTimeout(() => { if(mapInstance) mapInstance.invalidateSize(); }, 80);
     avisarMapa(en);
   };
+  /* v84: «Ampliar» usa SIEMPRE la pantalla completa dentro de la página, en
+     todos los navegadores. La del navegador (Fullscreen API) solo deja ver el
+     mapa: al tocar un área, la ficha se abría detrás y había que salir para
+     leerla. Así la ficha se abre encima del mapa ampliado y, al cerrarla, el
+     mapa sigue ampliado. Esc sale (ver el escucha de teclado de abajo). */
+  canvas._siaFsSalir = () => fsSimulado(false);
   fresh.addEventListener('click', () => {
     if(canvas.classList.contains('sia-fs')){ fsSimulado(false); return; }
     const isFs = document.fullscreenElement || document.webkitFullscreenElement;
-    if(isFs){
-      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-    } else {
-      const req = canvas.requestFullscreen || canvas.webkitRequestFullscreen;
-      if(req){ try{ const p = req.call(canvas); if(p && p.catch) p.catch(()=>fsSimulado(true)); }catch(_){ fsSimulado(true); } }
-      else fsSimulado(true);
-    }
+    if(isFs){ try{ (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(_){} }
+    fsSimulado(true);
   });
 
   // Recalcular tamaño del mapa al entrar/salir de fullscreen.
@@ -6719,7 +6739,7 @@ function renderUbicarResultado(latlng, precision, etiqueta){
     ${etiqueta ? `<p class="ubi-etiqueta">${esc(etiqueta)}</p>` : ''}
     <div class="ubi-grid">
       <div class="ubi-col">${cuerpo}</div>
-      <div class="ubi-col"><div class="ubi-map-wrap" id="ubicarMapWrap"><div class="ubi-map" id="ubicarMapCanvas"></div><button class="map-fullscreen-btn" type="button" aria-label="Pantalla completa" title="Pantalla completa"></button></div></div>
+      <div class="ubi-col"><div class="ubi-map-wrap" id="ubicarMapWrap"><div class="ubi-map" id="ubicarMapCanvas"></div><div class="map-block-controls map-block-controls-floating"><div class="map-block-toggle"><button data-layer="positron" class="active">Mapa</button><button data-layer="satelite">Satélite</button></div><button class="map-fullscreen-btn" type="button" aria-label="Pantalla completa" title="Pantalla completa"></button></div><div class="drawer-sc-floating"><button class="map-filter-chip active" id="ubicarSCToggle" type="button" style="--chip-color:var(--sc)"><span class="chip-dot"></span>Suelo de Conservación</button></div></div></div>
     </div>
     ${sc === true && enCDMX ? '<div id="ubiPgoedf" class="pg-cont"></div>' : ''}
     <div class="ubi-ctx">${ctx}</div>
@@ -7160,7 +7180,21 @@ function initUbicarMap(latlng, precision){
                 .setView([latlng.lat, latlng.lng], 14);
   _gestosTactilesIncrustado(ubicarMap);
   try{ ubicarMap.invalidateSize(); }catch(e){}
-  L.tileLayer(TILE_LAYERS.positron.url, _opcionesTeselas(TILE_LAYERS.positron)).addTo(ubicarMap);
+  /* v84: mismo juego de controles que los demás mapas —menú con Mapa/Satélite,
+     Suelo de Conservación y PGOEDF; Ubicarme; vista general y Ampliar—. Antes
+     este mapa solo tenía acercar y ampliar. */
+  const wrapUbic = document.getElementById('ubicarMapWrap');
+  let baseUbic = null;
+  const ponerBaseUbic = key => {
+    if(!ubicarMap) return;
+    if(baseUbic){ try{ ubicarMap.removeLayer(baseUbic); }catch(_){} }
+    const cfg = TILE_LAYERS[key] || TILE_LAYERS.positron;
+    baseUbic = L.tileLayer(cfg.url, _opcionesTeselas(cfg)).addTo(ubicarMap);
+    _marcarBase(ubicarMap, key);
+    if(wrapUbic) wrapUbic.querySelectorAll('.map-block-toggle button[data-layer]').forEach(b=>b.classList.toggle('active', b.dataset.layer === key));
+  };
+  ponerBaseUbic('positron');
+  if(wrapUbic) wrapUbic.querySelectorAll('.map-block-toggle button[data-layer]').forEach(b=>b.addEventListener('click', ()=>ponerBaseUbic(b.dataset.layer)));
   let alcUbic = null;
   try{ alcUbic = createAlcaldiasLayer({interactive:false}).addTo(ubicarMap); }catch(e){}
   /* Contexto de protección: sin él, un punto fuera de toda área dejaba el
@@ -7176,8 +7210,12 @@ function initUbicarMap(latlng, precision){
   else ubicarMap.setView([latlng.lat,latlng.lng],15);
   ubicarMap.on('click focus', ()=>ubicarMap.scrollWheelZoom.enable());
   ubicarMap.on('mouseout',    ()=>ubicarMap.scrollWheelZoom.disable());
+  try{ addLocateControl(ubicarMap, ll=>featuresContaining(GEOMETRIES&&GEOMETRIES.features, ll), ()=>(GEOMETRIES&&GEOMETRIES.features)||[]); }catch(e){}
   addResetViewControl(ubicarMap, 'Vista general');
-  try{ attachFullscreenBtn(document.getElementById('ubicarMapWrap'), ubicarMap); }catch(e){}
+  try{ attachFullscreenBtn(wrapUbic, ubicarMap); }catch(e){}
+  /* Suelo de Conservación encendido de inicio, ahora con su interruptor. */
+  try{ attachSCToggle('ubicarSCToggle', ubicarMap, ctxUbic ? {areas:ctxUbic} : null, alcUbic); }catch(e){}
+  setTimeout(()=>{ try{ montarBotonBase(); }catch(e){} }, 80);
   setTimeout(()=>{ try{ ubicarMap.invalidateSize(); }catch(e){} }, 200);
 }
 
@@ -7203,18 +7241,8 @@ function _capaContextoUbicar(mapa, alcaldias){
       }).addTo(mapa);
     }
   }catch(e){ console.warn('[Ubicar] contexto de áreas:', e && e.message); }
-  /* Suelo de Conservación: asíncrono; al llegar se manda al fondo, bajo las
-     áreas y las alcaldías. Si el mapa ya se reinició, no se pinta. */
-  loadSueloConservacion().then(sc => {
-    try{
-      if(!sc || !sc.features || !sc.features.length || mapa !== ubicarMap) return;
-      mapa._scLayer = L.geoJSON(sc, {
-        style:{ color:'var(--sc-900)', weight:1.25, fillColor:'var(--sc)', fillOpacity:0.12, dashArray:'4,3' },
-        interactive:false
-      }).addTo(mapa);
-      mapa._scLayer.bringToBack();
-    }catch(e){}
-  }).catch(()=>{});
+  /* Suelo de Conservación: desde v84 lo pone su interruptor del menú de capas
+     (attachSCToggle en initUbicarMap), encendido de inicio. */
   return grupo;
 }
 
