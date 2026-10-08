@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-10-08a';
+const CACHE_VERSION = 'sia-v35-2026-10-08b';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 /* Capas y teselas que la persona guardó con «Guardar para usar sin señal»

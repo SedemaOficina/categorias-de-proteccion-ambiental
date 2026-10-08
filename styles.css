@@ -3215,3 +3215,29 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
 .hoja-limpiar{background:none;border:none;color:var(--guinda);font:inherit;font-weight:600;text-decoration:underline;
   text-underline-offset:3px;min-height:44px;padding:0 10px;cursor:pointer}
 @media (max-width:760px){ #tableSection > .toolbar.hoja-abierta .btn-group{display:none !important} }
+
+/* ═══ v96 (8-oct-2026) ══════════════════════════════════════════════════
+   1. Con un globo abierto se ocultan los botones flotantes del mapa (capas,
+      Ampliar, Ubicarme): quedaban encima del globo y tapaban su «×».
+   2. En celular la búsqueda «¿Dónde estoy?» solo aparece en Ubicar: en
+      Inventario se sumaba a «Buscar por nombre del área» y en Análisis no
+      servía. En escritorio se queda (desde cualquier pestaña lleva al
+      resultado junto al mapa).
+   3. Indicador de conexión sobre la barra de destinos (celular). */
+.sia-popup-abierto .map-block-controls-floating:not(.base-abierto),
+.sia-popup-abierto .btn-ampliar,
+.sia-popup-abierto .gps-fab{opacity:0;pointer-events:none;transition:opacity .15s}
+.estado-red{display:none}
+@media (max-width:760px){
+  .wrap:not(.dest-ubicar) .ubicar-bar{display:none}
+  .estado-red{display:inline-flex;align-items:center;gap:6px;position:fixed;z-index:calc(var(--z-sticky) + 1);
+    left:10px;bottom:calc(var(--destbar-h) + env(safe-area-inset-bottom, 0px) - var(--ajuste-inf, 0px) + 8px);
+    min-height:28px;padding:0 9px;border:1px solid var(--line);border-radius:14px;background:var(--card);
+    box-shadow:var(--gm-e2, 0 1px 3px rgba(0,0,0,.2));font:600 var(--fs-xs) 'Roboto',sans-serif;color:var(--ink-2);cursor:pointer}
+  .estado-red .er-punto{width:9px;height:9px;border-radius:50%;background:#2f9e44;flex:0 0 auto}
+  .estado-red:not(.sin-red) .er-txt{display:none}
+  .estado-red:not(.sin-red){padding:0;width:28px;justify-content:center}
+  .estado-red.sin-red{background:#fff4d6;border-color:#e0b44c;color:#6b4a00}
+  .estado-red.sin-red .er-punto{background:#e8a317}
+  html.ficha-abierta .estado-red,html.sia-fs-abierto .estado-red{display:none}
+}

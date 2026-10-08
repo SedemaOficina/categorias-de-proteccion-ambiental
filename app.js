@@ -3551,8 +3551,14 @@ function _masCercana(latlng, features){
 function _popupOpts(map){
   if(map && !map._siaDim){
     map._siaDim = true;
+    /* v96: la clase va también en el lienzo que contiene los botones
+       flotantes (capas, Ampliar, Ubicarme): están por encima de los globos y
+       tapaban su «×». */
     const cl = (add) => { try{
-      map.getContainer().classList[add?'add':'remove']('sia-popup-abierto');
+      const c = map.getContainer();
+      c.classList[add?'add':'remove']('sia-popup-abierto');
+      const lz = c.closest('.map-canvas, .global-map-block, .ubi-map-wrap, #trasMapCanvas, #zpMapCanvas') || c.parentElement;
+      if(lz && lz !== c) lz.classList[add?'add':'remove']('sia-popup-abierto');
     }catch(_){} };
     map.on('popupopen',  ()=>cl(true));
     map.on('popupclose', ()=>cl(false));
@@ -9057,6 +9063,34 @@ function showOfflineNotice(msg, type='offline'){
 
 window.addEventListener('online', () => showOfflineNotice('Conexión restablecida ✓', 'online'));
 window.addEventListener('offline', () => showOfflineNotice('Sin conexión · operando con datos en caché', 'offline'));
+
+/* ═══ INDICADOR DE CONEXIÓN EN CELULAR (v96, 8-oct-2026) ═══════════════════
+   Un punto sobre la barra de destinos: verde «En línea», ámbar «Sin conexión»
+   (con «capas guardadas» si se usó «Guardar para usar sin señal»). Con red
+   solo se ve el punto; sin red se despliega el texto. Al tocarlo explica qué
+   funciona sin señal. */
+(function(){
+  const el = document.createElement('button');
+  el.type = 'button'; el.id = 'estadoRed'; el.className = 'estado-red';
+  document.body.appendChild(el);
+  const pintar = () => {
+    const en = navigator.onLine !== false;
+    let guardado = false; try{ guardado = !!localStorage.getItem('sia_campo_guardado'); }catch(_){}
+    el.classList.toggle('sin-red', !en);
+    el.innerHTML = '<span class="er-punto" aria-hidden="true"></span><span class="er-txt">'
+      + (en ? 'En línea' : 'Sin conexión' + (guardado ? ' · capas guardadas' : '')) + '</span>';
+    el.setAttribute('aria-label', en ? 'En línea' : 'Sin conexión');
+  };
+  el.addEventListener('click', () => {
+    const en = navigator.onLine !== false;
+    let guardado = false; try{ guardado = !!localStorage.getItem('sia_campo_guardado'); }catch(_){}
+    siaToast(en ? 'En línea: el inventario y los mapas se actualizan.'
+      : (guardado ? 'Sin conexión: el tablero usa las capas guardadas en este equipo. La búsqueda de direcciones no funciona; coordenadas, GPS y nombres de área sí.'
+                  : 'Sin conexión: solo funciona lo que ya se había abierto. Con red, usa «Guardar para usar sin señal» en la guía (?).'), 5000);
+  });
+  window.addEventListener('online', pintar); window.addEventListener('offline', pintar);
+  pintar();
+})();
 
 } catch(err){
   console.error('[Dashboard] Error al inicializar:', err);
