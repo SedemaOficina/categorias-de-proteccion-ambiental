@@ -3176,3 +3176,42 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
 .campo-estado{font-size:var(--fs-xs);color:var(--muted);margin:6px 0 0}
 .campo-estado:empty{display:none}
 .campo-estado-pie{margin:0 0 0 6px}
+
+/* ═══ v95 (8-oct-2026) ═══════════════════════════════════════════════════
+   1. Ajuste inferior (--ajuste-inf, lo calcula _ajustarFondoMovil): todo lo
+      anclado al fondo en celular baja lo que Chrome de iPhone dejó libre.
+   2. Controles del mapa de «¿Dónde estoy?» en celular separados de la cápsula
+      de búsqueda (antes 6 px; la casita casi la tocaba).
+   3. «Tipo de mapa» con mosaicos y miniatura, como en Google Maps.
+   4. «Limpiar» en la cabecera de la hoja de filtros. */
+@media (max-width:760px){
+  .destbar{bottom:calc(0px - var(--ajuste-inf, 0px))}
+  .wrap.dest-ubicar.gm-shell #globalMapSection{bottom:calc(var(--destbar-h) + env(safe-area-inset-bottom, 0px) - var(--ajuste-inf, 0px))}
+  .wrap.dest-ubicar.gm-shell #ubicarResultado{bottom:calc(var(--destbar-h) + env(safe-area-inset-bottom, 0px) - var(--ajuste-inf, 0px))}
+  #tableSection > .toolbar.hoja-abierta{bottom:calc(0px - var(--ajuste-inf, 0px))}
+  .drawer{bottom:calc(0px - var(--ajuste-inf, 0px))}
+  .wrap.dest-ubicar.gm-shell #globalMapSection .leaflet-top{top:calc(84px + env(safe-area-inset-top, 0px))}
+  .wrap.dest-ubicar.gm-shell #globalMapSection .map-block-controls-floating{top:calc(84px + env(safe-area-inset-top, 0px))}
+}
+.map-block-controls-floating .map-block-toggle .base-mosaico{display:flex;gap:10px;padding:6px 18px 10px;flex:0 0 auto}
+.map-block-controls-floating .map-block-toggle .base-mosaico > button[data-layer],
+#mapCanvas .map-block-controls-floating .map-block-toggle .base-mosaico > button[data-layer]{
+  flex:1 1 0;height:auto;min-height:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0;
+  background:transparent;border:none;border-radius:0;font-family:'Roboto',sans-serif;font-size:var(--fs-sm);
+  font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink);cursor:pointer}
+.map-block-controls-floating .map-block-toggle .base-mosaico > button[data-layer]::before{
+  content:'';display:block;width:64px;height:64px;border-radius:12px;border:3px solid transparent;
+  box-shadow:0 0 0 1px var(--line);background-size:cover;background-position:center;transition:border-color .15s}
+.map-block-controls-floating .map-block-toggle .base-mosaico > button[data-layer="positron"]::before{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23f6f4ee'/%3E%3Cpath d='M0 46c14-4 22-14 30-26S48 2 64 0v18c-10 2-16 10-22 20S26 58 8 64H0z' fill='%23cfe6c9'/%3E%3Cpath d='M-4 30C12 26 30 34 44 26S60 8 70 6' fill='none' stroke='%23a9cbe0' stroke-width='5'/%3E%3Cpath d='M0 58L64 20M20 0l18 64' fill='none' stroke='%23ffffff' stroke-width='6'/%3E%3Cpath d='M0 58L64 20M20 0l18 64' fill='none' stroke='%23d9d4c7' stroke-width='1.5'/%3E%3C/svg%3E")}
+.map-block-controls-floating .map-block-toggle .base-mosaico > button[data-layer="satelite"]::before{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%234f5b3a'/%3E%3Cpath d='M0 0h30L14 26 0 30z' fill='%23667447'/%3E%3Cpath d='M38 0h26v24L44 30 30 18z' fill='%23394428'/%3E%3Cpath d='M0 40l20-6 14 10-8 20H0z' fill='%236d6b50'/%3E%3Cpath d='M40 40l24-8v32H34z' fill='%235d6a40'/%3E%3Ccircle cx='22' cy='14' r='3' fill='%232e3a20'/%3E%3Ccircle cx='50' cy='50' r='4' fill='%232e3a20'/%3E%3Cpath d='M0 54L64 10' fill='none' stroke='%23bcb7a8' stroke-width='5'/%3E%3Cpath d='M0 54L64 10' fill='none' stroke='%23f0eee6' stroke-width='1' stroke-dasharray='4 4'/%3E%3C/svg%3E")}
+.map-block-controls-floating .map-block-toggle .base-mosaico > button[data-layer]:hover::before{border-color:var(--line)}
+.map-block-controls-floating .map-block-toggle .base-mosaico > button[data-layer].active,
+#mapCanvas .map-block-controls-floating .map-block-toggle .base-mosaico > button[data-layer].active{color:var(--guinda);font-weight:700;background:transparent}
+.map-block-controls-floating .map-block-toggle .base-mosaico > button[data-layer].active::before{border-color:var(--guinda);box-shadow:none}
+.map-block-controls-floating .map-block-toggle .base-mosaico > button[data-layer]:focus-visible{outline:2px solid var(--guinda);outline-offset:2px;border-radius:12px}
+.hoja-filtros-cab .hfc-acc{display:flex;align-items:center;gap:6px}
+.hoja-limpiar{background:none;border:none;color:var(--guinda);font:inherit;font-weight:600;text-decoration:underline;
+  text-underline-offset:3px;min-height:44px;padding:0 10px;cursor:pointer}
+@media (max-width:760px){ #tableSection > .toolbar.hoja-abierta .btn-group{display:none !important} }

@@ -860,6 +860,7 @@ function buildTabs(){
   const volver = enAnalisis && chips
     ? `<button type="button" class="subchip subchip-volver" data-id="PORTADA" aria-label="Volver a la portada de Análisis">← Análisis</button>` : '';
 
+  setTimeout(_pedirAjusteFondo, 0);
   el.innerHTML = `<div class="destbar" role="tablist">${barra}</div>` +
                  `<div class="subnav${enAnalisis ? ' subnav-secciones' : ''}">${chips ? `${volver}<span class="subnav-lbl">${enAnalisis ? 'Sección' : 'Filtrar'}</span>${chips}` : ''}</div>`;
 
@@ -2716,6 +2717,9 @@ function _contarFiltrosMovil(nRes){
   };
   btn.addEventListener('click', () => abrir(true));
   if(listo) listo.addEventListener('click', () => abrir(false));
+  /* v95: «Limpiar» va en la cabecera de la hoja, junto a «Ver resultados». */
+  const limp = document.getElementById('btnFiltrosLimpiar');
+  if(limp) limp.addEventListener('click', () => { const r = document.getElementById('btnReset'); if(r) r.click(); });
   if(bdF) bdF.addEventListener('click', () => abrir(false));
   document.addEventListener('keydown', e => { if(e.key === 'Escape' && tb.classList.contains('hoja-abierta')) abrir(false); });
   /* Al pasar a escritorio (giro de tableta, ventana más ancha) la hoja se cierra. */
@@ -3137,7 +3141,7 @@ function renderMapaPage(g, limpio){
           <!-- Toggle Mapa/Satélite + botón fullscreen (esquina superior derecha) -->
           <div class="map-block-controls map-block-controls-floating">
             <div class="map-block-toggle" id="globalLayerToggle">
-              <button data-layer="positron" class="active">Mapa</button>
+              <button data-layer="positron" class="active">Estándar</button>
               <button data-layer="satelite">Satélite</button>
             </div>
             <button class="map-fullscreen-btn" type="button" aria-label="Pantalla completa" title="Pantalla completa">
@@ -4185,7 +4189,7 @@ function renderZonaPatrimonioPage(){
       <!-- Toggle Mapa/Satélite + botón pantalla completa (esquina superior derecha) -->
       <div class="map-block-controls map-block-controls-floating">
         <div class="map-block-toggle" id="zpLayerToggle">
-          <button data-layer="positron" class="active">Mapa</button>
+          <button data-layer="positron" class="active">Estándar</button>
           <button data-layer="satelite">Satélite</button>
         </div>
         <button class="map-fullscreen-btn" type="button" aria-label="Pantalla completa" title="Pantalla completa">
@@ -4418,7 +4422,7 @@ function renderTraslapesPage(){
     <div class="map-canvas" id="trasMapCanvas" style="position:relative;height:520px;border-radius:12px;overflow:hidden;margin-top:6px">
       <div class="map-block-controls map-block-controls-floating">
         <div class="map-block-toggle" id="trasLayerToggle">
-          <button data-layer="positron" class="active">Mapa</button>
+          <button data-layer="positron" class="active">Estándar</button>
           <button data-layer="satelite">Satélite</button>
         </div>
         <button class="map-fullscreen-btn" type="button" aria-label="Pantalla completa" title="Pantalla completa"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M21 8V5a2 2 0 0 0-2-2h-3"></path><path d="M3 16v3a2 2 0 0 0 2 2h3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg></button>
@@ -7480,8 +7484,13 @@ function montarBotonBase(){
     /* Título de la sección de base (v76): el menú se lee como un panel de
        ajustes con dos apartados, «Mapa base» y «Capas». */
     if(!toggle.querySelector('.menu-tit-base')){
-      const tb = document.createElement('span'); tb.className = 'capa-extra-tit menu-tit-base'; tb.textContent = 'Mapa base';
+      const tb = document.createElement('span'); tb.className = 'capa-extra-tit menu-tit-base'; tb.textContent = 'Tipo de mapa';
       toggle.insertBefore(tb, toggle.firstChild);
+      /* v95: las bases van como mosaicos con miniatura, como en Google Maps.
+         Se mueven los mismos botones (conservan sus escuchas). */
+      const mos = document.createElement('div'); mos.className = 'base-mosaico';
+      toggle.querySelectorAll(':scope > button[data-layer]').forEach(b => mos.appendChild(b));
+      tb.after(mos);
     }
 
     /* Suelo de Conservación no es una capa base —puede estar encendida a la vez
@@ -7978,7 +7987,7 @@ function fichaMapaHTML(opts){
         <div class="map-canvas-inner" id="mapCanvasMap"></div>
         <div class="map-block-controls map-block-controls-floating">
           <div class="map-block-toggle">
-            <button data-layer="positron" class="active">Mapa</button>
+            <button data-layer="positron" class="active">Estándar</button>
             <button data-layer="satelite">Satélite</button>
           </div>
           <button class="map-fullscreen-btn" type="button" aria-label="Pantalla completa" title="Pantalla completa">
@@ -8025,7 +8034,9 @@ function _gestosTactilesIncrustado(mapa, opts){
        mapa a pantalla completa —nativa o simulada— y, en táctil, es la vía
        para arrastrar con un dedo. Reutiliza el botón de pantalla completa,
        que está oculto por CSS, y vive bajo el botón de capas. */
-    if(!total){
+    /* v95: también en el mapa de gesto total («¿Dónde estoy?» en celular),
+       que antes no tenía pantalla completa. */
+    {
       let canvas = cont, n = 0;
       while(canvas && n < 4 && !canvas.querySelector('.map-fullscreen-btn')){ canvas = canvas.parentElement; n++; }
       const fsBtn = canvas && canvas.querySelector('.map-fullscreen-btn');
@@ -8294,6 +8305,32 @@ document.addEventListener('pointerdown', e=>{
    caparazón de «¿Dónde estoy?»): se cuenta por clave. */
 const _bloqueosPagina = new Set();
 let _scrollBloqueado = 0;
+/* ═══ AJUSTE INFERIOR EN CELULAR (v95, 8-oct-2026) ═══════════════════════
+   En iPhone, cuando Chrome encoge su barra inferior, la barra de destinos
+   (position:fixed; bottom:0) se quedaba donde estaba y abajo aparecía una
+   franja vacía del color de la página. Se mide la diferencia entre el fondo
+   real de la pantalla y el de la barra, y todo lo anclado abajo (barra, mapa
+   de «¿Dónde estoy?», hojas) baja eso con --ajuste-inf. Solo cuenta si es
+   positiva: con el teclado abierto la pantalla visible se acorta y ahí no se
+   mueve nada. */
+let _ajusteInfCuadro = 0;
+function _ajustarFondoMovil(){
+  _ajusteInfCuadro = 0;
+  try{
+    const root = document.documentElement, db = document.querySelector('.destbar');
+    if(!db || getComputedStyle(db).position !== 'fixed'){ root.style.setProperty('--ajuste-inf', '0px'); return; }
+    root.style.setProperty('--ajuste-inf', '0px');
+    const vv = window.visualViewport;
+    const fondo = Math.max(window.innerHeight, vv ? vv.offsetTop + vv.height : 0);
+    const d = Math.round(fondo - db.getBoundingClientRect().bottom);
+    if(d > 1 && d < 400) root.style.setProperty('--ajuste-inf', d + 'px');
+  }catch(_){}
+}
+function _pedirAjusteFondo(){ if(!_ajusteInfCuadro) _ajusteInfCuadro = requestAnimationFrame(_ajustarFondoMovil); }
+['resize','orientationchange','pageshow'].forEach(ev => window.addEventListener(ev, _pedirAjusteFondo));
+try{ if(window.visualViewport){ visualViewport.addEventListener('resize', _pedirAjusteFondo); visualViewport.addEventListener('scroll', _pedirAjusteFondo); } }catch(_){}
+setTimeout(_pedirAjusteFondo, 300); setTimeout(_pedirAjusteFondo, 1500);
+
 function siaBloquearPagina(on, clave){
   try{
     if(on) _bloqueosPagina.add(clave || 'x'); else _bloqueosPagina.delete(clave || 'x');
