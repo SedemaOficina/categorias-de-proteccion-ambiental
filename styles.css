@@ -3241,3 +3241,53 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
   .estado-red.sin-red .er-punto{background:#e8a317}
   html.ficha-abierta .estado-red,html.sia-fs-abierto .estado-red{display:none}
 }
+
+/* ═══ Recorrido guiado ════════════════════════════════════════════════════
+   Capa que recibe los toques, foco que ilumina el control (sombra enorme que
+   oscurece todo lo demás) y tarjeta con el texto del paso. En celular la
+   tarjeta se ancla arriba o abajo; en pantallas grandes, junto al control. */
+.tour-velo{position:fixed;inset:0;z-index:1400;background:transparent;touch-action:none;cursor:default}
+.tour-foco{position:fixed;z-index:1401;border-radius:12px;pointer-events:none;
+  box-shadow:0 0 0 3px #fff,0 0 0 9999px rgba(28,16,22,.6);
+  transition:left .28s ease,top .28s ease,width .28s ease,height .28s ease}
+.tour-card{position:fixed;z-index:1402;width:min(380px,calc(100vw - 32px));background:var(--card);color:var(--ink);
+  border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.28);padding:16px 18px 12px;font-family:'Roboto',sans-serif;overflow:hidden}
+.tour-card.tc-centro{left:50% !important;top:50% !important;transform:translate(-50%,-50%)}
+.tour-card.tc-movil{left:16px !important;right:16px;width:auto;transform:none}
+.tour-card.tc-movil.tc-arriba{top:calc(12px + env(safe-area-inset-top, 0px)) !important}
+.tour-card.tc-movil.tc-centro{top:50% !important;transform:translateY(-50%)}
+.tour-card .tc-barra{position:absolute;left:0;right:0;top:0;height:4px;background:var(--line-soft)}
+.tour-card .tc-barra span{display:block;height:100%;background:var(--guinda);transition:width .28s ease}
+.tour-card .tc-paso{margin:4px 0 2px;font:600 var(--fs-xs) 'Roboto',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--guinda)}
+.tour-card h2{margin:0 0 6px;font-family:var(--font-titulo);font-size:var(--fs-lg);line-height:1.25;color:var(--ink)}
+.tour-card .tc-txt{margin:0 0 12px;font-size:var(--fs-base);line-height:1.5;color:var(--ink-2)}
+.tour-card .tc-acc{display:flex;align-items:center;gap:8px}
+.tour-card .tc-acc .btn{height:44px}
+.tour-card .tc-saltar{margin-right:auto;min-height:44px;padding:0 6px;background:none;border:0;color:var(--muted);
+  font:inherit;font-size:var(--fs-sm);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.tour-card .tc-saltar:hover{color:var(--guinda)}
+.tour-card button:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
+html.tour-activo .estado-red,html.tour-activo #siaToast{visibility:hidden}
+.tour-invita{position:fixed;z-index:var(--z-toast);left:24px;bottom:24px;width:min(360px,calc(100vw - 32px));
+  background:var(--card);border:1px solid var(--line);border-left:4px solid var(--guinda);border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.18);padding:12px 14px;font-family:'Roboto',sans-serif;animation:tiEntra .25s ease}
+.tour-invita p{margin:0 0 10px;font-size:var(--fs-sm);line-height:1.45;color:var(--ink-2)}
+.tour-invita p b{color:var(--ink)}
+.tour-invita .ti-acc{display:flex;align-items:center;gap:8px}
+.tour-invita .ti-acc .btn{height:40px}
+.tour-invita .ti-no{min-height:40px;background:none;border:0;color:var(--muted);font:inherit;font-size:var(--fs-sm);
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.tour-invita.ti-sale{opacity:0;transition:opacity .3s}
+@keyframes tiEntra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (max-width:760px){
+  .tour-invita{left:16px;right:16px;width:auto;bottom:calc(var(--destbar-h) + env(safe-area-inset-bottom, 0px) - var(--ajuste-inf, 0px) + 12px)}
+}
+.recorrido-sec{display:flex;align-items:center;gap:16px;justify-content:space-between}
+.recorrido-sec h3{margin-top:0}
+.recorrido-sec p{margin:0}
+.recorrido-sec .btn{flex:0 0 auto}
+@media (max-width:560px){ .recorrido-sec{flex-direction:column;align-items:flex-start} }
+@media (prefers-reduced-motion: reduce){
+  .tour-foco,.tour-card .tc-barra span{transition:none}
+  .tour-invita{animation:none}
+}

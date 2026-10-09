@@ -9061,6 +9061,293 @@ function showOfflineNotice(msg, type='offline'){
   window.abrirAyuda = abrirAyuda;
 })();
 
+/* ═══ RECORRIDO GUIADO ═══════════════════════════════════════════════════
+   Paso a paso sobre la interfaz real: cada paso lleva a su sección, ilumina
+   el control del que habla y lo explica en una tarjeta. Funciona igual en
+   computadora, tableta y celular; si un control no está a la vista en ese
+   equipo, el paso se muestra al centro sin iluminar nada.
+   · Se ofrece una vez al primer ingreso (invitación discreta, no se impone)
+     y se vuelve a abrir desde la Guía rápida (?).
+   · Mientras corre, la capa del recorrido recibe los toques: nada de lo que
+     está debajo se activa por accidente.
+   · Esc o «Saltar» lo terminan; ← y → cambian de paso.
+   · Al terminar se regresa a la sección en la que estaba la persona.
+   · `elMovil`: en celular algunos bloques son tan largos que no caben junto
+     a la tarjeta; ahí se ilumina una parte más chica. */
+(function(){
+  const CLAVE = 'sia_recorrido_visto';
+  const CLAVE_AVISOS = 'sia_recorrido_avisos';
+  const PASOS = [
+    { titulo:'Te damos la bienvenida',
+      texto:'En un minuto te mostramos cómo usar el tablero: ubicar un punto, leer el resultado, abrir la ficha de un área y moverte entre las secciones. Puedes salir cuando quieras.' },
+    { dest:'UBICAR', el:['.ubicar-input-wrap', '#ubicarInput'], titulo:'¿Dónde estoy?',
+      texto:'Escribe una dirección, un lugar, el nombre de un área, coordenadas o pega una liga de Google Maps. El tablero te dice qué protección ambiental aplica en ese punto y te deja abrir la ficha de cada área.' },
+    { dest:'UBICAR', el:['.gps-fab', '#ubicarGps'], titulo:'Usar mi ubicación',
+      texto:'En campo, toca aquí para usar el GPS del equipo: el punto se coloca donde estás y aparece el resultado. Funciona también sin señal si antes guardaste las capas.' },
+    { dest:'UBICAR', el:['#globalMapSection .map-block-controls-floating'], titulo:'Tipo de mapa y capas',
+      texto:'Cambia entre mapa Estándar y Satélite, y enciende o apaga capas como Suelo de Conservación, el PGOEDF o la Zona Patrimonio.' },
+    { dest:'UBICAR', el:['#globalMapSection .btn-ampliar'], titulo:'Ampliar el mapa',
+      texto:'Pone el mapa en pantalla completa. Toca cualquier polígono para saber qué área es y abrir su ficha.' },
+    { el:['.destbar'], titulo:'Tres secciones',
+      texto:'Ubicar: la consulta por punto. Inventario: las 66 áreas con sus datos. Análisis: brechas, traslapes, metas y marco jurídico.' },
+    { dest:'INVENTARIO', el:['.subnav'], titulo:'Filtrar por categoría',
+      texto:'Elige una categoría —Bosques Urbanos, Barrancas, ANP locales o federales— y el mapa, las cifras y la tabla se ajustan a ella.' },
+    { dest:'INVENTARIO', el:['#tb tr'], titulo:'La ficha de un área',
+      texto:'Toca una fila, o un polígono en el mapa, para abrir su ficha: superficie, instrumento de creación, programa de manejo, mapa, y el botón para compartirla como imagen.' },
+    { dest:'ANALITICA', el:['.an-portada', '#dashboard'], elMovil:['.an-intro'], titulo:'Análisis',
+      texto:'Cuatro secciones, cada una responde una pregunta sobre el sistema de áreas protegidas. Todas las cifras se calculan con el inventario vigente.' },
+    { el:['#ayudaAbrir', '#ayudaAbrirPie'], titulo:'Guía y recorrido',
+      texto:'Aquí está la guía de las categorías y el botón «Guardar para usar sin señal», que conviene usar con wifi antes de salir a campo. También puedes volver a ver este recorrido.' },
+  ];
+
+  const leer = k => { try{ return localStorage.getItem(k); }catch(_){ return null; } };
+  const guardar = (k, v) => { try{ localStorage.setItem(k, v); }catch(_){} };
+  const movil = () => { try{ return matchMedia('(max-width:760px)').matches; }catch(_){ return false; } };
+  const visible = el => {
+    if(!el || !el.isConnected) return false;
+    const r = el.getBoundingClientRect();
+    if(r.width < 2 || r.height < 2) return false;
+    const cs = getComputedStyle(el);
+    return cs.visibility !== 'hidden' && cs.display !== 'none' && Number(cs.opacity) > 0.05;
+  };
+  const buscar = sels => {
+    for(const s of sels || []){
+      const e = Array.prototype.find.call(document.querySelectorAll(s), visible);
+      if(e) return e;
+    }
+    return null;
+  };
+  const espera = ms => new Promise(r => setTimeout(r, ms));
+
+  let capa = null, foco = null, tarjeta = null, vivo = null;
+  let i = 0, objetivo = null, destInicial = null, devolverFoco = null, cuadro = 0, turno = 0;
+
+  function irADestino(id){
+    if(!id || state.dest === id) return false;
+    const b = document.querySelector('.dest[data-dest="' + id + '"]');
+    if(!b) return false;
+    b.click();
+    return true;
+  }
+
+  function cerrarLoAbierto(){
+    try{ if(document.getElementById('dr').classList.contains('open')) closeDrawer(); }catch(_){}
+    try{ const a = document.getElementById('ayudaDlg'); if(a && a.classList.contains('open')) document.getElementById('ayudaCerrar').click(); }catch(_){}
+    try{ siaFsSalirTodo(); }catch(_){}
+    try{ const s = document.getElementById('ubicarSug'); if(s) s.hidden = true; }catch(_){}
+  }
+
+  function montar(){
+    capa = document.createElement('div');
+    capa.className = 'tour-velo';
+    capa.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); });
+    capa.addEventListener('touchmove', e => e.preventDefault(), {passive:false});
+    capa.addEventListener('wheel', () => pedirColocar(), {passive:true});
+    foco = document.createElement('div');
+    foco.className = 'tour-foco';
+    foco.setAttribute('aria-hidden', 'true');
+    tarjeta = document.createElement('div');
+    tarjeta.className = 'tour-card';
+    tarjeta.setAttribute('role', 'dialog');
+    tarjeta.setAttribute('aria-modal', 'true');
+    tarjeta.setAttribute('aria-labelledby', 'tourTit');
+    tarjeta.setAttribute('aria-describedby', 'tourTxt');
+    tarjeta.innerHTML =
+      '<div class="tc-barra" aria-hidden="true"><span></span></div>' +
+      '<p class="tc-paso" id="tourPaso"></p>' +
+      '<h2 id="tourTit"></h2>' +
+      '<p class="tc-txt" id="tourTxt"></p>' +
+      '<div class="tc-acc">' +
+        '<button type="button" class="tc-saltar">Saltar</button>' +
+        '<button type="button" class="btn ghost tc-ant">Anterior</button>' +
+        '<button type="button" class="btn tc-sig">Siguiente</button>' +
+      '</div>';
+    vivo = document.createElement('div');
+    vivo.className = 'sr-only';
+    vivo.setAttribute('aria-live', 'polite');
+    document.body.append(capa, foco, tarjeta, vivo);
+    tarjeta.querySelector('.tc-saltar').addEventListener('click', () => terminar());
+    tarjeta.querySelector('.tc-ant').addEventListener('click', () => mostrar(i - 1));
+    tarjeta.querySelector('.tc-sig').addEventListener('click', () => (i >= PASOS.length - 1 ? terminar() : mostrar(i + 1)));
+    document.addEventListener('keydown', teclas, true);
+    window.addEventListener('resize', pedirColocar);
+    window.addEventListener('scroll', pedirColocar, {passive:true});
+    try{ if(window.visualViewport) visualViewport.addEventListener('resize', pedirColocar); }catch(_){}
+  }
+
+  function desmontar(){
+    document.removeEventListener('keydown', teclas, true);
+    window.removeEventListener('resize', pedirColocar);
+    window.removeEventListener('scroll', pedirColocar);
+    try{ if(window.visualViewport) visualViewport.removeEventListener('resize', pedirColocar); }catch(_){}
+    [capa, foco, tarjeta, vivo].forEach(e => { try{ e.remove(); }catch(_){} });
+    capa = foco = tarjeta = vivo = null;
+    document.documentElement.classList.remove('tour-activo');
+  }
+
+  function teclas(e){
+    if(!tarjeta) return;
+    if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); terminar(); return; }
+    if(e.key === 'ArrowRight'){ e.preventDefault(); e.stopPropagation(); if(i < PASOS.length - 1) mostrar(i + 1); return; }
+    if(e.key === 'ArrowLeft'){ e.preventDefault(); e.stopPropagation(); if(i > 0) mostrar(i - 1); return; }
+    if(e.key === 'Tab'){
+      const bs = Array.prototype.filter.call(tarjeta.querySelectorAll('button'), b => !b.hidden);
+      const pri = bs[0], ult = bs[bs.length - 1];
+      if(e.shiftKey && document.activeElement === pri){ e.preventDefault(); ult.focus(); }
+      else if(!e.shiftKey && document.activeElement === ult){ e.preventDefault(); pri.focus(); }
+      else if(!tarjeta.contains(document.activeElement)){ e.preventDefault(); pri.focus(); }
+    }
+  }
+
+  async function mostrar(n){
+    if(!tarjeta || n < 0 || n >= PASOS.length) return;
+    const mio = ++turno;
+    i = n;
+    const p = PASOS[n];
+    if(irADestino(p.dest)) await espera(450);
+    if(mio !== turno || !tarjeta) return;
+    objetivo = buscar((movil() && p.elMovil) || p.el);
+    if(objetivo){
+      /* Fuera de la pantalla (o tapado por la barra de destinos en celular):
+         se lleva al centro antes de iluminarlo. */
+      const r = objetivo.getBoundingClientRect();
+      const db = document.querySelector('.destbar');
+      const piso = (db && movil() && visible(db) && !db.contains(objetivo)) ? db.getBoundingClientRect().top : innerHeight;
+      /* Al desplazar se deja lugar para la tarjeta: en pantallas grandes el
+         control queda a ~250 px del borde superior (la tarjeta va encima);
+         en celular se centra, salvo un bloque más alto que la pantalla, que
+         basta con que empiece arriba. */
+      const alto = r.height > piso * 0.7;
+      if(r.top < 0 || r.bottom > piso || (alto && r.top > piso * 0.45)){
+        try{
+          if(movil() && !alto) objetivo.scrollIntoView({block:'center', behavior:_suave()});
+          else {
+            const meta = movil() ? 16 : Math.max(12, Math.min(250, piso - r.height - 12));
+            window.scrollBy({top: r.top - meta, behavior:_suave()});
+          }
+        }catch(_){}
+        await espera(_suave() === 'smooth' ? 420 : 60);
+        if(mio !== turno || !tarjeta) return;
+      }
+    }
+    tarjeta.querySelector('#tourPaso').textContent = 'Paso ' + (n + 1) + ' de ' + PASOS.length;
+    tarjeta.querySelector('#tourTit').textContent = p.titulo;
+    tarjeta.querySelector('#tourTxt').textContent = p.texto;
+    tarjeta.querySelector('.tc-barra span').style.width = ((n + 1) / PASOS.length * 100) + '%';
+    tarjeta.querySelector('.tc-ant').hidden = n === 0;
+    const sig = tarjeta.querySelector('.tc-sig');
+    sig.textContent = n === 0 ? 'Empezar' : (n === PASOS.length - 1 ? 'Terminar' : 'Siguiente');
+    tarjeta.querySelector('.tc-saltar').textContent = n === 0 ? 'Ahora no' : 'Saltar';
+    vivo.textContent = 'Paso ' + (n + 1) + ' de ' + PASOS.length + '. ' + p.titulo + '. ' + p.texto;
+    colocar();
+    try{ sig.focus({preventScroll:true}); }catch(_){ sig.focus(); }
+  }
+
+  function pedirColocar(){ if(!cuadro) cuadro = requestAnimationFrame(() => { cuadro = 0; colocar(); }); }
+
+  function colocar(){
+    if(!tarjeta) return;
+    const vw = document.documentElement.clientWidth, vh = innerHeight;
+    const enMovil = movil();
+    tarjeta.classList.toggle('tc-movil', enMovil);
+    tarjeta.style.left = tarjeta.style.top = tarjeta.style.bottom = '';
+    tarjeta.classList.remove('tc-centro', 'tc-arriba', 'tc-abajo');
+    if(!objetivo || !visible(objetivo)){
+      foco.style.cssText = 'left:50%;top:50%;width:0;height:0';
+      tarjeta.classList.add('tc-centro');
+      return;
+    }
+    const r = objetivo.getBoundingClientRect(), m = 6;
+    const x = Math.max(4, r.left - m), y = Math.max(4, r.top - m);
+    const w = Math.min(vw - 4, r.right + m) - x, h = Math.min(vh - 4, r.bottom + m) - y;
+    foco.style.cssText = 'left:' + x + 'px;top:' + y + 'px;width:' + Math.max(0, w) + 'px;height:' + Math.max(0, h) + 'px';
+    if(enMovil){
+      /* En celular la tarjeta se ancla arriba o abajo, del lado contrario al
+         control; abajo queda por encima de la barra de destinos. */
+      const db = document.querySelector('.destbar');
+      const sobreBarra = (db && visible(db)) ? Math.max(12, vh - db.getBoundingClientRect().top + 10) : 12;
+      const centro = y + h / 2;
+      if(centro > vh / 2 && h < vh * 0.7){ tarjeta.classList.add('tc-arriba'); }
+      else { tarjeta.classList.add('tc-abajo'); tarjeta.style.bottom = sobreBarra + 'px'; }
+      return;
+    }
+    const cw = tarjeta.offsetWidth, ch = tarjeta.offsetHeight, g = 14;
+    let top;
+    if(y + h + g + ch <= vh - 12) top = y + h + g;
+    else if(y - g - ch >= 12) top = y - g - ch;
+    else top = null;
+    let left;
+    if(top === null){
+      /* Sin espacio arriba ni abajo: a un lado del control. */
+      top = Math.min(Math.max(12, y), vh - ch - 12);
+      left = (x + w + g + cw <= vw - 12) ? x + w + g : (x - g - cw >= 12 ? x - g - cw : (vw - cw) / 2);
+    } else {
+      left = Math.min(Math.max(12, x + w / 2 - cw / 2), vw - cw - 12);
+    }
+    tarjeta.style.left = Math.round(left) + 'px';
+    tarjeta.style.top = Math.round(top) + 'px';
+  }
+
+  function terminar(){
+    if(!tarjeta) return;
+    turno++;
+    guardar(CLAVE, '1');
+    desmontar();
+    if(destInicial && state.dest !== destInicial){ irADestino(destInicial); }
+    try{ window.scrollTo({top:0, behavior:_suave()}); }catch(_){}
+    if(devolverFoco && document.contains(devolverFoco)){ try{ devolverFoco.focus({preventScroll:true}); }catch(_){} }
+    devolverFoco = null;
+  }
+
+  function iniciar(origen){
+    if(tarjeta) return;
+    quitarInvitacion();
+    cerrarLoAbierto();
+    devolverFoco = origen || document.activeElement;
+    destInicial = state.dest;
+    document.documentElement.classList.add('tour-activo');
+    montar();
+    mostrar(0);
+  }
+
+  /* ── Invitación al primer ingreso ──
+     Discreta y una sola vez por equipo: si la persona la cierra o hace el
+     recorrido, no vuelve; si la deja pasar sin tocarla, se ofrece una vez más. */
+  let invitacion = null;
+  function quitarInvitacion(){ if(invitacion){ invitacion.remove(); invitacion = null; } }
+  function invitar(){
+    if(leer(CLAVE) || invitacion || tarjeta) return;
+    if(location.hash.startsWith('#area=')) return;
+    const html = document.documentElement;
+    if(html.classList.contains('ficha-abierta') || html.classList.contains('sia-fs-abierto')) return;
+    const avisos = Number(leer(CLAVE_AVISOS) || 0);
+    if(avisos >= 2){ guardar(CLAVE, '1'); return; }
+    guardar(CLAVE_AVISOS, String(avisos + 1));
+    invitacion = document.createElement('div');
+    invitacion.className = 'tour-invita';
+    invitacion.setAttribute('role', 'region');
+    invitacion.setAttribute('aria-label', 'Recorrido guiado');
+    invitacion.innerHTML =
+      '<p><b>¿Primera vez en el tablero?</b> Te mostramos cómo usarlo en un minuto.</p>' +
+      '<div class="ti-acc"><button type="button" class="btn ti-ver">Ver recorrido</button>' +
+      '<button type="button" class="ti-no">Ahora no</button></div>';
+    document.body.appendChild(invitacion);
+    invitacion.querySelector('.ti-ver').addEventListener('click', e => iniciar(e.currentTarget));
+    invitacion.querySelector('.ti-no').addEventListener('click', () => { guardar(CLAVE, '1'); quitarInvitacion(); });
+    setTimeout(() => { if(invitacion){ invitacion.classList.add('ti-sale'); setTimeout(quitarInvitacion, 300); } }, 30000);
+  }
+  setTimeout(invitar, 2500);
+
+  document.querySelectorAll('[data-recorrido]').forEach(b => b.addEventListener('click', () => {
+    const a = document.getElementById('ayudaDlg');
+    if(a && a.classList.contains('open')){
+      document.getElementById('ayudaCerrar').click();
+      setTimeout(() => iniciar(document.getElementById('ayudaAbrir')), 260);
+    } else iniciar(b);
+  }));
+  window.siaRecorrido = iniciar;
+})();
+
 window.addEventListener('online', () => showOfflineNotice('Conexión restablecida ✓', 'online'));
 window.addEventListener('offline', () => showOfflineNotice('Sin conexión · operando con datos en caché', 'offline'));
 
