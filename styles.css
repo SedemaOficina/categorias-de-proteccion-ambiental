@@ -1,8 +1,6 @@
 /* ═════════════════════════════════════════════════════════════════════
    Dashboard · Categorías de Protección Ambiental · SIA · SEDEMA CDMX
-   Hoja de estilos. Hasta la v43 vivía incrustada en index.html; se separó
-   para poder analizarla con herramientas de CSS y para que un cambio de
-   estilo no obligue a reenviar el archivo completo.
+   Hoja de estilos única del tablero (la carga index.html).
 
    Reglas que no se rompen:
    · Las reglas compiten por ORDEN cuando la especificidad empata. No mover
@@ -35,9 +33,8 @@
     --bg-3:#f1ead4;
     --ink:#2a2a2a;
     --ink-2:var(--gris);
-    /* 2.78:1 sobre --bg-3 no cumplia AA y es el color de la etiqueta que
-       identifica cada dato en la ficha. #67696b da 5.40 sobre crema y 4.58
-       sobre el fondo mas oscuro del sistema. */
+    /* Color de la etiqueta que identifica cada dato en la ficha: #67696b da
+       5.40 sobre crema y 4.58 sobre el fondo mas oscuro del sistema (AA). */
     --muted:#67696b;
     --marron-900:#8f5610;   /* fondo de insignia con texto crema · 5.86:1 */
     /* Colores de grupo para TEXTO pequeño (AA ≥ 4.5:1 sobre blanco y crema) */
@@ -71,14 +68,11 @@
     --shadow:0 1px 2px rgba(42,42,42,.04),0 4px 12px -6px rgba(42,42,42,.08);
     --radius:7px;
 
-    /* ─── Sistema de diseno · consolidacion 2026-08-22 ────────────────────
-       Antes: 36 tamanos de letra, 14 radios, 20 sombras, 11 z-index y 32
-       colores hex sueltos fuera de este bloque. Cada token conserva el valor
-       que ya tenia el caso dominante: es consolidacion, no rediseno.
-       Movimiento maximo: 1 px. */
-    /* Rediseno 2026-09-10 · piso tipografico de 11 px (antes 9.5) y escala
-       reducida: el cuerpo sube y las cifras gigantes bajan, porque el dato
-       util es la comparacion, no el tamano. */
+    /* ─── Sistema de diseno · tokens ───────────────────────────────────────
+       Tamanos de letra, radios, sombras y z-index salen de aqui: no declarar
+       valores sueltos fuera de este bloque. */
+    /* Piso tipografico de 11 px y escala reducida: el dato util es la
+       comparacion, no el tamano de la cifra. */
     --fs-micro:11px;    --fs-mini:11px;    --fs-xs:11.5px;
     --fs-sm:12.5px;     --fs-base:13.5px;  --fs-md:14.5px;
     --fs-lg:18px;       --fs-xl:22px;      --fs-2xl:26px;
@@ -93,8 +87,8 @@
 
     --z-flotante:500; --z-sticky:900;
     /* Alto de la barra de destinos fija en celular. Lo usan la propia barra y
-       el hueco que .wrap reserva al pie: si se tocan en un solo sitio no vuelven
-       a desincronizarse (el pie quedaba 15 px por debajo de la barra). */
+       el hueco que .wrap reserva al pie: se define en un solo sitio para que no
+       se desincronicen. */
     --destbar-h:56px;
     --z-drawer:1000; --z-drawer-top:1001; --z-modal:1500; --z-toast:2000;
 
@@ -115,7 +109,7 @@
   html,body{background:var(--bg);color:var(--ink);font-family:'Roboto',sans-serif;font-size:var(--fs-md);line-height:1.55;-webkit-font-smoothing:antialiased}
   .wrap{max-width:1560px;margin:0 auto;padding:18px 24px 80px}
 
-  /* Banda institucional — v36: el logo vive dentro del header (una sola banda) */
+  /* Banda institucional: el logo vive dentro del header (una sola banda) */
   .logo-inst{display:block;height:38px;width:auto;max-width:100%;object-fit:contain;object-position:left center;flex-shrink:0}
   .brand-divider{width:1px;align-self:stretch;background:var(--line);margin:3px 0;flex-shrink:0}
   @media (max-width:1024px){ .logo-inst{height:44px} }
@@ -125,7 +119,6 @@
 
   header.top{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:0 0 10px;border-bottom:2px solid var(--guinda);margin-bottom:12px}
   .brand{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;max-width:780px}
-  /* .eyebrow eliminada en v34 — el span se removió del header en v33 */
   h1{font-family:var(--font-titulo);font-weight:700;font-size:var(--fs-xl);line-height:1.12;letter-spacing:-.015em;color:var(--ink);max-width:900px}
   h1 em{font-style:normal;color:var(--guinda);font-weight:900}
   .sub{color:var(--ink-2);margin-top:2px;margin-bottom:0;font-size:var(--fs-sm);font-weight:400;text-wrap:balance}
@@ -142,9 +135,9 @@
      En celular crece: es la primera acción de la pantalla y el uso dominante. */
   /* Siempre a la vista, como la barra de Google Maps: se ancla arriba y
      acompaña el desplazamiento, así buscar una dirección o una coordenada
-     nunca obliga a volver al principio de la página. Es la única búsqueda del
-     tablero desde que los mapas perdieron la suya (11-sep-2026), de modo que
-     no puede quedar fuera de cuadro. El fondo lleva un color opaco debajo del
+     nunca obliga a volver al principio de la página. Es la única búsqueda de
+     direcciones del tablero (los mapas no llevan la suya), de modo que no
+     puede quedar fuera de cuadro. El fondo lleva un color opaco debajo del
      degradado: pegada, pasa por encima del contenido. */
   .ubicar-bar{background:linear-gradient(100deg,rgba(157,33,72,.05),rgba(178,142,92,.05)),var(--card);
     border:1px solid var(--line);border-left:3px solid var(--guinda);border-radius:var(--radius);
@@ -254,7 +247,7 @@
     color:var(--muted);margin-bottom:14px;min-height:24px}
   .ubi-cabeza-txt{flex:1;min-width:0}
   .ubi-etiqueta{font-size:var(--fs-base);color:var(--ink-2);margin:-8px 0 14px}
-  /* v85 (B14): el resultado ya no lleva mapa propio; una sola columna. */
+  /* El resultado no lleva mapa propio: una sola columna. */
   .ubi-grid{display:grid;grid-template-columns:1fr;gap:20px;align-items:start}
   .ubi-col{min-width:0}
 
@@ -297,10 +290,8 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     Navegación de dos niveles · rediseño 2026-09-10
-     Once destinos planos mezclaban filtros del inventario, inventarios
-     independientes y herramientas. Ahora: cuatro destinos arriba y, dentro
-     de cada uno, sus subconjuntos como filtros. Los ids de GROUPS no cambian.
+     Navegación de dos niveles: cuatro destinos arriba y, dentro de cada
+     uno, sus subconjuntos como filtros (con los ids de GROUPS).
      ═══════════════════════════════════════════════════════════════ */
   .destbar{display:flex;gap:4px;background:var(--card);border:1px solid var(--line-soft);
     border-radius:var(--radius);padding:4px;box-shadow:var(--shadow);margin-bottom:10px}
@@ -362,7 +353,7 @@
   .panel-intro{color:var(--ink-2);font-size:var(--fs-md);margin-top:8px;margin-bottom:20px;max-width:760px;line-height:1.6}
 
   /* ═══════════════════════════════════════════════════════════════
-     Campo primero · celular · rediseño 2026-09-10
+     Campo primero · celular
      La navegacion baja al pulgar, la cabecera se reduce a lo que identifica
      a la institucion y la tabla se lee como lista.
      ═══════════════════════════════════════════════════════════════ */
@@ -372,11 +363,9 @@
     h1{font-size:var(--fs-md);font-weight:600}
     .sub{display:none}
     header.top .meta{display:none}
-    /* La barra está en las cuatro vistas: desde que los mapas perdieron su
-       buscador flotante, es la única entrada de direcciones y coordenadas del
-       tablero y no puede desaparecer al cambiar de destino. Fuera de «Ubicar»
-       se comprime a una fila —sin subtítulo y con el GPS reducido a su icono—
-       para no robarse el primer tercio de la pantalla. */
+    /* Fuera de «Ubicar» la barra se comprime a una fila —sin subtítulo y con
+       el GPS reducido a su icono— para no robarse el primer tercio de la
+       pantalla. */
     .wrap:not(.dest-ubicar) .ubicar-bar{display:flex;align-items:center;gap:9px;
       padding:8px 10px;margin-bottom:10px}
     .wrap:not(.dest-ubicar) .ubicar-head{margin:0;flex:0 0 auto}
@@ -409,19 +398,19 @@
     table.t th:nth-child(11),table.t td:nth-child(11){display:none}
     /* `body` no adorna: sin él estas cuatro reglas pierden contra las anchuras
        base de `table.t th:nth-child(n)`, que se declaran MÁS ABAJO en la hoja
-       con la misma especificidad. El bloque móvil llevaba tiempo sin aplicar y
-       las columnas se repartían por normalización de los porcentajes base
-       (57/14/12/17 en lugar de 52/24/10/14), que es lo que cortaba «6,000». */
+       con la misma especificidad, y las columnas se reparten por normalización
+       de los porcentajes base (57/14/12/17 en lugar de 52/24/10/14), que es lo
+       que corta «6,000». */
     body table.t th:nth-child(1), body table.t td:nth-child(1){width:54%}
     body table.t th:nth-child(7), body table.t td:nth-child(7){width:18%}
     body table.t th:nth-child(8), body table.t td:nth-child(8){width:10%}
     body table.t th:nth-child(10),body table.t td:nth-child(10){width:18%}
     tbody.t-body td{padding:12px 6px;white-space:normal}
     /* `body` por especificidad: la regla base de td.name (nowrap + ellipsis) está
-       declarada después y truncaba los nombres en celular en lugar de partirlos. */
+       declarada después y truncaría los nombres en celular en lugar de partirlos. */
     body tbody.t-body td.name{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.3;font-size:var(--fs-md)}
     /* Con más especificidad que el `.name-sub{display:none}` base, que está
-       declarado después en la hoja y ganaba: la segunda línea nunca se veía. */
+       declarado después en la hoja y ganaría: la segunda línea no se vería. */
     tbody.t-body td.name .name-sub{display:block;white-space:normal;overflow-wrap:anywhere;font-size:var(--fs-xs);color:var(--muted);font-weight:400;margin-top:3px;line-height:1.35}
     /* ARCAC: la tenencia (Comunidad / Ejido) es columna propia también en celular. */
     body table.t.arcac th:nth-child(4), body table.t.arcac td:nth-child(4){display:table-cell;width:28%}
@@ -433,7 +422,7 @@
     .ubicar-input-wrap input,.ubicar-go{height:48px}
   }
 
-  /* ═══ Resumen del inventario · sustituye a las 4 tarjetas KPI ═══ */
+  /* ═══ Resumen del inventario ═══ */
   .panel-mapa{padding-top:14px !important;padding-bottom:14px !important}
   .panel-mapa .mapa-h{font-size:var(--fs-lg) !important;margin-bottom:10px !important}
   .resumen{display:grid;grid-template-columns:auto auto minmax(260px,1fr);gap:0 34px;align-items:center;
@@ -458,7 +447,7 @@
   }
 
   .hero{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
-  /* v82 (auditoría UI-08): paneles con tres cifras —Brechas y distribución— en tres columnas; con cuatro dejaban un hueco a la derecha. */
+  /* Paneles con tres cifras —Brechas y distribución— en tres columnas; con cuatro queda un hueco a la derecha. */
   @media (min-width:1201px){ .hero.hero-3{grid-template-columns:repeat(3,1fr)} }
   .hero-card{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);padding:20px 22px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
   .hero-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--guinda)}
@@ -472,21 +461,11 @@
   .hero-sub{font-size:var(--fs-sm);color:var(--muted);margin-top:8px;font-family:'Roboto',sans-serif;letter-spacing:.04em}
 
   /* ============================================================
-   * Separador institucional · diferencia secciones dentro de un mismo tab
-   * ============================================================ */
-  .seccion-divider{margin-top:48px;margin-bottom:24px;padding:24px 28px;background:linear-gradient(180deg,var(--bg-2) 0%,var(--card) 100%);border-radius:var(--radius);border-top:3px solid var(--guinda);position:relative}
-  .seccion-divider::before{content:"";position:absolute;top:-12px;left:28px;width:24px;height:24px;background:var(--card);border:3px solid var(--guinda);border-radius:50%;box-shadow:0 0 0 4px var(--bg)}
-  .seccion-divider-eyebrow{display:inline-block;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.16em;text-transform:uppercase;color:var(--guinda);font-weight:600;margin-bottom:10px;background:rgba(157,33,72,.08);padding:4px 10px;border-radius:var(--r-ui)}
-  .seccion-divider-title{font-family:'Roboto',sans-serif;font-size:var(--fs-hero);font-weight:700;line-height:1.15;margin:0 0 12px;color:var(--ink);letter-spacing:-.015em}
-  .seccion-divider-title em{font-style:italic;font-weight:400;color:var(--guinda)}
-  .seccion-divider-sub{font-size:var(--fs-md);color:var(--ink-2);line-height:1.6;margin:0;max-width:880px}
-
-  /* ============================================================
    * BRECHAS · CSS
    * ============================================================ */
   /* Variantes hero para diagnóstico de brechas.
-     Sin semáforo (v38): el rojo y el azul de antes competían con la marca y
-     con los colores de categoría —el azul es «ANP Federal» en todo el tablero—.
+     Sin semáforo: el rojo y el azul competirían con la marca y con los
+     colores de categoría —el azul es «ANP Federal» en todo el tablero—.
      El guinda marca lo que exige decisión; el dorado, lo que solo contextualiza. */
   .hero-card.hero-warning::before{background:var(--guinda)}
   .hero-card.hero-info::before{background:var(--dorado)}
@@ -494,7 +473,6 @@
   .hero-card.hero-info .hero-eyebrow{color:var(--dorado-text)}
   .hero-meta{font-size:var(--fs-xs);color:var(--muted);margin-top:10px;font-family:'Roboto',sans-serif;letter-spacing:.04em;line-height:1.3}
 
-  /* Grid de tarjetas de brecha por grupo (2 columnas en desktop) */
   /* Etiqueta de grupo dentro de las tablas de Análisis: el color lo pone el JS
      con GROUP_COLORS; aquí solo el tamaño y la caja tipográfica. */
   .grp-mini{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);white-space:nowrap}
@@ -599,7 +577,6 @@
   .cron-gob-col-period{font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);letter-spacing:.04em;color:var(--muted);text-align:center;margin-top:1px}
   .cron-gob-caption{font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.06em;color:var(--muted);text-transform:uppercase;text-align:center}
 
-  /* .grid-3 y .mini eliminadas en v34 (sin uso en HTML) — usar .legal-grid-3 si se necesita grid de 3 columnas */
           
   /* Paneles compactos — menor padding, sin h3 */
   .panel-compact{padding:18px 22px}
@@ -609,7 +586,7 @@
   #globalMapSection{display:block;margin-top:0;margin-bottom:14px}
   #globalMapSection > .panel{margin-bottom:0}
 
-  /* ═══ Columnas redundantes · rediseño 2026-09-11 ═══
+  /* ═══ Columnas redundantes ═══
      Misma regla que en los filtros: una columna cuyo subconjunto activo tiene un
      solo valor no informa nada. Dentro de «Barrancas» la columna Tipo repite AVA
      veintiséis veces y Subcategoría repite Barranca. Se retiran mientras ese
@@ -623,10 +600,10 @@
   table.t.oc-10 th:nth-child(10), table.t.oc-10 td:nth-child(10),
   table.t.oc-11 th:nth-child(11), table.t.oc-11 td:nth-child(11){display:none}
 
-  /* ═══ Vista partida · rediseño 2026-09-10 ═══
-     El mapa vivia debajo de la tabla, en un producto cuyo uso dominante es de
-     campo: obligaba a recorrer toda la pagina y nunca se veian juntos. A partir
-     de 1200 px comparten pantalla; el mapa queda fijo mientras la tabla corre. */
+  /* ═══ Vista partida ═══
+     A partir de 1200 px tabla y mapa comparten pantalla: el uso dominante es
+     de campo y el mapa no puede quedar al final de la pagina. El mapa queda
+     fijo mientras la tabla corre. */
   @media (min-width:1200px){
     main#main-content{display:grid;grid-template-columns:minmax(0,0.88fr) minmax(0,1fr);
       gap:16px;align-items:start}
@@ -699,26 +676,8 @@
   }
   .panel-compact h3{font-size:var(--fs-xl);margin-bottom:10px}
 
-  /* Tabla compacta de hitos — reemplaza grid de tarjetas */
-  .hitos-table tr{border-bottom:1px dotted var(--line-soft)}
-  .hitos-table tr:last-child{border-bottom:none}
-  .hitos-table th{text-align:left;padding:10px 14px 10px 0;font-family:'Roboto Mono',monospace;font-size:var(--fs-mini);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;width:190px;white-space:nowrap;vertical-align:baseline}
-  .hitos-table td{padding:10px 12px;font-size:var(--fs-base);color:var(--ink);vertical-align:baseline}
-
-  /* Nota al pie dentro de paneles (sustituye estilos inline) */
-  .panel-note{margin-top:14px;padding:10px 14px;background:var(--bg-2);border-radius:var(--r-ui);font-size:var(--fs-sm);color:var(--muted);line-height:1.55;border-left:3px solid var(--dorado)}
-
-  @media (max-width:1024px){
-    .hitos-table th{width:160px;font-size:var(--fs-mini)}
-    .hitos-table td.hitos-val{width:110px;font-size:var(--fs-lg)}
-  }
   @media (max-width:640px){
     .panel-compact{padding:16px 18px}
-    .hitos-table th{width:auto;display:block;padding:10px 0 2px;border:none}
-    .hitos-table td{display:block;padding:0 0 4px}
-    .hitos-table td.hitos-val{width:auto;display:inline-block;margin-right:10px;font-size:var(--fs-lg)}
-    .hitos-table td.hitos-ctx{display:inline;font-size:var(--fs-sm)}
-    .hitos-table tr{padding:8px 0;display:block}
   }
 
   .comp{width:100%;border-collapse:collapse}
@@ -743,7 +702,7 @@
   .alc-leg-swatch{display:inline-block;width:14px;height:11px;border-radius:var(--r-chip);flex-shrink:0}
 
   .alc-stacked{display:flex;flex-direction:column;gap:7px}
-  /* v82: la columna del total tiene ancho fijo; con `auto` cada fila medía distinto y las barras no arrancaban en el mismo punto. */
+  /* La columna del total tiene ancho fijo; con `auto` cada fila mide distinto y las barras no arrancan en el mismo punto. */
   .alc-row{display:grid;grid-template-columns:1.3fr 2.4fr 11.5rem;gap:12px;align-items:center;font-size:var(--fs-base)}
   .alc-name{color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400}
   .alc-track{display:flex;height:22px;background:var(--bg-2);border-radius:var(--r-ui);overflow:hidden;transition:width .4s cubic-bezier(.2,.8,.2,1)}
@@ -753,7 +712,7 @@
   .alc-seg-num{padding:0 4px;text-shadow:0 1px 2px rgba(0,0,0,.25)}
   .alc-seg-num-oscuro{color:#3b1d00;text-shadow:none}
   .alc-total{font-family:'Roboto',sans-serif;font-size:var(--fs-sm);color:var(--ink);white-space:nowrap;min-width:90px;text-align:right;font-weight:600}
-  /* v82: ARCAC fuera de la barra, como dato aparte bajo el total de la alcaldía. */
+  /* ARCAC fuera de la barra, como dato aparte bajo el total de la alcaldía. */
   .alc-arcac{display:block;font-size:var(--fs-xs);font-weight:400;color:var(--muted)}
   /* Las alcaldías con muy poca superficie (Coyoacán, Cuauhtémoc, V. Carranza) no deben desaparecer. */
   .alc-track{min-width:4px}
@@ -762,7 +721,7 @@
   @media (max-width:640px){
     .alc-row{grid-template-columns:1fr;gap:4px}
     .alc-name{font-size:var(--fs-sm);font-weight:500;color:var(--ink)}
-    /* v82: la barra conserva su largo proporcional también en celular (antes todas a 100 %). */
+    /* La barra conserva su largo proporcional también en celular. */
     .alc-track{height:20px}
     .alc-total{text-align:left;font-size:var(--fs-xs);color:var(--muted)}
     .alc-legend{font-size:var(--fs-micro);gap:8px 12px;padding:8px 10px}
@@ -825,9 +784,7 @@
   .legal-list li .ref{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:.04em;font-weight:400;display:block;word-wrap:break-word;overflow-wrap:break-word;white-space:normal}
 
   /* Variante compacta — ref a la izquierda (mono, pequeña) · contenido a la
-     derecha. El comentario anunciaba el bloque desde hace tiempo pero la regla
-     nunca se escribió: `legalList(LEGAL.sistema.items, 'compact')` emitía la
-     clase y el listado se pintaba como uno normal. Escrita el 11-sep-2026. */
+     derecha. La emite `legalList(LEGAL.sistema.items, 'compact')`. */
   .legal-list-compact li{display:grid;grid-template-columns:minmax(96px,auto) 1fr;
     gap:4px 16px;align-items:baseline;padding:9px 0}
   .legal-list-compact li .ref{order:-1;margin:0;text-align:right;white-space:nowrap;
@@ -869,14 +826,12 @@
   .legal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
   .legal-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
 
-  /* ═══ Barra de filtros · compacta (11 sep 2026) ═══════════════════════
-     Antes era una rejilla de campos de formulario: cada filtro con su rótulo
-     encima, a 44 px de alto y a media columna de ancho. Siete filtros así
-     ocupaban unos 400 px de alto y empujaban la tabla fuera de la pantalla.
-     El problema no era el número de columnas, era el tamaño de cada campo:
-     esto es una barra de filtros de tablero, no un formulario de captura.
-     Ahora el rótulo va EN LÍNEA con su control, cada campo mide lo que su
-     contenido pide y la fila envuelve sola según el ancho disponible. */
+  /* ═══ Barra de filtros · compacta ═══════════════════════════════════════
+     Es una barra de filtros de tablero, no un formulario de captura: el
+     rótulo va EN LÍNEA con su control, cada campo mide lo que su contenido
+     pide y la fila envuelve sola según el ancho disponible. Con el rótulo
+     encima y 44 px de alto, siete filtros ocuparían unos 400 px de alto y
+     empujarían la tabla fuera de la pantalla. */
   .toolbar{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);
     padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;
     margin-bottom:12px;box-shadow:var(--shadow)}
@@ -896,9 +851,9 @@
     padding-top:10px;margin-top:2px;border-top:1px dashed var(--line)}
   .filtros-av[hidden]{display:none}
   /* Cada par etiqueta+desplegable nunca se encoge por debajo de su contenido:
-     antes, con min-width:0, los cinco pares de «Más filtros» se apretaban en
-     un renglón y el desplegable invadía la etiqueta siguiente (14-sep-2026).
-     Al no caber, la fila parte en dos. */
+     con min-width:0 los cinco pares de «Más filtros» se apretarían en un
+     renglón y el desplegable invadiría la etiqueta siguiente. Al no caber, la
+     fila parte en dos. */
   .filtros-av label{min-width:fit-content;flex:0 1 auto}
   .filtros-av select{min-width:120px}
   .toolbar .lab{font-size:var(--fs-micro);letter-spacing:.06em}
@@ -925,8 +880,8 @@
     padding:5px 22px 5px 9px;height:30px;font-size:var(--fs-sm);text-overflow:ellipsis}
   .toolbar input[type=search]{height:30px;padding:5px 9px;font-size:var(--fs-sm);width:auto;flex:1 1 auto;min-width:0}
   .toolbar label.f-buscar{flex:1 1 230px;min-width:170px}
-  /* El indicador de foco de estos controles era un borde de 1px, el más débil de la
-     interfaz, justo en los controles más usados. Se alinea con el resto del sitio. */
+  /* Indicador de foco alineado con el resto del sitio: un borde de 1px sería
+     el más débil de la interfaz, justo en los controles más usados. */
   input[type=search]:focus-visible,select:focus-visible{outline:2px solid var(--guinda);outline-offset:1px}
   .btn{background:var(--guinda);color:var(--crema);border:none;border-radius:var(--radius);padding:0 16px;font-family:'Roboto',sans-serif;font-weight:500;font-size:var(--fs-base);letter-spacing:.02em;cursor:pointer;transition:background .15s;height:38px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
   .btn:hover{background:var(--guinda-900)}
@@ -1007,14 +962,10 @@
   .tag-ANP.tag-full{background:rgba(157,33,72,.08)}
 
   /* SUBCATEGORÍA — todas con color único basado en paleta GCDMX */
-  /* Etiqueta de tenencia de la ficha ARCAC. Vivía dentro del <style> de la
-     página independiente de ARCAC, que nunca se inyectaba: la insignia se
-     pintaba sin estilo. Rescatada al retirar esa página (11-sep-2026). */
+  /* Etiqueta de tenencia de la ficha ARCAC. */
   .ten-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:var(--fs-xs);
     font-weight:600;color:#fff;letter-spacing:.01em}
   .tag-sub{display:inline-block;padding:2px 8px;border-radius:var(--r-chip);font-size:var(--fs-mini);font-family:'Roboto Mono',monospace;letter-spacing:.03em;white-space:nowrap;font-weight:500;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-  /* Variante full: nombre completo dentro del recuadro con su color característico */
-  .tag-sub.tag-sub-full{padding:4px 12px;font-size:var(--fs-xs);letter-spacing:.02em;white-space:normal}
   /* AVA */
   .sub-BU   {background:transparent; color:var(--sub-bu); border:1px solid rgba(240,130,23,.55)}
   .sub-BR   {background:transparent; color:var(--marron-900); border:1px solid rgba(143,86,16,.45)}
@@ -1039,9 +990,6 @@
   .sub-SAN  {background:var(--sub-san);           color:var(--crema)}      /* Naranja oscuro */
 
   .empty{padding:60px 20px;text-align:center;color:var(--muted);font-style:italic}
-
-  /* Leyenda institucional de nomenclatura */
-  /* (Bloque de nomenclatura institucional eliminado) */
 
   /* Bloque constitucional — norma suprema local */
   .constitucion-block{border-left:4px solid var(--guinda)}
@@ -1122,7 +1070,7 @@
   .drawer .subcat{font-size:var(--fs-base);color:var(--muted);margin-bottom:18px;font-style:italic}
   /* Encabezado del drawer con botón Compartir alineado a la derecha */
   .drawer-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:8px;padding-right:44px}
-  /* Cabecera fija de la ficha (14-sep-2026): #drHead recibe la
+  /* Cabecera fija de la ficha: #drHead recibe la
      .drawer-header-row de cada ficha y contiene el «×»; el cuerpo (#drIn) se
      desplaza por debajo. En escritorio el cajón entero es el que hace scroll,
      así que la cabecera es sticky; en celular es un hijo fijo del flex. */
@@ -1144,7 +1092,7 @@
      barra de destinos fija (900)—, así que la atribución y los controles se
      quedaban los toques destinados a la navegación cuando el mapa llegaba al
      pie de la pantalla. Se bajan a 800: siguen por encima de los globos de
-     Leaflet (700) y ya no compiten con la interfaz de la página. */
+     Leaflet (700) y no compiten con la interfaz de la página. */
   .leaflet-top, .leaflet-bottom{z-index:800}
   .map-block-controls-floating{position:absolute;top:10px;right:10px;z-index:var(--z-flotante);display:flex;gap:6px;align-items:stretch}
   .map-block-controls-floating .map-block-toggle{position:static;box-shadow:var(--sh-2);background:var(--card)}
@@ -1155,8 +1103,6 @@
   /* Mapa en pantalla completa — usa Fullscreen API nativa */
   #globalMapCanvas:fullscreen,#mapCanvas:fullscreen,#zpMapCanvas:fullscreen{height:100vh !important;width:100vw !important;background:var(--card)}
   #globalMapCanvas:-webkit-full-screen,#mapCanvas:-webkit-full-screen,#zpMapCanvas:-webkit-full-screen{height:100vh !important;width:100vw !important;background:var(--card)}
-  /* Marcador del resultado de búsqueda */
-  .search-result-marker{background:var(--guinda);border:3px solid #fff;border-radius:50%;width:18px !important;height:18px !important;margin-left:-9px !important;margin-top:-9px !important;box-shadow:0 2px 6px rgba(0,0,0,.4)}
   /* ── Popup de ubicación · ejecutivo: una respuesta, no un expediente ── */
   .lp{font-family:'Roboto',sans-serif;color:var(--ink);line-height:1.4;min-width:0}
   .loc-loading{padding:14px 4px;text-align:center;color:var(--muted);font-size:var(--fs-sm);font-family:'Roboto',sans-serif;}
@@ -1179,7 +1125,6 @@
     font-size:var(--fs-sm);font-weight:700;max-width:150px;overflow:hidden;white-space:nowrap}
   .lp-ficha:hover{background:var(--guinda-900)}
   .lp-ficha .ar{font-family:'Roboto Mono',monospace}
-  /* Chip SC flotante en la ficha técnica (esquina inferior izquierda para no chocar con buscador) */
   /* El lienzo Leaflet de la ficha vive en su propio hijo para no borrar los flotantes */
   .map-canvas-inner{position:absolute;inset:0;z-index:0}
   /* Ficha: el panel mide 580px, así que el buscador (316px desde left:50) se encimaba
@@ -1197,13 +1142,10 @@
   .map-canvas.no-data{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:var(--fs-sm);text-align:center;padding:20px;background:var(--bg-2);font-family:'Roboto',sans-serif}
 
   /* ═══════════════════════════════════════════════════════════════════════
-     SISTEMA UNIFICADO DE CONTROLES DE MAPA · v36
-     Antes convivían tres lenguajes visuales (los controles nativos de Leaflet,
-     los botones flotantes propios y los chips), con alturas, radios, sombras y
-     colores distintos, y la columna izquierda se veía como cuatro cajas sueltas.
-     Ahora todos comparten los mismos tokens y se agrupan por función:
+     SISTEMA UNIFICADO DE CONTROLES DE MAPA
+     Los controles nativos de Leaflet, los botones flotantes propios y los
+     chips comparten los mismos tokens y se agrupan por función:
        · arriba-izquierda  → navegación (zoom · ubicarme · vista general) en UNA tarjeta
-       · a su derecha      → buscador
        · arriba-derecha    → vista (capa base · pantalla completa) en UNA tarjeta
        · abajo-izquierda   → capas/leyenda (chip de Suelo de Conservación)
      ═══════════════════════════════════════════════════════════════════════ */
@@ -1241,9 +1183,8 @@
   /* Íconos propios: mismo peso y color que el resto; el color solo aparece al pasar el cursor */
   /* «Ubicarme» va en guinda: es la misma acción que el botón redondo de la
      barra de búsqueda y debe leerse igual. «Vista general» se queda en gris
-     —es una utilidad del mapa, no la acción principal—. El `!important` venía
-     de cuando ambos controles se igualaban; se conserva porque el icono trae
-     color en línea desde el JS de Leaflet. */
+     —es una utilidad del mapa, no la acción principal—. El `!important` hace
+     falta porque el icono trae color en línea desde el JS de Leaflet. */
   .resetview-ctrl a{color:var(--ink-2) !important}
   .locate-ctrl a{color:var(--guinda) !important}
   .resetview-ctrl a:hover{color:var(--guinda) !important}
@@ -1282,13 +1223,11 @@
   .drawer-sc-floating .map-filter-chip:hover{border-color:var(--guinda); color:var(--guinda)}
 
   /* ── Pantallas angostas: los controles caben en UNA fila ──────────────
-     Con el buscador flotante retirado (11-sep-2026) no queda nada que
-     empuje la segunda fila: zoom a la izquierda, vista a la derecha, ambos
-     al ras superior. Antes se apilaban en dos filas y entre el buscador de
-     ancho completo y la tarjeta de vista se comían medio mapa. */
+     Zoom a la izquierda, vista a la derecha, ambos al ras superior: apilados
+     en dos filas se comerían medio mapa. */
   @media (max-width:760px){
     /* Los botones +/− se retiran: en un teléfono se acerca con dos dedos, y la
-       columna de controles terminaba pisando la barra de navegación inferior.
+       columna de controles terminaría pisando la barra de navegación inferior.
        Quedan «Ubicarme» y «Vista general», que no tienen gesto equivalente. */
     .leaflet-control-zoom{display:none !important}
 
@@ -1303,9 +1242,9 @@
     .leaflet-container.leaflet-touch-zoom,
     .leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{touch-action:pan-x pan-y !important}
     /* Excepciones con gesto completo (un dedo arrastra el mapa): el caparazón
-       de «¿Dónde estoy?», la pantalla completa nativa y la simulada. Antes el
-       pan-y de arriba alcanzaba también a estos mapas y en celular solo se
-       podían mover en horizontal o con dos dedos: la sensación de «trabado». */
+       de «¿Dónde estoy?», la pantalla completa nativa y la simulada. Sin ellas
+       el pan-y de arriba alcanza también a estos mapas y en celular solo se
+       mueven en horizontal o con dos dedos: la sensación de «trabado». */
     /* La clase se repite para superar la especificidad (0,3,0) de la regla
        de arriba; la pone el JS (caparazón y pantalla completa, nativa o simulada). */
     .leaflet-container.mapa-gesto-total.mapa-gesto-total.mapa-gesto-total{touch-action:none !important}
@@ -1355,7 +1294,7 @@
   /* «Ubicar» esconde los chips pero conserva el contenedor: de él cuelga el
      interruptor de Suelo de Conservación, que es quien monta esa capa en el
      mapa. Quitarlo del DOM dejaría la vista de campo sin SC dibujado.
-     [hidden] no bastaba: .map-filters declara display:flex y le gana. */
+     [hidden] no basta: .map-filters declara display:flex y le gana. */
   .map-filters--oculto{display:none !important}
   .map-filter-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 13px;background:#fff;border:1.5px solid var(--line);border-radius:var(--r-ui);font-size:var(--fs-sm);color:var(--ink-2);cursor:pointer;font-weight:500;font-family:'Roboto',sans-serif;transition:all .15s}
   .map-filter-chip:hover{border-color:var(--ink-2)}
@@ -1428,8 +1367,8 @@
   .legal-block p:last-child{margin-bottom:0}
   .legal-block .ref{font-family:'Roboto Mono',monospace;font-size:var(--fs-xs);color:var(--muted);font-weight:500}
 
-  /* FIX v36: la lista de selectores quedaba abierta con coma final y se comía el
-     @media siguiente, dejando TODO el BREAKPOINT 1 (≤1200px) muerto en producción. */
+  /* Cuidado: una lista de selectores abierta con coma final se come el
+     @media siguiente y deja muerto TODO el BREAKPOINT 1 (≤1200px). */
   .panel h3, .panel-intro, .hero-sub{overflow-wrap:break-word}
 
   /* ===== BREAKPOINT 1 — iPad 11" landscape y pantallas medianas (≤1200px) ===== */
@@ -1444,7 +1383,7 @@
   @media (max-width:1024px){
     .wrap{padding:26px 20px 60px}
     h1{font-size:var(--fs-2xl)}
-    .grid-2,.legal-grid{grid-template-columns:1fr}
+    .legal-grid{grid-template-columns:1fr}
     .legal-grid-3{grid-template-columns:repeat(2,1fr)}
     .constitucion-grid{grid-template-columns:1fr}
     .panel{padding:22px 22px}
@@ -1503,11 +1442,6 @@
     /* Brechas en mobile: 1 columna */
     .brechas-grid{grid-template-columns:1fr}
     .brecha-card-num{font-size:var(--fs-hero)}
-    /* Separador institucional adaptado a mobile */
-    .seccion-divider{margin-top:32px;padding:18px 18px;border-top-width:2px}
-    .seccion-divider::before{left:18px;width:18px;height:18px;border-width:2px;top:-9px}
-    .seccion-divider-title{font-size:var(--fs-xl)}
-    .seccion-divider-sub{font-size:var(--fs-base)}
     /* Cronología en mobile: scroll horizontal */
     .cronologia-container{padding:18px 12px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
     .cronologia-chart{min-width:520px;height:200px}
@@ -1559,7 +1493,6 @@
   }
 
 
-  /* === Suelo de Conservación: capa overlay === */
   /* Estado (PM · SC): se lee por RELLENO, no por matiz. El verde ya significa
      «Bosque Urbano» y el rojo leia como alarma en un dato que solo describe
      una condicion territorial. Punto lleno = si · punto hueco = no. */
@@ -1572,7 +1505,7 @@
   .status-sc.status-tag-si::before{background:var(--sc)}
   /* Tercer estado: dentro EN PARTE. El punto va medio lleno —relleno a la
      izquierda, hueco a la derecha—, que es exactamente lo que dice el dato, y
-     mantiene la regla de v38: el estado no se codifica por matiz. */
+     mantiene la regla: el estado no se codifica por matiz. */
   .status-tag-parcial{color:var(--ink-2)}
   .status-tag-nd::before{background:transparent;border:1.6px dashed #c0bbaa}
   .status-tag-nd{color:var(--muted)}
@@ -1615,15 +1548,14 @@
   .sia-footer-text-2{color:var(--ink-2);font-weight:400}
   .sia-footer-sep{color:var(--line);font-weight:400}
   /* Procedencia del dato · exigencia de gobierno digital: fuente, corte, unidad
-     responsable, carácter no vinculante y vía de contacto ciudadano. */
+     responsable y carácter no vinculante. */
   .sia-proc{max-width:900px;margin:0 auto 18px;padding:0 20px;display:flex;flex-direction:column;gap:8px;font-family:'Roboto',sans-serif;font-size:var(--fs-xs);line-height:1.55;color:var(--ink-2);text-align:center}
   .sia-proc p{margin:0}
   .sia-proc b{color:var(--ink);font-weight:500}
   .sia-proc-aviso{border-left:3px solid var(--dorado);background:var(--warn-bg,rgba(178,142,92,.08));padding:10px 14px;text-align:left;border-radius:0 var(--radius) var(--radius) 0}
-  .sia-proc-contacto a{color:var(--guinda);font-weight:500}
 
   /* ============================================================
-   * E3 · INDICADOR DE ESTADO DE CONEXIÓN (Service Worker)
+   * INDICADOR DE ESTADO DE CONEXIÓN (Service Worker)
    * ============================================================ */
   .offline-notice{position:fixed;bottom:80px;right:20px;background:var(--ink);color:var(--crema);padding:12px 18px;border-radius:var(--radius);font-family:'Roboto',sans-serif;font-size:var(--fs-base);line-height:1.4;box-shadow:var(--sh-3);z-index:var(--z-modal);max-width:320px;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none}
   .offline-notice.visible{opacity:1;transform:translateY(0);pointer-events:auto}
@@ -1640,11 +1572,11 @@
   }
 
     /* ═══ OBJETIVOS TACTILES ═══════════════════════════════════════════════
-     Medido en produccion: 17 controles quedaban por debajo de 44 px, entre
-     ellos el zoom de Leaflet (30x30) que aparece en los seis mapas del sitio
-     y es el control que mas se toca en campo.
+     Todo control tactil llega a 44 px, incluido el zoom de Leaflet (30x30 de
+     serie), que aparece en los seis mapas del sitio y es el control que mas
+     se toca en campo.
      Se usa pointer:coarse y no max-width para cubrir tambien tabletas
-     tactiles anchas, que con el criterio de ancho quedaban fuera.
+     tactiles anchas, que con el criterio de ancho quedarian fuera.
      Se agranda el area de toque sin cambiar la caja visual donde importa. */
   @media (pointer:coarse), (max-width:640px){
     .leaflet-touch .leaflet-bar a,
@@ -1667,7 +1599,7 @@
   }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SISTEMA «GOOGLE MAPS» · adaptación del kit de Figma (11 sep 2026)
+   SISTEMA «GOOGLE MAPS» · adaptación del kit de Figma
    ───────────────────────────────────────────────────────────────────
    Se toma del kit la GEOMETRÍA y la ELEVACIÓN —cápsulas de radio
    completo, botones redondos de 48/56, sombras de tres niveles, la
@@ -1697,19 +1629,16 @@
 .gm-mark-pin svg{filter:drop-shadow(0 2px 3px rgba(42,42,42,.4))}
 
 /* ── PANTALLA COMPLETA ─────────────────────────────────────────────
-   v80 (28-sep-2026): el botón nativo `.map-fullscreen-btn` sigue oculto (es
-   solo el objetivo del clic); el control visible de TODO mapa incrustado es
-   `.btn-ampliar` (redondo, bajo el de capas), en cualquier puntero. Lo crea
+   El botón nativo `.map-fullscreen-btn` va oculto (es solo el objetivo del
+   clic); el control visible de TODO mapa incrustado es `.btn-ampliar`
+   (redondo, bajo el de capas), en cualquier puntero. Lo crea
    `_gestosTactilesIncrustado` y lo cablea `attachFullscreenBtn`. Todo mapa
    nuevo debe llevar un `.map-fullscreen-btn` en su lienzo y llamar a ambas.
-   Nota histórica (v70): no aportaba nada —en celular el mapa ya ocupa la pantalla y en
-   escritorio la ventana ES la pantalla— y en iOS solo servía para mostrar
-   «Tu navegador no admite el modo pantalla completa». Va sin media query:
-   sobra en todos los anchos. Deja sin efecto a `html.sin-fullscreen`. */
+   Va sin media query: se oculta en todos los anchos. */
 .map-fullscreen-btn{display:none!important}
 
 /* ── «Ubicarme» en guinda ──────────────────────────────────────────
-   Es la misma acción que el botón redondo de la barra de búsqueda y debía
+   Es la misma acción que el botón redondo de la barra de búsqueda y debe
    leerse igual. El azul se reserva para el punto que marca dónde estás,
    que es un dato, no un control. Va en la hoja y no en un estilo en línea
    porque así se aplica también a los controles que Leaflet recrea. */
@@ -1724,10 +1653,9 @@
 #mapCanvas .map-block-controls-floating .map-block-toggle button{padding:0 10px;
   font-size:var(--fs-micro)}
 
-/* Encabezado de superficie (14-sep-2026): «Sup. (ha)» partía en dos renglones
-   en la columna de 6-10 % y se veía descuadrado frente a los demás. Ahora es
-   «Ha» (título y aria-label dicen «Superficie en hectáreas»): un renglón,
-   alineado a la derecha como sus cifras. */
+/* Encabezado de superficie: «Ha» (título y aria-label dicen «Superficie en
+   hectáreas») cabe en un renglón en la columna de 6-10 % y se alinea a la
+   derecha como sus cifras; «Sup. (ha)» partiría en dos. */
 thead.t-head th:nth-child(7){white-space:nowrap}
 
 /* El asa de la ficha solo existe cuando la ficha es hoja (celular). En
@@ -1736,8 +1664,8 @@ thead.t-head th:nth-child(7){white-space:nowrap}
 
 /* Asa de arrastre (componente `handle` del kit) */
 .gm-handle{width:34px;height:4px;border-radius:2px;background:#dadce0;margin:8px auto 4px}
-/* v82 (auditoría UI-06): en escritorio el resultado de «¿Dónde estoy?» es una
-   tarjeta fija en la página, no una hoja que se arrastra: el asa sobra. */
+/* En escritorio el resultado de «¿Dónde estoy?» es una tarjeta fija en la
+   página, no una hoja que se arrastra: el asa sobra. */
 @media (min-width:761px){ .gm-handle{display:none} }
 
 @media (max-width:760px){
@@ -1760,7 +1688,7 @@ thead.t-head th:nth-child(7){white-space:nowrap}
 
   /* ── SEARCH BAR (componente `search-bar`) ─────────────────────────
      Cápsula blanca con sombra, icono guía a la izquierda y acción a la
-     derecha. Sustituye a la caja con borde y esquinas de 6 px: es el
+     derecha, en lugar de caja con borde y esquinas de 6 px: es el
      elemento que más distingue a Google Maps de un formulario web. */
   .ubicar-bar{background:var(--card);border:none;border-left:none;border-radius:28px;
     padding:6px 6px 6px 8px;box-shadow:var(--gm-e2);margin-bottom:12px}
@@ -1783,17 +1711,17 @@ thead.t-head th:nth-child(7){white-space:nowrap}
     overflow:hidden}
 
   /* ── FAB (componente `Button /Round`) ─────────────────────────────
-     «Usar mi ubicación» deja de ser un botón rectangular con texto: es
-     el gesto que más repite el personal en campo y en el kit eso es un
-     círculo. Guinda relleno = acción primaria. */
+     «Usar mi ubicación» es el gesto que más repite el personal en campo y
+     en el kit eso es un círculo, no un botón rectangular con texto. Guinda
+     relleno = acción primaria. */
   .ubicar-gps{width:44px;height:44px;min-width:44px;padding:0;border-radius:50%;
     background:var(--guinda);color:#fff;box-shadow:var(--gm-e1);flex:0 0 auto}
   .ubicar-gps span{display:none}
   .ubicar-gps svg{width:20px;height:20px}
   .ubicar-gps:active{box-shadow:var(--gm-e2);transform:scale(.96)}
   .wrap:not(.dest-ubicar) .ubicar-gps{width:44px;height:44px;padding:0}
-  /* En «Ubicar» el alto lo fijaban dos reglas de escritorio (52 y 48 px) que
-     estiraban el círculo a óvalo. La cápsula es de una sola altura. */
+  /* En «Ubicar» dos reglas de escritorio (52 y 48 px) estirarían el círculo
+     a óvalo. La cápsula es de una sola altura. */
   .dest-ubicar .ubicar-row{flex-direction:row;align-items:center;gap:6px}
   .dest-ubicar .ubicar-gps{width:44px;height:44px;align-self:center;font-size:0}
   /* En el kit la acción de la derecha cierra la cápsula (ahí va el avatar).
@@ -1831,7 +1759,7 @@ thead.t-head th:nth-child(7){white-space:nowrap}
     border:none;color:var(--guinda);font-size:var(--fs-lg);flex:0 0 auto}
 
 
-  /* ═══ CAPARAZÓN DE MAPA · etapa 2 del kit (12 sep 2026) ═══════════
+  /* ═══ CAPARAZÓN DE MAPA ═══════════
      En «Ubicar» el celular deja de ser una página con un mapa dentro y
      pasa a ser un mapa con una página encima: el lienzo ocupa la
      pantalla, la cápsula de búsqueda flota arriba y el resultado sube
@@ -1892,37 +1820,24 @@ thead.t-head th:nth-child(7){white-space:nowrap}
   .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-panel{flex:1;min-height:0;overflow-y:auto;
     -webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;
     margin:0;border:none;border-radius:0;box-shadow:none;padding:0 14px 18px}
-  /* Con el mapa detrás, el mini-mapa del resultado sobra: mostraba el
-     mismo punto dos veces y partía la pantalla en dos lienzos. */
-  /* Sin el mini-mapa, la rejilla de dos columnas deja una columna con ancho
-     mínimo que se desborda de la hoja. En la hoja el resultado es una sola
-     columna, sin excepción. */
+  /* En la hoja el resultado es una sola columna, sin excepción: la rejilla de
+     dos columnas deja una columna con ancho mínimo que se desborda de la hoja. */
   .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-grid{display:block}
   .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-col,
   .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-main,
   .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-item{min-width:0;max-width:100%}
 
 
-  /* (La «cápsula que se aparta al bajar» se retiró el 13-sep-2026: en celular
-     la cápsula ya no es pegajosa fuera del caparazón.) */
   .ubicar-bar{transition:transform .26s cubic-bezier(.2,.8,.2,1)}
 
   /* ── BOTÓN DE CAPAS (patrón `layers` del kit) ────────────────────── */
   .panel-mapa, #globalMapCanvas{position:relative}
-  /* 34 px de holgura: es el alto de la barra de atribución de Leaflet. */
   .map-filters{display:none;position:absolute;left:10px;bottom:90px;z-index:601;
     margin:0;padding:11px;gap:7px;flex-direction:column;align-items:stretch;
     background:var(--card);border-radius:16px;box-shadow:var(--gm-e3);
     max-height:56vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
   .map-filters.abierto{display:flex}
   .map-filter-chip{justify-content:flex-start}
-  .btn-capas{position:absolute;left:10px;bottom:34px;z-index:602;
-    width:44px;height:44px;border-radius:50%;border:none;background:var(--card);
-    color:var(--ink-2);box-shadow:var(--gm-e2);display:flex;align-items:center;
-    justify-content:center;cursor:pointer;padding:0}
-  .btn-capas svg{width:21px;height:21px}
-  .btn-capas.activo{background:var(--guinda);color:var(--crema)}
-  .btn-capas:active{transform:scale(.95)}
 
   /* ── LA FICHA COMO HOJA (componente `location-card`) ──────────────
      El cajón lateral llegaba desde la derecha y tapaba la pantalla
@@ -1952,12 +1867,10 @@ thead.t-head th:nth-child(7){white-space:nowrap}
   html.ficha-abierta .ubicar-bar{opacity:0;pointer-events:none;transform:translateY(-135%)}
 
   /* ── RESULTADO DE UBICACIÓN · una sola pieza ──────────────────────
-     Estaba partido en cuatro bloques con tratamientos distintos —rótulo,
-     tarjeta enorme, fila de la más cercana y un pie suelto tras una
-     línea—, y la frase principal iba en tipografía de titular, que en
-     un teléfono ocupa tres renglones para decir «aquí no hay nada».
-     Ahora es una lista de renglones con el mismo ritmo, en la que el
-     tamaño solo distingue el dato del rótulo. */
+     Una lista de renglones con el mismo ritmo, en la que el tamaño solo
+     distingue el dato del rótulo. La frase principal no va en tipografía
+     de titular: en un teléfono ocuparía tres renglones para decir «aquí
+     no hay nada». */
   #ubicarResultado .ubi-cabeza{font-size:var(--fs-micro);letter-spacing:.11em;
     color:var(--muted);margin:0 0 8px}
   #ubicarResultado .ubi-main{padding:12px 14px;border-left-width:4px;margin-bottom:8px}
@@ -1968,8 +1881,8 @@ thead.t-head th:nth-child(7){white-space:nowrap}
   #ubicarResultado .ubi-item{padding:11px 12px}
   #ubicarResultado .ubi-item-txt b{font-size:var(--fs-base)}
   #ubicarResultado .ubi-item-txt span{font-size:var(--fs-micro);letter-spacing:.04em}
-  /* El pie deja de ser un apéndice tras una línea: es una fila más, con
-     el mismo icono de lugar que usa el resto del kit. */
+  /* El pie es una fila más, no un apéndice tras una línea, con el mismo
+     icono de lugar que usa el resto del kit. */
   #ubicarResultado .ubi-ctx{margin:8px 0 0;padding:12px;border-top:none;
     background:var(--card);border-radius:12px;box-shadow:var(--gm-e1);
     font-size:var(--fs-base);color:var(--ink-2);display:flex;align-items:center;gap:9px;
@@ -1998,9 +1911,9 @@ thead.t-head th:nth-child(7){white-space:nowrap}
   .drawer-asa{flex:0 0 auto;display:flex;align-items:center;justify-content:center;
     height:26px;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent}
   .drawer-asa:active{cursor:grabbing}
-  /* v87: el encabezado de la ficha también arrastra la hoja. Sin touch-action
-     el navegador podía quedarse con el gesto (pointercancel) y la hoja se
-     detenía a medio arrastre. Los botones conservan su toque normal. */
+  /* El encabezado de la ficha también arrastra la hoja. Sin touch-action
+     el navegador puede quedarse con el gesto (pointercancel) y la hoja se
+     detiene a medio arrastre. Los botones conservan su toque normal. */
   .drawer-head{touch-action:none;-webkit-user-select:none;user-select:none}
   .drawer-head button,.drawer-head a{touch-action:manipulation}
   .wrap.dest-ubicar.gm-shell #ubicarResultado .ubi-cabeza{touch-action:none;-webkit-user-select:none;user-select:none}
@@ -2030,8 +1943,8 @@ thead.t-head th:nth-child(7){white-space:nowrap}
   html.ficha-abierta, html.ficha-abierta body{overflow:hidden;overscroll-behavior:none}
   /* El tache, como en Maps: círculo gris en la esquina de la cabecera, a la
      altura del título —no flotando en el hueco de arriba—. */
-  /* z-index por encima de la cabecera fija (600): desde que la cabecera cubre
-     el ancho completo, un valor menor dejaba el tache tapado por ella. */
+  /* z-index por encima de la cabecera fija (600): la cabecera cubre el
+     ancho completo y un valor menor deja el tache tapado por ella. */
   .drawer .close{position:absolute;z-index:601;top:6px;right:14px;
     width:34px;height:34px;border-radius:50%;background:var(--bg-2);color:var(--ink-2);
     font-size:var(--fs-xl);box-shadow:var(--gm-e1)}
@@ -2040,21 +1953,20 @@ thead.t-head th:nth-child(7){white-space:nowrap}
   .drawer-head{flex:0 0 auto;position:relative;top:auto;z-index:600;background:var(--card);
     box-shadow:0 6px 10px -8px rgba(60,64,67,.35)}
   /* Especificidad por encima de `.drawer .drawer-header-row` (más abajo), que
-     aún trae el margen negativo de cuando la fila vivía dentro del cuerpo con
-     18 px de relleno: en #drHead ese margen la sacaba al borde de la pantalla
-     (nombre pegado a la izquierda, botón de imagen encimado al «×»; v75). */
+     trae un margen negativo pensado para la fila dentro del cuerpo con 18 px
+     de relleno: en #drHead ese margen la saca al borde de la pantalla (nombre
+     pegado a la izquierda, botón de imagen encimado al «×»). */
   .drawer .drawer-head .drawer-header-row{position:static;margin:0;padding:6px 66px 9px 18px;box-shadow:none}
   .drawer .drawer-head .btn-share-area{margin-right:2px}
   .drawer .close:active{background:#e6e1d4}
   /* Cabecera fija: nombre, categoría y los dos botones se quedan arriba al
-     desplazar el cuerpo, como la tarjeta de lugar de Maps. Antes el nombre se
-     iba con el scroll y, en una ficha larga, se perdía de vista de qué área se
-     estaba leyendo. */
+     desplazar el cuerpo, como la tarjeta de lugar de Maps: en una ficha larga
+     no se pierde de vista de qué área se está leyendo. */
   /* z-index por encima de `--z-flotante` (500): el chip de Suelo de
-     Conservación del mini-mapa es `absolute` dentro del contenido y pasaba
+     Conservación del mini-mapa es `absolute` dentro del contenido y pasaría
      POR ENCIMA de la cabecera al desplazar, tapando el nombre del área.
      Cabecera de DOS renglones: tipo · jurisdicción · subcategoría arriba, y el
-     nombre debajo, más chico. Antes ocupaba tres y se comía la hoja. */
+     nombre debajo, más chico. */
   .drawer .drawer-header-row{padding-right:62px;position:sticky;top:0;z-index:600;
     background:var(--card);margin:0 -18px;padding-left:18px;padding-top:6px;
     padding-bottom:9px;box-shadow:0 6px 10px -8px rgba(60,64,67,.35)}
@@ -2091,8 +2003,8 @@ thead.t-head th:nth-child(7){white-space:nowrap}
 
 
   /* ── PILLS (componente `pills`) ───────────────────────────────────
-     Los subfiltros ya eran pastillas; se les da la sombra y el blanco
-     del kit para que floten sobre el fondo en vez de dibujar borde. */
+     Los subfiltros son pastillas con la sombra y el blanco del kit, para
+     que floten sobre el fondo en vez de dibujar borde. */
   .subchip{border:none;background:var(--card);box-shadow:var(--gm-e1);height:44px;border-radius:22px}
   .subchip.active{background:var(--guinda);box-shadow:var(--gm-e2)}
 }
@@ -2100,8 +2012,8 @@ thead.t-head th:nth-child(7){white-space:nowrap}
 /* ── MARCAS DEL KIT (frame `MARKS`) ─────────────────────────────────
    Fuera de la media query: la marca es la misma en celular y en
    escritorio, porque describe un hecho del territorio, no un tamaño de
-   pantalla. (Auditoría 13-sep-2026, D4-01: el bloque estaba dentro de
-   `@media (max-width:760px)` y en escritorio los avisos salían sin estilo.) */
+   pantalla. Dentro de `@media (max-width:760px)` los avisos saldrían sin
+   estilo en escritorio. */
 
 /* Aviso de respaldo: ámbar, junto al contador, sin tapar nada. */
 .aviso-respaldo{display:inline-flex;align-items:center;gap:6px;margin-left:10px;
@@ -2121,7 +2033,7 @@ thead.t-head th:nth-child(7){white-space:nowrap}
 .aviso-integridad:hover{background:#F2D6DF}
 .aviso-integridad:focus-visible{outline:2px solid var(--guinda);outline-offset:2px}
 
-/* Lienzo de mapa sin Leaflet (D2-06): texto centrado, sin fingir un mapa. */
+/* Lienzo de mapa sin Leaflet: texto centrado, sin fingir un mapa. */
 .mapa-no-disponible{display:flex;align-items:center;justify-content:center;min-height:180px;height:100%;
   padding:18px;text-align:center;color:var(--gris,#55585a);background:#f3f1ec;border-radius:8px;
   font-family:'Roboto',sans-serif;font-size:var(--fs-base)}
@@ -2174,9 +2086,8 @@ header.top .meta{display:flex;align-items:center;gap:12px}
 .ayuda-fam{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 4px}
 .ayuda-fam-card{border:1px solid var(--line-soft);border-left:4px solid var(--guinda);
   border-radius:var(--radius);padding:12px 14px;background:var(--bg-2)}
-/* v82 (auditoría UI-12): cada familia lleva en el filete los colores de sus dos
-   grupos —AVA: Bosque Urbano y Barranca; ANP: local y federal—; antes ANP iba
-   solo en el naranja de ANP Local y AVA solo en el verde de Bosque Urbano. */
+/* Cada familia lleva en el filete los colores de sus dos grupos —AVA:
+   Bosque Urbano y Barranca; ANP: local y federal—. */
 .ayuda-fam-card.ava,.ayuda-fam-card.anp{border-left-color:transparent;background-repeat:no-repeat;
   background-position:0 0;background-size:4px 100%;background-origin:border-box}
 .ayuda-fam-card.ava{background-image:linear-gradient(var(--bu) 50%, var(--br) 50%)}
@@ -2225,8 +2136,8 @@ header.top .meta{display:flex;align-items:center;gap:12px}
 }
 
 /* ═══ CAJON LATERAL · CIERRE POR GESTO (escritorio) ══════════════════
-   En celular la ficha ya se cierra deslizando el asa. En escritorio solo
-   habia tache, Escape y clic fuera. El tirador de la izquierda se arrastra
+   En celular la ficha se cierra deslizando el asa. En escritorio, ademas
+   del tache, Escape y clic fuera, el tirador de la izquierda se arrastra
    hacia la derecha para cerrar, que es la direccion en la que el cajon
    entro. Se posiciona con `fixed` porque el cajon es el contenedor
    desplazable en escritorio y un `absolute` se iria con el scroll. */
@@ -2234,7 +2145,7 @@ header.top .meta{display:flex;align-items:center;gap:12px}
   display:flex;align-items:center;justify-content:center;padding:0;border:none;
   background:transparent;cursor:grab;touch-action:none}
 .drawer-tirador::before{content:'';width:4px;height:46px;border-radius:2px;
-  background:rgba(85,88,90,.42);transition:background .15s,height .15s}   /* antes var(--line): se leía como una raya blanca suelta */
+  background:rgba(85,88,90,.42);transition:background .15s,height .15s}   /* con var(--line) se lee como una raya blanca suelta */
 .drawer-tirador:hover::before{background:var(--guinda);height:64px}
 .drawer-tirador:active{cursor:grabbing}
 .drawer-tirador:focus-visible{outline:2px solid var(--guinda);outline-offset:-3px;border-radius:4px}
@@ -2269,7 +2180,7 @@ header.top .meta{display:flex;align-items:center;gap:12px}
 .drawer-sc-floating.en-menu .map-filter-chip:not(.active),
 .map-filters.en-menu .map-filter-chip:not(.active){color:var(--muted);opacity:1}
 .map-filters.en-menu .map-filter-chip .chip-count{margin-left:auto}
-/* Capa PGOEDF en el menú (v75): mismo renglón que Suelo de Conservación y,
+/* Capa PGOEDF en el menú: mismo renglón que Suelo de Conservación y,
    encendida, una leyenda compacta por clave debajo. En todos los anchos. */
 .pgoedf-flotante.en-menu{position:static}
 .pgoedf-flotante.en-menu .map-filter-chip,.pgoedf-flotante.en-menu .map-filter-chip.active{
@@ -2281,7 +2192,7 @@ header.top .meta{display:flex;align-items:center;gap:12px}
 .pgoedf-flotante.en-menu .map-filter-chip:not(.active){color:var(--muted);opacity:1}
 .pgoedf-flotante.en-menu .map-filter-chip:not(.active) .chip-dot{background:transparent;box-shadow:inset 0 0 0 1.5px var(--muted)}
 .pgoedf-flotante.en-menu .map-filter-chip.cargando{opacity:.6;cursor:progress}
-/* Capas de contexto del minimapa de la ficha (v86): otras áreas del
+/* Capas de contexto del minimapa de la ficha: otras áreas del
    inventario, ARCAC y Zona Patrimonio. Mismo renglón que PGOEDF; el color del
    punto lo da --chip-color en el propio botón. */
 .ctx-flotante.en-menu{position:static}
@@ -2321,30 +2232,18 @@ header.top .meta{display:flex;align-items:center;gap:12px}
 }
 .drawer-sc-floating.en-menu .map-filter-chip .chip-dot{flex:0 0 auto}
 
-/* Aviso cuando el servicio de direcciones no responde: antes fallaba en
-   silencio y quien buscaba una calle creia que no existia. */
+/* Aviso cuando el servicio de direcciones no responde: sin él, quien busca
+   una calle cree que no existe. */
 .ubicar-sugerencias .item.aviso{cursor:default}
 .ubicar-sugerencias .item.aviso .ico{background:var(--warn-bg,#fdf6e3);color:var(--dorado-text)}
 .ubicar-sugerencias .item.aviso b{color:var(--ink-2);font-weight:500}
 
-/* ═══ SUBCATEGORIA LARGA EN CELULAR ══════════════════════════════════
-   «Zona Sujeta a Conservacion Ecologica» y «Area de Proteccion de Recursos
-   Naturales» no caben en un renglon de la columna de valores del telefono.
-   Dentro de un recuadro, al partirse en dos lineas el borde seguia ocupando
-   todo el ancho y dejaba un hueco grande a la derecha. Aqui el recuadro se
-   retira y queda el nombre en su color: misma informacion, sin el aire. */
-@media (max-width:760px){
-  .drawer .field .tag-sub.tag-sub-full{
-    border:none;background:transparent;padding:0;
-    font-family:'Roboto',sans-serif;font-size:var(--fs-base);
-    font-weight:500;letter-spacing:0;line-height:1.4}
-}
-
 /* ═══ ARRANQUE EN CELULAR ════════════════════════════════════════════
-   El destino se decidia al final del guion, despues de leer el inventario:
-   el telefono pintaba la pagina de inventario y un instante despues saltaba
-   al mapa a pantalla completa. La clase la pone un guion de dos lineas en
-   la cabecera, antes del primer pintado, y la retira el propio arranque. */
+   El destino se decide al final del guion, despues de leer el inventario:
+   sin esta clase el telefono pintaria la pagina de inventario y un instante
+   despues saltaria al mapa a pantalla completa. La clase la pone un guion
+   de dos lineas en la cabecera, antes del primer pintado, y la retira el
+   propio arranque. */
 .sia-arranque{display:none}
 html.arranque-campo .sia-arranque{display:flex;position:fixed;inset:0;z-index:3000;
   flex-direction:column;align-items:center;justify-content:center;gap:14px;
@@ -2368,11 +2267,9 @@ html.arranque-campo body > .wrap{visibility:hidden}
    segunda linea atenuada. El separador va indentado a la altura del texto,
    para que la columna de iconos se lea continua.
 
-   Estas reglas vivian DENTRO de la consulta de medios de celular. En
-   escritorio el `.ico` se quedaba sin caja y su SVG —que trae `viewBox` pero
-   no ancho ni alto— se estiraba hasta llenar el panel: un rombo negro gigante
-   tapaba la lista entera. La estructura es la misma en los dos tamanios, asi
-   que sube a nivel superior. */
+   Van a nivel superior, no en la consulta de medios de celular: la
+   estructura es la misma en los dos tamanios y, sin caja, el SVG del `.ico`
+   —trae `viewBox` pero no ancho ni alto— se estira hasta llenar el panel. */
 /* En escritorio el campo ocupa mas de mil pixeles; la lista no debe seguirlo,
    o el dato de la derecha de cada fila queda a un palmo de su titulo. */
 .ubicar-sugerencias{max-width:640px;border-radius:18px;box-shadow:var(--gm-e3);border:none;
@@ -2406,13 +2303,12 @@ html.arranque-campo body > .wrap{visibility:hidden}
 .sug-limpiar:active{background:var(--bg-2)}
 
 /* ═══ SELECTOR DE CAPA BASE, PLEGADO ═════════════════════════════════
-   El contenedor deja de ser una barra y pasa a ser el boton redondo; el par
-   MAPA | SATELITE se convierte en una tarjeta que cuelga debajo, con la capa
-   superpuesta de Suelo de Conservacion en su propia seccion.
+   El contenedor es el boton redondo; el par MAPA | SATELITE es una
+   tarjeta que cuelga debajo, con la capa superpuesta de Suelo de
+   Conservacion en su propia seccion.
 
-   Vivia dentro de la consulta de medios de celular: en escritorio el par
-   seguia siendo una barra permanente sobre el lienzo, con otro aspecto y otra
-   mecanica para la misma decision. El control es el mismo en los dos tamanios. */
+   Va a nivel superior, no en la consulta de medios de celular: el control
+   es el mismo en los dos tamanios. */
 .map-block-controls-floating{background:transparent;border:none;box-shadow:none;
   overflow:visible;display:block;width:44px;height:44px}
 .btn-base{width:44px;height:44px;border-radius:50%;border:none;background:var(--card);
@@ -2433,10 +2329,10 @@ html.arranque-campo body > .wrap{visibility:hidden}
 
 
 /* ═══ CABECERA FIJA DE LA FICHA TAMBIEN EN ESCRITORIO ════════════════
-   Era una regla de celular. En escritorio el cajon mide 580 px de ancho y una
-   ficha completa pasa de dos mil de alto: al bajar a «fundamento juridico» ya
-   no se veia de que area se estaba leyendo, que es justo lo que la cabecera
-   fija resolvio en el telefono. Mismo componente, mismas medidas del cajon. */
+   En escritorio el cajon mide 580 px de ancho y una ficha completa pasa de
+   dos mil de alto: la cabecera fija mantiene a la vista de que area se
+   esta leyendo, igual que en el telefono. Mismo componente, mismas medidas
+   del cajon. */
 @media (min-width:761px){
   .drawer-inner{padding-top:0}
   .drawer-head .drawer-header-row{position:static;margin:0;padding:22px 62px 12px 34px;
@@ -2445,10 +2341,10 @@ html.arranque-campo body > .wrap{visibility:hidden}
 }
 
 /* ═══ MONITORES ANCHOS ═══════════════════════════════════════════════
-   A 1920 sobraban 360 px de margen a cada lado mientras la tabla de once
-   columnas vivia en 794. El contenedor crece a partir de 1600 px, pero la
-   prosa NO: un parrafo de 1800 px de ancho es ilegible, asi que los bloques
-   de texto corrido se acotan por medida de linea, no por el contenedor. */
+   El contenedor crece a partir de 1600 px (a 1920 sobrarian 360 px de
+   margen a cada lado con la tabla de once columnas en 794), pero la prosa
+   NO: un parrafo de 1800 px de ancho es ilegible, asi que los bloques de
+   texto corrido se acotan por medida de linea, no por el contenedor. */
 @media (min-width:1600px){
   .wrap{max-width:1800px}
   .panel-intro,
@@ -2491,7 +2387,7 @@ html.arranque-campo body > .wrap{visibility:hidden}
 .zonif-leyenda{position:absolute;left:10px;bottom:56px;z-index:var(--z-flotante);
   display:flex;flex-wrap:wrap;gap:4px 12px;max-width:calc(100% - 20px);
   background:rgba(255,255,255,.93);border-radius:8px;padding:7px 10px;box-shadow:var(--sh-2)}
-.zonif-leyenda[hidden]{display:none !important}   /* display:flex le ganaba a [hidden]: quedaba una píldora blanca vacía */
+.zonif-leyenda[hidden]{display:none !important}   /* display:flex le gana a [hidden]: quedaría una píldora blanca vacía */
 .zonif-leyenda .zl-i{display:inline-flex;align-items:center;gap:6px;
   font-size:var(--fs-mini);color:var(--ink-2);line-height:1.3}
 .zonif-leyenda .zl-sw{width:10px;height:10px;border-radius:2px;flex-shrink:0}
@@ -2551,8 +2447,8 @@ html.arranque-campo body > .wrap{visibility:hidden}
    Borra las tres cosas y el punto del mapa; es el «x» de Maps. */
 .ubicar-input-wrap{align-items:stretch}
 /* El «x» va DENTRO del campo, pegado a la lupa: un solo objeto visual, como en
-   Maps. Antes era un tercer segmento con bordes propios y se leía como un
-   botón suelto que se encimaba al campo. */
+   Maps, no un tercer segmento con bordes propios que se lee como un botón
+   suelto. */
 .ubicar-input-wrap input{padding-right:40px}
 .ubicar-limpiar{position:absolute;top:50%;right:calc(var(--go-w) + 5px);transform:translateY(-50%);
   width:30px;height:30px;border:none;border-radius:50%;background:transparent;color:var(--muted);
@@ -2609,11 +2505,11 @@ html.arranque-campo body > .wrap{visibility:hidden}
   .ubi-chip{white-space:normal;line-height:1.3}
 }
 
-/* ═══ GPS SOBRE EL MAPA · VOLVER ARRIBA (12-sep-2026) ═════════════════
-   El botón «Usar mi ubicación» sale de la fila del buscador y pasa al mapa
-   global como botón redondo guinda (acción primaria) en la esquina inferior
-   derecha, encima de la atribución de Leaflet. El botón original queda en el
-   DOM, oculto: conserva el manejador y el estado «Ubicando…». */
+/* ═══ GPS SOBRE EL MAPA · VOLVER ARRIBA ═════════════════════════════
+   En el mapa global, «Usar mi ubicación» es un botón redondo guinda
+   (acción primaria) en la esquina inferior derecha, encima de la atribución
+   de Leaflet. El botón de la fila del buscador queda en el DOM, oculto:
+   conserva el manejador y el estado «Ubicando…». */
 .ubicar-gps{display:none !important}
 #globalMapCanvas{position:relative}
 .gps-fab{position:absolute;right:10px;bottom:34px;z-index:602;width:52px;height:52px;border-radius:50%;
@@ -2662,7 +2558,7 @@ html.arranque-campo body > .wrap{visibility:hidden}
 .zonif-bloque-intercalado:empty{display:none}
 .zonif-bloque-intercalado .zonif-h{margin-bottom:8px}
 /* Interruptor de zonificación dentro del menú de capas de la ficha: renglón
-   de ajuste, igual que Suelo de Conservación; deja de flotar sobre el mapa. */
+   de ajuste, igual que Suelo de Conservación; no flota sobre el mapa. */
 .zonif-flotante.en-menu{position:static;left:auto;bottom:auto;z-index:auto}
 .zonif-flotante.en-menu .map-filter-chip,
 .zonif-flotante.en-menu .map-filter-chip.active,
@@ -2674,15 +2570,15 @@ html.arranque-campo body > .wrap{visibility:hidden}
   letter-spacing:0;font-weight:500;opacity:1}
 .zonif-flotante.en-menu .map-filter-chip:not(.active){color:var(--muted)}
 .zonif-flotante.en-menu .map-filter-chip:disabled{opacity:.5;cursor:wait}
-/* La leyenda de zonas se queda sobre el mapa, ahora sin el chip debajo. */
+/* La leyenda de zonas se queda sobre el mapa, sin el chip debajo. */
 .zonif-leyenda{bottom:26px}
 /* El menú de capas abierto va por encima de la leyenda de zonificación del
-   minimapa (ambos eran z 500 y la leyenda, posterior en el DOM, lo tapaba). */
+   minimapa (con ambos en z 500 la leyenda, posterior en el DOM, lo tapa). */
 .map-block-controls-floating.base-abierto{z-index:calc(var(--z-flotante) + 5)}
 
-/* ═══ AUDITORÍA 360 · 12-sep-2026 (noche) ═════════════════════════════ */
+/* ═══ ÁREAS TÁCTILES Y FOCO DEL BUSCADOR ══════════════════════════════ */
 /* El «×» de la ficha conserva su círculo de 34 px, pero el área que responde
-   al dedo es de 44 px: en celular medía 34 y quedaba bajo el mínimo táctil. */
+   al dedo es de 44 px, el mínimo táctil. */
 .drawer .close{position:absolute}
 .drawer .close::after{content:'';position:absolute;inset:-6px;border-radius:50%}
 /* Subpestañas de Zona Patrimonio y buscador de Traslapes: 44 px en táctil. */
@@ -2693,9 +2589,8 @@ html.arranque-campo body > .wrap{visibility:hidden}
 /* Foco visible en el campo de búsqueda: el cambio de color del borde (1 px)
    no basta como indicador de foco al navegar con teclado. */
 .ubicar-input-wrap input:focus-visible{box-shadow:0 0 0 3px rgba(157,33,72,.22)}
-/* Escritorio (14-sep-2026): campo y lupa son un solo objeto. Con el foco, el
-   borde guinda y el halo abarcan los dos segmentos; antes el campo se ponía
-   guinda y la lupa seguía gris, como un botón suelto pegado al lado. */
+/* Escritorio: campo y lupa son un solo objeto. Con el foco, el borde guinda
+   y el halo abarcan los dos segmentos. */
 @media (min-width:761px){
   .ubicar-input-wrap:focus-within{border-radius:var(--radius);box-shadow:0 0 0 3px rgba(157,33,72,.22)}
   .ubicar-input-wrap:focus-within input{border-color:var(--guinda)}
@@ -2705,14 +2600,14 @@ html.arranque-campo body > .wrap{visibility:hidden}
 }
 .wrap.dest-ubicar.gm-shell .ubicar-input-wrap input:focus-visible{box-shadow:inset 0 0 0 2px var(--gm-tint-fuerte),0 0 0 3px rgba(157,33,72,.22)}
 
-/* ═══ CIERRE DE LA AUDITORÍA 360 · pulido aplicado ═══════════════════ */
+/* ═══ ÁREAS TÁCTILES, BUSCADOR, FICHA Y MAPAS INCRUSTADOS ═════════════ */
 /* Pie: el enlace de ayuda gana área táctil sin cambiar de aspecto. */
 .sia-footer-ayuda{padding:12px 0}
 /* Barras de la cronología: el área que responde al dedo y al foco sube a
    44 px aunque la barra mida 7. El tooltip sigue anclado a la barra. */
 .cron-bar::before,.cron-gob-bar::before{content:'';position:absolute;left:0;right:0;bottom:0;min-height:44px}
-/* Barra de búsqueda de escritorio fuera de «¿Dónde estoy?»: 30 px y 12.5 px
-   quedaban por debajo de la escala del resto de controles. */
+/* Barra de búsqueda de escritorio fuera de «¿Dónde estoy?»: a la escala del
+   resto de controles (30 px y 12.5 px quedarían por debajo). */
 @media (min-width:761px){
   .ubicar-input-wrap input{height:38px;font-size:var(--fs-base)}
   .ubicar-go{width:40px;height:38px}
@@ -2723,7 +2618,7 @@ html.arranque-campo body > .wrap{visibility:hidden}
 }
 
 /* Frase de entrada del bloque PGOEDF: texto corrido, no recuadro. Dos cajas
-   beige (entrada + nota) alrededor de la tabla pesaban demasiado. */
+   beige (entrada + nota) alrededor de la tabla pesan demasiado. */
 .zonif-intro{font-size:var(--fs-sm);color:var(--muted);line-height:1.5;margin:0 0 10px}
 /* Punto consultado dentro de los bloques de zonificación y PGOEDF de la ficha. */
 .zonif-punto{display:flex;align-items:center;gap:8px;margin:8px 0 6px;font-size:var(--fs-sm);color:var(--ink);line-height:1.4}
@@ -2772,16 +2667,15 @@ html.arranque-campo body > .wrap{visibility:hidden}
   max-width:none !important;margin:0 !important;border-radius:0 !important;background:var(--card)}
 .sia-fs .leaflet-container,.sia-fs .map-canvas-inner{height:100% !important;min-height:0 !important;border-radius:0 !important}
 html.sia-fs-abierto{overflow:hidden}
-/* v84: la ficha se abre ENCIMA de un mapa de la página ampliado (z 1200). Antes
-   quedaba detrás —con la pantalla completa del navegador, ni se veía— y había
+/* La ficha se abre ENCIMA de un mapa de la página ampliado (z 1200): no hay
    que salir del mapa ampliado para leerla. */
 html.sia-fs-abierto .backdrop{z-index:1250}
 html.sia-fs-abierto .drawer{z-index:1260}
-/* Ampliar dentro de la ficha (14-sep-2026, A1c-3): la hoja entera se vuelve el
-   mapa. En iOS el portal a <body> con position:fixed dejaba el lienzo del
-   tamaño del cuerpo de la hoja y el «×» de la ficha encima de los controles;
-   aquí no hay fixed ni portal: la hoja ocupa la pantalla, se ocultan asa,
-   cabecera y «×», y el lienzo se posiciona en absoluto dentro de ella. */
+/* Ampliar dentro de la ficha: la hoja entera se vuelve el mapa. En iOS el
+   portal a <body> con position:fixed deja el lienzo del tamaño del cuerpo de
+   la hoja y el «×» de la ficha encima de los controles; aquí no hay fixed ni
+   portal: la hoja ocupa la pantalla, se ocultan asa, cabecera y «×», y el
+   lienzo se posiciona en absoluto dentro de ella. */
 html.sia-fs-hoja-abierta .drawer{top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;
   width:100% !important;height:100% !important;max-width:none !important;transform:none !important;
   border:none !important;border-radius:0 !important;box-shadow:none !important;overflow:hidden !important}
@@ -2789,12 +2683,12 @@ html.sia-fs-hoja-abierta .drawer-asa,html.sia-fs-hoja-abierta .drawer-tirador,
 html.sia-fs-hoja-abierta .drawer-head,html.sia-fs-hoja-abierta .drawer .close{display:none !important}
 html.sia-fs-hoja-abierta .drawer-inner{overflow:hidden !important}
 .sia-fs.sia-fs-hoja{position:absolute !important}
-/* Botón «Ampliar» de los mapas incrustados (solo táctil; lo crea el JS). Mismo
+/* Botón «Ampliar» de los mapas incrustados (lo crea el JS). Mismo
    lenguaje que el botón de capas; se esconde mientras el menú de capas está
    abierto porque ese menú cae sobre él. En modo ampliado se vuelve guinda y
    su icono se interpreta como «cerrar». */
-/* v80: el botón «Ampliar» se muestra en TODO puntero (antes solo táctil): es el
-   control de pantalla completa de todos los mapas de la plataforma. */
+/* El botón «Ampliar» se muestra en TODO puntero: es el control de pantalla
+   completa de todos los mapas de la plataforma. */
 .btn-ampliar{position:absolute;right:10px;top:62px;z-index:var(--z-flotante);width:44px;height:44px;border-radius:50%;border:none;
   background:var(--card);color:var(--ink-2);box-shadow:var(--gm-e2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   transition:background .15s,color .15s}
@@ -2805,14 +2699,14 @@ html.sia-fs-hoja-abierta .drawer-inner{overflow:hidden !important}
 .btn-ampliar.activo{background:var(--guinda);color:var(--crema)}
 .map-block-controls-floating.base-abierto ~ .btn-ampliar,
 :has(> .map-block-controls-floating.base-abierto) > .btn-ampliar{opacity:0;pointer-events:none}
-/* Pantalla completa nativa de los demás lienzos (traslapes y ARCAC no tenían regla). */
+/* Pantalla completa nativa de los demás lienzos (traslapes y ARCAC). */
 #trasMapCanvas:fullscreen,#trasMapCanvas:-webkit-full-screen{height:100vh !important;width:100vw !important;background:var(--card);border-radius:0 !important}
 
 
-/* Objetivos táctiles de 44 px también en tabletas y teléfonos en horizontal
-   (auditoría 13-sep-2026, D3-03 y D3-04): esas pantallas reciben la
-   disposición de escritorio (> 760 px) pero se tocan con el dedo. Solo los
-   controles de uso frecuente; la tabla de escritorio se conserva. */
+/* Objetivos táctiles de 44 px también en tabletas y teléfonos en horizontal:
+   esas pantallas reciben la disposición de escritorio (> 760 px) pero se
+   tocan con el dedo. Solo los controles de uso frecuente; la tabla de
+   escritorio se conserva. */
 @media (pointer:coarse){
   .subchip{min-height:44px}
   .ubicar-input-wrap input{height:44px}
@@ -2828,18 +2722,16 @@ html.sia-fs-hoja-abierta .drawer-inner{overflow:hidden !important}
 html.pagina-bloqueada{overflow:hidden;overscroll-behavior:none}
 html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hidden;overscroll-behavior:none}
 
-/* ═══ MENÚ DE CAPAS · v76 (14-sep-2026) ══════════════════════════════
-   Rediseño del panel que cuelga del botón de capas, en todos los mapas y
-   anchos. Antes: renglones pegados entre sí y al borde del lienzo, base
-   como barra guinda, zonas del PGOEDF al mismo nivel que su interruptor.
-   Ahora, como un panel de ajustes: secciones con título («Mapa base»,
-   «Capas»), base con radio, capas con interruptor a la derecha, y las
-   zonas del PGOEDF sangradas bajo su capa madre con guía a la izquierda. */
+/* ═══ MENÚ DE CAPAS ══════════════════════════════════════════════════
+   Panel que cuelga del botón de capas, en todos los mapas y anchos, como un
+   panel de ajustes: secciones con título («Mapa base», «Capas»), base con
+   radio, capas con interruptor a la derecha, y las zonas del PGOEDF
+   sangradas bajo su capa madre con guía a la izquierda. */
 .map-block-controls-floating{top:12px;right:12px}
 #mapCanvas .map-block-controls-floating{top:12px;right:12px}
 /* overflow-y:auto: la regla del botón redondo (más abajo en la hoja, misma
-   especificidad) ponía overflow:hidden y el menú NUNCA se desplazaba: en
-   celular las capas del final quedaban fuera de alcance. El tope lo calcula
+   especificidad) pone overflow:hidden y sin esto el menú no se desplaza: en
+   celular las capas del final quedarían fuera de alcance. El tope lo calcula
    el JS al abrir (--menu-max); --lienzo-h queda de respaldo. */
 .map-block-controls-floating .map-block-toggle,
 .map-block-controls-floating.base-abierto .map-block-toggle{min-width:320px;top:54px;padding:6px 0 8px;
@@ -2856,7 +2748,7 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
   flex:0 0 auto;padding:8px 18px 4px;margin:0;line-height:1.3}
 .map-block-controls-floating .map-block-toggle .capa-extra{
   flex:0 0 auto;margin-top:6px;padding:4px 0 2px;border-top:1px solid var(--line-soft)}
-/* Base: renglón con radio, ya no barra guinda. */
+/* Base: renglón con radio. */
 .map-block-controls-floating .map-block-toggle > button[data-layer],
 #mapCanvas .map-block-controls-floating .map-block-toggle > button[data-layer]{
   height:42px;flex:0 0 auto;padding:0 18px;display:flex;align-items:center;gap:12px;
@@ -2909,19 +2801,19 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
 @media (pointer:coarse){ .map-block-controls-floating .map-block-toggle .pgoedf-ley-item{min-height:40px} }
 /* Abierto, el menú va por encima de los controles de Leaflet (zoom, ubicar,
    z 1000): en el mapa del inventario en celular, de 328 px de ancho, el panel
-   quedaba debajo de ellos. Cerrado vuelve a su capa. */
+   quedaría debajo de ellos. Cerrado vuelve a su capa. */
 .map-block-controls-floating.base-abierto{z-index:1100}
 
-/* ═══ CAMPO DE BÚSQUEDA · v78 (14-sep-2026) ══════════════════════════
-   La cápsula era blanca sobre fondo crema y sin filete: no se leía como
-   un campo donde se escribe, sobre todo en celular. Un filete sutil la
-   delimita y al enfocar toma el guinda, como cualquier campo del tablero. */
+/* ═══ CAMPO DE BÚSQUEDA ══════════════════════════════════════════════
+   Blanca sobre fondo crema y sin filete, la cápsula no se lee como un campo
+   donde se escribe, sobre todo en celular: un filete sutil la delimita y al
+   enfocar toma el guinda, como cualquier campo del tablero. */
 .ubicar-bar{border:1px solid var(--line)}
 .dest-ubicar .ubicar-bar{border:1px solid var(--line)}
 .ubicar-bar:focus-within{border-color:var(--guinda);
   box-shadow:var(--gm-e2), 0 0 0 3px rgba(157,33,72,.16)}
 @media (max-width:760px){
-  /* Dentro de la cápsula el campo ya no necesita su propio anillo al
+  /* Dentro de la cápsula el campo no necesita su propio anillo al
      enfocar: lo da la cápsula. */
   .ubicar-input-wrap input:focus{box-shadow:none}
 }
@@ -2931,16 +2823,15 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
   display:block;padding:6px 8px 2px;font-size:var(--fs-mini);line-height:1.35;
   color:var(--muted);white-space:normal}
 
-/* ═══ TRASLAPES · BARRA DE FILTROS (v82, auditoría UI-07) ═════════════
+/* ═══ TRASLAPES · BARRA DE FILTROS ═══════════════════════════════════
    Buscador, selector de cruce y CSV en una sola fila; en pantallas
-   angostas se acomodan solos en dos. Antes no tenía reglas y cada control
-   ocupaba todo el ancho en escritorio. */
+   angostas se acomodan solos en dos. */
 .tras-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:6px 0 12px}
 .tras-toolbar #trasSearch{flex:2 1 260px;width:auto;margin:0}
 .tras-toolbar #trasCruceFilter{flex:1 1 220px;width:auto;margin:0}
 .tras-toolbar #trasCsv{flex:0 0 auto;margin:0}
 
-/* ═══ «¿DÓNDE ESTOY?» EN ESCRITORIO · RESULTADO JUNTO AL MAPA (B14, v85) ══
+/* ═══ «¿DÓNDE ESTOY?» EN ESCRITORIO · RESULTADO JUNTO AL MAPA ══
    Un solo mapa, como en celular: el resultado ocupa una columna a la
    izquierda del mapa principal y mide lo mismo que él (si es más largo, se
    desplaza por dentro). El orden del DOM no cambia —el resultado sigue
@@ -2963,7 +2854,7 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
   .wrap.ubi-lateral #ubicarResultado .ubi-ctx{flex-wrap:wrap}
 }
 
-/* ═══ PORTADA DE ANÁLISIS (v88, 6-oct-2026) ══════════════════════════════
+/* ═══ PORTADA DE ANÁLISIS ══════════════════════════════
    Cuatro tarjetas, una por sección (Brechas, Traslapes, Metas, Marco
    jurídico): la pregunta que responde y su cifra clave. Dos columnas en
    escritorio, una en celular. Dentro de cada sección, la barra lleva
@@ -2995,11 +2886,11 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
   .an-tit{font-size:var(--fs-xl)}
 }
 
-/* ═══ TABLA · AYUDA Y LEYENDA (v89, 7-oct-2026) ═════════════════════════
+/* ═══ TABLA · AYUDA Y LEYENDA ═══════════════════════════════════════════
    La ayuda habla según el puntero (clic/Enter con ratón; «toca» en pantalla
-   táctil) y una línea explica los puntos de PM y SC, que antes no tenían
-   leyenda cerca. En celular la tabla ya no muestra la columna de
-   subcategoría, así que esa parte de la leyenda se oculta. */
+   táctil) y una línea explica los puntos de PM y SC. En celular la tabla no
+   muestra la columna de subcategoría, así que esa parte de la leyenda se
+   oculta. */
 .tabla-hint .hint-tactil{display:none}
 @media (pointer:coarse){
   .tabla-hint .hint-raton{display:none}
@@ -3012,17 +2903,17 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
 .tabla-leyenda .lg-pt.sc{background:var(--sc);border-color:var(--sc)}
 @media (max-width:760px){ .tabla-leyenda .lg-sub{display:none} }
 
-/* ═══ INVENTARIO · RÓTULO DE LOS BOTONES DEL MAPA (v89, 7-oct-2026) ════
+/* ═══ INVENTARIO · RÓTULO DE LOS BOTONES DEL MAPA ════════════════════
    Los botones de categoría sobre el mapa prenden y apagan capas; los de
-   «Filtrar» de arriba filtran la tabla. Se parecían tanto que confundían.
-   En celular esos botones viven dentro del menú de capas: el rótulo sobra. */
+   «Filtrar» de arriba filtran la tabla: el rótulo los distingue. En
+   celular esos botones viven dentro del menú de capas: el rótulo sobra. */
 .map-filters-lbl{margin-top:14px;font-family:'Roboto Mono',monospace;font-size:var(--fs-micro);
   letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .map-filters-lbl span{font-family:'Roboto',sans-serif;text-transform:none;letter-spacing:0;font-size:var(--fs-xs)}
 .map-filters-lbl + .map-filters{margin-top:6px}
 @media (max-width:760px){ .map-filters-lbl{display:none} }
 
-/* ═══ FILTROS EN CELULAR COMO HOJA (v89, 7-oct-2026) ═══════════════════
+/* ═══ FILTROS EN CELULAR COMO HOJA ═══════════════════
    Cerrada: buscador + botón «Filtros (n)». Abierta: la barra entera es una
    hoja inferior sobre la barra de destinos, con los filtros avanzados ya
    desplegados (el botón «Más filtros» sobra ahí). En escritorio nada cambia. */
@@ -3057,7 +2948,7 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
   .hoja-filtros-bd:not([hidden]){display:block;position:fixed;inset:0;z-index:1140;background:rgba(42,42,42,.45)}
 }
 
-/* ═══ MARCO JURÍDICO · ÍNDICE, PLEGABLES Y ENLACES OFICIALES (v89) ═════
+/* ═══ MARCO JURÍDICO · ÍNDICE, PLEGABLES Y ENLACES OFICIALES ═════
    Índice pegado debajo de lo que ya está fijo arriba (--legal-top lo mide
    _ajustarIndiceLegal); el contenido largo de cada norma va en un <details>
    cerrado de inicio; las normas enlazan a su texto vigente oficial. */
@@ -3085,12 +2976,12 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
 .btn-ext span b{display:block}
 .btn-ext .ext-fuente{display:block;font-size:var(--fs-micro);color:var(--muted);font-weight:400}
 
-/* ═══ AJUSTES 7-OCT (v91) ══════════════════════════════════════════════
-   1. Chips cortados en celular: la tira (.subnav) se desplaza de lado
-      (overflow-x:auto), lo que también recorta en vertical; los chips
-      arrancaban en su borde y perdían la línea superior y la sombra.
-   2. «Entrar» de las tarjetas de Análisis: era texto guinda pequeño y las
-      tarjetas parecían solo informativas. Ahora es un botón lleno. */
+/* ═══ TIRA DE CHIPS EN CELULAR · «ENTRAR» DE LAS TARJETAS DE ANÁLISIS ═══
+   1. La tira (.subnav) se desplaza de lado (overflow-x:auto), lo que también
+      recorta en vertical: sin aire, los chips arrancan en su borde y pierden
+      la línea superior y la sombra.
+   2. «Entrar» de las tarjetas de Análisis es un botón lleno: como texto
+      guinda pequeño, las tarjetas parecen solo informativas. */
 @media (max-width:760px){
   .subnav{padding-top:4px;padding-bottom:6px}
 }
@@ -3104,13 +2995,12 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
 .an-nota{margin-bottom:14px}
 .an-portada .an-ir{margin-top:auto}
 
-/* ═══ TABLETA Y PANTALLAS TÁCTILES (v92, auditoría del 7-oct-2026) ═══════
-   1. Tabla del Inventario de 761 a 1199 px (iPad vertical y horizontal): con
-      las once columnas, en iPad vertical la de hectáreas salía cortada y PM,
-      SC, Fecha PM y DG quedaban fuera; en horizontal se cortaban encabezados
-      y la columna DG. Ahí se quedan siete: Nombre, Tipo, Subcategoría,
-      Alcaldía, Ha, PM y SC. Jurisdicción, Decreto, Fecha PM y DG siguen en la
-      ficha. Columnas: 1 Nombre · 2 Tipo · 3 Jur. · 4 Subcat. · 5 Alcaldía ·
+/* ═══ TABLETA Y PANTALLAS TÁCTILES ═══════════════════════════════════════
+   1. Tabla del Inventario de 761 a 1199 px (iPad vertical y horizontal): las
+      once columnas no caben (se cortan encabezados y cifras, y las últimas
+      quedan fuera). Se quedan siete: Nombre, Tipo, Subcategoría, Alcaldía,
+      Ha, PM y SC. Jurisdicción, Decreto, Fecha PM y DG siguen en la ficha.
+      Columnas: 1 Nombre · 2 Tipo · 3 Jur. · 4 Subcat. · 5 Alcaldía ·
       6 Decreto · 7 Ha · 8 PM · 9 Fecha PM · 10 SC · 11 DG.
    2. Objetivos táctiles de 44 px en pantallas táctiles de cualquier ancho
       (en iPad el diseño es el de escritorio, pero se usa con el dedo).
@@ -3126,13 +3016,13 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
 @media (pointer:coarse){
   .ubicar-limpiar{width:44px;height:44px}
   .legal-indice button{min-height:44px}
-  .brecha-card-details > summary,.meta-det > summary,.panel details > summary{min-height:44px;display:flex;align-items:center}
+  .brecha-card-details > summary,.panel details > summary{min-height:44px;display:flex;align-items:center}
   .btn-share-area,.ubi-compartir{min-height:44px}
   .tabla-leyenda .lg-sub{display:none}
 }
-/* La regla de 900 px (`table.t{min-width:980px}`) obligaba al desplazamiento
-   lateral en iPad vertical aunque ya solo quedan siete columnas: en tableta la
-   tabla se ajusta al ancho. */
+/* La regla de 900 px (`table.t{min-width:980px}`) obligaría al desplazamiento
+   lateral en iPad vertical con solo siete columnas: en tableta la tabla se
+   ajusta al ancho. */
 @media (min-width:761px) and (max-width:1199px){
   #tableSection table.t{min-width:0;table-layout:fixed}
 }
@@ -3153,20 +3043,20 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
   #tableSection table.t th:nth-child(4),#tableSection table.t td:nth-child(4){width:11%}
 }
 
-/* ═══ CABECERA EN TABLETA (v93, R-01 de la auditoría por dispositivo) ════
-   De 761 a 900 px la cabecera se apilaba en columna y «Actualizado · fecha»
-   con el botón «?» quedaban en un renglón propio con mucho aire (~90 px
-   perdidos en iPad vertical). Ahora: logotipo arriba a todo el ancho; título
-   a la izquierda y fecha + «?» a la derecha, en la misma fila. */
+/* ═══ CABECERA EN TABLETA ══════════════════════════════════════════════
+   De 761 a 900 px: logotipo arriba a todo el ancho; título a la izquierda y
+   fecha + «?» a la derecha, en la misma fila. Apilada en columna, la
+   cabecera dejaría «Actualizado · fecha» y el «?» en un renglón propio con
+   mucho aire (~90 px en iPad vertical). */
 @media (min-width:761px) and (max-width:900px){
   header.top{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px 16px}
   header.top .logo-inst{grid-column:1 / -1}
   header.top .meta{text-align:right;justify-content:flex-end}
 }
 
-/* ═══ v94 (7-oct-2026) ══════════════════════════════════════════════════
-   1. Portada de Análisis en celular: el panel de introducción dejaba un hueco
-      grande bajo el texto (márgenes del párrafo sumados al relleno).
+/* ═══ PORTADA DE ANÁLISIS EN CELULAR · GUARDAR PARA USAR SIN SEÑAL ══════
+   1. Portada de Análisis en celular: sin hueco bajo el texto del panel de
+      introducción (los márgenes del párrafo se suman al relleno).
    2. «Guardar para usar sin señal» en la guía y en el pie. */
 .an-intro .panel-intro{margin-bottom:0}
 @media (max-width:760px){ .an-intro{padding-bottom:16px;margin-bottom:12px} }
@@ -3177,11 +3067,11 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
 .campo-estado:empty{display:none}
 .campo-estado-pie{margin:0 0 0 6px}
 
-/* ═══ v95 (8-oct-2026) ═══════════════════════════════════════════════════
+/* ═══ CELULAR · AJUSTE INFERIOR, CONTROLES DEL MAPA Y TIPO DE MAPA ═════
    1. Ajuste inferior (--ajuste-inf, lo calcula _ajustarFondoMovil): todo lo
-      anclado al fondo en celular baja lo que Chrome de iPhone dejó libre.
+      anclado al fondo en celular baja lo que Chrome de iPhone deja libre.
    2. Controles del mapa de «¿Dónde estoy?» en celular separados de la cápsula
-      de búsqueda (antes 6 px; la casita casi la tocaba).
+      de búsqueda (a 6 px la casita casi la toca).
    3. «Tipo de mapa» con mosaicos y miniatura, como en Google Maps.
    4. «Limpiar» en la cabecera de la hoja de filtros. */
 @media (max-width:760px){
@@ -3216,12 +3106,12 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
   text-underline-offset:3px;min-height:44px;padding:0 10px;cursor:pointer}
 @media (max-width:760px){ #tableSection > .toolbar.hoja-abierta .btn-group{display:none !important} }
 
-/* ═══ v96 (8-oct-2026) ══════════════════════════════════════════════════
+/* ═══ GLOBO ABIERTO, BÚSQUEDA EN CELULAR E INDICADOR DE CONEXIÓN ════════
    1. Con un globo abierto se ocultan los botones flotantes del mapa (capas,
-      Ampliar, Ubicarme): quedaban encima del globo y tapaban su «×».
+      Ampliar, Ubicarme): quedarían encima del globo y taparían su «×».
    2. En celular la búsqueda «¿Dónde estoy?» solo aparece en Ubicar: en
-      Inventario se sumaba a «Buscar por nombre del área» y en Análisis no
-      servía. En escritorio se queda (desde cualquier pestaña lleva al
+      Inventario se sumaría a «Buscar por nombre del área» y en Análisis no
+      sirve. En escritorio se queda (desde cualquier pestaña lleva al
       resultado junto al mapa).
    3. Indicador de conexión sobre la barra de destinos (celular). */
 .sia-popup-abierto .map-block-controls-floating:not(.base-abierto),

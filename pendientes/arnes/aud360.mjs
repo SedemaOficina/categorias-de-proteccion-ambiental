@@ -1,5 +1,5 @@
-import { playwright, lanzar, F, LEAF, LCSS, CSV_REAL, CAPAS, VACIA, teselaCORS, BASE } from './_comun.mjs';
-const { chromium, devices } = await playwright(); import fs from 'fs';
+import { playwright, lanzar, LEAF, LCSS, CSV_REAL, CAPAS, VACIA, teselaCORS, BASE } from './_comun.mjs';
+const { chromium } = await playwright(); import fs from 'fs';
 const D = CAPAS;
 const PERFILES=[
  {n:'iPhone 14 (Safari-like)', vp:{width:390,height:844}, dpr:3, mob:true, ua:'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'},
@@ -40,7 +40,7 @@ for(const P of PERFILES){
  const dests=await pg.evaluate(()=>[...document.querySelectorAll('.dest[data-dest]')].map(b=>b.dataset.dest));
  for(const d of dests){
    await pg.evaluate(d=>{const b=document.querySelector(`.dest[data-dest="${d}"]`); b&&b.click();}, d); await pg.waitForTimeout(1200);
-   /* Análisis (v88) abre en una portada de tarjetas sin chips: se audita la
+   /* Análisis abre en una portada de tarjetas sin chips: se audita la
       portada (null) y después cada sección entrando por su tarjeta. */
    const subs=await pg.evaluate(()=>{ const c=[...document.querySelectorAll('.subchip[data-id]')].map(b=>b.dataset.id); if(c.length) return c;
      const t=[...document.querySelectorAll('.an-card[data-ir]')].map(b=>b.dataset.ir); return t.length ? [null, ...t] : []; });
@@ -67,7 +67,7 @@ for(const P of PERFILES){
    }
  }
  R.recorrido=recorrido;
- // flujos ubicar (3 casos) + ficha desde resultado
+ // flujos ubicar (4 casos) + ficha desde resultado
  await pg.evaluate(()=>{const b=document.querySelector('.dest[data-dest="UBICAR"]'); b&&b.click();}); await pg.waitForTimeout(800);
  const flujos={};
  for(const [nom,c] of [['urbano','19.3467, -99.1617'],['anp_pm_coadmin','19.3125, -99.3095'],['sc_pgoedf','19.15, -99.05'],['doble','19.3455, -99.0905']]){

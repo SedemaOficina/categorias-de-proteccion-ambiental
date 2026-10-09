@@ -1,5 +1,5 @@
 # Dashboard SIA · SEDEMA CDMX
-# Fines de línea y sangría uniformes en cualquier editor (D10-03, 13-sep-2026).
+# Fines de línea y sangría uniformes en cualquier editor.
 # .gitattributes ya normaliza a LF en git; esto lo hace en el editor.
 root = true
 

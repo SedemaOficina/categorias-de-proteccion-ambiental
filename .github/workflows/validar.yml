@@ -1,23 +1,23 @@
 name: Validar entrega SIA
 
-# Red de seguridad de la cadena de publicación. Comprueba lo que hasta ahora
-# dependía solo de la disciplina de quien edita (auditoría 13-sep-2026, D12-02:
-# la versión anterior nunca validaba app.js ni styles.css, y el chequeo de bump
-# solo corría en pull_request, cuando el flujo real es push directo a main):
+# Red de seguridad de la cadena de publicación. Corre en cada push a main (el
+# flujo real de publicación) y en cada pull request, y comprueba:
 #   1. que app.js, sw.js y config.js sean sintácticamente válidos
 #   2. que el JavaScript inline de index.html sea válido
-#   3. que styles.css no tenga errores de sintaxis y que el hash del script
-#      inline de index.html coincida con el declarado en la CSP de _headers
-#   4. que CACHE_VERSION se haya bumpeado cuando cambie CUALQUIERA de los
+#   3. que el hash del script inline de index.html coincida con el declarado
+#      en la CSP de _headers
+#   4. que los hashes integrity de vendor/ (Leaflet propio) coincidan con los
+#      archivos del repo
+#   5. que styles.css no tenga errores de sintaxis
+#   6. que CACHE_VERSION se haya bumpeado cuando cambie CUALQUIERA de los
 #      archivos que el Service Worker sirve desde caché (index.html, styles.css,
 #      app.js, config.js, sw.js, manifest.json, data/**, vendor/**): sin el
 #      bump el navegador sigue sirviendo la versión anterior (cache-first)
-#   4b. que los hashes integrity de vendor/ (Leaflet propio) coincidan con los
-#      archivos del repo
-#   5. que los GeoJSON sean JSON válido, 2D y en EPSG:4326 (lon/lat)
-#   6. que el invariante 66 = 13 + 26 + 18 + 9 se cumpla en geometrias.geojson
-#      y en data/inventario.csv (respaldo del Sheet)
-#   7. que las 17 columnas del contrato del Sheet sigan en el respaldo
+#   7. que los GeoJSON sean JSON válido, 2D y en EPSG:4326 (lon/lat)
+#   8. que el invariante 66 = 13 + 26 + 18 + 9 se cumpla en geometrias.geojson
+#      y en data/inventario.csv (respaldo del Sheet), que las 17 columnas del
+#      contrato del Sheet sigan en el respaldo y que todo nombre del respaldo
+#      tenga polígono
 
 on:
   push:
@@ -70,7 +70,7 @@ jobs:
             if (declarados.length && !declarados.includes(hash)) { console.error('::error::El script inline de index.html cambió y su hash ya no coincide con el de _headers (' + declarados.join(', ') + '). Actualiza el hash o la CSP bloqueará el arranque en celular.'); process.exit(1); }
           "
 
-      - name: SRI de vendor/ (Leaflet propio desde B13, 14-sep-2026)
+      - name: SRI de vendor/ (Leaflet propio)
         run: |
           node -e "
             const fs = require('fs'), crypto = require('crypto');

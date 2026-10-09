@@ -2,7 +2,11 @@ _borrar/
 *.bak
 *.bak[0-9]
 
-# Capturas que la app de Claude guarda en la carpeta de trabajo: no van al repo
+# Carpeta de descartes: no se publica ni se versiona
+_to_delete/
+
+# Carpeta que la app de escritorio del asistente de código crea en la carpeta
+# de trabajo (capturas y salidas): no va al repo. El patrón es su nombre literal.
 Claude outputs/
 
 # Capturas que deja el arnés (filtros.mjs) en la carpeta desde la que se corre

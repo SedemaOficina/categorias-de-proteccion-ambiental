@@ -1,6 +1,6 @@
 /* ═════════════════════════════════════════════════════════════════════
    Dashboard · Categorías de Protección Ambiental · SIA · SEDEMA CDMX
-   Lógica de la aplicación. Hasta la v43 vivía incrustada en index.html.
+   Lógica de la aplicación.
    Un solo IIFE con estado compartido: NO es un módulo ES y no debe cargarse
    con type="module". Depende de config.js, que se carga antes.
    Validar siempre con: node --check app.js
@@ -54,23 +54,21 @@ function parseCSV(text){
  *
  * Para cambiar la fuente, modificar SHEET_URL.
  * ============================================================ */
-/* gid=1601492810 es la pestaña «Inventario». Republicada el 11-sep-2026: al
-   reestructurar el Sheet (renombrar la hoja y agregar ARCAC, Traslapes y la
-   nota metodológica) la publicación anterior con gid=0 dejó de resolver y
-   Google empezó a devolver su página de error con HTTP 200. Si vuelve a
-   romperse, republicar SOLO esa hoja como CSV y traer el gid nuevo: no basta
-   con cambiar la clave 2PACX y conservar el gid viejo. */
+/* gid=1601492810 es la pestaña «Inventario». Si la publicación se rompe
+   (Google devuelve su página de error con HTTP 200, p. ej. al renombrar o
+   reestructurar hojas del libro), republicar SOLO esa hoja como CSV y traer
+   el gid nuevo: no basta con cambiar la clave 2PACX y conservar el gid viejo. */
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTjzQYJ2Qyj_LB2oFOU2irZa1Qp1yNt9Z44MGbU_2xkAMwxIPOuiviorX6JI4P_eb5kA3rkKqYomQo1/pub?gid=1601492810&single=true&output=csv';
 
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* ^ Escape de texto libre antes de insertarlo con innerHTML (defensa XSS).
      Se declara aqui, y no junto al resto de helpers, porque es un const (no se
      iza) y DATA lo necesita unas lineas mas abajo. */
-/* Llave del join Sheet ↔ geometría ↔ índices (auditoría 13-sep-2026, D1-01 y
-   D1-02): el nombre CRUDO del Sheet, normalizado a NFC y sin espacios en los
-   extremos. Exacto por regla del proyecto: ni acentos tolerados ni `includes`.
-   `DATA[i]._clave` la guarda antes del escape HTML, porque `nombre` (escapado
-   para pintar) no puede ser llave: «'» se vuelve «&#39;» y ya no casa. */
+/* Llave del join Sheet ↔ geometría ↔ índices: el nombre CRUDO del Sheet,
+   normalizado a NFC y sin espacios en los extremos. Exacto por regla del
+   proyecto: ni acentos tolerados ni `includes`. `DATA[i]._clave` la guarda
+   antes del escape HTML, porque `nombre` (escapado para pintar) no puede ser
+   llave: «'» se vuelve «&#39;» y ya no casa. */
 const nombreClave = s => String(s==null?'':s).normalize('NFC').trim();
 
 /* Aviso en el cuerpo de la tabla mientras el inventario no llega. Sin esto,
@@ -85,8 +83,8 @@ function _estadoTabla(msg){
 
 async function loadInventarioCSV(){
   _estadoTabla('Cargando el inventario…');
-  /* Era el unico fetch del archivo sin timeout, y bloquea todo el modulo:
-     si el Sheet no responde, nada despues de esta linea se ejecuta. */
+  /* Lleva timeout porque bloquea todo el modulo: si el Sheet no responde,
+     nada despues de esta linea se ejecuta. */
   const intento = async (ms)=>{
     const url = SHEET_URL + (SHEET_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
     const ac = new AbortController();
@@ -123,9 +121,9 @@ async function loadInventarioCSV(){
   const rows = parseCSV(text);
   if(!rows.length) throw new Error('El inventario de Google Sheets está vacío o mal formado.');
 
-  /* ── Contrato de columnas (auditoría 13-sep-2026, D12-01) ──────────────
+  /* ── Contrato de columnas ─────────────────────────────────────────
      El Sheet lo editan personas sin acceso al repo; renombrar una columna
-     tumbaba el tablero (`superficie`) o cambiaba los datos en silencio
+     tumbaría el tablero (`superficie`) o cambiaría los datos en silencio
      (`suelo_conservacion_pct` → todo «Sin dato»; `programa_manejo` → todo
      «Sin programa»). Se comparan las cabeceras con la lista del README:
      · falta una columna CRÍTICA → error legible y se sirve el respaldo;
@@ -154,11 +152,11 @@ const COLUMNAS_CRITICAS = ['nombre','grupo','superficie','programa_manejo'];
 let COLUMNAS_FALTANTES = [];
 
 /* Respaldo del inventario dentro del repositorio.
-   El Sheet es la fuente autoritativa, pero es UNA fuente: el 11-sep-2026 su
-   publicación dejó de resolver y el tablero estuvo horas sin datos. Con esta
-   copia, una caída del Sheet deja de ser una caída del tablero y pasa a ser
-   una degradación: se sirven los datos del último corte, claramente rotulados
-   como tales para que nadie los confunda con el dato vivo.
+   El Sheet es la fuente autoritativa, pero es UNA fuente: si su publicación
+   deja de resolver, el tablero se queda sin datos. Con esta copia, una caída
+   del Sheet no es una caída del tablero sino una degradación: se sirven los
+   datos del último corte, claramente rotulados como tales para que nadie los
+   confunda con el dato vivo.
    Se regenera exportando la hoja «Inventario» como CSV a data/inventario.csv. */
 async function cargarRespaldoCSV(){
   const r = await fetch('./data/inventario.csv', { cache: 'no-cache' });
@@ -201,9 +199,9 @@ let SUELO_CONSERVACION = null;
 /* Los tres cargadores de capas complementarias (SC, ARCAC, Zona Patrimonio)
    resuelven SIEMPRE con una colección —el resto del código no distingue—,
    pero cuando la descarga falla la marcan con `_fallo = true` y NO la dejan
-   cacheada: la siguiente llamada reintenta (auditoría 13-sep-2026, D2-08).
-   Antes un fallo en el arranque dejaba una colección vacía y «cargada» para
-   toda la sesión, y el aviso «Resultado incompleto» nunca podía aparecer. */
+   cacheada: la siguiente llamada reintenta. Cachear la colección vacía de un
+   fallo en el arranque la dejaría «cargada» toda la sesión, y el aviso
+   «Resultado incompleto» nunca podría aparecer. */
 const _capaFallida = () => ({type:'FeatureCollection', features:[], _fallo:true});
 async function loadSueloConservacion(){
   if(SUELO_CONSERVACION && !SUELO_CONSERVACION._fallo) return SUELO_CONSERVACION;
@@ -285,13 +283,12 @@ const DATA = DATA_RAW.map(d => {
     jurisdiccion: grupo.includes('Federal') ? 'Federal' : 'Local',
     dg_responsable: dg,
     /* Porcentaje de la superficie del área dentro de Suelo de Conservación.
-       Desde el 11-sep-2026 es el ÚNICO campo de Suelo de Conservación del
-       Sheet: la columna binaria `suelo_conservacion` se retiró porque dos
-       campos que describen el mismo hecho terminan contradiciéndose y nadie
-       los sincroniza a mano. Las etiquetas (Dentro / Parcial / Fuera) las
-       deriva scEstado() de este número, así que el criterio vive en un solo
-       lugar. Vacío significa «Sin dato», NO «Fuera»: la ausencia de un dato
-       no es una afirmación sobre el territorio. */
+       Es el ÚNICO campo de Suelo de Conservación del Sheet: no hay columna
+       binaria aparte, porque dos campos que describen el mismo hecho terminan
+       contradiciéndose y nadie los sincroniza a mano. Las etiquetas (Dentro /
+       Parcial / Fuera) las deriva scEstado() de este número, así que el criterio
+       vive en un solo lugar. Vacío significa «Sin dato», NO «Fuera»: la ausencia
+       de un dato no es una afirmación sobre el territorio. */
     suelo_conservacion_pct: (()=>{
       const v = String(d.suelo_conservacion_pct ?? '').trim().replace(',','.');
       if(!v) return null;
@@ -416,7 +413,7 @@ function _pintarAlertasInventario(){
 async function verificarInventario(fase){
   const previas = INVENTARIO_ALERTAS.slice();
   const lista = _alertasInvariante();
-  /* Contrato de columnas (D12-01): una columna no crítica ausente se lee
+  /* Contrato de columnas: una columna no crítica ausente se lee
      vacía; se dice aquí para que no pase por un dato real. */
   if(COLUMNAS_FALTANTES.length)
     lista.push('el Sheet no trae la columna ' + COLUMNAS_FALTANTES.map(c => '«' + c + '»').join(', ') + ' (se lee vacía; ¿se renombró?)');
@@ -449,7 +446,7 @@ const GROUPS = [
   {id:'ZP',      label:'Zona Patrimonio', cls:'zp',     key:'ZONA_PATRIMONIO'},
   {id:'ARCAC',   label:'ARCAC',           cls:'arcac',  key:'ARCAC'},
   {id:'TRASLAPES',label:'Traslapes',      cls:'traslapes',key:'TRASLAPES'},
-  /* Portada de Análisis (v88): cuatro tarjetas que llevan a cada sección. */
+  /* Portada de Análisis: cuatro tarjetas que llevan a cada sección. */
   {id:'PORTADA', label:'Análisis',        cls:'analisis',key:'PORTADA'},
   {id:'ANALISIS',label:'Análisis',        cls:'analisis',key:'ANALISIS'},
   {id:'METAS',   label:'Metas',           cls:'metas',  key:'METAS'},
@@ -495,8 +492,8 @@ const LEGAL = {
       {fr:"XXIII", lbl:"Diseñar e implementar, en coordinación con el Gobierno de la Ciudad de México, acciones que promuevan la innovación científica y tecnológica en materia de preservación y mejoramiento del medio ambiente."},
       {fr:"XXIV",  lbl:"Vigilar, en coordinación con el Gobierno de la Ciudad de México, que no sean ocupadas de manera ilegal las áreas naturales protegidas y el suelo de conservación."},
     ],
-    /* v89 (7-oct-2026): texto vigente en el sitio de la Consejería Jurídica,
-       no una copia en PDF que se desactualiza con cada reforma. */
+    /* Texto vigente en el sitio de la Consejería Jurídica, no una copia en PDF
+       que se desactualiza con cada reforma. */
     url: "https://data.consejeria.cdmx.gob.mx/index.php/leyes/constitucion",
     urlFuente: "Consejería Jurídica y de Servicios Legales de la CDMX"
   },
@@ -647,15 +644,9 @@ const LEGAL = {
 /* ===== Helpers ===== */
 const fmt = n => n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtInt = n => n.toLocaleString('es-MX');
-/* Superficie en la TABLA: sin decimales. Los centésimos de hectárea no se
-   comparan de un vistazo entre renglones y cuestan ancho en una columna que
-   compite con SC y DG. El valor exacto sigue en el `title` de la celda, en la
-   ficha y en la suma del pie, que es donde sí se consulta con precisión.
-   Excepción: por debajo de 1 ha se conservan dos decimales, porque redondear
-   Vista Hermosa (0.32 ha) a «0» sería falso, no compacto. */
-/* Superficie en la tabla: un decimal (v89). Antes se redondeaba a entero y la
-   columna decía «11» mientras el resumen decía «27,747.05». Debajo de 1 ha, dos
-   decimales para no mostrar «0.0». La cifra completa va en el title. */
+/* Superficie en la tabla: un decimal. Redondeada a entero, la columna diría
+   «11» mientras el resumen dice «27,747.05». Debajo de 1 ha, dos decimales
+   para no mostrar «0.0». La cifra completa va en el title. */
 const fmtSup = n => {
   const v = +n || 0;
   return (v > 0 && v < 1)
@@ -671,11 +662,11 @@ const anioDecreto = d => {
   const m = String(d.fecha_decreto || '').match(/(\d{4})\s*$/);
   return m ? m[1] : '—';
 };
-/* esc() ahora se define antes de la construccion de DATA (buscar "defensa XSS en la fuente") */
-/* Aviso visual no bloqueante (reemplaza alert nativo) */
-/* Desplazamiento animado solo si la persona no pidió menos movimiento
-   (auditoría 13-sep-2026, D5-06): el CSS ya respeta prefers-reduced-motion,
-   los scrollTo/scrollIntoView de JS no lo hacían. */
+/* esc() se define antes de la construccion de DATA (buscar "defensa XSS en la fuente") */
+/* Aviso visual no bloqueante (en lugar de alert nativo) */
+/* Desplazamiento animado solo si el sistema no pide movimiento reducido:
+   el CSS ya respeta prefers-reduced-motion; los scrollTo/scrollIntoView de
+   JS pasan por aquí para respetarlo también. */
 const _suave = () => { try{ return matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'; }catch(_){ return 'smooth'; } };
 function siaToast(msg, duracion){
   let t=document.getElementById('siaToast');
@@ -689,15 +680,14 @@ function siaToast(msg, duracion){
      segundos; los avisos ordinarios conservan el tiempo de siempre. */
   clearTimeout(t._h); t._h=setTimeout(()=>{ t.style.opacity='0'; }, duracion || 4200);
 }
-const pct = (a,b) => b===0?'0':((a/b)*100).toFixed(1);
 const sum = (arr,k) => arr.reduce((s,d)=>s+(+d[k]||0),0);
 const explode = (arr,k) => arr.flatMap(d => d[k].split(/,\s*/).map(s=>s.trim()));
 
 /* Mapeo subcategoría → código de color y abreviatura */
 const SUBCAT = {
   "Bosque Urbano":                              {code:"BU",   short:"Bosque Urbano"},
-  /* Tenencia de la tierra (ARCAC). Sin estas dos entradas subCode caía en "BU"
-     y la tenencia se pintaba con el estilo de Bosque Urbano. */
+  /* Tenencia de la tierra (ARCAC). Sin estas dos entradas subCode caería en "BU"
+     y la tenencia se pintaría con el estilo de Bosque Urbano. */
   "Comunidad":                                  {code:"COM",  short:"Comunidad"},
   "Ejido":                                      {code:"EJI",  short:"Ejido"},
   "Barranca":                                   {code:"BR",   short:"Barranca"},
@@ -717,10 +707,10 @@ const SUBCAT = {
 };
 const subCode  = cat => (SUBCAT[cat] && SUBCAT[cat].code)  || "BU";
 const subShort = cat => (SUBCAT[cat] && SUBCAT[cat].short) || cat;
-/* Celda de subcategoría en la tabla de escritorio (v89): siempre la sigla
-   (BU, BR, PN, ZCE…) con el nombre completo en el title. «Bosque Urbano» y
-   «Parque Nacional» no cabían y se cortaban («Bosque Urba…»), mientras las ANP
-   locales ya iban en sigla. La tenencia de ARCAC (Comunidad, Ejido) va completa. */
+/* Celda de subcategoría en la tabla de escritorio: siempre la sigla (BU, BR,
+   PN, ZCE…) con el nombre completo en el title. «Bosque Urbano» y «Parque
+   Nacional» no caben y se cortarían («Bosque Urba…»). La tenencia de ARCAC
+   (Comunidad, Ejido) va completa. */
 const SUB_TENENCIA = new Set(['Comunidad','Ejido']);
 const subTabla = cat => SUB_TENENCIA.has(cat) ? subShort(cat) : ((SUBCAT[cat] && SUBCAT[cat].code) || cat);
 
@@ -734,11 +724,11 @@ let state = { tab:'ALL', dest:'INVENTARIO', sortKey:'nombre', sortDir:1, q:'', f
   highlightCoadmin: false };
 const currentGroup = () => GROUPS.find(g=>g.id===state.tab);
 /* Pestañas con página propia: no usan la tabla compartida ni sus filtros.
-   TRASLAPES entró aquí el 11-sep-2026; estaba fuera por descuido y hacía que
-   render() y populateFilters() trabajaran sobre una tabla oculta. */
+   TRASLAPES tiene que estar aquí: fuera de la lista, render() y
+   populateFilters() trabajarían sobre una tabla oculta. */
 const isSpecialTab = (id) => id==='PORTADA' || id==='LEGAL' || id==='METAS' || id==='ANALISIS' || id==='ZP' || id==='TRASLAPES';
 /* ════════════════════════════════════════════════════════════════════
- * ARCAC en la tabla general · 11 sep 2026
+ * ARCAC en la tabla general
  * Los 30 núcleos NO entran a DATA ni a GEOMETRIES: el inventario sigue
  * siendo 66 y ningún contador cambia. Lo que se comparte es la TABLA, que
  * pinta el conjunto activo sea cual sea. Los campos que ARCAC no tiene
@@ -781,10 +771,10 @@ const currentData = () => {
 };
 
 /* ════════════════════════════════════════════════════════════════════
- * Navegación de dos niveles · rediseño 2026-09-10
- * Cuatro destinos. Cada uno agrupa ids de GROUPS que ya existían, así que
- * ninguna función de render cambia de contrato: `state.tab` sigue siendo
- * el id de grupo y `currentGroup()`/`currentData()` no se tocan.
+ * Navegación de dos niveles
+ * Cada destino agrupa ids de GROUPS, así que ninguna función de render
+ * cambia de contrato: `state.tab` es el id de grupo y
+ * `currentGroup()`/`currentData()` no se tocan.
  * «Ubicar» no tiene grupo: es una acción, y vive en `state.dest`.
  * ════════════════════════════════════════════════════════════════════ */
 const DEST_ICONS = {
@@ -795,10 +785,10 @@ const DEST_ICONS = {
   INVENTARIO:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>',
   ANALITICA:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>'
 };
-/* Tres destinos (11-sep-2026). «Capas» desapareció: sus dos módulos se
-   repartieron donde el usuario los busca —Zona Patrimonio es un chip más del
-   inventario y Traslapes es análisis—, y un destino con dos entradas no
-   justificaba un cuarto del ancho de la barra. */
+/* Tres destinos. No hay destino «Capas»: Zona Patrimonio es un chip más
+   del inventario y Traslapes es análisis, que es donde el usuario los busca,
+   y un destino con dos entradas no justificaría un cuarto del ancho de la
+   barra. */
 const DESTINOS = [
   { id:'UBICAR',     label:'Ubicar',     sub:[] },
   { id:'INVENTARIO', label:'Inventario', sub:['ALL','BU','BR','ANPL','ANPF','COADMIN','ARCAC','ZP'] },
@@ -846,7 +836,7 @@ function buildTabs(){
         <span class="dest-lbl">${d.label}</span>
       </button>`).join('');
 
-  /* Análisis (v88): en la portada no hay chips —las tarjetas son la
+  /* Análisis: en la portada no hay chips —las tarjetas son la
      navegación—; dentro de una sección, «← Análisis» y las cuatro secciones
      como pestañas (son páginas, no filtros). */
   const enAnalisis = dest.id === 'ANALITICA';
@@ -1061,7 +1051,7 @@ function populateFilters(){
 }
 
 function renderDashboard(){
-  setTimeout(()=>{ try{ montarBotonCapas(); montarBotonBase(); }catch(e){} }, 60);
+  setTimeout(()=>{ try{ montarBotonBase(); }catch(e){} }, 60);
   const g = currentGroup();
   const dash = document.getElementById('dashboard');
   const tblSec = document.getElementById('tableSection');
@@ -1080,7 +1070,7 @@ function renderDashboard(){
   siaBloquearPagina(state.dest==='UBICAR' && _movil, 'shell');
   if(state.dest!=='UBICAR'){
     if(typeof limpiarUbicacionGlobal === 'function') limpiarUbicacionGlobal();
-    /* Escritorio (B14): el resultado vive junto al mapa de Ubicar; fuera de
+    /* Escritorio: el resultado vive junto al mapa de Ubicar; fuera de
        ese destino se cierra. */
     if(!_movil && wrap && wrap.classList.contains('ubi-lateral')) cerrarResultadoLateral();
     const _hr = document.getElementById('ubicarResultado');
@@ -1149,7 +1139,7 @@ function renderDashboard(){
       /* Una sola tentativa. Sin este cerrojo, un arcac.geojson que no responde
          —o que responde vacío— deja a renderDashboard llamándose a sí mismo. */
       dash.innerHTML = '';
-      /* Tras un fallo se reintenta en cada visita al subconjunto (D2-05/D2-08). */
+      /* Tras un fallo se reintenta en cada visita al subconjunto. */
       if(_arcacTablaEstado === 'fallo') _arcacTablaEstado = 'sin-cargar';
       if(_arcacTablaEstado === 'listo'){
         _estadoTabla('No se pudieron cargar los núcleos agrarios. Revisa la conexión y vuelve a intentar.');
@@ -1163,7 +1153,7 @@ function renderDashboard(){
         construirDatosArcac(fc);
         _arcacTablaEstado = 'listo';
         /* render() solo con datos: si no hay, pisaría el aviso de fallo con
-           «Sin resultados para los filtros actuales» (D2-05). */
+           «Sin resultados para los filtros actuales». */
         if(state.tab === 'ARCAC'){ populateFilters(); renderDashboard(); if(DATA_ARCAC.length) render(); }
         if(fc && fc._fallo){ _arcacTablaEstado = 'fallo'; try{ siaToast('No se pudieron cargar los núcleos agrarios (ARCAC). Revisa la conexión.'); }catch(_){} }
       }).catch(()=>{
@@ -1212,10 +1202,10 @@ function renderDashboard(){
   }
 }
 
-/* Resumen del inventario · rediseño 2026-09-10
-   Antes: cuatro tarjetas, y la cuarta («sin programa de manejo») era el inverso
-   aritmetico de la tercera: un cuarto del ancho util sin informacion nueva.
-   Ahora: tres cifras y una barra que muestra la cobertura y la brecha a la vez. */
+/* Resumen del inventario: tres cifras y una barra que muestra la cobertura y
+   la brecha a la vez. Una cuarta tarjeta «sin programa de manejo» sería el
+   inverso aritmetico de la tercera: un cuarto del ancho util sin informacion
+   nueva. */
 function resumenHTML(arr, titulo){
   const total   = arr.length;
   const totArea = sum(arr,'superficie');
@@ -1288,9 +1278,9 @@ function renderGlobalDashboard(){
 }
 
 /* ===== Página Metas: comparativo de administraciones + sección Brechas ===== */
-/* ═══ GUARDAR PARA USAR SIN SEÑAL (v94, 7-oct-2026) ═══════════════════════
-   Antes solo quedaban sin conexión las capas que ya se habían abierto, y una
-   versión nueva empezaba con su caché vacía. Este botón (en la guía y en el
+/* ═══ GUARDAR PARA USAR SIN SEÑAL ═══════════════════════════════════════
+   Sin él solo quedan sin conexión las capas que ya se abrieron, y cada
+   versión nueva empieza con su caché vacía. Este botón (en la guía y en el
    pie) descarga de una vez todas las capas y el mapa base de la CDMX
    (zoom 10 a 13) a la caché `sia-campo-v35`, que el Service Worker sirve sin
    red y refresca en segundo plano cuando hay red; esa caché sobrevive a las
@@ -1371,12 +1361,12 @@ document.addEventListener('click', e => {
 });
 _campoEstadoGuardado();
 
-/* ═══ PORTADA DE ANÁLISIS (v88, 6-oct-2026) ═══════════════════════════
-   Los cuatro chips de Análisis se perdían: parecían filtros y eran cuatro
-   páginas distintas. Al entrar a Análisis se llega aquí, a cuatro tarjetas
-   con la pregunta que responde cada sección y su cifra clave, calculada en
-   vivo sobre DATA (ninguna escrita a mano). Dentro de cada sección, la
-   barra lleva «← Análisis» y las cuatro secciones como pestañas. */
+/* ═══ PORTADA DE ANÁLISIS ═════════════════════════════════════════════
+   Como chips, las cuatro secciones de Análisis se pierden: parecen filtros y
+   son cuatro páginas distintas. Al entrar a Análisis se llega aquí, a cuatro
+   tarjetas con la pregunta que responde cada sección y su cifra clave,
+   calculada en vivo sobre DATA (ninguna escrita a mano). Dentro de cada
+   sección, la barra lleva «← Análisis» y las cuatro secciones como pestañas. */
 function renderPortadaAnalisis(){
   const totArea = sum(DATA,'superficie');
   const sinPM   = DATA.filter(d=>d.programa_manejo!=='Sí');
@@ -1434,8 +1424,8 @@ document.addEventListener('click', e => {
 });
 
 function renderMetasPage(){
-  /* Las brechas se mudaron a «Análisis» el 11-sep-2026: el chip de allá las
-     promete por nombre y aquí quedaban escondidas detrás de otra pregunta. */
+  /* Las brechas viven en «Análisis»: el chip de allá las promete por nombre y
+     aquí quedarían escondidas detrás de otra pregunta. */
   return renderMetaComparable();
 }
 
@@ -1446,11 +1436,9 @@ function renderMetasPage(){
 const ORD_ANALISIS = { b2:{k:'fecha', dir:1}, b3:{k:'fecha', dir:1} };
 
 /* ═══ Análisis · Brechas y distribución ═══════════════════════════════
-   Reescrito el 11-sep-2026. Lo que había mezclaba dos cosas: el chip decía
-   «Brechas y distribución» pero la página entregaba composición y cronología,
-   mientras que el diagnóstico de brechas vivía escondido dentro de Metas, que
-   es otra pregunta (qué hizo cada administración). Aquí van las dos que el
-   chip promete: qué falta y cómo se reparte.
+   Las dos preguntas que el chip «Brechas y distribución» promete: qué falta
+   y cómo se reparte. Qué hizo cada administración es otra pregunta y vive en
+   Metas.
    Todas las cifras se calculan sobre DATA en cada render: ninguna está escrita
    a mano, así que la página no puede quedar desfasada del Sheet. */
 function renderAnalisisPage(){
@@ -1536,11 +1524,11 @@ function renderAnalisisPage(){
       alcStats[k].supG[d.grupo] = (alcStats[k].supG[d.grupo]||0) + ha;
     }
   }));
-  /* ARCAC NO entra a la barra, al total ni al orden (v82, auditoría de
-     interfaz UI-01): son núcleos agrarios, no áreas del inventario, y antes
-     la gráfica decía «no suma al inventario» mientras los sumaba (Tlalpan
-     salía con 21 áreas y 26,450 ha en lugar de 11 y 12,511). Se cuentan
-     aparte y se rotulan en la fila, igual que en «Los cuatro grupos». */
+  /* ARCAC NO entra a la barra, al total ni al orden: son núcleos agrarios, no
+     áreas del inventario, y sumarlos haría que la gráfica dijera «no suma al
+     inventario» mientras los suma (Tlalpan saldría con 21 áreas y 26,450 ha en
+     lugar de 11 y 12,511). Se cuentan aparte y se rotulan en la fila, igual que
+     en «Los cuatro grupos». */
   DATA_ARCAC.forEach(d=>{
     const k = String(d.alcaldia||'').split(' (')[0].trim(); if(!k) return;
     if(!alcStats[k]) alcStats[k] = alcVacia();
@@ -1770,7 +1758,7 @@ function renderAnalisisPage(){
                 /* El número solo cuando el tramo mide al menos ~5 % del ancho de la
                    columna: en barras cortas se enciman («1 2 1» en Miguel Hidalgo). */
                 const cabe = p * ancho / 100 >= 5;
-                /* Texto oscuro sobre el naranja de ANP Local: el blanco no alcanza AA (D5-04). */
+                /* Texto oscuro sobre el naranja de ANP Local: el blanco no alcanza AA. */
                 const oscuro = x.color === GROUP_COLORS['ANP · Local'] ? ' alc-seg-num-oscuro' : '';
                 return `<div class="alc-seg" style="width:${p}%;background:${x.color}" title="${k} · ${x.label}: ${x.n} ${x.n===1?'área':'áreas'} · ${fmt(x.ha)} ha">${cabe?`<span class="alc-seg-num${oscuro}">${x.n}</span>`:''}</div>`;
               }).join('')}
@@ -1820,9 +1808,9 @@ function graficaPorAdministracion(o){
           singular, plural, verbo } = o;
   /* El último día del periodo SÍ pertenece al periodo: la entrega ocurre el 5 de
      diciembre, así que el 4 todavía es de quien sale. Con el corte abierto
-     (`t < end`) tres registros caían en ningún sexenio —los programas de Vista
+     (`t < end`) tres registros caerían en ningún sexenio —los programas de Vista
      Hermosa (2012-12-04) y Ecoguardas (2018-12-04) y el decreto de Ejidos de
-     Xochimilco (2006-12-04)— y el pie los reportaba como si fueran anteriores a
+     Xochimilco (2006-12-04)— y el pie los reportaría como si fueran anteriores a
      1997. Los periodos no se traslapan porque cada `end` es la víspera del
      `start` siguiente. */
   const dentro = (iso, g) => {
@@ -1942,14 +1930,14 @@ function renderCronologiaSection(){
   // Periodos de gobierno electo de la Ciudad de México (desde 1997)
   // Fechas como decimal (año + fracción) para posicionamiento en el eje continuo
   const toDec = (y,m,d) => y + (m-1)/12 + (d-1)/365;
-  /* CINCO ADMINISTRACIONES, NO DIEZ (11 sep 2026).
-     Antes se listaban las diez jefaturas desde 1997, interinatos incluidos. Dos
-     problemas: los tres interinatos —Encinas, Amieva, Batres— partían en dos la
-     administración a la que pertenecen y repartían sus decretos entre dos
-     barras, de modo que ninguna de las dos decía cuánto se decretó en ese
-     sexenio; y Cárdenas y Robles ocupaban la mitad izquierda del gráfico sin un
+  /* CINCO ADMINISTRACIONES, NO DIEZ JEFATURAS.
+     Listar las diez jefaturas desde 1997, interinatos incluidos, tiene dos
+     problemas: los tres interinatos —Encinas, Amieva, Batres— parten en dos la
+     administración a la que pertenecen y reparten sus decretos entre dos
+     barras, de modo que ninguna de las dos dice cuánto se decretó en ese
+     sexenio; y Cárdenas y Robles ocupan la mitad izquierda del gráfico sin un
      solo decreto que mostrar.
-     Ahora cada barra es un PERIODO COMPLETO a nombre de quien lo encabezó: el
+     Por eso cada barra es un PERIODO COMPLETO a nombre de quien lo encabezó: el
      interinato se cuenta dentro del periodo que termina, que es como se lee un
      sexenio. 1997–2000 sale porque no tiene decretos que reportar. */
   const gobiernos = [
@@ -1959,10 +1947,6 @@ function renderCronologiaSection(){
     {nombre:'C. Sheinbaum', start:toDec(2018,12,5), end:toDec(2024,10,4),  full:'Claudia Sheinbaum',           color:'var(--guinda-900)'},
     {nombre:'C. Brugada',   start:toDec(2024,10,5), end:toDec(2030,10,5),  full:'Clara Brugada',               color:'var(--guinda)'}
   ];
-
-  // Rango total del eje (en años decimales)
-  const ejeStart = minDec;
-  const ejeEnd = maxDec + 10;
 
   return `
     <div class="panel" style="margin-top:18px">
@@ -2201,10 +2185,10 @@ function legalList(items, variant=''){
   const cls = variant ? `legal-list legal-list-${variant}` : 'legal-list';
   return `<div class="${cls}"><ul>${items.map(i=>`<li><span class="lbl">${i.lbl}</span><span class="ref">${i.ref}</span></li>`).join('')}</ul></div>`;
 }
-/* Filas de la tabla del Convenio Marco (auditoría 13-sep-2026, D1-05): antes
-   iban escritas a mano y ya divergían del Sheet (superficies y fechas). Se
-   leen del inventario por nombre canónico (COADMIN_AREAS); si un área no
-   estuviera en el inventario, la fila lo dice en vez de inventar cifras. */
+/* Filas de la tabla del Convenio Marco: se leen del inventario por nombre
+   canónico (COADMIN_AREAS), nunca escritas a mano, para que no diverjan del
+   Sheet (superficies y fechas); si un área no estuviera en el inventario, la
+   fila lo dice en vez de inventar cifras. */
 const _MESES_LARGOS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 function _fechaLarga(iso){
   const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -2226,9 +2210,8 @@ function _filasConvenioHTML(){
   return filas;
 }
 
-/* Botón a la versión oficial de una norma (v89): se abre en otra pestaña y
-   dice de dónde viene. Sustituye a los PDF locales, que había que reemplazar a
-   mano con cada reforma. */
+/* Botón a la versión oficial de una norma: se abre en otra pestaña y dice de
+   dónde viene. Un PDF local habría que reemplazarlo a mano con cada reforma. */
 function _btnNormaExterna(n, badge, federal){
   return `<a class="btn-pdf btn-ext${federal ? ' btn-pdf-federal' : ''}" href="${n.url}" target="_blank" rel="noopener noreferrer"
             title="Texto vigente · ${n.urlFuente} (se abre en otra pestaña)">
@@ -2237,7 +2220,7 @@ function _btnNormaExterna(n, badge, federal){
             <span class="pdf-arrow" aria-hidden="true">↗</span>
           </a>`;
 }
-/* Índice de Marco jurídico (v89): la página medía unos 9,000 px sin índice.
+/* Índice de Marco jurídico: sin índice la página mide unos 9,000 px.
    Botones (no ligas con #, que pisarían las vistas compartibles #v?…) que
    llevan a cada norma y abren su bloque plegable. */
 document.addEventListener('click', e => {
@@ -2575,7 +2558,7 @@ function renderLegalDashboard(){
 /* ===== Table ===== */
 /* Una regla por filtro, en un solo lugar. filter() las aplica todas;
    populateFilters() aplica todas MENOS una para saber qué opciones siguen
-   teniendo sentido en ese desplegable. Tenerlas escritas dos veces era la
+   teniendo sentido en ese desplegable. Tenerlas escritas dos veces sería la
    manera seguro de que se separaran. */
 const PRUEBA_FILTRO = {
   fTipo: d => !state.fTipo || d.tipo === state.fTipo,
@@ -2633,7 +2616,7 @@ function render(){
         <td class="name" title="${d.nombre}">${d.nombre}<span class="name-sub">${
           /* Segunda línea en celular: tipo, subcategoría y alcaldía —lo que
              identifica el territorio—. Año de decreto y DG quedan en la ficha:
-             con ellos la fila crecía a tres renglones. ARCAC omite la tenencia
+             con ellos la fila crecería a tres renglones. ARCAC omite la tenencia
              porque ahí es columna propia. */
           [d.tipo, d._arcacNo!=null ? '' : subShort(d.categoria), d.alcaldia]
             .filter(v=>v && v!=='—').join(' · ')
@@ -2693,9 +2676,9 @@ function render(){
   _contarFiltrosMovil(rows.length);
 }
 
-/* ═══ FILTROS EN CELULAR COMO HOJA (v89, 7-oct-2026) ═════════════════════
+/* ═══ FILTROS EN CELULAR COMO HOJA ═════════════════════════════════════
    En celular la barra de filtros (Alcaldía, Programa, Más filtros, Limpiar)
-   ocupaba casi toda la pantalla antes de la primera área. Ahí
+   ocuparía casi toda la pantalla antes de la primera área. Ahí
    solo quedan visibles el buscador y un botón «Filtros (n)», con n = filtros
    activos; el botón abre la misma barra como hoja inferior, con los filtros
    avanzados ya desplegados y «Ver N resultados» para cerrar. Son los mismos
@@ -2721,7 +2704,7 @@ function _contarFiltrosMovil(nRes){
   };
   btn.addEventListener('click', () => abrir(true));
   if(listo) listo.addEventListener('click', () => abrir(false));
-  /* v95: «Limpiar» va en la cabecera de la hoja, junto a «Ver resultados». */
+  /* «Limpiar» va en la cabecera de la hoja, junto a «Ver resultados». */
   const limp = document.getElementById('btnFiltrosLimpiar');
   if(limp) limp.addEventListener('click', () => { const r = document.getElementById('btnReset'); if(r) r.click(); });
   if(bdF) bdF.addEventListener('click', () => abrir(false));
@@ -2730,9 +2713,9 @@ function _contarFiltrosMovil(nRes){
   try{ window.matchMedia('(max-width:760px)').addEventListener('change', e => { if(!e.matches && tb.classList.contains('hoja-abierta')) abrir(false); }); }catch(_){}
 })();
 
-/* Orden de la tabla principal por clic y por teclado (auditoría 13-sep-2026,
-   D5-01): los <th> son enfocables (tabindex en index.html) y anuncian
-   `aria-sort`; Enter o Espacio hacen lo mismo que el clic. */
+/* Orden de la tabla principal por clic y por teclado: los <th> son
+   enfocables (tabindex en index.html) y anuncian `aria-sort`; Enter o
+   Espacio hacen lo mismo que el clic. */
 document.querySelectorAll('thead.t-head th').forEach(th=>{
   const ordenar = ()=>{
     const k=th.dataset.k;
@@ -2746,7 +2729,7 @@ document.getElementById('q').addEventListener('input',e=>{ state.q=e.target.valu
 /* Cada cambio repuebla los desplegables antes de repintar: son dependientes
    entre sí —elegir Tipo = ANP deja «Subcategoría» solo con subcategorías de
    ANP— y eso se recalcula en populateFilters(). Sin esta llamada, las opciones
-   se quedaban congeladas en las del grupo. */
+   se quedarían congeladas en las del grupo. */
 ['fJur','fCat','fAlc','fPM','fTipo','fSC','fDG'].forEach(id=>{
   const e = document.getElementById(id); if(!e) return;
   e.addEventListener('change', ev=>{ state[id] = ev.target.value; populateFilters(); render(); });
@@ -2897,8 +2880,7 @@ function slugify(s){
     .replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
 }
 
-/* GeoJSON embebido directamente en el HTML — funciona con file:// (doble clic), http:// y https:// sin restricciones de CORS */
-// GEOMETRIES_EMBEDDED se carga ahora desde data/geometrias.geojson (lazy)
+// Carga perezosa desde data/geometrias.geojson
 let _GEOM_PROMISE = null;
 function loadGeometriesData(){
   if(!_GEOM_PROMISE){
@@ -2922,9 +2904,9 @@ async function loadGeometries(){
       GEOM_INDEX = {};
       GEOMETRIES.features.forEach(f => {
         const p = f.properties||{};
-        /* Llave exacta (D1-01): antes era el slug, que toleraba acentos y
-           mayúsculas y dejaba pasar renombres que el resto del código no
-           tolera. `id_match` se conserva como segunda llave. */
+        /* Llave exacta, no el slug: el slug tolera acentos y mayúsculas y dejaría
+           pasar renombres que el resto del código no tolera. `id_match` se conserva
+           como segunda llave. */
         if(p.nombre) GEOM_INDEX[nombreClave(p.nombre)] = f;
         if(p.id_match) GEOM_INDEX[p.id_match] = f;
       });
@@ -2939,8 +2921,8 @@ async function loadGeometries(){
   return GEOMETRIES;
 }
 
-/* GeoJSON de alcaldías embebido — capa de contexto territorial sobre los mapas */
-// ALCALDIAS_EMBEDDED se carga ahora desde data/alcaldias.geojson (lazy)
+/* GeoJSON de alcaldías — capa de contexto territorial sobre los mapas, con carga
+   perezosa desde data/alcaldias.geojson */
 let _ALC_PROMISE = null;
 function loadAlcaldiasData(){
   if(!_ALC_PROMISE){
@@ -2958,16 +2940,16 @@ let ALCALDIAS_EMBEDDED = { type:'FeatureCollection', features:[] };
 /* Colores institucionales por grupo para el mapa global */
 /* Colores semánticos que viven en JS porque los consumen Leaflet y Canvas,
    donde var(--token) no se resuelve. Una sola fuente de verdad por concepto:
-   antes había 3 azules casi idénticos y 4 grises sin relación entre sí. */
+   nada de azules casi idénticos ni de grises sin relación entre sí. */
 const COL_GRIS_NEUTRO = '#8a8d8f';  /* sin protección · fuera de ámbito */
 
 /* Resuelve `var(--x)` a un color literal.
    Canvas NO entiende variables CSS: al asignar un valor que no sabe parsear a
    `fillStyle` lo ignora en silencio y conserva el anterior. Como el primer
-   relleno de la tarjeta compartible es el fondo crema, todo lo que venía
+   relleno de la tarjeta compartible es el fondo crema, todo lo que viniera
    después con un `var(...)` —el filete, el badge de categoría, la cifra de
-   superficie y el polígono— se dibujaba crema sobre crema: invisible.
-   GROUP_COLORS pasó a variables CSS en el rediseño de v38 y ahí se rompió. */
+   superficie y el polígono— se dibujaría crema sobre crema: invisible.
+   GROUP_COLORS y otros colores de capa son variables CSS. */
 function colorLiteral(c){
   const s = String(c == null ? '' : c).trim();
   const m = s.match(/^var\(\s*(--[\w-]+)\s*(?:,\s*([^)]*))?\)$/);
@@ -2981,14 +2963,14 @@ const COL_AZUL_UBIC   = '#1971c2';  /* ubicación del usuario · GPS */
 const COL_AZUL_EMB    = '#1864ab';  /* embarcaderos */
 
 /* Lectura del traslape con Suelo de Conservación · fuente única.
-   El Sheet ya no trae Sí/No: trae el porcentaje y nada más. Aquí —y solo
+   El Sheet no trae Sí/No: trae el porcentaje y nada más. Aquí —y solo
    aquí— se convierte en las cuatro etiquetas que usan tabla, ficha, filtro y
-   tarjeta compartible. «Parcial» es el caso que el binario no sabía decir:
+   tarjeta compartible. «Parcial» es el caso que un binario no sabría decir:
    entre 0.5% y 99.5% el área está dentro *en parte*, y hoy ocho áreas del
    inventario caen ahí. Los cortes son los del cruce geométrico de agosto.
    Los núcleos ARCAC no tienen este dato: caen en «sindato», no en «fuera». */
 const scPct = d => (d && typeof d.suelo_conservacion_pct === 'number') ? d.suelo_conservacion_pct : null;
-/* Tolerancia cartográfica (13-sep-2026). Las tres barrancas con menos de 5%
+/* Tolerancia cartográfica. Las tres barrancas con menos de 5%
    —Atzoyapan 1.29, Pachuquilla 1.32, Magdalena Eslava 3.83— no están «en
    parte» dentro del Suelo de Conservación: su traslape son franjas de 2 a
    18 m de ancho pegadas al límite del SC (penetración máxima 18 m; en
@@ -3042,7 +3024,7 @@ const GROUP_COLORS = {
 };
 /* Variantes para TEXTO pequeño sobre fondo claro: el naranja de ANP Local
    (2.65:1) y el marrón de Barranca (4.2:1) no alcanzan AA como texto; como
-   relleno de polígono o filete sí. Auditoría 360, 12-sep-2026. */
+   relleno de polígono o filete sí. */
 const GROUP_TEXT_COLORS = {
   'AVA · Bosque Urbano': 'var(--bu-text)',
   'AVA · Barranca':       'var(--br-text)',
@@ -3098,7 +3080,7 @@ function destroyGlobalMap(){
 /* `limpio` deja el mapa a solas: sin título y sin la fila de chips de capa.
    Es para «Ubicar», donde la pregunta es «¿qué me cubre aquí?» y no «¿qué capas
    quiero ver?»: las cuatro categorías van encendidas y no hay nada que elegir,
-   así que los chips solo ocupaban el primer tercio de la pantalla en celular. */
+   así que los chips solo ocuparían el primer tercio de la pantalla en celular. */
 function renderMapaPage(g, limpio){
   const isGlobal = !g || g.id === 'ALL';
   const labels = {
@@ -3193,9 +3175,9 @@ const ZP_DATA_BASE = [
   {key:'SIPAM_FAO', nombre:'SIPAM FAO · Sistema Agrícola Chinampero', grupo:'Internacional', ambito:'Internacional', categoria:'Sistema Importante del Patrimonio Agrícola Mundial (FAO–GIAHS)', alcaldia:'Xochimilco, Tláhuac, Milpa Alta', fecha_decreto:'07/2017', superficie:1875.65, sup_nota:'6 zonas chinamperas · SIG', fecha_pm:'—', notas:'Designación FAO (julio 2017). 6 zonas chinamperas, incluida Tetelco recuperada: Xochimilco 931.2 · Mixquic 316.4 · San Gregorio 241.4 · Tetelco 151.3 · San Pedro Tláhuac 147.1 · San Luis Tlaxialtemalco 88.2 ha.', color:'#6B7A2F', es_designacion:true}
 ];
 /* Las siete filas del inventario (`INV::…`) toman grupo, categoría, alcaldía,
-   fecha de decreto, superficie y fecha de PM del Sheet (auditoría 13-sep-2026,
-   D1-05): la copia a mano coincidía hoy pero divergiría con la A7. Los valores
-   escritos arriba quedan solo como respaldo si el área no está en el inventario. */
+   fecha de decreto, superficie y fecha de PM del Sheet: una copia a mano
+   divergiría con el primer cambio del Sheet. Los valores escritos arriba
+   quedan solo como respaldo si el área no está en el inventario. */
 const ZP_DATA = ZP_DATA_BASE.map(r => {
   if(!r.key || r.key.indexOf('INV::') !== 0 || typeof areaPorNombre !== 'function') return r;
   const d = areaPorNombre(r.key.slice(5));
@@ -3244,7 +3226,7 @@ function openEmbFicha(e){
   const col = (typeof EMB_COLORS!=='undefined' && EMB_COLORS[e.tipo]) || COL_AZUL_EMB;
   _marcaFicha(true);
   /* Abre en la posición alta: la ficha es el objeto de la consulta y a media
-     altura obligaba a un gesto extra para leer superficie, decreto y suelo de
+     altura obligaría a un gesto extra para leer superficie, decreto y suelo de
      conservación. Las otras dos posiciones siguen a un tirón del asa. */
   if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
   drIn.innerHTML = `
@@ -3323,8 +3305,7 @@ function addResetViewControl(map, title){
       a.setAttribute('aria-label', title||'Vista general');
       a.style.cssText = 'display:flex;align-items:center;justify-content:center;color:var(--guinda)';
       /* Casita, no el marco de cuatro esquinas: ese se lee como «pantalla
-         completa» —de hecho se confundía con el botón que ya retiramos— y
-         esto es «volver a la vista general», el encuadre de partida. */
+         completa» y esto es «volver a la vista general», el encuadre de partida. */
       a.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></svg>';
       L.DomEvent.on(a,'click',L.DomEvent.stopPropagation).on(a,'click',L.DomEvent.preventDefault)
         .on(a,'click',()=>{
@@ -3388,8 +3369,8 @@ const ENT_FUERA = 'Fuera del ámbito';
 /* Entidad del punto. Sin cartografía estatal en el tablero, fuera de la CDMX
    se resuelve por cajas: Morelos al sur, Estado de México en el resto del
    ámbito (CDMX y colindantes, `_AMBITO_BOUNDS`). Fuera de ese ámbito NO se
-   atribuye entidad (auditoría 13-sep-2026, D2-04: Madrid salía «Estado de
-   México»). Mejora pendiente: `data/entidades.geojson` del INEGI. */
+   atribuye entidad (un punto en Madrid saldría
+   «Estado de México»). Mejora pendiente: `data/entidades.geojson` del INEGI. */
 function _entidadEn(latlng){
   if(_alcaldiaEn(latlng)) return 'CDMX';
   const B = (typeof _AMBITO_BOUNDS !== 'undefined') ? _AMBITO_BOUNDS : null;
@@ -3555,9 +3536,9 @@ function _masCercana(latlng, features){
 function _popupOpts(map){
   if(map && !map._siaDim){
     map._siaDim = true;
-    /* v96: la clase va también en el lienzo que contiene los botones
-       flotantes (capas, Ampliar, Ubicarme): están por encima de los globos y
-       tapaban su «×». */
+    /* La clase va también en el lienzo que contiene los botones flotantes
+       (capas, Ampliar, Ubicarme): están por encima de los globos y taparían su
+       «×». */
     const cl = (add) => { try{
       const c = map.getContainer();
       c.classList[add?'add':'remove']('sia-popup-abierto');
@@ -3585,7 +3566,7 @@ function addLocateControl(map, getContainment, getFeatures, opts){
       a.href='#'; a.title='Ubicarme'; a.setAttribute('role','button'); a.setAttribute('aria-label','Ubicarme');
       /* El color lo fija la hoja de estilos (`.locate-ctrl a`), no aquí: los
          estilos de Leaflet para `.leaflet-bar a` llevan `!important` y un
-         color en línea quedaba sin efecto —parecía puesto y no lo estaba—. */
+         color en línea quedaría sin efecto —parecería puesto y no lo estaría—. */
       a.style.cssText = 'display:flex;align-items:center;justify-content:center';
       a.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg>';
       L.DomEvent.on(a,'click',L.DomEvent.stopPropagation).on(a,'click',L.DomEvent.preventDefault)
@@ -3620,16 +3601,16 @@ function _doLocate(map,getContainment,btn,getFeatures,opts){
   opts = opts || {};
   if(btn) btn.style.opacity = '0.5';
   /* En la ficha el encuadre NO se cede al GPS: el objeto de la vista es el
-     poligono del area. Si la ubicacion esta lejos, centrar ahi dejaba la
+     poligono del area. Si la ubicacion esta lejos, centrar ahi dejaria la
      ficha de Xochimilco enseniando Coyoacan sin decir por que. */
   map.locate({setView: !opts.area, maxZoom:16, enableHighAccuracy:true, timeout:12000});
   map.once('locationfound', e=>{
     if(btn) btn.style.opacity = '';
     const prev=_locateRefs.get(map);
     if(prev){ try{map.removeLayer(prev.m);map.removeLayer(prev.c);}catch(_){} }
-    /* Dos sistemas dibujaban el punto: este control y `pintarUbicacionEnGlobal`
-       de la barra «¿dónde estoy?». Cada uno limpiaba solo lo suyo, así que al
-       usar los dos quedaban dos puntos azules a la vez. Se limpian entre sí. */
+    /* Dos sistemas dibujan el punto: este control y `pintarUbicacionEnGlobal`
+       de la barra «¿dónde estoy?». Se limpian entre sí: si cada uno limpiara
+       solo lo suyo, al usar los dos quedarían dos puntos azules a la vez. */
     if(map === globalMap && typeof limpiarUbicacionGlobal === 'function') limpiarUbicacionGlobal();
     const c=L.circle(e.latlng,{radius:e.accuracy||30,color:COL_AZUL_UBIC,weight:1,fillColor:COL_AZUL_UBIC,fillOpacity:0.12}).addTo(map);
     const m=L.circleMarker(e.latlng,{radius:7,color:'#fff',weight:2,fillColor:COL_AZUL_UBIC,fillOpacity:1}).addTo(map);
@@ -3649,8 +3630,8 @@ function _doLocate(map,getContainment,btn,getFeatures,opts){
 
 /* ═══ UBICARSE DESDE UNA FICHA · COMPORTAMIENTO DEFINIDO ══════════════
    La ficha plantea una pregunta concreta —¿esta área me incluye?— y la
-   respuesta tiene tres casos. Antes los tres se trataban igual: el mapa
-   saltaba a la ubicación y el polígono desaparecía de cuadro.
+   respuesta tiene tres casos. Tratarlos igual haría que el mapa saltara a
+   la ubicación y el polígono desapareciera de cuadro:
      · Dentro           → se mantiene el encuadre del área y se dice que sí.
      · Fuera y cerca    → se encuadran los dos, para ver la relación.
      · Fuera y lejos    → se conserva el área en cuadro y se dice a cuánto
@@ -3718,9 +3699,9 @@ function _locatePopupHTML(latlng, accuracy, _i1, _i2, opts){
 
   /* Pie: lugar + chip de entidad en la primera linea, precision en la segunda */
   const lugar = enCDMX ? (alc || 'Ciudad de México') : 'Fuera de la CDMX';
-  /* Sin el ± del GPS, igual que la ficha de resultado (12-sep-2026): en campo
-     no se usa y ocupaba un renglón. La precisión se sigue calculando: alimenta
-     el aviso de «dentro del margen de error del límite». */
+  /* Sin el ± del GPS, igual que la ficha de resultado: en campo no se usa y
+     ocuparía un renglón. La precisión se calcula de todos modos: alimenta el
+     aviso de «dentro del margen de error del límite». */
   const pie = esc(lugar) + ' ' + _entChip(ent);
 
   /* Si una capa no cargo, se dice ANTES del diagnostico: el resultado no es
@@ -3849,7 +3830,7 @@ function openZPDrawer(row){
     : `<span style="font-size:var(--fs-xl);color:var(--muted)">Por confirmar</span>`;
   _marcaFicha(true);
   /* Abre en la posición alta: la ficha es el objeto de la consulta y a media
-     altura obligaba a un gesto extra para leer superficie, decreto y suelo de
+     altura obligaría a un gesto extra para leer superficie, decreto y suelo de
      conservación. Las otras dos posiciones siguen a un tirón del asa. */
   if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
   drIn.innerHTML = `
@@ -3881,11 +3862,10 @@ function openZPDrawer(row){
   // Renderiza el mapa de la designación (solo mapa + zoom, sin buscador/toggle/fullscreen)
   loadZonaPatrimonio().then(()=>{
     initZPFichaMap(row);
-    /* El polígono se busca aquí, ya cargada la capa: la designación se
-       identifica por `capa`, igual que en el diagnóstico de ubicación. */
-    /* La designación se identifica por `key`, no por `capa`: es la misma
-       correspondencia que usa el mini-mapa de la ficha. Con `capa` el polígono
-       nunca se encontraba y la imagen salía con «Polígono no disponible». */
+    /* El polígono se busca aquí, ya cargada la capa: `properties.capa` de la
+       designación contra `row.key`, la misma correspondencia que usa el
+       mini-mapa de la ficha. Si no casan, la imagen sale con «Polígono no
+       disponible». */
     let feat = null;
     try{ feat = ((ZP_DESIGNACIONES&&ZP_DESIGNACIONES.features)||[])
                   .find(f=>f.properties && f.properties.capa===row.key) || null; }catch(e){}
@@ -3930,7 +3910,6 @@ function initZPFichaMap(row){
   fichaMapaConectar(container);
   addLocateControl(activeMap, ll=>featuresContaining(getZPAllFeatures(), ll), getZPAllFeatures);
   addResetViewControl(activeMap, 'Volver al polígono');
-  addSearchMarkerTo(activeMap);
 }
 
 /* Colores de la capa de embarcaderos por tipo (puntos) */
@@ -3985,8 +3964,8 @@ async function loadZonaPatrimonio(){
 let zpLayers = {};
 
 /* Leaflet no cargó (CDN caído, SRI fallido, primera visita sin red): el
-   lienzo lo dice en vez de quedarse en «Cargando…» y se avisa una sola vez
-   (auditoría 13-sep-2026, D2-06). Tablas y fichas siguen funcionando. */
+   lienzo lo dice en vez de quedarse en «Cargando…» y se avisa una sola vez.
+   Tablas y fichas siguen funcionando. */
 let _avisoLeafletDado = false;
 function _sinLeaflet(cont, idsTexto){
   try{
@@ -4112,7 +4091,7 @@ async function initZPMap(){
     fresh.addEventListener('click', ()=> setZPBaseLayer(fresh.dataset.layer));
   });
 
-  // Botón de pantalla completa (Fullscreen API nativa · reutiliza el helper existente)
+  // Botón de pantalla completa (reutiliza attachFullscreenBtn)
   attachFullscreenBtn(canvas, zpMap);
 
   // Clic en fila de la tabla → abre la ficha lateral
@@ -4138,10 +4117,9 @@ async function initZPMap(){
   const embCountEl = document.getElementById('zpEmbCount');
   if(embCountEl) embCountEl.innerHTML = `<b>${embFeats.length}</b> embarcaderos · ${nPro} productivos · ${nTur} turísticos. Clic en una fila para ver la ficha y hacer zoom en el mapa.`;
   const embBtn = document.querySelector('.zp-subtab[data-zpsub="emb"]');
-  /* Sin embarcaderos capturados la subpestaña no se ofrece: el archivo de
-     datos traía dos puntos de EJEMPLO que llegaron a producción (auditoría
-     del repositorio, 13-sep-2026). Cuando exista el padrón real, basta con
-     poblar data/embarcaderos.geojson. */
+  /* Sin embarcaderos capturados la subpestaña no se ofrece (no se publican
+     puntos de ejemplo). Cuando exista el padrón real, basta con poblar
+     data/embarcaderos.geojson. */
   if(embBtn){ embBtn.textContent = `Embarcaderos (${embFeats.length})`; embBtn.hidden = embFeats.length === 0; }
   const embTbody = document.querySelector('#zpEmbTable tbody');
   if(embTbody){
@@ -4297,12 +4275,11 @@ async function loadARCAC(){
     const r = await fetch('data/arcac.geojson');
     if(!r.ok) throw new Error('HTTP '+r.status);
     ARCAC_GEO = await r.json();
-    // Color DISTINTO por ARCAC (ángulo áureo → máxima separación entre vecinos)
     const feats = (ARCAC_GEO.features||[]).slice().sort((a,b)=>a.properties.no-b.properties.no);
     /* El color del polígono es el de la TENENCIA, no uno por núcleo: así el mapa,
-     el badge de la tabla y el filete de la fila dicen lo mismo. La rueda de 30
-     matices del módulo anterior competía con la paleta institucional y no
-     codificaba ningún dato. */
+       el badge de la tabla y el filete de la fila dicen lo mismo. Una rueda de
+       matices por núcleo competiría con la paleta institucional y no codificaría
+       ningún dato. */
   feats.forEach(f=>{ f.properties._color = ARCAC_COLORS[f.properties.tenencia] || 'var(--arcac-com)'; arcacByNo[f.properties.no]=f.properties; });
   }catch(err){ console.warn('[ARCAC] no disponible:', err.message); ARCAC_GEO = _capaFallida(); }
   return ARCAC_GEO;
@@ -4316,7 +4293,7 @@ function openARCACFicha(no){
   if(typeof destroyMap === 'function'){ try{ destroyMap(); }catch(e){} }
   _marcaFicha(true);
   /* Abre en la posición alta: la ficha es el objeto de la consulta y a media
-     altura obligaba a un gesto extra para leer superficie, decreto y suelo de
+     altura obligaría a un gesto extra para leer superficie, decreto y suelo de
      conservación. Las otras dos posiciones siguen a un tirón del asa. */
   if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
   drIn.innerHTML = `
@@ -4359,10 +4336,9 @@ function initARCACFichaMap(no){
   fichaMapaConectar(container);
   addLocateControl(activeMap, ll=>featuresContaining((ARCAC_GEO&&ARCAC_GEO.features)||[], ll), ()=>(ARCAC_GEO&&ARCAC_GEO.features)||[]);
   addResetViewControl(activeMap, 'Volver al polígono');
-  addSearchMarkerTo(activeMap);
 }
 
-/* Capa L.geoJSON de ARCAC con color DISTINTO por feature, clic→ficha (+zoom opcional) */
+/* Capa L.geoJSON de ARCAC con el color de tenencia de cada feature, clic→ficha (+zoom opcional) */
 function buildArcacGeoLayer(fc, zoomMap){
   return L.geoJSON(fc, {
     style: f => { const c = f.properties._color || 'var(--arcac-com)'; return {color:c, weight:1.25, fillColor:c, fillOpacity:0.30}; },
@@ -4698,15 +4674,15 @@ async function initGlobalMap(){
   }
   
   /* zoomSnap fraccionario: con pasos enteros, un encuadre que se pasa por unos
-     pocos píxeles cae un nivel completo y desperdicia media pantalla. Le pasaba
-     a ARCAC, cuya extensión queda justo por encima del nivel 11. */
+     pocos píxeles cae un nivel completo y desperdicia media pantalla. Es el caso
+     de ARCAC, cuya extensión queda justo por encima del nivel 11. */
   globalMap = L.map(canvas, { zoomControl:true, scrollWheelZoom:false, zoomSnap:0.25 });
   /* En el caparazón de «¿Dónde estoy?» el mapa llena la pantalla: gesto completo
      con un dedo. Incrustado en Inventario, la regla de dos dedos. */
   _gestosTactilesIncrustado(globalMap, { total: !!document.querySelector('.wrap.gm-shell') });
   /* Vista provisional ANTES de agregar capas: Leaflet falla en _clipPoints si
-     dibuja vectores sin vista establecida. Pasaba en la pestaña ARCAC, donde
-     ningún grupo del inventario aporta bounds y el mapa quedaba en blanco.
+     dibuja vectores sin vista establecida. Pasa en la pestaña ARCAC, donde
+     ningún grupo del inventario aporta bounds y el mapa quedaría en blanco.
      El fitBounds de abajo (o el de ARCAC) la sustituye cuando hay geometría. */
   globalMap.setView([19.36, -99.13], 10);
   setGlobalBaseLayer('positron');
@@ -4767,20 +4743,19 @@ async function initGlobalMap(){
   // Botón pantalla completa
   attachFullscreenBtn(canvas, globalMap);
 
-  // Buscador de direcciones / coordenadas
+  // Ubicarme y vista general
   addLocateControl(globalMap, ll=>featuresContaining(GEOMETRIES&&GEOMETRIES.features, ll), ()=>(GEOMETRIES&&GEOMETRIES.features)||[]);
   addResetViewControl(globalMap, 'Vista general · todas las áreas');
 
   // Overlay ARCAC (núcleos agrarios) — apagado por defecto, se activa con su chip.
-  // La descarga (291 KB) se difiere hasta que el chip se enciende: antes bajaba en
-  // cada primera apertura del mapa global aunque la capa quedara invisible.
+  // La descarga (291 KB) se difiere hasta que el chip se enciende: así no baja en
+  // cada primera apertura del mapa global con la capa invisible.
   globalArcacLayer = null;
   if(state.showArcac) asegurarCapaArcacGlobal();
   /* Escritorio: si hay una consulta abierta, el punto vuelve al mapa rehecho. */
   if(state.dest === 'UBICAR') _pintarLateral();
 }
 
-/* === Pantalla completa (Fullscreen API nativa) === */
 /* === Resaltar áreas en coadministración SEMARNAT–CONANP–CDMX 2025 ===
    Son los mismos polígonos de ANP Federal, no otra categoría: por eso no se
    recolorean. La condición (convenio) se expresa como TEXTURA —achurado
@@ -4852,8 +4827,8 @@ function applyCoadminHighlight(){
 }
 
 /* === Toggle reutilizable de Suelo de Conservación ===
-   Soluciona hallazgo 2.2 de auditoría: el chip SC ahora funciona en cualquier
-   mapa (global, ficha, mapas de grupo), no solo en el mapa global.
+   El chip SC funciona en cualquier mapa (global, ficha, mapas de grupo), no
+   solo en el mapa global.
    Usa clone-and-replace para evitar listeners duplicados al re-inicializar. */
 function attachSCToggle(btnId, mapInstance, groupLayers, alcaldiasLayer){
   const btn = document.getElementById(btnId);
@@ -4915,8 +4890,8 @@ function _siaFsPortal(canvas, en, destino){
     }
   }catch(_){}
 }
-/* Al cerrar la ficha sale de pantalla completa SOLO su minimapa. Desde v84 la
-   ficha puede abrirse sobre un mapa de la página ampliado, y ese debe seguir
+/* Al cerrar la ficha sale de pantalla completa SOLO su minimapa: la ficha
+   puede abrirse sobre un mapa de la página ampliado, y ese debe seguir
    ampliado al cerrarla. */
 function siaFsSalirTodo(){
   try{
@@ -4953,8 +4928,8 @@ function attachFullscreenBtn(canvas, mapInstance){
   const fsSimulado = en => {
     canvas.classList.toggle('sia-fs', en);
     /* Dentro de la ficha (hoja #dr) no se saca el lienzo a <body>: en iOS ese
-       portal con position:fixed dejaba el mapa del tamaño del cuerpo de la
-       hoja y el «×» de la ficha encima de los controles (A1c-3, 14-sep-2026).
+       portal con position:fixed deja el mapa del tamaño del cuerpo de la
+       hoja y el «×» de la ficha encima de los controles.
        La hoja entera se convierte en el mapa (html.sia-fs-hoja-abierta):
        ocupa la pantalla, se ocultan asa, cabecera y «×», y el lienzo se
        posiciona en absoluto dentro de ella. Los mapas de la página siguen
@@ -4975,9 +4950,9 @@ function attachFullscreenBtn(canvas, mapInstance){
     setTimeout(() => { if(mapInstance) mapInstance.invalidateSize(); }, 80);
     avisarMapa(en);
   };
-  /* v84: «Ampliar» usa SIEMPRE la pantalla completa dentro de la página, en
-     todos los navegadores. La del navegador (Fullscreen API) solo deja ver el
-     mapa: al tocar un área, la ficha se abría detrás y había que salir para
+  /* «Ampliar» usa SIEMPRE la pantalla completa dentro de la página, en todos
+     los navegadores. La del navegador (Fullscreen API) solo deja ver el mapa:
+     al tocar un área, la ficha se abriría detrás y habría que salir para
      leerla. Así la ficha se abre encima del mapa ampliado y, al cerrarla, el
      mapa sigue ampliado. Esc sale (ver el escucha de teclado de abajo). */
   canvas._siaFsSalir = () => fsSimulado(false);
@@ -4989,10 +4964,10 @@ function attachFullscreenBtn(canvas, mapInstance){
   });
 
   // Recalcular tamaño del mapa al entrar/salir de fullscreen.
-  // Un escucha POR LIENZO (v81, 5-oct-2026): antes había uno solo para toda la
-  // página y cada mapa nuevo borraba el del anterior; tras abrir una ficha, el
-  // mapa general entraba a pantalla completa sin enterarse (botón sin «Salir»,
-  // sin invalidateSize al salir con Esc, y en Android sin arrastre de un dedo).
+  // Un escucha POR LIENZO: con uno solo para toda la página, cada mapa nuevo
+  // borraría el del anterior; tras abrir una ficha, el mapa general entraría a
+  // pantalla completa sin enterarse (botón sin «Salir», sin invalidateSize al
+  // salir con Esc, y en Android sin arrastre de un dedo).
   // Al re-inicializar el mismo lienzo se quita el suyo; el de un lienzo que
   // salió del DOM se quita solo en el siguiente cambio.
   const quitar = h => { document.removeEventListener('fullscreenchange', h); document.removeEventListener('webkitfullscreenchange', h); };
@@ -5014,14 +4989,13 @@ function attachFullscreenBtn(canvas, mapInstance){
 /* ═══════════════════════════════════════════════════════════════════════
    AUTOCOMPLETADO DE DIRECCIONES · Google Places (New)
    ═══════════════════════════════════════════════════════════════════════
-   Pega aquí la llave del proyecto de Google Cloud de SEDEMA.
-   Si queda vacía, el buscador sigue funcionando exactamente como hoy
-   (Nominatim al presionar Enter) — el sitio nunca se degrada.
+   Llave del proyecto de Google Cloud de SEDEMA (vive en config.js).
+   Si queda vacía, el buscador sigue funcionando con nombres de área y
+   coordenadas; solo se pierden las direcciones.
 
    OBLIGATORIO antes de publicarla, en Google Cloud → Credenciales:
      1. Restricción de aplicación: "Sitios web" con estos referers
-          https://sedemaoficina.github.io/*
-        (y el dominio propio si algún día se migra)
+          los dominios donde se publica el tablero (p. ej. https://sia.contactoverde.com/*)
      2. Restricción de API: solo "Maps JavaScript API" y "Places API (New)"
      3. Cuota diaria y alerta de facturación en el proyecto
    La llave viaja al navegador por diseño: lo que la protege NO es esconderla,
@@ -5049,7 +5023,6 @@ function cargarGooglePlaces(){
   return _gmapsPromise;
 }
 
-/* Sesgo a la CDMX: mismas coordenadas que ya usa el buscador de Nominatim */
 /* Ambito de busqueda de direcciones: la CDMX y sus dos entidades colindantes.
    El inventario termina en el limite estatal (10 areas lo cruzan, 1,236.6 ha
    quedan fuera), asi que restringir a la CDMX dejaria ciego a quien verifica
@@ -5065,7 +5038,7 @@ function _entidadDeTexto(txt){
   /* La entidad viaja como ULTIMO componente del texto secundario. Hay que
      probar el componente completo, no una subcadena: "Ecatepec de Morelos"
      es municipio del Estado de Mexico, y una prueba laxa de /Morelos/ lo
-     etiquetaba como Morelos. Detectado probando en produccion. */
+     etiquetaria como Morelos. */
   const cola = t.split(',').pop().trim();
   if(/^(CDMX|Ciudad de M[eé]xico|Distrito Federal|D\.?\s*F\.?)$/i.test(cola)) return 'CDMX';
   if(/^(Mor\.?|Morelos)$/i.test(cola))                                        return 'Morelos';
@@ -5086,9 +5059,9 @@ let _ubicarOrigen = null;
 let _sesionPlaces = null;
 function siaCerrarSesionPlaces(){ _sesionPlaces = null; }
 
-/* Estado del servicio de direcciones. Antes un fallo de Google solo dejaba un
-   `console.warn`: en pantalla la lista salia vacia y quien buscaba una calle
-   concluia que el tablero no encontraba direcciones. Ahora el fallo se dice.
+/* Estado del servicio de direcciones. Un fallo de Google se dice en pantalla:
+   con solo un `console.warn`, la lista saldria vacia y quien busca una calle
+   concluiria que el tablero no encuentra direcciones.
    El diagnostico fino se guarda para la consola; al usuario se le da una
    causa util y la salida que si le sirve. */
 let _placesFalla = null;
@@ -5171,19 +5144,6 @@ async function siaResolverLugar(pred){
   return { lat: loc.lat(), lng: loc.lng(), etiqueta: place.formattedAddress || '' };
 }
 
-/* === Buscador de direcciones / coordenadas (Nominatim · OpenStreetMap) === */
-/* Última coordenada buscada (persiste entre mapas: global → mini-mapa de ficha) */
-let lastSearchLatLng = null;
-function addSearchMarkerTo(map){
-  if(!lastSearchLatLng || !map || typeof L==='undefined') return;
-  try{
-    const mk = L.marker([lastSearchLatLng.lat, lastSearchLatLng.lng], {
-      icon: L.divIcon({ className:'search-result-marker', iconSize:[18,18] })
-    }).addTo(map);
-    mk.bindTooltip(lastSearchLatLng.label || `${lastSearchLatLng.lat.toFixed(5)}, ${lastSearchLatLng.lng.toFixed(5)}`, {direction:'top'});
-  }catch(e){}
-}
-
 /* Índice local de nombres: instantáneo, sin red y sin costo.
    Es lo que más se teclea ("Ajusco", "Chapultepec"), así que va primero. */
 function _indiceLocal(){
@@ -5211,12 +5171,6 @@ function _buscarLocal(q){
   if(nq.length < 2) return [];
   return _indiceLocal().filter(x=>norm(x.nombre).includes(nq)).slice(0,5);
 }
-
-/* El buscador flotante de los mapas se retiró el 11-sep-2026: duplicaba la
-   barra «¿Dónde estoy?», que ahora está en las cuatro vistas y es la única
-   entrada de direcciones y coordenadas del tablero. Con `attachMapSearch`
-   se fueron su `parseCoords` y su consumo de Google Places por mapa;
-   `parseCoordsSia()` sigue siendo el parser, ya con un solo llamador. */
 
 /* Carga perezosa de la capa ARCAC del mapa global. Idempotente: si ya está
    construida no vuelve a pedir el GeoJSON. */
@@ -5374,26 +5328,21 @@ const TILE_LAYERS = {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     attribution: 'Tiles © Esri · Maxar · Earthstar Geographics',
     maxZoom: 18
-  },
-  osm: {
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 19
   }
 };
 
 /* Opciones comunes de toda capa de teselas. `crossOrigin` importa para la
-   caché sin conexión (auditoría 13-sep-2026, D7-02): sin él la petición es
+   caché sin conexión: sin él la petición es
    no-cors y el Service Worker recibe respuestas opacas (status 0) que no
    guarda; con CORS (CARTO, Esri y OSM lo permiten) las teselas entran a la
    caché runtime y no vuelven a pedirse a la red en campo. La imagen
-   compartible ya las cargaba así (crossOrigin='anonymous'). */
-/* Trazos de Leaflet fuera del orden de tabulación (auditoría 13-sep-2026,
-   D5-02): Chromium mete cada polígono interactivo en el orden de tabulación
-   y el tabulador recorría 66 + 16 rutas sin nombre antes de llegar a la tabla,
-   que es la vía accesible. Un gancho de inicialización de L.Map lo corrige
-   para todos los mapas. Leaflet se carga con `defer`, así que se instala
-   cuando el script termina de cargar. */
+   compartible las carga igual (crossOrigin='anonymous'). */
+/* Trazos de Leaflet fuera del orden de tabulación: Chromium mete cada
+   polígono interactivo en el orden de tabulación y el tabulador recorrería
+   66 + 16 rutas sin nombre antes de llegar a la tabla, que es la vía
+   accesible. Un gancho de inicialización de L.Map lo corrige para todos los
+   mapas. Leaflet se carga con `defer`, así que se instala cuando el script
+   termina de cargar. */
 (function(){
   const instalar = () => {
     try{
@@ -5402,12 +5351,12 @@ const TILE_LAYERS = {
       /* Leaflet 1.9 deja pendiente el fin de la animación de acercamiento
          (setTimeout de 250 ms) aunque el mapa se destruya: si un mapa se
          quita a media animación, el aviso llega sin `_mapPane` y lanza
-         «reading '_leaflet_pos'» (auditoría de interfaz UI-09). */
+         «reading '_leaflet_pos'». */
       const _finZoom = L.Map.prototype._onZoomTransitionEnd;
       L.Map.prototype._onZoomTransitionEnd = function(){ if(!this._mapPane) return; return _finZoom.apply(this, arguments); };
       L.Map.addInitHook(function(){
         /* Registro lienzo → mapa: el menú de capas (montarBotonBase) encuentra
-           así la instancia del mapa sobre el que está montado (v75, PGOEDF). */
+           así la instancia del mapa sobre el que está montado. */
         try{ this.getContainer()._siaMapa = this; }catch(_){}
         this.on('layeradd', e => {
           try{ const el = e.layer && e.layer.getElement && e.layer.getElement();
@@ -5430,7 +5379,7 @@ let activeBaseLayer = null;
 let activeGeoLayer = null;
 /* Fila del inventario cuya ficha está abierta. La usa el menú de capas del
    mini-mapa para decidir qué capas ofrecer: una capa que no toca el polígono
-   no debe aparecer (decisión del 14-sep-2026). Las fichas de ARCAC y Zona
+   no debe aparecer. Las fichas de ARCAC y Zona
    Patrimonio la ponen en null: no son filas del inventario. */
 let _fichaD = null;
 
@@ -5462,7 +5411,7 @@ function setBaseLayer(key){
   // Reordena geo layer encima
   if(activeGeoLayer){ activeGeoLayer.bringToFront(); }
   /* Solo los botones del minimapa de la ficha: el toggle del mapa global
-     refleja su propia base (D2-02). */
+     refleja su propia base. */
   document.querySelectorAll('#dr .map-block-toggle button[data-layer]').forEach(b=>{
     b.classList.toggle('active', b.dataset.layer===key);
   });
@@ -5521,14 +5470,13 @@ function initMapForArea(d){
   // Función reutilizable que también se usa en el mapa global y mapas de grupo
   attachSCToggle('drawerSCToggle', activeMap, null, activeGeoLayer);
 
-  // Pantalla completa + buscador en mapa de ficha técnica
+  // Pantalla completa, Ubicarme y vista general en mapa de ficha técnica
   attachFullscreenBtn(container, activeMap);
   addLocateControl(activeMap, ll=>featuresContaining(GEOMETRIES&&GEOMETRIES.features, ll),
     ()=>(GEOMETRIES&&GEOMETRIES.features)||[],
     { area: geo, nombre: d.nombre, getBounds: ()=>activeGeoLayer.getBounds() });
   addResetViewControl(activeMap, 'Volver al polígono del área');
   montarZonificacionEnMapa(activeMap, d);
-  addSearchMarkerTo(activeMap);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -5548,7 +5496,8 @@ function _wrapText(ctx, txt, maxW){
 }
 
 /* ═══ MAPA BASE DENTRO DE LA IMAGEN COMPARTIBLE ═══════════════════════
-   El recuadro enseñaba el polígono flotando sobre el fondo crema: sin calles
+   Sin mapa base el recuadro enseñaría el polígono flotando sobre el fondo
+   crema: sin calles
    ni relieve, la captura no dice DÓNDE está el área. Aquí se dibujan primero
    las teselas del mismo mapa base del tablero y el polígono encima.
 
@@ -5556,7 +5505,7 @@ function _wrapText(ctx, txt, maxW){
    · Las teselas se piden con `crossOrigin`. Sin CORS el lienzo queda
      contaminado y `toBlob` lanza excepción: no habría imagen, no un mapa feo.
    · El polígono se proyecta con la MISMA fórmula de Web Mercator que las
-     teselas. Con la proyección aproximada anterior el trazo caía desplazado
+     teselas. Con una proyección aproximada el trazo caería desplazado
      respecto a las calles. */
 function _proyeccionCaja(geo, x, y, w, h, punto){
   const polys = geo.type==='Polygon' ? [geo.coordinates]
@@ -5571,7 +5520,7 @@ function _proyeccionCaja(geo, x, y, w, h, punto){
   /* Web Mercator en pixeles de tesela, medido al zoom 0; el zoom entra como
      factor. Trabajar con zoom FRACCIONARIO es lo que permite que el poligono
      llene el recuadro: con zoom entero el encuadre salta de golpe al doble y
-     el area quedaba diminuta en el centro. */
+     el area quedaria diminuta en el centro. */
   const MX = lng => (lng+180)/360 * 256;
   const MY = lat => { const t=Math.max(-85.05,Math.min(85.05,lat));
     const sn=Math.sin(t*Math.PI/180);
@@ -5586,8 +5535,8 @@ function _proyeccionCaja(geo, x, y, w, h, punto){
   let esc = escSolo, puntoEnCuadro = false;
   /* El punto consultado entra en el encuadre SOLO si al ampliarlo el poligono
      sigue siendo legible. Un punto a veinte kilometros dejaria el area del
-     tamanio de un alfiler; peor aun era la version anterior, que lo pegaba al
-     borde del recuadro y hacia creer que estaba junto al limite. */
+     tamanio de un alfiler, y pegarlo al borde del recuadro haria creer que
+     esta junto al limite. */
   if(punto && isFinite(punto.lat) && isFinite(punto.lng)){
     const cX0 = Math.min(minX, punto.lng), cX1 = Math.max(maxX, punto.lng);
     const cY0 = Math.min(minY, punto.lat), cY1 = Math.max(maxY, punto.lat);
@@ -5675,8 +5624,8 @@ function _trazarCapaEnCaja(ctx, fc, P, x, y, w, h, estilo){
     if(!polys.length) return;
     const st = estilo(f.properties || {}) || {};
     /* Solo cuenta lo que cae dentro del recuadro: el que llama usa la cuenta
-       para decidir si la capa entra a la leyenda (v86). Sin esto la imagen
-       nombraba capas que no se veían. */
+       para decidir si la capa entra a la leyenda. Sin esto la imagen nombraría
+       capas que no se ven. */
     /* Visible = algún vértice dentro del recuadro, o el centro del recuadro
        dentro del polígono (un polígono enorme que lo cubre sin vértices
        adentro). El rectángulo envolvente no basta: el del Suelo de
@@ -5708,7 +5657,7 @@ function _capasActivasFicha(){
   const out = [];
   try{ if(activeMap && activeMap._scLayer) out.push({ id:'sc', fc: activeMap._scLayer.toGeoJSON() }); }catch(_){}
   try{ if(typeof _zonifCapa !== 'undefined' && _zonifCapa && activeMap && activeMap.hasLayer(_zonifCapa)) out.push({ id:'zonif', fc: _zonifCapa.toGeoJSON() }); }catch(_){}
-  /* Capas de contexto encendidas en el minimapa (v86): una capa por color,
+  /* Capas de contexto encendidas en el minimapa: una capa por color,
      con su leyenda, debajo del polígono del área como en pantalla. */
   try{
     const ctxC = activeMap && activeMap._ctxCapas;
@@ -5725,7 +5674,7 @@ function _capasActivasFicha(){
     }
     if(ctxC && ctxC.zp && activeMap.hasLayer(ctxC.zp)){
       /* Trazo continuo: el punteado sobre los cientos de vértices de SIPAM y
-         Ramsar se volvía una nube de puntos en la imagen (v91). */
+         Ramsar se vuelve una nube de puntos en la imagen. */
       out.push({ id:'extra', fc: ctxC.zp.toGeoJSON(), estilo:{ fill:'#444441', fillAlpha:.04, stroke:'rgba(68,68,65,.55)', width:1 }, leyenda:'Zona Patrimonio' });
     }
   }catch(_){}
@@ -5794,8 +5743,9 @@ function _drawGeoInBox(ctx, geoIn, x, y, w, h, color, punto, T){
 }
 
 /* ═══ DESCRIPTOR DE FICHA PARA LA TARJETA COMPARTIBLE ══════════════════
-   El generador recibía el registro crudo del inventario y por eso solo servía
-   para las 66 áreas: ARCAC trae tenencia en lugar de subcategoría y no tiene
+   El generador recibe un descriptor y no el registro crudo del inventario,
+   que solo serviría para las 66 áreas: ARCAC trae tenencia en lugar de
+   subcategoría y no tiene
    decreto ni programa de manejo, y Zona Patrimonio trae instrumento y ámbito.
    Con un descriptor común las tres fichas comparten estructura —encabezado,
    badge, polígono, cifra, filas— y solo cambia qué se pone en cada casilla. */
@@ -5808,8 +5758,8 @@ function descInventario(d){
     geo:    (typeof findGeometry==='function') ? findGeometry(d) : null,
     superficie: d.superficie,
     supLabel: 'SUPERFICIE DECRETADA',
-    /* Mismo orden lógico que la ficha (sin Jurisdicción ni Subcategoría desde
-       v83: van en el distintivo y el subtítulo de la tarjeta). Lo que se deriva de Suelo de
+    /* Mismo orden lógico que la ficha (sin Jurisdicción ni Subcategoría: van en
+       el distintivo y el subtítulo de la tarjeta). Lo que se deriva de Suelo de
        Conservación (PGOEDF) va debajo de ese dato; lo que se deriva del
        programa de manejo (zonificación), debajo de él. */
     filas: [
@@ -5883,8 +5833,8 @@ function descArcac(p){
     superficie: p.sup_ha,
     /* Los núcleos ARCAC no se decretan: se registran. El rótulo de la cifra
        tiene que decir la verdad de cada figura, no copiar el del inventario.
-       La fila «FIGURA» se quitó: el subtítulo ya dice el nombre completo y en
-       la columna de valores quedaba cortado. */
+       No hay fila «FIGURA»: el subtítulo ya dice el nombre completo y en la
+       columna de valores quedaría cortado. */
     supLabel: 'SUPERFICIE REGISTRADA',
     filas: [
       ['TENENCIA',    p.tenencia||'—'],
@@ -5915,8 +5865,7 @@ function descZP(row, feat){
 }
 
 /* Botón «Compartir imagen» común a las tres fichas. Se inyecta y se conecta
-   en un solo lugar: antes el listener vivía suelto en openDrawer y por eso
-   ARCAC y ZP se quedaron sin él. */
+   en un solo lugar para que ninguna ficha (ARCAC, ZP) se quede sin él. */
 function botonCompartirHTML(){
   return '<button class="btn-share-area" id="btnShareArea" type="button"'
        + ' aria-label="Compartir esta ficha como imagen">'
@@ -5944,12 +5893,12 @@ function conectarCompartir(descOrFn){
 async function compartirFichaImagen(d, btn){
   _uso('COMPARTIR', d && d.nombre);
   try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(_){}
-  /* v91 (7-oct-2026): el alto ya no es fijo. Con 1440 px y mucha información
-     (fichas desde una ubicación, varias coberturas, zonificación y PGOEDF)
-     las filas se apretaban, los valores largos se cortaban a un renglón y la
-     leyenda se salía del recuadro. Ahora se mide todo antes de dibujar: el
-     lienzo mide 1080 de ancho y al menos 1440 de alto, y crece lo necesario
-     para que cada valor quepa completo. */
+  /* El alto no es fijo: con 1440 px y mucha información (fichas desde una
+     ubicación, varias coberturas, zonificación y PGOEDF) las filas se
+     apretarían, los valores largos se cortarían a un renglón y la leyenda se
+     saldría del recuadro. Se mide todo antes de dibujar: el lienzo mide 1080
+     de ancho y al menos 1440 de alto, y crece lo necesario para que cada valor
+     quepa completo. */
   const W = 1080, BOX_H = 430, COL_V = 378, ANCHO_V = W - 48 - COL_V;
   const med = document.createElement('canvas').getContext('2d');
   const logo = document.querySelector('.logo-inst');
@@ -5988,7 +5937,7 @@ async function compartirFichaImagen(d, btn){
   ctx.fillStyle=color; ctx.beginPath();
   ctx.roundRect ? ctx.roundRect(48,y-4,tw+32,42,5) : ctx.rect(48,y-4,tw+32,42);
   ctx.fill();
-  ctx.fillStyle='#fff'; ctx.fillText(tag,64,y+24); y+=92;   /* +16 de aire: el badge rozaba el nombre */
+  ctx.fillStyle='#fff'; ctx.fillText(tag,64,y+24); y+=92;   /* +16 de aire: sin él el badge roza el nombre */
 
   /* Nombre */
   ctx.fillStyle='#2a2a2a'; ctx.font='900 54px Roboto, sans-serif';
@@ -6002,7 +5951,7 @@ async function compartirFichaImagen(d, btn){
   const geo = d.geo || null;
   /* La caja del mapa cede alto cuando hay muchas filas: con doce renglones
      (ficha abierta desde una ubicación, con zonificación y PGOEDF) el paso
-     entre filas bajaba a 25 px y los filetes cortaban el texto. */
+     entre filas bajaría a 25 px y los filetes cortarían el texto. */
   const boxH = BOX_H;
   ctx.fillStyle='#f8f4e0'; ctx.fillRect(48,y,W-96,boxH);
   ctx.strokeStyle='#eae4cf'; ctx.lineWidth=2; ctx.strokeRect(48,y,W-96,boxH);
@@ -6028,14 +5977,14 @@ async function compartirFichaImagen(d, btn){
         }
         if(c.id === 'extra' && c.fc){
           const n = _trazarCapaEnCaja(ctx, c.fc, T.P, 48, y, W-96, boxH, ()=>c.estilo);
-          /* v94: una sola entrada por color. Si ya está «ANP Local», el área
+          /* Una sola entrada por color. Si ya está «ANP Local», el área
              «Cerro de la Estrella (local)» —mismo color— no se repite: su nombre
              ya va en las filas («También en»). */
           const col = c.estilo.stroke || c.estilo.fill;
           if(n && c.leyenda && !leyenda.some(l => l.col === col && !!l.dash === !!c.estilo.dash)) leyenda.push({ txt:c.leyenda, col, dash: !!c.estilo.dash });
         }
         if(c.id === 'zonif'){
-          /* Misma regla que la leyenda del minimapa (UI-04): nombre literal de la
+          /* Misma regla que la leyenda del minimapa: nombre literal de la
              zona si es la única de su familia, nombre de la familia si agrupa varias. */
           const fams = new Map();
           _trazarCapaEnCaja(ctx, c.fc, T.P, 48, y, W-96, boxH, pr => { const f = zonifFamilia(pr.zona_k);
@@ -6052,8 +6001,8 @@ async function compartirFichaImagen(d, btn){
     _drawGeoInBox(ctx,geo,48,y,W-96,boxH,color,ctxU,T);
     if(leyenda.length){
       /* Leyenda de capas dentro del recuadro, arriba a la izquierda, en las
-         filas que haga falta (v91: antes iba en una sola y se salía del
-         recuadro con cinco o más capas). */
+         filas que haga falta (en una sola se saldría del recuadro con cinco o más
+         capas). */
       ctx.save();
       ctx.font='500 17px Roboto, sans-serif';
       const x0 = 48+12, xMax = W-48-12, filaH = 28;
@@ -6112,7 +6061,7 @@ async function compartirFichaImagen(d, btn){
     ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='400 26px Roboto, sans-serif';
     ctx.fillText('Polígono no disponible',48+30,y+boxH/2);
   }
-  y+=boxH+78;   /* +28: la cifra quedaba pegada al borde del recuadro */
+  y+=boxH+78;   /* +28: sin él la cifra queda pegada al borde del recuadro */
 
   /* Cifra grande: superficie en las fichas; en la constancia de campo, la
      coordenada (d.grande / d.grandeLabel). */
@@ -6132,9 +6081,9 @@ async function compartirFichaImagen(d, btn){
   ctx.fillText(d.grandeLabel || d.supLabel || 'SUPERFICIE',48,y); y+=64;
 
   /* Datos duros */
-  /* v91: cada fila mide lo que su valor necesita (renglones de 32 px) y el
-     filete va debajo del último renglón, con aire: ya no se cortan valores ni
-     se encima el texto con la línea. El lienzo creció lo necesario arriba. */
+  /* Cada fila mide lo que su valor necesita (renglones de 32 px) y el filete
+     va debajo del último renglón, con aire: no se cortan valores ni se encima
+     el texto con la línea. El lienzo ya creció lo necesario arriba. */
   filasMed.forEach(f=>{
     ctx.fillStyle=COL_GRIS_NEUTRO; ctx.font='500 19px "Roboto Mono", monospace'; ctx.fillText(f.k,48,y);
     ctx.fillStyle='#2a2a2a'; ctx.font='500 25px Roboto, sans-serif';
@@ -6239,7 +6188,7 @@ function initUbicarBar(){
     const cerrar = document.getElementById('ubicarCerrar');
     if(cerrar) cerrar.click();                       /* cierra el resultado por su propia vía */
     try{ if(typeof limpiarUbicacionGlobal === 'function') limpiarUbicacionGlobal(); }catch(_){}
-    try{ lastSearchLatLng = null; _ubicarDomicilio = null; }catch(_){}
+    try{ _ubicarDomicilio = null; }catch(_){}
     actualizarLimpiar();
     inp.focus();
   });
@@ -6272,11 +6221,9 @@ function initUbicarBar(){
   });
 }
 
-/* Mismo parser de coordenadas que usa el buscador de los mapas */
 /* ─────────────────────────────────────────────────────────────────────────
-   Parser único de coordenadas. Lo usan la barra «¿Dónde estoy?» y los cinco
-   buscadores de mapa (global, ficha, Zona Patrimonio, ARCAC y Traslapes), así
-   que cualquier formato que se acepte aquí se acepta en todo el tablero.
+   Parser único de coordenadas. Lo usa la barra «¿Dónde estoy?», la única
+   entrada de coordenadas del tablero.
 
    Acepta, normalizando espacios, paréntesis y signos tipográficos:
      19.4237, -99.1421          (19.4237, -99.1421)      ( 19.4237 , -99.1421 )
@@ -6389,8 +6336,8 @@ function pintarUbicarSug(locales, direcciones, yaConsultado){
 
 /* ═══ FILAS DE SUGERENCIA · estructura del kit ═════════════════════════
    Icono circular a la izquierda, título en negritas y segunda línea gris.
-   Antes el resultado era una línea de texto con un punto de color pegado al
-   borde: se leía como una lista de opciones de formulario, no como resultados
+   Una línea de texto con un punto de color pegado al borde se leería
+   como una lista de opciones de formulario, no como resultados
    de búsqueda. La estructura es la misma para las tres clases de resultado
    —área del inventario, dirección y búsqueda reciente—; solo cambia el icono. */
 const ICO_SUG = {
@@ -6428,7 +6375,7 @@ function pintarRecientes(){
   const sug = document.getElementById('ubicarSug'); if(!sug) return false;
   const rec = recientesLeer();
   /* Sin recientes no hay panel: la guía de qué se puede teclear vive en el
-     placeholder del campo (decisión del 12-sep-2026). */
+     placeholder del campo. */
   if(!rec.length){ sug.hidden = true; sug.innerHTML = ''; return false; }
   sug.innerHTML = '<div class="res-group">Recientes</div>'
     + rec.map((r,i)=>filaSug({attrs:`data-rec="${i}"`, icono:ICO_SUG.reciente,
@@ -6470,7 +6417,7 @@ function ubicarDesdeTexto(txt){
   const c = parseCoordsSia(q);
   if(c){
     _ubicarDomicilio = null;
-    /* v94: las coordenadas y ligas de Google Maps también quedan en recientes. */
+    /* Las coordenadas y ligas de Google Maps también quedan en recientes. */
     recienteGuardar({t:'coord', lat:c.lat, lng:c.lng, titulo:c.lat.toFixed(5) + ', ' + c.lng.toFixed(5),
                      sub:/maps|goo\.gl|google/i.test(q) ? 'Liga de Google Maps' : 'Coordenada'});
     ubicarResolver(c, null, null); return;
@@ -6500,11 +6447,11 @@ function ubicarDesdeTexto(txt){
   });
 }
 
-/* Mensaje según la causa real del fallo de geolocalización (v75). Antes un
-   solo texto genérico («requiere HTTPS») para tres situaciones distintas; en
-   producción el sitio ya es HTTPS, así que el caso frecuente en campo es el
-   permiso negado en el teléfono (código 1), y el aviso debe decir dónde
-   activarlo en ese sistema. */
+/* Mensaje según la causa real del fallo de geolocalización: son tres
+   situaciones distintas, no un genérico «requiere HTTPS». En producción el
+   sitio es HTTPS, así que el caso frecuente en campo es el permiso negado en
+   el teléfono (código 1), y el aviso debe decir dónde activarlo en ese
+   sistema. */
 function _mensajeGeo(err){
   const c = err && err.code;
   const ua = navigator.userAgent || '';
@@ -6571,11 +6518,11 @@ function ubicarPorGPS(){
   document.addEventListener('click', ()=>setTimeout(refrescar, 350));
 })();
 
-/* (13-sep-2026) Se retiró la «cápsula que se aparta al bajar»: en celular la
-   cápsula ya no es pegajosa fuera del caparazón (ver styles.css), así que no
-   hay nada que apartar. Con dos elementos pegajosos en top:0 —cápsula y tira
-   de chips— el regreso animado de la cápsula se encimaba sobre los chips y en
-   el rebote de iOS parpadeaban uno sobre otro. */
+/* No hay «cápsula que se aparta al bajar»: en celular la cápsula no es
+   pegajosa fuera del caparazón (ver styles.css), así que no hay nada que
+   apartar. Con dos elementos pegajosos en top:0 —cápsula y tira de chips— el
+   regreso animado de la cápsula se encimaría sobre los chips y en el rebote
+   de iOS parpadearían uno sobre otro. */
 
 /* ═══ HOJA DESLIZABLE · caparazón de mapa en celular ═══════════════════
    Tres posiciones, como en Maps: asomada (se ve el encabezado y la primera
@@ -6602,14 +6549,14 @@ function hojaSnap(vis){
   hojaIr(best);
   return best;
 }
-/* R-02 (auditoría por dispositivo, 7-oct-2026): al cerrar el resultado se
-   vacía el buscador. Antes la última coordenada o dirección seguía escrita
-   al pasar a Inventario o Análisis y parecía una búsqueda en curso. */
+/* Al cerrar el resultado se vacía el buscador: si no, la última coordenada o
+   dirección seguiría escrita al pasar a Inventario o Análisis y parecería
+   una búsqueda en curso. */
 function _vaciarBuscadorUbicar(){
   try{
     const inp = document.getElementById('ubicarInput'); if(inp) inp.value = '';
     const sug = document.getElementById('ubicarSug'); if(sug){ sug.hidden = true; sug.innerHTML = ''; }
-    lastSearchLatLng = null; _ubicarDomicilio = null;
+    _ubicarDomicilio = null;
     if(window._actualizarLimpiarUbicar) window._actualizarLimpiarUbicar();
   }catch(_){}
 }
@@ -6620,8 +6567,8 @@ function cerrarHoja(){
   limpiarUbicacionGlobal();
   setTimeout(()=>{ if(sec && _hojaVis === 0){ sec.hidden = true; sec.innerHTML = ''; } }, 300);
 }
-/* Arrastre delegado: el asa se vuelve a crear en cada consulta. Misma
-   corrección que la hoja de la ficha (v87): se agarra también por el
+/* Arrastre delegado: el asa se vuelve a crear en cada consulta. Mismo
+   arrastre que la hoja de la ficha: se agarra también por el
    encabezado del resultado (salvo sus botones), la altura se acota a
    [0, tope] con origen móvil, se pinta una vez por cuadro y un toque se
    distingue de un arrastre con 8 px. */
@@ -6742,22 +6689,21 @@ async function ubicarResolver(latlng, precision, etiqueta){
     hojaIr(_hojaAlturas()[2]);
     pintarUbicacionEnGlobal(latlng, precision);
   } else {
-    /* Escritorio (B14, v85): el mismo principio, sin hoja. El resultado va en
-       una columna a la izquierda del mapa principal y el punto se pinta en
-       él; ya no hay un segundo mapa dentro del resultado. */
+    /* Escritorio: el mismo principio, sin hoja. El resultado va en una columna
+       a la izquierda del mapa principal y el punto se pinta en él; no hay un
+       segundo mapa dentro del resultado. */
     _ubiLateral = { latlng:{lat:latlng.lat, lng:latlng.lng}, precision };
     _pintarLateral();
   }
 }
 
-/* ═══ «¿DÓNDE ESTOY?» EN ESCRITORIO · COLUMNA JUNTO AL MAPA (B14, v85) ════
-   En escritorio había dos mapas en la misma página —el chico del resultado
-   y el principal debajo de las pestañas— y la persona no entendía la
-   diferencia. Ahora, como en celular, hay uno: al consultar un punto el
-   tablero pasa al destino Ubicar, `.wrap.ubi-lateral` pone el resultado en
-   una columna a la izquierda del mapa principal y el punto se pinta en
-   él. `_ubiLateral` guarda el último punto para volver a pintarlo cuando el
-   mapa se rehace (initGlobalMap lo llama al terminar). */
+/* ═══ «¿DÓNDE ESTOY?» EN ESCRITORIO · COLUMNA JUNTO AL MAPA ═════════════
+   Como en celular, hay un solo mapa: dos en la misma página —uno chico en
+   el resultado y el principal debajo de las pestañas— no se distinguen. Al
+   consultar un punto el tablero pasa al destino Ubicar, `.wrap.ubi-lateral`
+   pone el resultado en una columna a la izquierda del mapa principal y el
+   punto se pinta en él. `_ubiLateral` guarda el último punto para volver a
+   pintarlo cuando el mapa se rehace (initGlobalMap lo llama al terminar). */
 let _ubiLateral = null;
 function _pintarLateral(){
   if(!_ubiLateral || _shellActivo() || !globalMap) return;
@@ -6839,7 +6785,7 @@ function descConstancia(u, scFC){
     capas.push({ id:'extra', fc:{type:'FeatureCollection', features:scCerca}, estilo:{ fill:colorLiteral('var(--sc)'), fillAlpha:.10, stroke:colorLiteral('var(--sc-900)'), width:2.5, dash:[8,6] }, leyenda:'Suelo de Conservación' });
   /* Áreas del inventario que caen en el encuadre y no son coberturas del punto
      (p. ej. la barranca a 56 m de un punto «sin área decretada»): sin ellas la
-     imagen mostraba un mapa vacío que la pantalla sí llenaba. Una capa por
+     imagen mostraría un mapa vacío que la pantalla sí llena. Una capa por
      categoría, con su color y su leyenda. */
   try{
     const yaEn = new Set(covs.map(c => c.nombre));
@@ -6905,8 +6851,8 @@ async function compartirConstancia(btn){
 /* ═══ PGOEDF · ZONIFICACIÓN DEL SUELO DE CONSERVACIÓN ══════════════════
    El Programa General de Ordenamiento Ecológico del Distrito Federal (2000)
    es el instrumento que zonifica el Suelo de Conservación FUERA de las ANP;
-   dentro de ellas rige el programa de manejo. Con esto el tablero deja de
-   decir solo «estás en Suelo de Conservación» y pasa a decir en qué zona y
+   dentro de ellas rige el programa de manejo. Con esto el tablero no dice
+   solo «estás en Suelo de Conservación»: dice en qué zona y
    qué actividades permite o prohíbe ahí —117 actividades de 9 sectores—.
 
    Reglas:
@@ -7005,11 +6951,11 @@ function pintarPgoedf(latlng, enANP){
 }
 
 function renderUbicarResultado(latlng, precision, etiqueta){
-  /* La coordenada y el ± del GPS se retiraron del pie (12-sep-2026): en campo
-     no se usan —el mapa de arriba ya muestra dónde cayó el punto— y ocupaban
-     una línea entera del resultado. La precisión SIGUE calculándose: alimenta
-     `cerca()` y el aviso ámbar de «estás dentro del margen de error del
-     límite», que sí es información operativa. */
+  /* La coordenada y el ± del GPS no van en el pie: en campo no se usan —el
+     mapa de arriba ya muestra dónde cayó el punto— y ocuparían una línea
+     entera del resultado. La precisión SÍ se calcula: alimenta `cerca()` y el
+     aviso ámbar de «estás dentro del margen de error del límite», que sí es
+     información operativa. */
   const acc = precision ? Math.round(precision) : null;
   const alc = _alcaldiaEn(latlng);
   const sc  = _enSueloConservacion(latlng);
@@ -7056,8 +7002,8 @@ function renderUbicarResultado(latlng, precision, etiqueta){
 
     /* Lo que decide qué hacer en campo, sin abrir la ficha: régimen de
        administración, si hay programa de manejo y —cuando existe la
-       zonificación— en qué zona cae el punto. Antes había que ir a la ficha
-       para saberlo, y la zona ni siquiera estaba ahí para el punto. */
+       zonificación— en qué zona cae el punto. Sin esto habría que ir a la ficha para
+       saberlo, y la zona del punto ni siquiera está ahí. */
     const dInv = (c.ficha && c.ficha.indexOf('inv::') === 0 && typeof DATA !== 'undefined')
       ? areaPorNombre(c.nombre) : null;
     let regimen = '';
@@ -7174,18 +7120,18 @@ function renderUbicarResultado(latlng, precision, etiqueta){
 }
 
 /* ═══ BOTÓN DE CAPAS (celular) ═════════════════════════════════════════
-   En celular la rejilla de capas del mapa repetía, con otro aspecto, los
-   mismos chips del inventario y gastaba cuatro renglones de pantalla. Se
+   En celular la rejilla de capas del mapa repetiría, con otro aspecto, los
+   mismos chips del inventario y gastaría cuatro renglones de pantalla. Se
    pliega detrás de un botón redondo sobre el mapa —el patrón `layers` del
    kit— y se despliega al tocarlo. No cambia ninguna lógica: son los mismos
    chips, solo que guardados. */
 /* ═══ SELECTOR DE CAPA BASE PLEGADO (celular) ══════════════════════════
-   El par MAPA | SATÉLITE ocupaba media anchura del lienzo de forma permanente
+   El par MAPA | SATÉLITE ocuparía media anchura del lienzo de forma permanente
    para una decisión que se toma una vez. Como en Maps, se pliega tras un botón
    redondo en la esquina superior derecha y las opciones aparecen al tocarlo.
    Se reutiliza el mismo par de botones —no se duplica nada—: solo se esconde
    y se le pone encima el disparador. */
-/* ═══ CAPA PGOEDF EN EL MENÚ DE CAPAS (v75) ═══════════════════════════
+/* ═══ CAPA PGOEDF EN EL MENÚ DE CAPAS ═════════════════════════════════
    Un interruptor maestro «Zonificación PGOEDF» y, debajo, una fila por
    zona (nueve claves) que se prende y apaga por separado. Apagada de
    inicio; la cartografía (≈1 MB) se pide al encenderla y queda en memoria.
@@ -7271,8 +7217,8 @@ function _montarPgoedfEnMenu(lienzo, toggle, seccionCapas){
   /* Orden de atrás hacia adelante: Suelo de Conservación · zonificación del
      programa de manejo · PGOEDF · todo lo demás (contorno del área, inventario).
      La zonificación del PM también es un relleno de TODA el área: con el PGOEDF
-     debajo, encenderlo no cambiaba nada en pantalla y parecía averiado
-     (reportado el 14-sep-2026 en Ejidos de Xochimilco). */
+     debajo, encenderlo no cambiaría nada en pantalla y parecería averiado (p. ej., en
+     Ejidos de Xochimilco). */
   const reordenar = mapa => {
     try{ mapa._pgoedfLayer.bringToBack(); }catch(_){}
     try{ if(enFicha && typeof _zonifCapa !== 'undefined' && _zonifCapa && mapa.hasLayer(_zonifCapa)) _zonifCapa.bringToBack(); }catch(_){}
@@ -7369,11 +7315,11 @@ function _montarPgoedfEnMenu(lienzo, toggle, seccionCapas){
     chip.classList.add('active'); chip.setAttribute('aria-pressed','true'); ley.hidden = false;
   });
 }
-/* ═══ CAPAS DE CONTEXTO EN EL MINIMAPA DE LA FICHA (v86, 6-oct-2026) ═══
-   El minimapa solo dibujaba el área de la ficha, las alcaldías y el Suelo de
-   Conservación: al alejarlo no se veía qué hay alrededor (¿otra área cerca?,
-   ¿un núcleo agrario?). Ahora su menú de capas ofrece el mismo contexto que
-   el mapa principal: las otras áreas del inventario (encendidas de inicio,
+/* ═══ CAPAS DE CONTEXTO EN EL MINIMAPA DE LA FICHA ═════════════════════
+   Con solo el área de la ficha, las alcaldías y el Suelo de Conservación, al
+   alejar el minimapa no se vería qué hay alrededor (¿otra área cerca?, ¿un
+   núcleo agrario?). Por eso su menú de capas ofrece el mismo contexto que el
+   mapa principal: las otras áreas del inventario (encendidas de inicio,
    trazo tenue en el color de su categoría; clic abre su ficha), ARCAC y Zona
    Patrimonio (apagadas). Van debajo del contorno del área de la ficha.
    `mapa._ctxCapas` las guarda para la imagen compartible (_capasActivasFicha). */
@@ -7460,10 +7406,10 @@ function montarBotonBase(){
       /* El menú no debe salirse del lienzo: se le pasa el alto del mapa y el
          CSS lo convierte en tope con desplazamiento interno. */
       try{ const lz = cont.parentElement; if(lz) cont.style.setProperty('--lienzo-h', lz.clientHeight + 'px'); }catch(_){}
-      /* v76: tope real del menú = lo que queda VISIBLE desde su borde superior
+      /* Tope real del menú = lo que queda VISIBLE desde su borde superior
          (54 px bajo el botón) hasta el fondo del lienzo, del viewport o de la
          barra de destinos fija de celular, lo que llegue primero. Con solo el
-         alto del lienzo, en «¿Dónde estoy?» el final del menú quedaba bajo la
+         alto del lienzo, en «¿Dónde estoy?» el final del menú quedaría bajo la
          barra y en la ficha bajo el borde del minimapa. */
       try{
         const lz = cont.parentElement, rc = cont.getBoundingClientRect();
@@ -7492,20 +7438,20 @@ function montarBotonBase(){
       b.setAttribute('aria-expanded','false');
     });
     cont.appendChild(b);
-    /* v76: el menú vive DENTRO del contenedor de Leaflet en el mapa general.
-       Sin esto, el touchstart subía al mapa, Leaflet iniciaba su arrastre y
-       su preventDefault del touchmove (no pasivo en WebKit) cancelaba el
-       desplazamiento del menú: en iPhone las capas del final no se alcanzaban.
+    /* El menú vive DENTRO del contenedor de Leaflet en el mapa general.
+       Sin esto, el touchstart subiría al mapa, Leaflet iniciaría su arrastre y
+       su preventDefault del touchmove (no pasivo en WebKit) cancelaría el
+       desplazamiento del menú: en iPhone las capas del final no se alcanzarían.
        Lo mismo con la rueda: desplaza el menú, no acerca el mapa. */
     if(typeof L !== 'undefined' && L.DomEvent){
       try{ L.DomEvent.disableClickPropagation(cont); L.DomEvent.disableScrollPropagation(cont); }catch(_){}
     }
-    /* Título de la sección de base (v76): el menú se lee como un panel de
+    /* Título de la sección de base: el menú se lee como un panel de
        ajustes con dos apartados, «Mapa base» y «Capas». */
     if(!toggle.querySelector('.menu-tit-base')){
       const tb = document.createElement('span'); tb.className = 'capa-extra-tit menu-tit-base'; tb.textContent = 'Tipo de mapa';
       toggle.insertBefore(tb, toggle.firstChild);
-      /* v95: las bases van como mosaicos con miniatura, como en Google Maps.
+      /* Las bases van como mosaicos con miniatura, como en Google Maps.
          Se mueven los mismos botones (conservan sus escuchas). */
       const mos = document.createElement('div'); mos.className = 'base-mosaico';
       toggle.querySelectorAll(':scope > button[data-layer]').forEach(b => mos.appendChild(b));
@@ -7546,7 +7492,7 @@ function montarBotonBase(){
     if(sc2 && !toggle.contains(sc2)){ sc2.classList.add('en-menu'); seccionCapas().appendChild(sc2); }
     /* «Usar mi ubicación» vive SOBRE el mapa, como botón redondo guinda en la
        esquina inferior derecha: es la acción que más se repite en campo y al
-       lado del buscador estorbaba (decisión del 12-sep-2026). Dispara el
+       lado del buscador estorbaría. Dispara el
        mismo manejador que el botón original, que queda oculto pero vivo. */
     if(lienzo && lienzo.id === 'globalMapCanvas' && !lienzo.querySelector('.gps-fab')){
       const fab = document.createElement('button');
@@ -7566,19 +7512,19 @@ function montarBotonBase(){
       }
       lienzo.appendChild(fab);
     }
-    /* Zonificación del PGOEDF como capa superpuesta en TODOS los mapas
-       (v75): mapa general, minimapas de ficha y traslapes. Ver _montarPgoedfEnMenu. */
+    /* Zonificación del PGOEDF como capa superpuesta en TODOS los mapas:
+       mapa general, minimapas de ficha y traslapes. Ver _montarPgoedfEnMenu. */
     if(lienzo && !toggle.querySelector('.pgoedf-toggle')){
       try{ _montarPgoedfEnMenu(lienzo, toggle, seccionCapas); }catch(_){}
     }
-    /* Capas de contexto (v86): solo en el minimapa de la ficha; el mapa
+    /* Capas de contexto: solo en el minimapa de la ficha; el mapa
        principal ya las tiene en sus chips de categoría, ARCAC y Zona Patrimonio. */
     if(lienzo && lienzo.closest('#dr') && !toggle.querySelector('.ctx-toggle')){
       try{ _montarContextoEnFicha(lienzo, toggle, seccionCapas); }catch(_){}
     }
     /* En celular, los chips de categoría (inventario, coadministración, ARCAC,
-       Suelo de Conservación) entran al MISMO menú. Antes tenían un segundo
-       botón con el mismo icono en la esquina opuesta: dos controles iguales
+       Suelo de Conservación) entran al MISMO menú. Un segundo
+       botón con el mismo icono en la esquina opuesta daría dos controles iguales
        para «capas» en un mapa de 360 px. Un solo menú, dos secciones: fondo
        arriba, capas abajo. Es el mismo nodo #mapFilters: conserva id y
        escuchas, y las funciones que lo rellenan lo siguen encontrando. */
@@ -7604,21 +7550,14 @@ document.addEventListener('click', e=>{
   });
 });
 
-function montarBotonCapas(){
-  /* Retirado el 12-sep-2026: los chips de capa viven ahora dentro del menú
-     de «Tipo de mapa» (ver montarBotonBase). Se conserva la función porque
-     el arranque la invoca. */
-}
-
 /* Capa de la ubicación resuelta sobre el mapa global. Vive aparte del resto
    de capas para poder borrarla entera en cada consulta sin tocar el
    inventario que ya está pintado. */
 let _capaUbicGlobal = null;
 
 /* Dibuja punto, margen de precisión y polígonos de cobertura en el mapa que se
-   le pase, y devuelve los límites. Antes esto vivía dentro de initUbicarMap y
-   por eso el caparazón de celular no podía reutilizarlo: tenía que crear un
-   segundo mapa para ver lo mismo. */
+   le pase, y devuelve los límites. Vive aparte de initUbicarMap para que el
+   caparazón de celular lo reutilice sin crear un segundo mapa. */
 function _dibujarUbicacion(map, destino, latlng, precision){
   const bounds = L.latLngBounds([[latlng.lat, latlng.lng]]);
   _coberturasEn(latlng).forEach(c=>{
@@ -7636,8 +7575,8 @@ function _dibujarUbicacion(map, destino, latlng, precision){
   /* Marca del kit (frame MARKS). Dos marcas distintas porque son dos hechos
      distintos: el punto azul con aro blanco es «aquí estás» según el GPS y va
      acompañado del halo de precisión; la gota es «este es el lugar que
-     buscaste», que no tiene margen de error que dibujar. Antes las dos se
-     pintaban igual y el usuario no podía distinguirlas. */
+     buscaste», que no tiene margen de error que dibujar. Pintadas igual,
+     el usuario no podría distinguirlas. */
   if(precision != null){
     L.circle([latlng.lat,latlng.lng],{radius:precision,color:COL_AZUL_UBIC,weight:1,
       fillColor:COL_AZUL_UBIC,fillOpacity:.12,interactive:false}).addTo(destino);
@@ -7701,7 +7640,7 @@ function _extenderConCercana(bounds, latlng, grupoCtx){
 
 
 /* ═══ ZONIFICACIÓN DE LOS PROGRAMAS DE MANEJO ═════════════════════════
-   Séptimo módulo del tablero y el primero que responde QUÉ SE PUEDE HACER
+   Responde QUÉ SE PUEDE HACER
    dentro de un área, no solo qué área es. Reglas de arquitectura:
 
    · NO entra a DATA ni a GEOMETRIES. No toca los 66 ni ningún contador.
@@ -7748,7 +7687,7 @@ function zonifGeo(entrada){
 const ZONIF_FAMILIAS = [
   { id:'proteccion',  prueba:/^proteccion/,                  color:'#1f6b4a', lbl:'Protección' },
   { id:'restaura',    prueba:/^(restauracion|recuperacion)/, color:'#b28e5c', lbl:'Restauración y recuperación' },
-  { id:'uso-publico', prueba:/^uso publico/,                 color:'#364fc7', lbl:'Uso público' },   /* índigo: ΔE 13.7 frente al punto GPS; el azul anterior era el mismo de ANP Federal */
+  { id:'uso-publico', prueba:/^uso publico/,                 color:'#364fc7', lbl:'Uso público' },   /* índigo: ΔE 13.7 frente al punto GPS; un azul se confundiría con el de ANP Federal */
   { id:'uso-especial',prueba:/^uso especial/,                color:'#8f4889', lbl:'Uso especial' },
   { id:'agricola',    prueba:/^agricola/,                    color:'#5d8a5e', lbl:'Agrícola chinampera' },
   { id:'ahi',         prueba:/ahi|asentamiento/,             color:'#55585a', lbl:'Asentamientos humanos irregulares' },
@@ -7840,7 +7779,7 @@ function _pintarPuntoEnBloque(tipo){
    catálogo de actividades —eso se consulta por punto en «¿Dónde estoy?»—.
    El cruce es precalculado (data/pgoedf_areas.json): 66 poligonales contra
    523 zonas no se hacen en el navegador. Regla del dato: la cartografía del
-   PGOEDF trae las ANP de la época como zona propia y sin ordenamiento; por
+   PGOEDF no cubre las ANP de la época (deja un hueco sobre ellas); por
    eso un ANP decretado antes del Programa sale con cobertura ~0 y así se
    explica, mientras que los decretados después (Tempiluli, Bosque de
    Tláhuac, San Miguel Ajusco…) sí traen zona. */
@@ -7961,8 +7900,8 @@ function montarZonificacionEnMapa(mapa, d){
       const fam = [...new Set(e.zonas.map(z=>zonifFamilia(z.k).id))];
       /* Si la familia tiene una sola zona en esta área, la leyenda usa el nombre
          literal del programa —el mismo de la tabla de abajo—; si agrupa varias
-         (Uso Público Intensivo y Extensivo), el de la familia. Antes siempre
-         decía la familia y no coincidía con la tabla (auditoría UI-04). */
+         (Uso Público Intensivo y Extensivo), el de la familia. Así
+         coincide con la tabla. */
       const zonasDe = {};
       e.zonas.forEach(z=>{ const id = zonifFamilia(z.k).id; (zonasDe[id] = zonasDe[id] || new Set()).add(z.zona); });
       const ley = document.getElementById('zonifLeyenda');
@@ -7973,7 +7912,7 @@ function montarZonificacionEnMapa(mapa, d){
         ley.hidden = false;
       }
     });
-    /* Encendida de inicio (v75): si el área tiene zonificación, el minimapa la
+    /* Encendida de inicio: si el área tiene zonificación, el minimapa la
        muestra al abrir la ficha; el mismo interruptor la apaga. */
     try{ btn.click(); }catch(_){}
   });
@@ -7995,8 +7934,8 @@ function zonaDePunto(nombreArea, latlng){
 /* ═══ MINIMAPA DE FICHA · UN SOLO MARCADO PARA LAS TRES FICHAS ═══════
    Inventario, ARCAC y Zona Patrimonio comparten lienzo, menú de capas
    (Mapa / Satélite · Capas: zonificación cuando existe, Suelo de Conservación
-   siempre), pantalla completa y controles. Antes cada ficha armaba su propio
-   mapa y dos de ellas salían sin menú ni Suelo de Conservación: distintas
+   siempre), pantalla completa y controles. Un mapa
+   propio por ficha dejaría a unas sin menú ni Suelo de Conservación: distintas
    fichas para la misma pregunta. `zonif` solo lo pide el inventario. */
 function fichaMapaHTML(opts){
   const o = opts || {};
@@ -8035,9 +7974,9 @@ function fichaMapaHTML(opts){
      · pantalla completa → el mapa toma la pantalla y un dedo arrastra.
    El mapa de «¿Dónde estoy?» en celular NO es incrustado: llena la pantalla
    (gm-shell) y conserva el gesto completo (`mapa-gesto-total`).
-   Se retiró el «toca para activar»: dependía de que el toque llegara como
-   click, en iOS no siempre llegaba y dejaba al usuario sin saber en qué
-   modo estaba. La etiqueta desaparece con el primer gesto de dos dedos. */
+   Nada de «toca para activar»: depende de que el toque llegue como
+   click, en iOS no siempre llega y deja al usuario sin saber en qué
+   modo está. La etiqueta desaparece con el primer gesto de dos dedos. */
 function _gestosTactilesIncrustado(mapa, opts){
   try{
     if(!mapa) return;
@@ -8050,11 +7989,10 @@ function _gestosTactilesIncrustado(mapa, opts){
     };
     if(tactil) reposo(!total);
     /* Botón «Ampliar» (todo mapa incrustado, en cualquier puntero): lleva el
-       mapa a pantalla completa —nativa o simulada— y, en táctil, es la vía
+       mapa a pantalla completa —simulada— y, en táctil, es la vía
        para arrastrar con un dedo. Reutiliza el botón de pantalla completa,
        que está oculto por CSS, y vive bajo el botón de capas. */
-    /* v95: también en el mapa de gesto total («¿Dónde estoy?» en celular),
-       que antes no tenía pantalla completa. */
+    /* También en el mapa de gesto total («¿Dónde estoy?» en celular). */
     {
       let canvas = cont, n = 0;
       while(canvas && n < 4 && !canvas.querySelector('.map-fullscreen-btn')){ canvas = canvas.parentElement; n++; }
@@ -8130,14 +8068,14 @@ function openDrawer(d){
   // Actualizar URL con slug del área (sin recargar página)
   const slug = slugify(d.nombre);
   const newHash = `#area=${slug}`;
-  /* v90: la ficha deja una entrada en el historial: «atrás» la cierra y se
+  /* La ficha deja una entrada en el historial: «atrás» la cierra y se
      vuelve a la misma pantalla (en Android, el botón atrás del teléfono). */
   if(location.hash !== newHash){
     history.pushState({ siaFicha: true }, '', newHash);
   }
   _marcaFicha(true);
   /* Abre en la posición alta: la ficha es el objeto de la consulta y a media
-     altura obligaba a un gesto extra para leer superficie, decreto y suelo de
+     altura obligaría a un gesto extra para leer superficie, decreto y suelo de
      conservación. Las otras dos posiciones siguen a un tirón del asa. */
   if(_drMovil()) setTimeout(()=>drIr(_drAlturas()[3]), 0);
   drIn.innerHTML = `
@@ -8165,8 +8103,8 @@ function openDrawer(d){
     <div class="field"><div class="k">Alcaldía(s)</div><div class="v">${d.alcaldia}</div></div>
     <div class="field"><div class="k">Suelo de Conservación</div><div class="v">${(() => {
       /* Un solo elemento: el punto y el texto que lo explica. Con la columna
-         de porcentaje el texto dice además cuánto, que es lo que el Sí/No
-         nunca pudo decir. */
+         de porcentaje el texto dice además cuánto, que es lo que un Sí/No
+         no puede decir. */
       return `<span class="status-tag status-sc ${SC_CLS[scEstado(d)]}">${scTexto(d)}</span>`;
     })()}</div></div>
     <!-- Lo que se deriva de caer en Suelo de Conservación va inmediatamente
@@ -8192,9 +8130,9 @@ function openDrawer(d){
   // Carga e inicializa el mapa después de renderizar el contenido
   loadGeometries().then(()=>{
     initMapForArea(d);
-    /* Toggles de capa base SOLO de la ficha (auditoría 13-sep-2026, D2-02):
-       la consulta global enganchaba también los botones del mapa general y
-       acumulaba una escucha por ficha abierta. */
+    /* Toggles de capa base SOLO de la ficha: una consulta global engancharía
+       también los botones del mapa general y acumularía una escucha por ficha
+       abierta. */
     document.querySelectorAll('#dr .map-block-toggle button[data-layer]').forEach(btn=>{
       btn.addEventListener('click', ()=>setBaseLayer(btn.dataset.layer));
     });
@@ -8209,9 +8147,9 @@ function openDrawer(d){
 /* ═══ LA FICHA COMO HOJA DE TRES POSICIONES ════════════════════════════
    Mismo contrato que la hoja de «Ubicar»: `--dvis` es la altura visible en
    píxeles y el desplazamiento se calcula en CSS. Posiciones: asomada (se ve
-   el encabezado), media y completa. Se arrastra solo por el asa —el cuerpo
-   tiene su propio desplazamiento—; un toque simple baja a la siguiente y,
-   por debajo de la asomada, la ficha se cierra. En escritorio no aplica: ahí
+   el encabezado), media y completa. Se arrastra por el asa y el encabezado —el cuerpo
+   tiene su propio desplazamiento—; arrastre y toque se detallan abajo.
+   En escritorio no aplica: ahí
    la ficha sigue siendo un cajón lateral. */
 const DR_ASOMADA = 230;
 let _drVis = 0;
@@ -8233,7 +8171,7 @@ function drIr(vis){
     a.setAttribute('aria-valuetext', ['asomada','media','completa'][pos]);
     a.setAttribute('aria-valuenow', String(pos)); }
 }
-/* Teclado del asa (D5-05): flechas arriba/derecha suben una posición,
+/* Teclado del asa: flechas arriba/derecha suben una posición,
    abajo/izquierda bajan; Inicio = asomada, Fin = completa. Solo en celular,
    que es donde la hoja tiene posiciones. */
 document.addEventListener('keydown', e=>{
@@ -8255,17 +8193,17 @@ function drSnap(vis){
   drIr(best);
   return best;
 }
-/* Arrastre de la hoja (v87, 6-oct-2026: «se siente pegajosa» en iPhone).
+/* Arrastre de la hoja (en iPhone no debe sentirse pegajosa).
    · Se agarra por el asa Y por todo el encabezado (tipo, nombre), salvo sus
      botones: el asa sola es una franja de 26 px y el dedo va al título.
-   · La altura se acota a [0, tope] mientras se arrastra: antes, arrastrar
-     más allá del tope acumulaba un sobrante invisible y al regresar la hoja
-     no se movía hasta deshacerlo.
+   · La altura se acota a [0, tope] mientras se arrastra: sin eso, arrastrar
+     más allá del tope acumularía un sobrante invisible y al regresar la hoja
+     no se movería hasta deshacerlo.
    · Las alturas se miden una vez al empezar y el movimiento se pinta una vez
-     por cuadro (requestAnimationFrame): antes cada pointermove medía la hoja
-     con getBoundingClientRect.
-   · Un toque que se mueve menos de 8 px sigue siendo toque (antes 3 px: en
-     iPhone casi todo toque se volvía un arrastre de cero que no hacía nada). */
+     por cuadro (requestAnimationFrame), sin medir la hoja con getBoundingClientRect
+     en cada pointermove.
+   · Un toque que se mueve menos de 8 px sigue siendo toque (con menos, en
+     iPhone casi todo toque se volvería un arrastre de cero que no hace nada). */
 const DR_UMBRAL_TOQUE = 8;
 document.addEventListener('pointerdown', e=>{
   const t = e.target && e.target.closest ? e.target : null;
@@ -8300,8 +8238,8 @@ document.addEventListener('pointerdown', e=>{
     if(!movio && !porAsa) return;
     if(!movio){
       /* Toque simple: SUBE a la siguiente posición; desde la completa vuelve a
-         la media. Antes bajaba y, por debajo de la asomada, cerraba: un roce
-         en el asa al leer hundía la ficha («a veces baja sola»). Cerrar es
+         la media. Si bajara y, por debajo de la asomada, cerrara,
+         un roce en el asa al leer hundiría la ficha. Cerrar es
          solo arrastrando hacia abajo o con el ×. */
       const al = _drAlturas();
       const sig = al.find(v => v > _drVis + 4);
@@ -8318,16 +8256,16 @@ document.addEventListener('pointerdown', e=>{
 
 /* ═══ BLOQUEO DE LA PÁGINA DE FONDO · una sola implementación ═══════════
    `overflow:hidden` en html/body no detiene el desplazamiento táctil en iOS:
-   con la ficha abierta, el gesto que llegaba al tope de la hoja seguía
+   con la ficha abierta, el gesto que llega al tope de la hoja sigue
    moviendo la página de atrás («hace scroll por detrás de la ficha»). Lo
    único fiable es fijar el body (position:fixed) conservando la posición y
    devolverla al liberar. Varias piezas pueden pedirlo a la vez (ficha, guía,
    caparazón de «¿Dónde estoy?»): se cuenta por clave. */
 const _bloqueosPagina = new Set();
 let _scrollBloqueado = 0;
-/* ═══ AJUSTE INFERIOR EN CELULAR (v95, 8-oct-2026) ═══════════════════════
+/* ═══ AJUSTE INFERIOR EN CELULAR ═══════════════════════════════════════
    En iPhone, cuando Chrome encoge su barra inferior, la barra de destinos
-   (position:fixed; bottom:0) se quedaba donde estaba y abajo aparecía una
+   (position:fixed; bottom:0) se queda donde está y abajo aparece una
    franja vacía del color de la página. Se mide la diferencia entre el fondo
    real de la pantalla y el de la barra, y todo lo anclado abajo (barra, mapa
    de «¿Dónde estoy?», hojas) baja eso con --ajuste-inf. Solo cuenta si es
@@ -8375,13 +8313,13 @@ function _marcaFicha(abierta){
 }
 
 /* ═══ CAMBIO DE MEDIO (rotación del teléfono, ventana que cruza los 760 px) ═══
-   Auditoría 13-sep-2026 (D3-01, D3-02, D3-05). El caparazón de «¿Dónde
+   El caparazón de «¿Dónde
    estoy?», el bloqueo de la página y la posición de la hoja de ficha se
-   deciden en JS con la misma consulta de medio que el CSS; nadie los
-   recalculaba al rotar. Un solo manejador, sobre `matchMedia('change')`
+   deciden en JS con la misma consulta de medio que el CSS; sin esto nadie
+   los recalcularía al rotar. Un solo manejador, sobre `matchMedia('change')`
    (no `resize`: solo interesa cruzar el umbral):
-   · Ficha abierta → vertical: la hoja vuelve a su altura completa (`--dvis`
-     estaba en 0 y la mandaba fuera de pantalla, con fondo oscuro e inerte).
+   · Ficha abierta → vertical: la hoja vuelve a su altura completa (con `--dvis` en 0
+     quedaría fuera de pantalla, con fondo oscuro e inerte).
      → horizontal: se retira `--dvis` y se libera la página.
    · Destino Ubicar: `renderDashboard()` rehace caparazón, bloqueo y mapa; si
      había un resultado, se vuelve a resolver el mismo punto en el modo nuevo
@@ -8417,7 +8355,7 @@ function _marcaFicha(abierta){
 })();
 
 /* ═══ CAMBIO DE ALTO DEL VIEWPORT (barra del navegador, teclado) ═══════
-   Reportado el 14-sep-2026: al abrir una ficha en el iPhone quedaba una
+   En iPhone, al abrir una ficha puede quedar una
    franja del color de la página debajo de la hoja. Las dos hojas guardan su
    altura visible en píxeles (`--dvis`, `--vis`) y el CSS la resta del 100 %
    del elemento; el elemento mide `100svh − …`, así que cuando la barra del
@@ -8448,7 +8386,7 @@ function _marcaFicha(abierta){
   try{ if(window.visualViewport) window.visualViewport.addEventListener('resize', alRedimensionar); }catch(_){}
 })();
 
-/* v90: si la ficha abierta dejó su propia entrada en el historial, cerrarla
+/* Si la ficha abierta dejó su propia entrada en el historial, cerrarla
    (×, Esc, fondo, arrastre) es ir atrás: así el historial no acumula fichas
    ya cerradas y «atrás» después lleva a la pantalla anterior. El cierre real
    lo hace el escucha de popstate con _cerrarFicha(). */
@@ -8473,15 +8411,15 @@ function _cerrarFicha(){
 }
 /* ═══ OPERABILIDAD POR TECLADO ═════════════════════════════════════════
    Las filas de las cinco tablas y los renglones de las dos listas de
-   sugerencias se activaban solo con clic. Aqui se les da foco y se traduce
+   sugerencias solo se activarían con clic. Aqui se les da foco y se traduce
    Enter/Espacio al mismo clic, sin tocar las funciones de render. */
 const _NAVEGABLES = 'tr[data-i],tr[data-emb],tr[data-zpkey],tr[data-no],tr[data-a],'
                   + '.ubicar-sugerencias .item';
 function _marcarNavegables(){
   document.querySelectorAll(_NAVEGABLES).forEach(el=>{
     if(!el.hasAttribute('tabindex')) el.setAttribute('tabindex','0');
-    /* El tabindex hizo la fila alcanzable, pero el lector de pantalla seguía
-       anunciandola como una fila de tabla cualquiera, sin pista de que Enter
+    /* El tabindex hace la fila alcanzable, pero el lector de pantalla la seguiría
+       anunciando como una fila de tabla cualquiera, sin pista de que Enter
        abre la ficha. role + nombre accesible cierran esa mitad. */
     if(el.tagName === 'TR' && !el.hasAttribute('role')){
       el.setAttribute('role','button');
@@ -8489,8 +8427,8 @@ function _marcarNavegables(){
       const nombre = celda && celda.textContent ? celda.textContent.trim() : '';
       if(nombre && !el.hasAttribute('aria-label')) el.setAttribute('aria-label','Ver ficha de ' + nombre);
     }
-    /* Las sugerencias del buscador principal eran <div> mudos, a diferencia de las
-       de los mini-mapas, que sí declaran su rol. */
+    /* Las sugerencias del buscador principal son <div> sin rol: se les da
+       role="option". */
     if(el.classList.contains('item') && el.closest('.ubicar-sugerencias') && !el.hasAttribute('role')){
       el.setAttribute('role','option');
     }
@@ -8508,7 +8446,7 @@ function _marcarNavegables(){
   new MutationObserver(sincronizar).observe(sug, {attributes:true, attributeFilter:['hidden']});
   sincronizar();
 })();
-/* Cabecera fija de la ficha (14-sep-2026): cada apertura pinta su
+/* Cabecera fija de la ficha: cada apertura pinta su
    `.drawer-header-row` al inicio de #drIn (inventario, ARCAC, Zona
    Patrimonio, embarcaderos). Este observador la saca del cuerpo desplazable y
    la coloca en #drHead, junto al «×», antes del primer pintado: así título,
@@ -8541,9 +8479,8 @@ _marcarNavegables();
 /* Orden de las tablas de brechas. Delegado en document porque
    renderAnalisisPage() rehace su propio HTML en cada clic: un listener puesto
    sobre los <th> moriría con el primer reordenamiento.
-   Auditoría 13-sep-2026 (D6-01): este bloque estaba DENTRO del callback del
-   MutationObserver de arriba y registraba un par de escuchas globales por cada
-   repintado de tabla; ahora se registra una sola vez. */
+   Va FUERA del callback del MutationObserver de arriba: dentro registraría
+   un par de escuchas globales por cada repintado de tabla. */
 function _ordenarBrecha(th){
   const tabla = th.closest('table[data-tabla]');
   const est = tabla && ORD_ANALISIS[tabla.dataset.tabla];
@@ -8593,7 +8530,7 @@ document.addEventListener('keydown', e=>{
    en el momento de enlazar. */
 let _focoPrevio = null;
 /* La ficha se oculta con transform, no con display:none, así que estando "cerrada"
-   su botón de cierre y todos sus enlaces seguían siendo alcanzables con Tab fuera de
+   su botón de cierre y todos sus enlaces seguirían siendo alcanzables con Tab fuera de
    pantalla. inert los retira del orden de tabulación Y del árbol de accesibilidad,
    sin romper la transición CSS. Aplicado en espejo sobre .wrap, aísla el fondo del
    lector de pantalla mientras el diálogo está abierto — que es lo que aria-modal
@@ -8624,8 +8561,8 @@ closeDrawer = function(){
 };
 /* Red de seguridad: las fichas de ARCAC, Zona Patrimonio y embarcaderos abren el
    cajón con dr.classList.add('open') sin pasar por openDrawer, así que el inert
-   puesto al cerrar se quedaba y el cajón completo dejaba de recibir toques
-   (sin scroll en celular: el que recibía el gesto era el fondo #bd). Se observa la
+   puesto al cerrar se quedaría y el cajón completo dejaría de recibir toques
+   (sin scroll en celular: el gesto lo recibiría el fondo #bd). Se observa la
    clase `open` y se aplica el mismo contrato para cualquier abridor. */
 if(_drEl && window.MutationObserver){
   new MutationObserver(()=>{
@@ -8667,7 +8604,7 @@ document.getElementById('drClose').addEventListener('click',closeDrawer);
 bd.addEventListener('click',closeDrawer);
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDrawer(); });
 
-/* Cabecera (v89): «Registros · 66» repetía el 66 del resumen. Ahora dice cuándo
+/* Cabecera: no repite el 66 del resumen; dice cuándo
    se actualizó el tablero, con la fecha de la versión instalada (CACHE_VERSION
    del Service Worker, la misma del pie). Sin SW no se muestra. */
 function _pintarActualizado(version){
@@ -8690,19 +8627,15 @@ function _pintarActualizado(version){
   }catch(_){ el.textContent = new Date().toISOString().slice(0,10); }
 })();
 
-/* =====================================================================
-   ASISTENTE · Motor de consultas semánticas en lenguaje natural
-   ===================================================================== */
-
 /* ═══ VISTAS COMPARTIBLES ═══════════════════════════════════════════
 
    · Vista guardable. El estado del tablero —destino, subfiltro, orden,
-     búsqueda y los siete filtros— vivía solo en memoria: quien armaba una
-     consulta útil no podía volver a ella ni mandársela a nadie. Se serializa
+     búsqueda y los siete filtros— se serializa para que quien
+     arme una consulta útil pueda volver a ella o mandársela a alguien. Va
      al fragmento de la URL, no a `localStorage`, porque una vista sirve
      justamente para compartirse y el almacenamiento del navegador no sale del
      equipo. Convive con `#area=`: son dos prefijos distintos del mismo
-     fragmento y nunca se pisan. Sin atajos de teclado por decisión del proyecto. */
+     fragmento y nunca se pisan. Sin atajos de teclado. */
 const VISTA_CAMPOS = ['dest','tab','sortKey','sortDir','q','fJur','fCat','fAlc','fPM','fTipo','fSC','fDG'];
 
 function vistaAURL(){
@@ -8725,9 +8658,9 @@ function aplicarVistaDeURL(){
   if(!h.startsWith('#v?')) return false;
   const qs = new URLSearchParams(h.slice(3));
   let algo = false;
-  /* Auditoría 13-sep-2026 (D2-03): los valores que eligen código —destino,
+  /* Los valores que eligen código —destino,
      subconjunto y columna de orden— se validan contra sus catálogos; una liga
-     malformada (`tab=XYZ`, `sortKey=x"]`) tumbaba el tablero completo. Los
+     malformada (`tab=XYZ`, `sortKey=x"]`) tumbaría el tablero completo. Los
      filtros de texto siguen entrando tal cual: solo se comparan con valores. */
   const destinosValidos = new Set(DESTINOS.map(d => d.id));
   const tabsValidos = new Set(DESTINOS.flatMap(d => d.sub));
@@ -8742,9 +8675,9 @@ function aplicarVistaDeURL(){
     algo = true;
   });
   if(!algo) return false;
-  /* D2-01: la liga se genera sin `dest` cuando es Inventario (valor por
+  /* La liga se genera sin `dest` cuando es Inventario (valor por
      omisión en escritorio), pero en celular el destino por omisión es Ubicar y
-     la vista llegaba con la tabla oculta. Si la liga no trae destino, manda el
+     la vista llegaría con la tabla oculta. Si la liga no trae destino, manda el
      subconjunto: el destino es el que lo contiene. */
   if(!qs.has('dest') || !destinosValidos.has(qs.get('dest'))){
     const duenio = DESTINOS.find(d => d.sub.includes(state.tab));
@@ -8762,9 +8695,8 @@ function aplicarVistaDeURL(){
 }
 
 /* Expuesta a proposito: permite armar la liga desde la consola y es el
-   enganche de las pruebas automatizadas. El botón «Copiar liga de esta vista»
-   se retiró el 7-oct-2026 (el acceso es restringido y no se quiere invitar a
-   compartir ligas); las vistas #v? siguen vivas porque las usa el historial. */
+   enganche de las pruebas automatizadas. No hay botón «Copiar liga de esta vista»
+   (el acceso es restringido); las vistas #v? siguen vivas porque las usa el historial. */
 window.vistaAURL = vistaAURL;
 
 /* Campo primero: en celular el uso dominante es ubicarse, no consultar tablas.
@@ -8797,8 +8729,8 @@ function openAreaFromHash(){
 }
 // Resolver al cargar la página
 openAreaFromHash();
-/* ═══ HISTORIAL DEL NAVEGADOR (v90, 7-oct-2026) ═══════════════════════════
-   Antes todo usaba replaceState y la flecha «atrás» sacaba del sitio. Ahora
+/* ═══ HISTORIAL DEL NAVEGADOR ═══════════════════════════════════════════
+   Con replaceState la flecha «atrás» sacaría del sitio; por eso
    cambiar de destino o de sección y abrir una ficha dejan una entrada
    (pushState); los filtros no, para no obligar a oprimir atrás diez veces.
    popstate (atrás/adelante, también al editar el # a mano) abre o cierra la
@@ -8844,7 +8776,7 @@ window.addEventListener('popstate', () => {
 });
 
 /* ============================================================
- * E3 · SERVICE WORKER — operación offline
+ * SERVICE WORKER — operación offline
  * Cachea recursos críticos en la primera carga; tras eso, la app
  * funciona sin conexión. Útil para presentaciones en zonas con
  * WiFi débil o salones sin conexión confiable.
@@ -8854,8 +8786,7 @@ if('serviceWorker' in navigator){
   if(location.protocol === 'http:' || location.protocol === 'https:'){
     /* Este bloque corre al final del arranque, que es asíncrono (espera el
        CSV del inventario): para entonces `load` ya disparó y un listener
-       nuevo no se ejecuta nunca. Auditoría 12-sep-2026: en producción el SW
-       no se registraba y no había caché offline. Si el documento ya está
+       nuevo no se ejecuta nunca. Si el documento ya está
        completo se registra de inmediato. */
     const _registrarSW = () => {
       navigator.serviceWorker.register('sw.js')
@@ -8891,7 +8822,7 @@ if('serviceWorker' in navigator){
     if(document.readyState === 'complete') _registrarSW();
     else window.addEventListener('load', _registrarSW);
 
-    /* ── Sesión de Cloudflare Access (desde 13-sep-2026) ──
+    /* ── Sesión de Cloudflare Access ──
        El sitio vive detrás de un inicio de sesión de 30 días. Como el tablero
        arranca desde la caché del SW, una sesión expirada no se nota hasta que
        falla una petición al propio sitio. Dos vías de detección, un solo
@@ -8904,7 +8835,7 @@ if('serviceWorker' in navigator){
        En ambos casos se navega a `./?entrar=…`, que el SW sirve desde la red:
        el navegador sigue la redirección al login y regresa autenticado.
        Sin red, el sondeo falla y no se hace nada: quien ya se autenticó en el
-       aparato conserva el tablero sin conexión (decisión del 13-sep-2026). */
+       aparato conserva el tablero sin conexión. */
     let _reentrando = false;
     const _reentrar = () => {
       if(_reentrando) return; _reentrando = true;
@@ -8924,11 +8855,11 @@ if('serviceWorker' in navigator){
       if(!e.data) return;
       if(e.data.tipo === 'sesion-expirada') _reentrar();
       /* El SW completó en caliente la caché de una versión que se activó sin
-         red (D7-01): la pestaña sigue con el código anterior hasta recargar. */
+         red: la pestaña sigue con el código anterior hasta recargar. */
       if(e.data.tipo === 'cache-reparada') showOfflineNotice('Nueva versión disponible. Recarga la página para actualizar.', 'update');
       if(e.data.tipo === 'version'){ const v = document.getElementById('footerVersion'); if(v) v.textContent = String(e.data.version || '—').replace(/^sia-v35-/, ''); _pintarActualizado(e.data.version); }
     });
-    /* Versión instalada, para el pie (D4-02). Se pregunta al SW que controla
+    /* Versión instalada, para el pie. Se pregunta al SW que controla
        la página; si aún no controla (primera visita), se pregunta al quedar
        listo. */
     const _pedirVersion = () => { try{ navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage({tipo:'version?'}); }catch(_){} };
@@ -9419,7 +9350,7 @@ function _uso(e, d){
 window.addEventListener('online', () => showOfflineNotice('Conexión restablecida ✓', 'online'));
 window.addEventListener('offline', () => showOfflineNotice('Sin conexión · operando con datos en caché', 'offline'));
 
-/* ═══ INDICADOR DE CONEXIÓN EN CELULAR (v96, 8-oct-2026) ═══════════════════
+/* ═══ INDICADOR DE CONEXIÓN EN CELULAR ═══════════════════════════════════
    Un punto sobre la barra de destinos: verde «En línea», ámbar «Sin conexión»
    (con «capas guardadas» si se usó «Guardar para usar sin señal»). Con red
    solo se ve el punto; sin red se despliega el texto. Al tocarlo explica qué

@@ -1,5 +1,5 @@
 import { playwright, lanzar, CSV_MIN as CSV, LEAFLET_STUB as STUB, BASE } from './_comun.mjs';
-const { chromium } = await playwright(); import fs from 'fs';
+const { chromium } = await playwright();
 const EMPTY = JSON.stringify({type:'FeatureCollection',features:[]});
 const b = await lanzar(chromium);
 const ctx = await b.newContext({viewport:{width:1440,height:1000}});

@@ -2,14 +2,14 @@
   // ───────────────────────────────────────────────────────────────────
   // Despliegue del tablero SIA en Cloudflare Workers (assets estáticos)
   //
-  // El sitio no tiene build: es HTML, CSS y JS en un solo archivo más la
-  // carpeta data/. Por eso "Build command" va VACÍO en el panel y aquí
-  // solo se declara qué carpeta se publica.
+  // El sitio no tiene build: son cuatro archivos (index.html, styles.css,
+  // app.js, config.js) más sw.js, vendor/, assets/ y data/. Por eso
+  // "Build command" va VACÍO en el panel y aquí solo se declara qué carpeta
+  // se publica.
   //
-  // "directory": "./" publica el repositorio tal cual, como hace GitHub
-  // Pages. OJO: wrangler NO excluye .git por su cuenta —el primer
-  // despliegue la subió entera—, así que la exclusión vive en el archivo
-  // .assetsignore de la raíz. Los dos archivos van juntos.
+  // "directory": "./" publica el repositorio tal cual. OJO: wrangler NO
+  // excluye .git por su cuenta (la sube entera), así que la exclusión vive
+  // en el archivo .assetsignore de la raíz. Los dos archivos van juntos.
   //
   // El Service Worker (sw.js) queda en la raíz, que es donde tiene que
   // estar: su ámbito es la carpeta desde la que se sirve, y moverlo lo
@@ -18,10 +18,10 @@
   "name": "categorias-de-proteccion-ambiental",
   "compatibility_date": "2026-09-12",
 
-  // Apagados a propósito (12-sep-2026). Con dominio propio, las direcciones
-  // *.workers.dev sobran y además duplicaban el sitio en una dirección que
-  // nadie debería citar. Van explícitas porque, si se omiten, wrangler las
-  // enciende por omisión en cada despliegue y volverían solas.
+  // Apagados a propósito. Con dominio propio, las direcciones *.workers.dev
+  // sobran y además duplicarían el sitio en una dirección que nadie debería
+  // citar. Van explícitas porque, si se omiten, wrangler las enciende por
+  // omisión en cada despliegue.
   "workers_dev": false,
   "preview_urls": false,
 

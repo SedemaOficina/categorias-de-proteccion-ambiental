@@ -1,4 +1,4 @@
-/* Piezas comunes del arnés de verificación (auditoría 13-sep-2026, D12-04).
+/* Piezas comunes del arnés de verificación.
    Todo se resuelve respecto a la RAÍZ DEL REPO, así que los scripts corren
    desde cualquier carpeta: `node pendientes/arnes/aud360.mjs` o `cd
    pendientes/arnes && node aud360.mjs` dan lo mismo. Requisitos y línea de
@@ -30,14 +30,14 @@ export const lanzar = (chromium, extra={}) => chromium.launch({
   args: ['--no-sandbox'], ...extra
 });
 
-/* Leaflet 1.9.4: desde el 14-sep-2026 (B13) index.html lo carga de vendor/
-   del propio sitio, que el servidor del arnés sirve como cualquier otro
-   archivo del repo. Se lee de ahí para los scripts que interceptan
-   «leaflet.js» por URL (srv-sw, stubs); pendientes/arnes/vendor/ ya no existe. */
+/* Leaflet 1.9.4: index.html lo carga de vendor/ del propio sitio, que el
+   servidor del arnés sirve como cualquier otro archivo del repo. Se lee de
+   ahí para los scripts que interceptan «leaflet.js» por URL. */
 export const LEAF = F('vendor', 'leaflet.js');
 export const LCSS = F('vendor', 'leaflet.css');
 
-/* CSV real del inventario (copia del Sheet del 12-sep-2026) y CSV mínimo. */
+/* CSV real del inventario (copia del Sheet; la fecha del nombre es la del
+   corte de datos) y CSV mínimo. */
 export const CSV_REAL = F('pendientes', 'arnes', 'fixtures', 'inventario_real_2026-09-12.csv');
 export const CSV_MIN  = F('pendientes', 'arnes', 'fixtures', 'inventario.csv');
 export const LEAFLET_STUB = F('pendientes', 'arnes', 'fixtures', 'leaflet-stub.js');
@@ -53,7 +53,7 @@ export const CAPAS = {
 export const VACIA = '{"type":"FeatureCollection","features":[]}';
 
 /* Tesela sintética (PNG 256×256 beige). Se responde con CORS porque las capas
-   de teselas se piden con crossOrigin (v67): sin la cabecera el mapa no pinta. */
+   de teselas se piden con crossOrigin: sin la cabecera el mapa no pinta. */
 export function png(w, h, rgb){
   const raw = Buffer.alloc((w*3+1)*h);
   for(let y=0; y<h; y++){ raw[y*(w*3+1)] = 0; for(let x=0; x<w; x++){ const o = y*(w*3+1)+1+x*3; raw[o]=rgb[0]; raw[o+1]=rgb[1]; raw[o+2]=rgb[2]; } }

@@ -1,19 +1,21 @@
 /* ============================================================
- * Service Worker · Dashboard SIA · ANP/AVA CDMX · v35
+ * Service Worker · Dashboard SIA · ANP/AVA CDMX
  * ============================================================
  * Estrategia mixta:
- *  - Recursos estáticos del repo: cache-first
- *  - Tiles de mapa: cache-first runtime
+ *  - Recursos estáticos del repo: cache-first (caché de la versión,
+ *    guardado para campo y, de respaldo, cachés de versiones anteriores)
+ *  - Teselas de mapa y Google Fonts: cache-first runtime
  *  - Google Sheets (inventario): network-first con caché
  *    (siempre intenta datos frescos; si falla red, usa última versión cacheada)
- *  - Nominatim, etc.: network-only
+ *  - /cdn-cgi/ (Cloudflare Access), /api/ y /admin/: directo a la red
+ *  - Otros orígenes: network-first
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-10-08e';
+const CACHE_VERSION = 'sia-v35-2026-10-08f';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
-/* Capas y teselas que la persona guardó con «Guardar para usar sin señal»
-   (v94). No lleva la versión en el nombre: sobrevive a las actualizaciones. */
+/* Capas y teselas guardadas con «Guardar para usar sin señal». El nombre no
+   cambia con CACHE_VERSION: sobrevive a las actualizaciones. */
 const CACHE_CAMPO   = 'sia-campo-v35';
 
 /* Recursos críticos: lo mínimo para que la app arranque y se vea.
@@ -21,16 +23,15 @@ const CACHE_CAMPO   = 'sia-campo-v35';
 const CORE_ASSETS = [
   './',
   './index.html',
-  /* Desde la v44 el tablero son cuatro archivos y se instalan como UNIDAD: un
-     index.html nuevo con un styles.css viejo se ve raro sin dar error, que es
-     el peor fallo posible. cacheUtilizable() exige los cuatro antes de purgar
-     cachés anteriores. config.js lleva la llave y solo lo edita el responsable. */
+  /* El tablero son cuatro archivos y se instalan como UNIDAD: un index.html
+     nuevo con un styles.css viejo se ve raro sin dar error, que es el peor
+     fallo posible. cacheUtilizable() exige los cuatro antes de purgar cachés
+     anteriores. config.js lleva la llave y no se reescribe en las entregas. */
   './styles.css',
   './app.js',
   './config.js',
-  /* Leaflet 1.9.4 desde el propio dominio (14-sep-2026, B13): 162 KB que antes
-     venían de unpkg y solo entraban a la caché runtime cuando la red y la CSP
-     lo permitían; ahora se instalan con el resto y el mapa arranca sin red. */
+  /* Leaflet 1.9.4 desde el propio dominio (162 KB): se instala con el resto,
+     así que el mapa arranca sin red desde la primera visita. */
   './vendor/leaflet.js',
   './vendor/leaflet.css',
   './assets/logo-sedema.png',
@@ -40,8 +41,8 @@ const CORE_ASSETS = [
   /* Respaldo del inventario: pesa 23 KB y es la diferencia entre un tablero
      sin datos y uno con el último corte cuando el Sheet no responde. */
   './data/inventario.csv',
-  /* Indice de zonificaciones: 4.8 KB. Sin el, una ficha abierta sin conexion no
-     puede ni decir si esa ANP tiene zonificacion publicada. Los siete GeoJSON
+  /* Índice de zonificaciones: 4.8 KB. Sin él, una ficha abierta sin conexión no
+     puede ni decir si esa ANP tiene zonificación publicada. Los siete GeoJSON
      —686 KB en total— NO entran: se piden uno a la vez cuando hacen falta. */
   './data/zonificacion/index.json',
   './data/pgoedf_areas.json'
@@ -49,10 +50,10 @@ const CORE_ASSETS = [
 
 /* Capas que sí conviene tener offline, pero que no deben bloquear el install ni
    competir por ancho de banda con el primer render. Se precachean en segundo plano
-   cuando el hilo está ocioso. suelo_conservacion.geojson salió de aquí: index.html
-   ya lo pide al arrancar y la estrategia same-origin lo deja cacheado igual —
-   estaba descargándose dos veces en cada primera visita.
-   sipam_fao, arcac, embarcaderos y traslapes siguen siendo bajo demanda. */
+   cuando el hilo está ocioso. suelo_conservacion.geojson no va aquí: la app
+   lo pide al arrancar y la estrategia same-origin lo deja cacheado; listarlo
+   lo descargaría dos veces en cada primera visita.
+   sipam_fao, arcac, embarcaderos y traslapes son bajo demanda. */
 const DEFERRED_ASSETS = [
   './data/geometrias.geojson',
   './data/zona_patrimonio.geojson',
@@ -115,11 +116,10 @@ async function purgarAnteriores(){
   );
 }
 
-/* Reparación en caliente (auditoría 13-sep-2026, D7-01). Si esta versión se
-   activó sin red, su caché quedó vacía y `cacheFirst` sirve la anterior; antes
-   nada volvía a intentar la descarga hasta el siguiente bump, así que el usuario
-   quedaba atado a la versión vieja aunque la red regresara. Ahora cada
-   navegación dispara un intento (nunca dos a la vez) y cada recurso que sale
+/* Reparación en caliente. Si esta versión se activó sin red, su caché quedó
+   vacía y `cacheFirst` sirve la anterior; sin reintento, el usuario quedaría
+   atado a la versión vieja hasta el siguiente bump aunque la red regresara.
+   Cada navegación dispara un intento (nunca dos a la vez) y cada recurso que sale
    de una caché de respaldo dispara otro acotado a uno cada 30 s: completa la
    caché y, solo si ya alcanza para arrancar, purga las anteriores y avisa a
    las pestañas para que ofrezcan recargar. Con la caché completa cuesta cinco
@@ -164,8 +164,8 @@ function repararSiIncompleta(esNavegacion){
 
 /* === ACTIVATE: limpiar caches viejos, pero NUNCA a ciegas ===
    El install traga los errores de red en silencio. Si el usuario recibe una
-   versión nueva estando en una red que no alcanza el origen (caso real: datos
-   móviles Telcel, que no rutea a GitHub Pages), la caché nueva queda vacía.
+   versión nueva estando en una red que no alcanza el origen (p. ej. datos
+   móviles que no rutean al servidor), la caché nueva queda vacía.
    Borrar la anterior en ese momento deja al usuario de campo sin tablero,
    ni siquiera offline. Por eso solo se purga cuando hay reemplazo verificado;
    si no, se conservan las cachés previas y `cacheFirst` las usa de respaldo. */
@@ -181,7 +181,7 @@ self.addEventListener('activate', event => {
   })());
 });
 
-/* La página pregunta su versión (auditoría 13-sep-2026, D4-02): con la
+/* La página pregunta su versión ({tipo:'version?'} → {tipo:'version'}): con la
    reparación en caliente de la caché, personal en campo puede estar en una
    versión anterior sin saberlo; el pie la muestra y así se puede reportar. */
 self.addEventListener('message', event => {
@@ -205,9 +205,8 @@ self.addEventListener('fetch', event => {
   }
 
   // 2. Teselas de mapa (CARTO basemaps.cartocdn.com, ArcGIS World Imagery):
-  //    cache-first runtime. Auditoría 13-sep-2026 (D7-02): la regla anterior
-  //    buscaba «cartodb» y no coincidía con cartocdn, así que cada tesela
-  //    volvía a la red aunque estuviera cacheada.
+  //    cache-first runtime. El host de CARTO es «cartocdn», no «cartodb»: con
+  //    el nombre equivocado cada tesela vuelve a la red aunque esté cacheada.
   if(/(?:cartocdn|arcgisonline)/.test(url.hostname)){
     event.respondWith(cacheFirst(req, CACHE_RUNTIME));
     return;
@@ -215,7 +214,7 @@ self.addEventListener('fetch', event => {
 
   // 3. Recursos del propio sitio: cache-first
   if(url.origin === location.origin){
-    /* ── Cloudflare Access (desde 13-sep-2026) ──
+    /* ── Cloudflare Access ──
        El sitio está detrás de un inicio de sesión. Dos peticiones deben ir a
        la red SIN pasar por la caché:
        · `?sesion=` — sondeo que hace app.js al arrancar y al volver a la app:
@@ -226,14 +225,15 @@ self.addEventListener('fetch', event => {
          index.html cacheado (sería un bucle), sino dejar que el navegador
          siga la redirección al login. Si no hay red, se cae a la caché para
          no dejar sin tablero a quien ya se había autenticado en el aparato. */
-    /* ── /cdn-cgi/ es de Cloudflare, no del tablero (14-sep-2026, A11) ──
+    /* ── /cdn-cgi/ es de Cloudflare, no del tablero ──
        Ahí viven el login, el logout y el RETORNO del login de Access
        (/cdn-cgi/access/authorized?nonce=…&state=…), que es la navegación que
-       fija la cookie de sesión. El SW la trataba como una página más y le
-       respondía el index.html cacheado: la cookie nunca se fijaba, el sondeo
-       ?sesion= volvía a mandar al login y Chrome terminaba en ERR_FAILED en
-       todo navegador con el SW ya instalado (en incógnito o en Edge, sin SW,
-       entraba). Nada de /cdn-cgi/ pasa por aquí: va directo a la red. */
+       fija la cookie de sesión. Si el SW la tratara como una página más y le
+       respondiera el index.html cacheado, la cookie nunca se fijaría, el
+       sondeo ?sesion= volvería a mandar al login y el ciclo terminaría en
+       ERR_FAILED en todo navegador con el SW instalado (sin SW, como en
+       incógnito, sí se entra). Nada de /cdn-cgi/ pasa por aquí: va directo a
+       la red. */
     if(url.pathname.startsWith('/cdn-cgi/')) return;
     /* Versión institucional: ./api/ (entrada, salida, registro de uso) y
        ./admin/ (vista de administración, solo para su rol) van siempre a la
@@ -250,7 +250,7 @@ self.addEventListener('fetch', event => {
       return;
     }
     /* Cada navegación intenta completar la caché de esta versión si quedó
-       incompleta (D7-01); con la caché sana no cuesta nada. */
+       incompleta; con la caché sana no cuesta nada. */
     if(req.mode === 'navigate'){
       _avisoReparacionPendiente = false; /* la página que nace ya recibe la caché completa */
       event.waitUntil(repararSiIncompleta(true));
@@ -259,18 +259,13 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 4. Nominatim (geocoder): network-only
-  if(/nominatim\.openstreetmap\.org/.test(url.hostname)){
-    return;
-  }
-
-  // 5. Fuentes Google: cache-first runtime (Leaflet ya es propio: regla 3)
+  // 4. Fuentes Google: cache-first runtime (Leaflet es propio: regla 3)
   if(/(?:fonts\.googleapis|fonts\.gstatic)/.test(url.hostname)){
     event.respondWith(cacheFirst(req, CACHE_RUNTIME));
     return;
   }
 
-  // 6. Otros recursos: network-first
+  // 5. Otros recursos: network-first
   event.respondWith(networkFirst(req));
 });
 
@@ -281,11 +276,11 @@ async function cacheFirst(req, cacheName, event){
      una caché vieja puede eclipsar al index.html nuevo. */
   const cache = await caches.open(cacheName);
   /* ignoreSearch: una navegación con query (?fuente=pwa, ?utm…) debe
-     encontrar el index.html cacheado; sin esto la app instalada arrancaba en
-     503 sin red. Para navegaciones, el último recurso es index.html. */
-  /* El index.html cacheado solo sustituye navegaciones a la propia app
-     (raíz o index.html), nunca a otras rutas del dominio. */
-  /* Relativo al alcance del SW: el tablero puede vivir en la raíz del dominio
+     encontrar el index.html cacheado; sin esto la app instalada arranca en
+     503 sin red. Para navegaciones, el último recurso es index.html.
+     El index.html cacheado solo sustituye navegaciones a la propia app
+     (raíz o index.html), nunca a otras rutas del dominio.
+     Relativo al alcance del SW: el tablero puede vivir en la raíz del dominio
      o en una carpeta (/categorias-proteccion/ en el dominio institucional). */
   const raiz = new URL(self.registration.scope).pathname;
   const ruta = new URL(req.url).pathname;
@@ -293,7 +288,7 @@ async function cacheFirst(req, cacheName, event){
   const propioVigente = (await cache.match(req, {ignoreSearch:true}))
                      || (esApp ? (await cache.match('./index.html')) : null);
   if(propioVigente) return propioVigente;
-  /* Guardado para campo (v94): se sirve de inmediato y, si hay red, se
+  /* Guardado para campo: se sirve de inmediato y, si hay red, se
      refresca en segundo plano para no quedarse con datos viejos tras una
      actualización. Va antes del respaldo para no disparar la reparación de la
      caché de versión por algo que nunca fue parte de ella. */
@@ -311,7 +306,7 @@ async function cacheFirst(req, cacheName, event){
   const respaldo = await caches.match(req, {ignoreSearch:true});
   if(respaldo){
     /* Salió de una caché de respaldo (versión anterior): la de esta versión
-       está incompleta. Se intenta completarla en segundo plano (D7-01). */
+       está incompleta. Se intenta completarla en segundo plano. */
     if(cacheName === CACHE_VERSION){
       const p = repararSiIncompleta();
       if(event) event.waitUntil(p);
@@ -339,9 +334,9 @@ async function cacheFirst(req, cacheName, event){
   }
 }
 
-/* Tope de la caché runtime (teselas, Leaflet, fuentes). Desde que las teselas
-   se piden con CORS sí se guardan (D7-02), así que crecería sin límite en
-   campo. Se revisa cada 25 altas y se borran las más antiguas (la Cache API
+/* Tope de la caché runtime (sobre todo teselas). Las teselas se piden con CORS
+   y por eso sí se guardan (las opacas, status 0, no), así que crecería sin
+   límite en campo. Se revisa cada 25 altas y se borran las más antiguas (la Cache API
    conserva el orden de inserción) por encima de RUNTIME_MAX entradas:
    ~600 teselas ≈ 10-25 MB según la base. */
 const RUNTIME_MAX = 600;
@@ -394,7 +389,7 @@ async function networkFirstData(req){
     const response = await fetch(req);
     if(response && response.status === 200){
       /* Solo se persiste lo que parece un CSV: evita guardar como inventario
-         una pagina de error de Google que responda 200. */
+         una página de error de Google que responda 200. */
       const ct = (response.headers.get('content-type') || '').toLowerCase();
       if(ct.includes('csv') || ct.includes('text/plain')){
         const cache = await caches.open(CACHE_DATA);
@@ -404,9 +399,9 @@ async function networkFirstData(req){
       }
       return response;
     }
-    /* 404 (publicacion revocada), 429 (cuota) o 5xx NO son fallo de red, asi
+    /* 404 (publicación revocada), 429 (cuota) o 5xx NO son fallo de red, así
        que no entran al catch. Sin esto la app entera muestra pantalla de error
-       aunque exista una copia buena en cache. */
+       aunque exista una copia buena en caché. */
     const previo = await caches.match(limpiar(req.url));
     if(previo){
       console.warn('[SW] Sheets respondio', response && response.status, '— sirviendo copia en caché');

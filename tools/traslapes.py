@@ -20,8 +20,8 @@ Uso
 Criterios
 ---------
 · De Zona Patrimonio SOLO se considera el polígono de Patrimonio Mundial
-  (capa ZPM_POLIGONO). Ramsar, AICA y SIPAM quedan fuera por decisión
-  institucional: se traslapan entre sí sobre el mismo humedal y no aportan
+  (capa ZPM_POLIGONO). Ramsar, AICA y SIPAM quedan fuera (criterio
+  institucional): se traslapan entre sí sobre el mismo humedal y no aportan
   información de gestión distinta.
 · Umbral de 0.5 ha: por debajo son roces de digitalización, no traslapes.
 · Superficies en proyección plana local (equirectangular a 19.35° N).
@@ -54,9 +54,8 @@ def ha(g):
 def solo_poligonos(g):
     """Se queda con la parte con área de una intersección. Dos polígonos que
     comparten un tramo de frontera devuelven una GeometryCollection con
-    líneas y puntos además de los polígonos; Leaflet dibujaba esas líneas
-    como trazos y los puntos como marcadores azules sin nombre (auditoría
-    13-sep-2026, D1-06)."""
+    líneas y puntos además de los polígonos; Leaflet dibuja esas líneas
+    como trazos y los puntos como marcadores azules sin nombre."""
     if g.is_empty:
         return g
     if g.geom_type in ('Polygon', 'MultiPolygon'):

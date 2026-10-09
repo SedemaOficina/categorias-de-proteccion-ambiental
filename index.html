@@ -9,7 +9,7 @@
 <meta name="description" content="Sistema de Información Ambiental de la CDMX. Tablero institucional de las 66 Áreas Naturales Protegidas, Áreas de Valor Ambiental y Zonas Comunitarias de Conservación Ecológica del territorio capitalino.">
 <meta name="author" content="Secretaría del Medio Ambiente · Gobierno de la Ciudad de México">
 <meta name="theme-color" content="#9d2148">
-<!-- v94 (7-oct-2026, B11): el tablero está detrás de un inicio de sesión;
+<!-- El tablero está detrás de un inicio de sesión;
      ningún buscador ni vista previa puede leerlo, así que no se indexa ni se
      ofrece imagen de vista previa. -->
 <meta name="robots" content="noindex,nofollow">
@@ -54,12 +54,11 @@
 <link rel="dns-prefetch" href="https://cartodb-basemaps-a.global.ssl.fastly.net">
 <link rel="dns-prefetch" href="https://server.arcgisonline.com">
 
-<!-- Leaflet 1.9.4 · Mapas interactivos. Desde el 14-sep-2026 (B13) se sirve
-     desde el propio dominio (vendor/): un CDN externo (unpkg) era una
-     dependencia de disponibilidad ajena y un host más en la CSP. Los archivos
-     son los de unpkg (leaflet.css normalizado a LF por .gitattributes, de ahí
-     su hash distinto). El SRI se conserva; si se actualiza Leaflet, recalcular:
-     sha256 en base64 del archivo. -->
+<!-- Leaflet 1.9.4 · Mapas interactivos. Se sirve desde el propio dominio
+     (vendor/): un CDN externo sería una dependencia de disponibilidad ajena
+     y un host más en la CSP. Los archivos son los de unpkg (leaflet.css
+     normalizado a LF por .gitattributes, de ahí su hash distinto). Si se
+     actualiza Leaflet, recalcular el SRI: sha256 en base64 del archivo. -->
 <link rel="stylesheet" href="./vendor/leaflet.css" integrity="sha256-M3v8pcq9A7OYFbJwD+vis7ft9VkhxZzUn4jssyghIwM=" crossorigin="" />
 <script src="./vendor/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
 <link rel="stylesheet" href="./styles.css">
@@ -131,15 +130,15 @@ try{
   <section id="dashboard"></section>
 
   <!-- Mapa global · va ANTES de la tabla: el uso dominante es de campo y
-       obligaba a recorrer toda la pagina para llegar al territorio.
+       no debe obligar a recorrer toda la pagina para llegar al territorio.
        Vive fuera de #tableSection porque el destino «Ubicar» lo muestra
        con la tabla oculta. -->
   <section id="globalMapSection" style="display:none"></section>
 
   <div id="tableSection">
-    <!-- Filtros jerarquizados · rediseno 2026-09-10
-         Ocho filtros con el mismo peso visual obligaban a leerlos todos. Los tres
-         de uso dominante quedan a la vista; los cinco restantes, tras un boton. -->
+    <!-- Filtros jerarquizados: ocho filtros con el mismo peso visual obligarían
+         a leerlos todos. Los tres de uso dominante quedan a la vista; los cinco
+         restantes, tras un boton. -->
     <div class="toolbar" id="tableToolbar">
       <div class="hoja-filtros-cab"><b>Filtros</b><span class="hfc-acc"><button type="button" class="hoja-limpiar" id="btnFiltrosLimpiar">Limpiar</button><button type="button" class="btn" id="btnFiltrosListo">Ver resultados</button></span></div>
       <label class="f-buscar"><span class="lab">Búsqueda</span><input id="q" type="search" placeholder="Buscar por nombre del área…" /></label>
@@ -217,16 +216,16 @@ try{
 
 <div class="backdrop" id="bd"></div>
 <aside class="drawer" id="dr" role="dialog" aria-label="Ficha del área" tabindex="-1">
-  <!-- Cabecera fija de la hoja: el asa vivía dentro del cuerpo desplazable y
-       por eso se iba con el scroll y no servía de agarre. Aquí no se mueve. -->
+  <!-- Asa fija de la hoja: fuera del cuerpo desplazable, para que no se vaya
+       con el scroll y sirva de agarre. -->
   <div class="drawer-asa" id="drawerAsa" role="slider" tabindex="0" aria-orientation="vertical"
        aria-label="Altura de la ficha" aria-valuemin="0" aria-valuemax="2" aria-valuenow="2" aria-valuetext="completa"><span></span></div>
   <button type="button" class="drawer-tirador" id="drTirador"
           aria-label="Cerrar ficha · también se puede arrastrar hacia la derecha"></button>
-  <!-- Cabecera fija (14-sep-2026): título, botón de imagen y «×» son un solo
-       bloque fuera del cuerpo desplazable. Antes el título era «sticky» dentro
-       del cuerpo y el «×» colgaba de la hoja: con el rebote elástico de iOS se
-       separaban. El JS mueve aquí la .drawer-header-row de cada ficha. -->
+  <!-- Cabecera fija: título, botón de imagen y «×» son un solo bloque fuera
+       del cuerpo desplazable (con el rebote elástico de iOS, un título
+       «sticky» dentro del cuerpo se separa del «×»). El JS mueve aquí la
+       .drawer-header-row de cada ficha. -->
   <div class="drawer-head" id="drHead">
     <button class="close" id="drClose" aria-label="Cerrar ficha">×</button>
   </div>

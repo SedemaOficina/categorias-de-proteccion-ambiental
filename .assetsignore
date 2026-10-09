@@ -18,8 +18,9 @@ node_modules
 tools
 CLAUDE.md
 
-# Carpeta de descartes y respaldos locales
+# Carpetas de descartes y respaldos locales: no se publican ni se versionan
 _borrar
+_to_delete
 *.bak
 *.bak[0-9]
 
@@ -30,5 +31,7 @@ README.md
 # en el repositorio pero NO se publica en el sitio
 pendientes
 
-# Capturas que la app de Claude guarda en la carpeta de trabajo: no forman parte del sitio
+# Carpeta que la app de escritorio del asistente de código crea en la carpeta
+# de trabajo (capturas y salidas): no forma parte del sitio. El patrón es su
+# nombre literal.
 Claude outputs
