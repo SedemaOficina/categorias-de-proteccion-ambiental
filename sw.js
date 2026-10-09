@@ -9,7 +9,7 @@
  *  - Nominatim, etc.: network-only
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-10-08d';
+const CACHE_VERSION = 'sia-v35-2026-10-08e';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 /* Capas y teselas que la persona guardó con «Guardar para usar sin señal»
@@ -235,9 +235,11 @@ self.addEventListener('fetch', event => {
        todo navegador con el SW ya instalado (en incógnito o en Edge, sin SW,
        entraba). Nada de /cdn-cgi/ pasa por aquí: va directo a la red. */
     if(url.pathname.startsWith('/cdn-cgi/')) return;
-    /* Rutas de servidor bajo ./api/ (versión institucional: entrada, salida,
-       registro de uso y administración): siempre a la red, nunca a la caché. */
-    if(/\/api\//.test(url.pathname)) return;
+    /* Versión institucional: ./api/ (entrada, salida, registro de uso) y
+       ./admin/ (vista de administración, solo para su rol) van siempre a la
+       red. La de administración no debe quedar en la caché de un equipo: la
+       sirve nginx después de comprobar el rol. */
+    if(/\/(?:api|admin)\//.test(url.pathname)) return;
     if(url.searchParams.has('sesion')){
       entregarAvisoReparacion(event);
       event.respondWith(fetch(req).catch(() => new Response('', {status: 503})));
@@ -283,7 +285,11 @@ async function cacheFirst(req, cacheName, event){
      503 sin red. Para navegaciones, el último recurso es index.html. */
   /* El index.html cacheado solo sustituye navegaciones a la propia app
      (raíz o index.html), nunca a otras rutas del dominio. */
-  const esApp = req.mode === 'navigate' && /^\/(?:index\.html)?$/.test(new URL(req.url).pathname);
+  /* Relativo al alcance del SW: el tablero puede vivir en la raíz del dominio
+     o en una carpeta (/categorias-proteccion/ en el dominio institucional). */
+  const raiz = new URL(self.registration.scope).pathname;
+  const ruta = new URL(req.url).pathname;
+  const esApp = req.mode === 'navigate' && (ruta === raiz || ruta === raiz + 'index.html');
   const propioVigente = (await cache.match(req, {ignoreSearch:true}))
                      || (esApp ? (await cache.match('./index.html')) : null);
   if(propioVigente) return propioVigente;
