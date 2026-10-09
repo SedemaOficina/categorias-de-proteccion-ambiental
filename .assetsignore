@@ -17,10 +17,10 @@ node_modules
 # Herramientas y documentación interna: no forman parte del sitio publicado
 tools
 CLAUDE.md
+.editorconfig
 
 # Carpetas de descartes y respaldos locales: no se publican ni se versionan
 _borrar
-_to_delete
 *.bak
 *.bak[0-9]
 

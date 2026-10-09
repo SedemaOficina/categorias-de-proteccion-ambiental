@@ -11,7 +11,7 @@ Tablero público de las 66 áreas de protección ambiental de la CDMX. Público 
 - `sw.js` en la raíz (su ámbito es la carpeta desde la que se sirve). `CORE_ASSETS` instala `./`, `index.html`, `styles.css`, `app.js`, `config.js`, `vendor/leaflet.js`, `vendor/leaflet.css`, logo, favicon, `manifest.json`, `assets/icon-192.png`, `data/inventario.csv`, `data/zonificacion/index.json`, `data/pgoedf_areas.json`. Nada pesado ahí.
 - Sin `?v=` en las URLs de los assets: Cloudflare ignora la query; la coherencia la da la caché por versión del SW.
 - **PWA:** `manifest.json` (standalone, atajos «¿Dónde estoy?» e «Inventario») + iconos en `assets/icon-*.png`; el SW responde navegaciones con query desde `index.html` cacheado (`ignoreSearch`).
-- **`.assetsignore`** (lo que no se publica): `tools`, `CLAUDE.md`, `README.md`, `_borrar`, `_to_delete`, `pendientes`, `wrangler.jsonc`, `Claude outputs`, dotfiles de git y de wrangler.
+- **`.assetsignore`** (lo que no se publica): `tools`, `CLAUDE.md`, `README.md`, `_borrar`, `pendientes`, `wrangler.jsonc`, `Claude outputs`, `.editorconfig`, dotfiles de git y de wrangler.
 - Datos en `data/`. Inventario en vivo desde el Google Sheet (CSV publicado); respaldo en `data/inventario.csv`.
 - **Contrato de columnas del Sheet:** `COLUMNAS_ESPERADAS` (las 17 del README) y `COLUMNAS_CRITICAS` (`nombre`, `grupo`, `superficie`, `programa_manejo`). Falta crítica → respaldo con aviso; falta no crítica → alerta de integridad y columna vacía; columnas extra se ignoran. Si el Sheet gana una columna que el tablero usa, añadirla a la lista.
 - **Datos del Sheet nunca se copian a mano en `app.js`:** la tabla del Convenio Marco (`_filasConvenioHTML`), las filas `INV::` de `ZP_DATA` y la meta mínima de Metas se calculan de `DATA`.

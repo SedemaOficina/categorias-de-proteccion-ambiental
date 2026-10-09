@@ -3016,7 +3016,7 @@ html.pagina-bloqueada body{position:fixed;left:0;right:0;width:100%;overflow:hid
 @media (pointer:coarse){
   .ubicar-limpiar{width:44px;height:44px}
   .legal-indice button{min-height:44px}
-  .brecha-card-details > summary,.panel details > summary{min-height:44px;display:flex;align-items:center}
+  .brecha-card-details > summary,.meta-details > summary,.panel details > summary{min-height:44px;display:flex;align-items:center}
   .btn-share-area,.ubi-compartir{min-height:44px}
   .tabla-leyenda .lg-sub{display:none}
 }
