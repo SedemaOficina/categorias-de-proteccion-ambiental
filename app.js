@@ -870,6 +870,7 @@ function buildTabs(){
       if(id === state.dest) return;
       state.dest = id;
       const d = DESTINOS.find(x=>x.id===id);
+      _uso('VISTA', d ? d.label : id);
       if(d && d.sub.length && !d.sub.includes(state.tab)) state.tab = d.sub[0];
       limpiarFiltros();
       buildTabs(); populateFilters(); renderDashboard(); render();
@@ -881,6 +882,7 @@ function buildTabs(){
   el.querySelectorAll('.subchip[data-id]').forEach(b=>{
     b.addEventListener('click',()=>{
       state.tab = b.dataset.id;
+      _uso(state.dest === 'ANALITICA' ? 'ANALISIS' : 'FILTRO', subLabel(state.tab));
       limpiarFiltros();
       buildTabs(); populateFilters(); renderDashboard(); render();
       _pushVista();
@@ -1327,6 +1329,7 @@ function _campoEstadoGuardado(){
 }
 let _campoEnCurso = false;
 async function guardarParaCampo(){
+  _uso('CAMPO', null);
   if(_campoEnCurso) return;
   if(!('caches' in window)){ siaToast('Este navegador no permite guardar para usar sin señal.'); return; }
   if(navigator.onLine === false){ siaToast('Sin conexión: conéctate a internet para guardar las capas.'); return; }
@@ -1423,6 +1426,7 @@ document.addEventListener('click', e => {
   const c = e.target && e.target.closest && e.target.closest('.an-card[data-ir]');
   if(!c) return;
   state.tab = c.dataset.ir;
+  _uso('ANALISIS', subLabel(state.tab));
   limpiarFiltros();
   buildTabs(); populateFilters(); renderDashboard(); render();
   _pushVista();
@@ -4673,6 +4677,7 @@ function exportTraslapesCSV(){
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `traslapes_sia_${new Date().toISOString().slice(0,10)}.csv`;
+  _uso('DESCARGA', 'Traslapes (CSV)');
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
   siaToast('CSV descargado.');
@@ -5937,6 +5942,7 @@ function conectarCompartir(descOrFn){
 }
 
 async function compartirFichaImagen(d, btn){
+  _uso('COMPARTIR', d && d.nombre);
   try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(_){}
   /* v91 (7-oct-2026): el alto ya no es fijo. Con 1440 px y mucha información
      (fichas desde una ubicación, varias coberturas, zonificación y PGOEDF)
@@ -6675,6 +6681,13 @@ async function ubicarResolver(latlng, precision, etiqueta){
   await _cargarCapasCobertura();
   _ubicarOrigen = { lat: latlng.lat, lng: latlng.lng };   // habilita distancias en las sugerencias
   _ubicarEtiqueta = etiqueta || (precision != null ? 'Ubicación por GPS' : 'Punto consultado');
+  try{
+    const cv = _coberturasEn(latlng);
+    const res = cv.length ? cv.map(c => c.nombre).join(' + ')
+      : (_entidadEn(latlng) !== 'CDMX' ? 'Fuera de la CDMX'
+      : (_enSueloConservacion(latlng) ? 'Suelo de Conservación' : 'Sin área decretada'));
+    _uso('UBICAR', (precision != null ? 'GPS' : (etiqueta ? 'Búsqueda' : 'Coordenadas o mapa')) + ' · ' + res);
+  }catch(_){}
   sec.innerHTML = renderUbicarResultado(latlng, precision, etiqueta);
   /* Contexto del último resultado: lo usa la constancia de campo. La zona
      del PM y el PGOEDF se agregan cuando resuelven. */
@@ -8098,6 +8111,7 @@ function fichaMapaConectar(container){
 const bd=document.getElementById('bd'),dr=document.getElementById('dr'),drIn=document.getElementById('drIn');
 function openDrawer(d){
   _fichaD = d;
+  _uso('FICHA', d && d.nombre);
   const legalParts = getLegalContext(d);
   /* De un solo uso: lo pone el manejador de [data-ficha] justo antes de abrir
      y se consume aquí. Así una ficha abierta después desde la tabla no arrastra
@@ -9011,6 +9025,7 @@ function showOfflineNotice(msg, type='offline'){
 
   function abrirAyuda(origen){
     if(abierta()) return;
+    _uso('GUIA', 'Guía rápida');
     devolverFoco = origen || document.activeElement;
     bd.hidden = false; dlg.hidden = false;
     /* Dos cuadros: el navegador necesita ver el elemento visible antes de
@@ -9059,6 +9074,58 @@ function showOfflineNotice(msg, type='offline'){
   }, true);
 
   window.abrirAyuda = abrirAyuda;
+})();
+
+/* ═══ AVISOS DE USO ═══════════════════════════════════════════════════════
+   El tablero avisa qué se consulta con un evento del documento, «sia:uso»
+   ({e: evento, d: detalle}). En sia.contactoverde.com nadie lo escucha y no
+   hace nada. En la versión institucional (sedema.sia.cdmx.gob.mx) lo recoge
+   institucional.js y lo manda al registro de uso del SIA.
+   Eventos: los del catálogo categorias_proteccion.cat_evento del backend
+   (INICIO, VISTA, UBICAR, FICHA, CAPA, MAPA_BASE, AMPLIAR, FILTRO, ANALISIS,
+   NORMA, COMPARTIR, DESCARGA, CAMPO, GUIA). El detalle es corto y nunca
+   lleva coordenadas, direcciones ni lo que se escribe en el buscador.
+   Unos se avisan desde su función (ficha, ubicación, secciones, compartir);
+   los controles de mapa se recogen aquí por delegación. */
+function _uso(e, d){
+  try{ document.dispatchEvent(new CustomEvent('sia:uso', {detail:{ e, d: d == null ? null : String(d).replace(/\s+/g, ' ').trim().slice(0, 160) }})); }catch(_){}
+}
+(function(){
+  const nombreDe = el => (el.textContent.trim() || el.getAttribute('aria-label') || el.getAttribute('title') || '')
+    .replace(/\s+/g, ' ').replace(/\s*\d[\d,.]*\s*$/, '').trim();
+  const mapaDe = el => el.closest('#dr') ? 'Ficha'
+    : el.closest('#globalMapCanvas, #globalMapSection') ? 'Mapa general'
+    : el.closest('#trasMapCanvas') ? 'Traslapes'
+    : el.closest('#zpMapCanvas') ? 'Zona Patrimonio' : 'Mapa';
+  document.addEventListener('click', ev => {
+    const t = ev.target;
+    if(!t || !t.closest) return;
+    const base = t.closest('.map-block-toggle button[data-layer]');
+    if(base){ _uso('MAPA_BASE', base.textContent); return; }
+    const amp = t.closest('.btn-ampliar');
+    if(amp){ const m = mapaDe(amp); setTimeout(() => { if(document.querySelector('.sia-fs')) _uso('AMPLIAR', m); }, 0); return; }
+    /* Capas: se registra solo al encender. El estado se lee después de que
+       el manejador propio del control lo cambió. */
+    const capa = t.closest('.capa-extra button, .capa-extra label, .map-filter-chip');
+    if(capa){
+      setTimeout(() => {
+        const inp = capa.querySelector('input[type="checkbox"]');
+        const on = inp ? inp.checked : (capa.classList.contains('active') || capa.getAttribute('aria-pressed') === 'true');
+        if(on) _uso('CAPA', nombreDe(capa));
+      }, 0);
+      return;
+    }
+    const norma = t.closest('a.btn-pdf, a.btn-ext');
+    if(norma){ const n = norma.querySelector('b'); _uso('NORMA', n ? n.textContent : (norma.getAttribute('title') || norma.textContent)); return; }
+  }, true);
+  document.addEventListener('change', ev => {
+    const s = ev.target;
+    if(!s || !s.matches || !s.matches('#tableToolbar select') || !s.value) return;
+    const lab = s.closest('label') && s.closest('label').querySelector('.lab');
+    const nom = (lab ? (lab.getAttribute('title') || lab.textContent) : (s.getAttribute('aria-label') || s.id)).replace(/\s+/g, ' ').trim();
+    _uso('FILTRO', nom + ': ' + (s.options[s.selectedIndex] ? s.options[s.selectedIndex].text : s.value));
+  }, true);
+  setTimeout(() => { const d = DESTINOS.find(x => x.id === state.dest); _uso('INICIO', d ? d.label : state.dest); }, 0);
 })();
 
 /* ═══ RECORRIDO GUIADO ═══════════════════════════════════════════════════
@@ -9301,6 +9368,7 @@ function showOfflineNotice(msg, type='offline'){
 
   function iniciar(origen){
     if(tarjeta) return;
+    _uso('GUIA', 'Recorrido guiado');
     quitarInvitacion();
     cerrarLoAbierto();
     devolverFoco = origen || document.activeElement;
