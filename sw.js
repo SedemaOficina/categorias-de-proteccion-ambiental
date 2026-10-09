@@ -11,7 +11,7 @@
  *  - Otros orígenes: network-first
  * ============================================================ */
 
-const CACHE_VERSION = 'sia-v35-2026-10-08f';
+const CACHE_VERSION = 'sia-v35-2026-10-08g';
 const CACHE_RUNTIME = 'sia-runtime-v35';
 const CACHE_DATA    = 'sia-data-v35';
 /* Capas y teselas guardadas con «Guardar para usar sin señal». El nombre no

@@ -3181,3 +3181,15 @@ html.tour-activo .estado-red,html.tour-activo #siaToast{visibility:hidden}
   .tour-foco,.tour-card .tc-barra span{transition:none}
   .tour-invita{animation:none}
 }
+
+/* ═══ CELULAR · FONDO DEL DOCUMENTO ═══════════════════════════════════════
+   En iPhone, mientras la barra del navegador cambia de tamaño, los elementos
+   fijos (barra de destinos, ficha, hojas) se quedan un momento en su lugar y
+   el hueco que dejan abajo pinta el fondo del documento, fuera del velo que
+   oscurece la página: una franja beige. Con el documento en blanco, como esos
+   elementos, la franja se lee como su continuación. El contenido sigue sobre
+   el crema del body, que ocupa al menos la pantalla completa. */
+@media (max-width:760px){
+  html{background:var(--card)}
+  body{min-height:100vh}
+}
